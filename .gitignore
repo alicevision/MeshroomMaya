@@ -1,3 +1,7 @@
+
+# Generic files
+*~
+
 # Compiled Object files
 *.slo
 *.lo
@@ -12,5 +16,10 @@
 *.la
 *.a
 
+# Python specific
+*.py[cod]
+
+# Distribution & packaging
 build/
 lib/
+
