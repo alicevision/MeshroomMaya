@@ -8,6 +8,7 @@
 #include <maya/MQtUtil.h>
 #include <maya/MSelectionList.h>
 
+
 using namespace mayaMVG;
 
 QWidget* MVGUtil::createMVGWindow() {
@@ -44,7 +45,14 @@ QWidget* MVGUtil::createMVGWindow() {
 	return mayaWindow;
 }
 
-void MVGUtil::populateMenu(MVGMenu* menu) {
+MStatus MVGUtil::deleteMVGWindow() {
+	return MGlobal::executePythonCommand(
+		"import maya.cmds as cmds\n"
+		"if cmds.window('openMVG', exists=True):\n"
+		"    cmds.deleteUI('openMVG', window=True)\n");
+}
+
+void MVGUtil::populateMVGMenu(MVGMenu* menu) {
 	menu->clear();
 	for(MItDependencyNodes it(MFn::kDependencyNode); !it.isDone(); it.next()) {
 		MDagPath p;
@@ -55,6 +63,22 @@ void MVGUtil::populateMenu(MVGMenu* menu) {
 			menu->addCamera(fn.name().asChar());
 		}
 	}
+}
+
+MStatus MVGUtil::createMVGContext() {
+	return MGlobal::executePythonCommand(
+		"import maya.cmds as cmds\n"
+		"if cmds.contextInfo('MVGTool1', exists=True):\n"
+		"    cmds.deleteUI('MVGTool1', toolContext=True)\n"
+		"cmds.MVGTool('MVGTool1')\n");
+}
+
+MStatus MVGUtil::deleteMVGContext() {
+	return MGlobal::executePythonCommand(
+		"import maya.cmds as cmds\n"
+		"cmds.setToolTo('selectSuperContext')\n"
+		"if cmds.contextInfo('MVGTool1', exists=True):\n"
+		"    cmds.deleteUI('MVGTool1', toolContext=True)\n");
 }
 
 MStatus MVGUtil::getMVGLeftCamera(MDagPath& path) {

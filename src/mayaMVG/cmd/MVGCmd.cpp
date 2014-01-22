@@ -67,7 +67,7 @@ namespace {
 		if(nodeFn.name().substring(0, 23)=="__PrenotatoPerDuplicare_")
 			return; // FIXME - allow duplication
 		MVGMenu* menu = static_cast<MVGMenu*>(userData);
-		MVGUtil::populateMenu(menu);
+		MVGUtil::populateMVGMenu(menu);
 	}
 
 
@@ -109,9 +109,11 @@ MStatus MVGCmd::doIt(const MArgList& args) {
 
 	// create maya window
 	QWidget* mayaWindow = MVGUtil::createMVGWindow();
-	if(!mayaWindow)
+	if(!mayaWindow) {
+		LOG_ERROR("MVGCmd", "Unable to create MVGWindow.")
 		return MS::kFailure;
-
+	}
+	
 	// add the custom Qt menu
 	QWidget* menuLayout = MQtUtil::findLayout("mvgMenuPanel");
 	if(!menuLayout)
@@ -121,7 +123,14 @@ MStatus MVGCmd::doIt(const MArgList& args) {
 	MQtUtil::addWidgetToMayaLayout(menu, layout);
 
 	// populate mvg menu
-	MVGUtil::populateMenu(menu);
+	MVGUtil::populateMVGMenu(menu);
+
+	// create maya MVGContext
+	status = MVGUtil::createMVGContext();
+	if(!status) {
+		LOG_ERROR("MVGCmd", "Unable to create MVGContext.")
+		return status;
+	}
 
 	// install mouse event filter on maya viewports
 	// WARNING : this may change depending on maya versions.
