@@ -45,6 +45,7 @@ QWidget* MVGUtil::createMVGWindow() {
 }
 
 void MVGUtil::populateMenu(MVGMenu* menu) {
+	menu->clear();
 	for(MItDependencyNodes it(MFn::kDependencyNode); !it.isDone(); it.next()) {
 		MDagPath p;
 		MDagPath::getAPathTo(it.item(), p);

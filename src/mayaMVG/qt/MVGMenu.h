@@ -14,6 +14,7 @@ public:
 
 public:
 	void addCamera(const QString& text);
+	void clear();
 	void selectCameras(const QList<QString>& cameraNames);
 
 private slots:

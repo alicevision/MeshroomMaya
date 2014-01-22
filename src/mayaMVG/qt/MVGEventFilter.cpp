@@ -87,7 +87,7 @@ bool MVGMouseEventFilter::eventFilter(QObject * obj, QEvent * e)
 		MFnCamera camera(m_camPath);
 		// compute mouse offset
 		QPointF offset = m_clickPos - mouseevent->pos();
-		offset /= 100.f;
+		offset /= camera.zoom()*500.f; // FIXME
 		// update camera pan
 		camera.setHorizontalPan(m_cameraHPan+offset.x());
 		camera.setVerticalPan(m_cameraVPan-offset.y());
@@ -101,6 +101,7 @@ bool MVGMouseEventFilter::eventFilter(QObject * obj, QEvent * e)
 		QWheelEvent * wheelevent = static_cast<QWheelEvent *>(e);
 		float numDegrees = wheelevent->delta() / 8.f;
 		float numSteps = numDegrees / 15.f;
+		numSteps /= 5.f; // FIXME
 		// update camera zoom
 		MFnCamera camera(m_camPath);
 		camera.setZoom(camera.zoom()-numSteps);

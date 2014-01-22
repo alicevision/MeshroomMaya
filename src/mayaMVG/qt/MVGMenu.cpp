@@ -16,11 +16,20 @@ MVGMenu::~MVGMenu() {
 }
 
 void MVGMenu::addCamera(const QString& cameraName) {
+	if(cameraName.isEmpty())
+		return;
+	if(cameraName == "persp" || cameraName == "top"
+		|| cameraName == "front" || cameraName == "side")
+		return;
 	MVGMenuItem * itemWidget = new MVGMenuItem(cameraName);
 	ui.camList->addItem(cameraName);
 	QListWidgetItem * item = ui.camList->item(ui.camList->count()-1);
 	ui.camList->setItemWidget(item, itemWidget);
 	item->setSizeHint(QSize(item->sizeHint().width(), 66));
+}
+
+void MVGMenu::clear() {
+	ui.camList->clear();
 }
 
 void MVGMenu::selectCameras(const QList<QString>& cameraNames) {

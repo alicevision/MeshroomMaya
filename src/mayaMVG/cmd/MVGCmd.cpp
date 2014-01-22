@@ -1,4 +1,3 @@
-#include <QMainWindow>
 #include <QWidgetList>
 #include <QApplication>
 #include <QLayout>
@@ -13,6 +12,7 @@
 #include <maya/MArgDatabase.h>
 #include <maya/MQtUtil.h>
 #include <maya/MEventMessage.h>
+#include <maya/MDGMessage.h>
 #include <maya/MSelectionList.h>
 #include <maya/MFnDependencyNode.h>
 
@@ -22,18 +22,6 @@ namespace {
 
 	static const char * helpFlag = "-h";
 	static const char * helpFlagLong = "-help";
-
-	QMainWindow* getMainWindow() {
-		QWidgetList widgetList = QApplication::topLevelWidgets();
-		for (int i = 0; i < widgetList.size(); i++) {
-			if (widgetList[i]->isWindow()) {
-				QMainWindow* castWidget = dynamic_cast<QMainWindow*>(widgetList[i]);
-				if (castWidget != NULL && castWidget->parent() == NULL)
-					return (castWidget);
-			}
-		}
-		return NULL;
-	}
 
 	void _debug_printMayaTree(const QObject* object) {
 		QString path;
@@ -52,7 +40,7 @@ namespace {
 		}
 	}
 
-	void selectionChanged(void* userData) {
+	void selectionChangedCB(void* userData) {
 		if(!userData)
 			return;
 		MVGMenu* menu = static_cast<MVGMenu*>(userData);
@@ -71,6 +59,18 @@ namespace {
 		}
 		menu->selectCameras(selectedCameras);
 	}
+
+	void cameraAddedOrRemovedCB(MObject& node, void* userData) {
+		if(!userData)
+			return;
+		MFnDependencyNode nodeFn(node);
+		if(nodeFn.name().substring(0, 23)=="__PrenotatoPerDuplicare_")
+			return; // FIXME - allow duplication
+		MVGMenu* menu = static_cast<MVGMenu*>(userData);
+		MVGUtil::populateMenu(menu);
+	}
+
+
 }
 
 MVGCmd::MVGCmd() {
@@ -80,32 +80,32 @@ MVGCmd::~MVGCmd() {
 }
 
 void * MVGCmd::creator() {
-    return new MVGCmd();
+	return new MVGCmd();
 }
 
 MSyntax MVGCmd::newSyntax() {
-    MSyntax s;
-    s.addFlag(helpFlag, helpFlagLong);
-    s.enableEdit(false);
-    s.enableQuery(false);
-    return s;
+	MSyntax s;
+	s.addFlag(helpFlag, helpFlagLong);
+	s.enableEdit(false);
+	s.enableQuery(false);
+	return s;
 }
 
 MStatus MVGCmd::doIt(const MArgList& args) {
-    MStatus status = MS::kSuccess;
+	MStatus status = MS::kSuccess;
 
-    // parsing ARGS
-    MSyntax syntax = MVGCmd::newSyntax();
-    MArgDatabase argData(syntax, args);
+	// parsing ARGS
+	MSyntax syntax = MVGCmd::newSyntax();
+	MArgDatabase argData(syntax, args);
 
 	MString nodeName;
 	MString attributeName;
 	MString uiName;
 
-    // -h
-    if (argData.isFlagSet(helpFlag)) {
+	// -h
+	if (argData.isFlagSet(helpFlag)) {
 		// TODO
-    }
+	}
 
 	// create maya window
 	QWidget* mayaWindow = MVGUtil::createMVGWindow();
@@ -143,14 +143,16 @@ MStatus MVGCmd::doIt(const MArgList& args) {
 		}
 	}
 
-	// register the 'Selection Changed' callback
+	// maya callbacks
 	MCallbackIdArray callbackIDs;
-	callbackIDs.append(MEventMessage::addEventCallback("SelectionChanged", selectionChanged, menu));
+	callbackIDs.append(MEventMessage::addEventCallback("SelectionChanged", selectionChangedCB, menu));
+	callbackIDs.append(MDGMessage::addNodeAddedCallback(cameraAddedOrRemovedCB, "camera", menu));
+	callbackIDs.append(MDGMessage::addNodeRemovedCallback(cameraAddedOrRemovedCB, "camera", menu));
 
 	// install a window event filter on 'mayaWindow'
 	// needed to remove all maya callbacks and all Qt event filters 
 	MVGWindowEventFilter * windowEventFilter = new MVGWindowEventFilter(callbackIDs, mouseEventFilter);
 	mayaWindow->installEventFilter(windowEventFilter);
 
-    return status;
+	return status;
 }
