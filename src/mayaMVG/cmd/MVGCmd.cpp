@@ -108,22 +108,22 @@ MStatus MVGCmd::doIt(const MArgList& args) {
 	}
 
 	// create maya window
-	QWidget* mayaWindow = MVGUtil::createMVGWindow();
-	if(!mayaWindow) {
-		LOG_ERROR("MVGCmd", "Unable to create MVGWindow.")
-		return MS::kFailure;
+	status = MVGUtil::createMVGWindow();
+	if(!status) {
+		LOG_ERROR("MVGCmd", "Unable to create MVGContext.")
+		return status;
 	}
-	
-	// add the custom Qt menu
-	QWidget* menuLayout = MQtUtil::findLayout("mvgMenuPanel");
-	if(!menuLayout)
-		return MS::kFailure;
-	MVGMenu* menu = new MVGMenu(NULL);
-	QWidget* layout = qobject_cast<QWidget*>(menuLayout);
-	MQtUtil::addWidgetToMayaLayout(menu, layout);
+	QWidget* mayaWindow = MVGUtil::getMVGWindow();
+	QWidget* menuLayout = MVGUtil::getMVGMenuLayout();
+	if(!mayaWindow || !menuLayout) {
+		LOG_ERROR("MVGCmd", "Unable to retrieve MVGWindow.")
+		return status;
+	}
 
-	// populate mvg menu
+	// create MVG menu
+	MVGMenu* menu = new MVGMenu(NULL);
 	MVGUtil::populateMVGMenu(menu);
+	MQtUtil::addWidgetToMayaLayout(menu, menuLayout);
 
 	// create maya MVGContext
 	status = MVGUtil::createMVGContext();
@@ -133,24 +133,19 @@ MStatus MVGCmd::doIt(const MArgList& args) {
 	}
 
 	// install mouse event filter on maya viewports
-	// WARNING : this may change depending on maya versions.
-	//           Use _debug_printMayaTree(mayaWindow) function for debugging purposes.
 	MVGMouseEventFilter * mouseEventFilter = new MVGMouseEventFilter();
-	QList<QWidget *> children = mayaWindow->findChildren<QWidget *>();
-	for (int i = 0; i < children.size(); ++i) {
-		if(children[i]->objectName() == ""){
-			if(children[i]->parent()->objectName() == "mvgLPanel") {
-				children[i]->installEventFilter(mouseEventFilter);
-				children[i]->setProperty("mvg_panel", "left");
-				children[i]->setProperty("mvg_mouseFiltered", true);
-			}
-			if(children[i]->parent()->objectName() == "mvgRPanel") {
-				children[i]->installEventFilter(mouseEventFilter);
-				children[i]->setProperty("mvg_panel", "right");
-				children[i]->setProperty("mvg_mouseFiltered", true);
-			}
-		}
+	QWidget* leftViewport = MVGUtil::getMVGLeftViewportLayout();
+	QWidget* rightViewport = MVGUtil::getMVGRightViewportLayout();
+	if(!leftViewport || !rightViewport) {
+		LOG_ERROR("MVGCmd", "Unable to retrieve maya viewport layouts.")
+		return MS::kFailure;
 	}
+	leftViewport->installEventFilter(mouseEventFilter);
+	leftViewport->setProperty("mvg_panel", "left");
+	leftViewport->setProperty("mvg_mouseFiltered", true);
+	rightViewport->installEventFilter(mouseEventFilter);
+	rightViewport->setProperty("mvg_panel", "right");
+	rightViewport->setProperty("mvg_mouseFiltered", true);
 
 	// maya callbacks
 	MCallbackIdArray callbackIDs;

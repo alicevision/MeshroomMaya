@@ -7,11 +7,16 @@
 #include "qt/MVGEventFilter.h"
 #include "util/MVGUtil.h"
 #include "util/MVGLog.h"
+#include "context/MVGContext.h"
 #include <maya/MDagPath.h>
 #include <maya/MFnCamera.h>
 
+
 using namespace mayaMVG;
 
+//
+// MVGKeyEventFilter
+//
 MVGKeyEventFilter::MVGKeyEventFilter()
 {
 }
@@ -39,7 +44,9 @@ bool MVGKeyEventFilter::eventFilter(QObject * obj, QEvent * e)
 }
 
 
-
+//
+// MVGMouseEventFilter
+//
 MVGMouseEventFilter::MVGMouseEventFilter()
 {
 }
@@ -56,7 +63,7 @@ bool MVGMouseEventFilter::eventFilter(QObject * obj, QEvent * e)
 			if(panelName.type()==QVariant::Invalid)
 				return QObject::eventFilter(obj, e);
 			// get camera dagpath
-			if(panelName.toString()=="left"){
+			if(panelName.toString()=="left") {
 				if(!MVGUtil::getMVGLeftCamera(m_camPath))
 					return QObject::eventFilter(obj, e);
 			} else {
@@ -74,12 +81,6 @@ bool MVGMouseEventFilter::eventFilter(QObject * obj, QEvent * e)
 			m_cameraVPan = camera.verticalPan();
 			// set as tracking
 			m_tracking = true;
-		} else if(mouseevent->button() & Qt::LeftButton) {
-			// TODO
-			// check if Point Mode is enabled
-			// check if main shape exists
-			// add a point
-			LOG_INFO("ADD POINT", "screen pos : " << mouseevent->pos().x() << " / " << mouseevent->pos().y())
 		}
 	} else if(e->type() == QEvent::MouseMove) {
 		if(!m_tracking)
@@ -110,6 +111,10 @@ bool MVGMouseEventFilter::eventFilter(QObject * obj, QEvent * e)
 	return QObject::eventFilter(obj, e);
 }
 
+
+//
+// MVGWindowEventFilter
+//
 MVGWindowEventFilter::MVGWindowEventFilter(const MCallbackIdArray& ids, MVGMouseEventFilter* mouseFilter, MVGKeyEventFilter* keyFilter)
 	: m_ids(ids), m_mouseFilter(mouseFilter), m_keyFilter(keyFilter)
 {
@@ -129,8 +134,30 @@ bool MVGWindowEventFilter::eventFilter(QObject * obj, QEvent * e)
 		// remove maya callbacks
 		if(m_ids.length()>0)
 			MMessage::removeCallbacks(m_ids);
+		// delete maya context
+		MVGUtil::deleteMVGContext();
  		// remove window event filter
 		obj->removeEventFilter(this);
 	}
+	return QObject::eventFilter(obj, e);
+}
+
+
+//
+// MVGContextEventFilter
+//
+MVGContextEventFilter::MVGContextEventFilter(MVGContext* ctx)
+	: m_context(ctx)
+{
+}
+
+bool MVGContextEventFilter::eventFilter(QObject * obj, QEvent * e)
+{
+	if(!m_context)
+		return QObject::eventFilter(obj, e);
+	if (e->type() == QEvent::MouseMove) {
+		QMouseEvent * mouseevent = static_cast<QMouseEvent *>(e);
+		m_context->setMousePos(mouseevent->pos().x(), mouseevent->pos().y());
+	} 
 	return QObject::eventFilter(obj, e);
 }

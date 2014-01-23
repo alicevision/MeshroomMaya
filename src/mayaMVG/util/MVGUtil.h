@@ -5,6 +5,7 @@
 
 class QWidget;
 class MDagPath;
+class M3dView;
 
 namespace mayaMVG {
 
@@ -12,10 +13,18 @@ class MVGMenu;
 
 struct MVGUtil {
 	// window
-	static QWidget* createMVGWindow();
+	static MStatus createMVGWindow();
 	static MStatus deleteMVGWindow();
+	static QWidget* getMVGWindow();
 	// window menu
 	static void populateMVGMenu(MVGMenu* menu);
+	static QWidget* getMVGMenuLayout();
+	// viewports
+	static QWidget* getMVGLeftViewportLayout();
+	static QWidget* getMVGRightViewportLayout();
+	static bool isMVGView(const M3dView & view);
+	static bool isActiveView(const M3dView & view);
+	static bool mouseUnderView(const M3dView & view);
 	// context
 	static MStatus createMVGContext();
 	static MStatus deleteMVGContext();

@@ -1,7 +1,13 @@
-#include <maya/M3dView.h>
-#include <maya/MToolsInfo.h>
+#include <QWidget>
+#include "qt/MVGEventFilter.h"
+#include "util/MVGUtil.h"
+#include "util/MVGLog.h"
 #include "MVGManipContainer.h"
 #include "MVGContext.h"
+#include <maya/M3dView.h>
+#include <maya/MToolsInfo.h>
+
+
 
 using namespace mayaMVG;
 
@@ -12,6 +18,7 @@ namespace {
 }
 
 MVGContext::MVGContext()
+	: m_eventFilter(NULL)
 {
 	setTitleString("MVG tool");
 }
@@ -19,29 +26,35 @@ MVGContext::MVGContext()
 void MVGContext::toolOnSetup(MEvent & event)
 {
 	updateManipulators(this);
+	// install context event filter
+	m_eventFilter = new MVGContextEventFilter(this);
+	QWidget* leftViewport = MVGUtil::getMVGLeftViewportLayout();
+	QWidget* rightViewport = MVGUtil::getMVGRightViewportLayout();
+	if(!leftViewport || !rightViewport)
+		return;
+	leftViewport->installEventFilter(m_eventFilter);
+	rightViewport->installEventFilter(m_eventFilter);
 }
 
 void MVGContext::toolOffCleanup()
 {
+	// remove context event filter
+	QWidget* leftViewport = MVGUtil::getMVGLeftViewportLayout();
+	QWidget* rightViewport = MVGUtil::getMVGRightViewportLayout();
+	if(leftViewport)
+		leftViewport->installEventFilter(m_eventFilter);
+	if(rightViewport)
+		rightViewport->installEventFilter(m_eventFilter);
 	MPxContext::toolOffCleanup();
 }
 
 MStatus MVGContext::doPress(MEvent & event)
 {
-	if (event.mouseButton() == MEvent::kLeftMouse) {
-		if (!event.isModifierShift() && !event.isModifierControl()
-		        && !event.isModifierMiddleMouseButton()) {
-			short x, y;
-			event.getPosition(x, y);
-			return MS::kSuccess;
-		}
-	}
 	return MPxContext::doPress(event);
 }
 
 MStatus MVGContext::doDrag(MEvent & event)
 {
-	currentView().refresh();
 	return MS::kSuccess;
 }
 
@@ -72,4 +85,20 @@ void MVGContext::updateManipulators(void * data)
 		ctxPtr->addManipulator(manipObject);
 		manipulator->setContext(ctxPtr);
 	}
+}
+
+void MVGContext::setMousePos(size_t x, size_t y) {
+	m_mousePosX = x;
+	m_mousePosY = currentView().portHeight() - y;
+	updateManipulators(this);
+}
+
+size_t MVGContext::mousePosX() const 
+{
+	return m_mousePosX;
+}
+
+size_t MVGContext::mousePosY() const 
+{
+	return m_mousePosY;
 }

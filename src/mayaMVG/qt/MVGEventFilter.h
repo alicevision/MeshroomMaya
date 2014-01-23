@@ -7,6 +7,8 @@
 
 namespace mayaMVG {
 
+class MVGContext;
+
 class MVGKeyEventFilter: public QObject {
     public:
         MVGKeyEventFilter();
@@ -36,6 +38,15 @@ class MVGWindowEventFilter: public QObject {
 		MCallbackIdArray m_ids;
     	MVGMouseEventFilter* m_mouseFilter;
     	MVGKeyEventFilter* m_keyFilter;
+};
+
+class MVGContextEventFilter: public QObject {
+    public:
+        MVGContextEventFilter(MVGContext* ctx);
+    protected:
+        bool eventFilter(QObject *obj, QEvent *e);
+    private:
+        MVGContext* m_context;
 };
 
 } // mayaMVG

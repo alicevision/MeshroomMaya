@@ -7,16 +7,18 @@
 #include <maya/MGlobal.h>
 #include <maya/MQtUtil.h>
 #include <maya/MSelectionList.h>
+#include <maya/M3dView.h>
 
 
 using namespace mayaMVG;
 
-QWidget* MVGUtil::createMVGWindow() {
+MStatus MVGUtil::createMVGWindow() {
+	MStatus status;
 	MString windowName;
-	MGlobal::executePythonCommand(
+	status = MGlobal::executePythonCommand(
 		"import maya.cmds as cmds\n"
 		"def createMVGWindow():\n"
-		"    win = cmds.window('openMVG')\n"
+		"    win = cmds.window('mayaMVG')\n"
 		"    cmds.paneLayout('mainPane', configuration='vertical3')\n"
 		"    # first modelPanel\n"
 		"    cmds.paneLayout('leftPane')\n"
@@ -39,17 +41,19 @@ QWidget* MVGUtil::createMVGWindow() {
 		"    cmds.showWindow(win)\n"
 		"    cmds.window(win, e=True, widthHeight=[920,700])\n"
 		"    return win\n");
-	MGlobal::executePythonCommand("createMVGWindow()", windowName);
-	// check for window creation
-	QWidget* mayaWindow = MQtUtil::findWindow(windowName);
-	return mayaWindow;
+	status = MGlobal::executePythonCommand("createMVGWindow()", windowName);
+	return status;
 }
 
 MStatus MVGUtil::deleteMVGWindow() {
 	return MGlobal::executePythonCommand(
 		"import maya.cmds as cmds\n"
-		"if cmds.window('openMVG', exists=True):\n"
-		"    cmds.deleteUI('openMVG', window=True)\n");
+		"if cmds.window('mayaMVG', exists=True):\n"
+		"    cmds.deleteUI('mayaMVG', window=True)\n");
+}
+
+QWidget* MVGUtil::getMVGWindow() {
+	return MQtUtil::findWindow("mayaMVG");
 }
 
 void MVGUtil::populateMVGMenu(MVGMenu* menu) {
@@ -63,6 +67,41 @@ void MVGUtil::populateMVGMenu(MVGMenu* menu) {
 			menu->addCamera(fn.name().asChar());
 		}
 	}
+}
+
+QWidget* MVGUtil::getMVGMenuLayout() {
+	return MQtUtil::findWindow("mayaMVG");
+}
+
+QWidget* MVGUtil::getMVGLeftViewportLayout() {
+	M3dView leftView;
+	M3dView::getM3dViewFromModelPanel("mvgLPanel", leftView);
+	return leftView.widget();
+}
+
+QWidget* MVGUtil::getMVGRightViewportLayout() {
+	M3dView rightView;
+	M3dView::getM3dViewFromModelPanel("mvgRPanel", rightView);
+	return rightView.widget();
+}
+
+bool MVGUtil::isMVGView(const M3dView & view) {
+	QWidget* leftViewport = MVGUtil::getMVGLeftViewportLayout();
+	QWidget* rightViewport = MVGUtil::getMVGRightViewportLayout();
+	return ((view.widget() == leftViewport) || (view.widget() == rightViewport));
+}
+
+bool MVGUtil::isActiveView(const M3dView & view) {
+	M3dView activeView = M3dView::active3dView();
+	return (activeView.widget() == view.widget());
+}
+
+bool MVGUtil::mouseUnderView(const M3dView & view) {
+	QWidget * viewWidget = view.widget();
+	if (viewWidget->rect().contains(viewWidget->mapFromGlobal(QCursor::pos()))) {
+		return true;
+	}
+	return false;
 }
 
 MStatus MVGUtil::createMVGContext() {

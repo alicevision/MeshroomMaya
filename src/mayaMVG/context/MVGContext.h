@@ -2,8 +2,12 @@
 
 #include <maya/MPxContext.h>
 #include <maya/MDagPath.h>
+#include <maya/MPoint.h>
 
 namespace mayaMVG {
+
+// forward declaration
+class MVGContextEventFilter;
 
 class MVGContext: public MPxContext {
     public:
@@ -17,6 +21,14 @@ class MVGContext: public MPxContext {
         virtual void getClassName(MString & name) const;
     public:
         static void updateManipulators(void* clientData);
+    public:
+        void setMousePos(size_t x, size_t y);
+        size_t mousePosX() const;
+        size_t mousePosY() const;
+    private:
+    	size_t m_mousePosX;
+    	size_t m_mousePosY;
+        MVGContextEventFilter* m_eventFilter;
 };
 
 } // mayaMVG
