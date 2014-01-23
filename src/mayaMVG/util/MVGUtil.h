@@ -22,6 +22,8 @@ struct MVGUtil {
 	// viewports
 	static QWidget* getMVGLeftViewportLayout();
 	static QWidget* getMVGRightViewportLayout();
+	static MStatus setFocusOnLeftView();
+	static MStatus setFocusOnRightView();
 	static bool isMVGView(const M3dView & view);
 	static bool isActiveView(const M3dView & view);
 	static bool mouseUnderView(const M3dView & view);

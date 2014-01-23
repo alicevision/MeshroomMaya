@@ -159,5 +159,16 @@ bool MVGContextEventFilter::eventFilter(QObject * obj, QEvent * e)
 		QMouseEvent * mouseevent = static_cast<QMouseEvent *>(e);
 		m_context->setMousePos(mouseevent->pos().x(), mouseevent->pos().y());
 	} 
+	else if (e->type() == QEvent::Enter) {
+		QVariant panelName = obj->property("mvg_panel");
+		if(panelName.type()==QVariant::Invalid)
+			return QObject::eventFilter(obj, e);
+		// set focus
+		if(panelName.toString()=="left")
+			MVGUtil::setFocusOnLeftView();
+		else
+			MVGUtil::setFocusOnRightView();
+	} else if (e->type() == QEvent::Leave) {
+	}
 	return QObject::eventFilter(obj, e);
 }

@@ -44,7 +44,7 @@ void MVGManipContainer::draw(M3dView & view, const MDagPath & path,
 	if(!m_ctx)
 		return;
 	
-	if(!MVGUtil::isMVGView(view) || !MVGUtil::mouseUnderView(view) || !MVGUtil::isActiveView(view))
+	if(!MVGUtil::isMVGView(view) || !MVGUtil::isActiveView(view))
 		return;
 
 	size_t mousex = m_ctx->mousePosX();

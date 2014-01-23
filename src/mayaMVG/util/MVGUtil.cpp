@@ -85,6 +85,18 @@ QWidget* MVGUtil::getMVGRightViewportLayout() {
 	return rightView.widget();
 }
 
+MStatus MVGUtil::setFocusOnLeftView() {
+	return MGlobal::executePythonCommand(
+		"import maya.cmds as cmds\n"
+		"cmds.setFocus('mvgLPanel')\n");
+}
+
+MStatus MVGUtil::setFocusOnRightView() {
+	return MGlobal::executePythonCommand(
+		"import maya.cmds as cmds\n"
+		"cmds.setFocus('mvgRPanel')\n");
+}
+
 bool MVGUtil::isMVGView(const M3dView & view) {
 	QWidget* leftViewport = MVGUtil::getMVGLeftViewportLayout();
 	QWidget* rightViewport = MVGUtil::getMVGRightViewportLayout();
