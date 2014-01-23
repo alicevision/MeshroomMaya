@@ -1,9 +1,9 @@
 #include <QWidget>
-#include "qt/MVGEventFilter.h"
-#include "util/MVGUtil.h"
-#include "util/MVGLog.h"
-#include "MVGManipContainer.h"
-#include "MVGContext.h"
+#include "mayaMVG/qt/MVGEventFilter.h"
+#include "mayaMVG/util/MVGUtil.h"
+#include "mayaMVG/util/MVGLog.h"
+#include "mayaMVG/context/MVGManipContainer.h"
+#include "mayaMVG/context/MVGContext.h"
 #include <maya/M3dView.h>
 #include <maya/MToolsInfo.h>
 

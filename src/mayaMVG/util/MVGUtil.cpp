@@ -1,6 +1,6 @@
-#include "MVGUtil.h"
-#include "MVGLog.h"
-#include "qt/MVGMenu.h"
+#include "mayaMVG/util/MVGUtil.h"
+#include "mayaMVG/util/MVGLog.h"
+#include "mayaMVG/qt/MVGMenu.h"
 #include <maya/MFnDependencyNode.h>
 #include <maya/MItDependencyNodes.h>
 #include <maya/MDagPath.h>

@@ -15,7 +15,7 @@ endif()
 #
 # Project Search Paths
 #
-include_directories(${PROJECT_SOURCE_DIR})
+include_directories(${PROJECT_SOURCE_DIR}/..)
 
 #
 # Maya dependency 
@@ -52,7 +52,8 @@ qt4_wrap_cpp(MOC_SRCS ${MOC_HDRS})
 qt4_wrap_ui(UISrcs 
 	qt/ui/menu.ui
 	qt/ui/menuItem.ui)
-include_directories(${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR})
+include_directories(${CMAKE_CURRENT_BINARY_DIR})
+
 
 #
 # Maya plugin properties

@@ -1,13 +1,11 @@
 #include <QWidgetList>
 #include <QApplication>
 #include <QLayout>
-
-#include "util/MVGLog.h"
-#include "util/MVGUtil.h"
-#include "cmd/MVGCmd.h"
-#include "qt/MVGMenu.h"
-#include "qt/MVGEventFilter.h"
-
+#include "mayaMVG/util/MVGLog.h"
+#include "mayaMVG/util/MVGUtil.h"
+#include "mayaMVG/cmd/MVGCmd.h"
+#include "mayaMVG/qt/MVGMenu.h"
+#include "mayaMVG/qt/MVGEventFilter.h"
 #include <maya/MArgList.h>
 #include <maya/MArgDatabase.h>
 #include <maya/MQtUtil.h>

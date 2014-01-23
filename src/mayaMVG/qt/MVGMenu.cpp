@@ -1,9 +1,9 @@
 #include <QHBoxLayout>
 #include <QPushButton>
-#include "MVGMenu.h"
-#include "MVGMenuItem.h"
-#include "util/MVGLog.h"
-#include "util/MVGUtil.h"
+#include "mayaMVG/qt/MVGMenu.h"
+#include "mayaMVG/qt/MVGMenuItem.h"
+#include "mayaMVG/util/MVGLog.h"
+#include "mayaMVG/util/MVGUtil.h"
 #include <maya/MQtUtil.h>
 
 using namespace mayaMVG;

@@ -1,13 +1,13 @@
-#include <QtCore/QEvent>
-#include <QtGui/QMouseEvent>
-#include <QtGui/QKeyEvent>
-#include <QtGui/QWheelEvent>
-#include <QtGui/QWidget>
-#include <QtGui/QApplication>
-#include "qt/MVGEventFilter.h"
-#include "util/MVGUtil.h"
-#include "util/MVGLog.h"
-#include "context/MVGContext.h"
+#include <QEvent>
+#include <QMouseEvent>
+#include <QKeyEvent>
+#include <QWheelEvent>
+#include <QWidget>
+#include <QApplication>
+#include "mayaMVG/qt/MVGEventFilter.h"
+#include "mayaMVG/util/MVGUtil.h"
+#include "mayaMVG/util/MVGLog.h"
+#include "mayaMVG/context/MVGContext.h"
 #include <maya/MDagPath.h>
 #include <maya/MFnCamera.h>
 

@@ -1,7 +1,7 @@
-#include "MVGManipContainer.h"
-#include "MVGContext.h"
-#include "util/MVGLog.h"
-#include "util/MVGUtil.h"
+#include "mayaMVG/context/MVGManipContainer.h"
+#include "mayaMVG/context/MVGContext.h"
+#include "mayaMVG/util/MVGLog.h"
+#include "mayaMVG/util/MVGUtil.h"
 #include <maya/MFnDagNode.h>
 
 using namespace mayaMVG;

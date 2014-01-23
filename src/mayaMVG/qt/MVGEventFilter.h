@@ -1,7 +1,7 @@
 #pragma once
 
-#include <QtCore/QObject>
-#include <QtCore/QPoint>
+#include <QObject>
+#include <QPoint>
 #include <maya/MDagPath.h>
 #include <maya/MCallbackIdArray.h>
 
