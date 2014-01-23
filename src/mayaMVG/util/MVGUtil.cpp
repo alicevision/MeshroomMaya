@@ -70,7 +70,7 @@ void MVGUtil::populateMVGMenu(MVGMenu* menu) {
 }
 
 QWidget* MVGUtil::getMVGMenuLayout() {
-	return MQtUtil::findWindow("mayaMVG");
+	return MQtUtil::findLayout("mvgMenuPanel");
 }
 
 QWidget* MVGUtil::getMVGLeftViewportLayout() {
