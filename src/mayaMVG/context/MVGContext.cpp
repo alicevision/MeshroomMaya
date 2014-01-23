@@ -6,6 +6,8 @@
 #include "mayaMVG/context/MVGContext.h"
 #include <maya/M3dView.h>
 #include <maya/MToolsInfo.h>
+#include <maya/MPointArray.h>
+#include <maya/MFnMesh.h>
 
 
 
@@ -50,6 +52,43 @@ void MVGContext::toolOffCleanup()
 
 MStatus MVGContext::doPress(MEvent & event)
 {
+	
+	if (event.mouseButton() == MEvent::kLeftMouse) {
+		if (!event.isModifierShift() && !event.isModifierControl()
+		        && !event.isModifierMiddleMouseButton()) {
+
+			short x, y;
+			event.getPosition(x, y);
+			if(m_points.size() > 3) {
+				
+				// get distance to origin
+				double distance = m_points[0].wpos.distanceTo(MPoint(0,0,0));
+
+				// as MPointArray
+				MPointArray vertices;
+				for(size_t i = 0; i < m_points.size(); ++i)
+					vertices.append(m_points[i].wpos+m_points[i].wdir*10); // FIXME
+
+				MFnMesh fn;
+				MObject m = fn.addPolygon(vertices, true, kMFnMeshPointTolerance, m_mesh);
+				if(m_mesh == MObject::kNullObj) {
+					MDagPath p;
+					MDagPath::getAPathTo(m, p);
+					p.extendToShape();
+					m_mesh = p.node();
+				}
+
+				m_points.clear();
+				return MPxContext::doPress(event);
+			}
+			MVGPoint p;
+			currentView().viewToWorld(x, y, p.wpos, p.wdir);
+			p.wdir.normalize();
+			m_points.push_back(p);
+			currentView().refresh();
+		}
+	}
+
 	return MPxContext::doPress(event);
 }
 
@@ -101,4 +140,9 @@ size_t MVGContext::mousePosX() const
 size_t MVGContext::mousePosY() const 
 {
 	return m_mousePosY;
+}
+
+MVGContext::vpoint_t MVGContext::points() const
+{
+	return m_points;	
 }

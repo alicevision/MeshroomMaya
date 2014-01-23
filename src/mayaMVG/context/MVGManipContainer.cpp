@@ -43,16 +43,44 @@ void MVGManipContainer::draw(M3dView & view, const MDagPath & path,
 	// get infos from context
 	if(!m_ctx)
 		return;
-	
+	MVGContext::vpoint_t points = m_ctx->points(); // have to cpy
+
+	// LINES
+	view.beginGL();
+	glPushAttrib(GL_ALL_ATTRIB_BITS);
+	glBegin(GL_LINES);
+	for(size_t i = 0; i < points.size(); ++i) {
+		glVertex3f(points[i].wpos.x, points[i].wpos.y, points[i].wpos.z);
+		glVertex3f(points[i].wpos.x+points[i].wdir.x*5000.f, points[i].wpos.y+points[i].wdir.y*5000.f, points[i].wpos.z+points[i].wdir.z*5000.f);
+	}
+	glEnd();
+	glPopAttrib();
+	view.endGL();
+
+
 	if(!MVGUtil::isMVGView(view) || !MVGUtil::isActiveView(view))
 		return;
+
+	// POINTS
+	view.beginGL();
+	glPushAttrib(GL_ALL_ATTRIB_BITS);
+	glBegin(GL_LINE_STRIP);
+	for(size_t i = 0; i < points.size(); ++i) {
+		glVertex3f(points[i].wpos.x+points[i].wdir.x*50.f, points[i].wpos.y+points[i].wdir.y*50.f, points[i].wpos.z+points[i].wdir.z*50.f);
+	}
+	glEnd();
+	glPopAttrib();
+	view.endGL();
+
+
+
+	// CURSOR
+	view.beginGL();
+	glPushAttrib(GL_ALL_ATTRIB_BITS);
 
 	size_t mousex = m_ctx->mousePosX();
 	size_t mousey = m_ctx->mousePosY();
 	GLdouble radius = 3.0;
-
-	view.beginGL();
-	glPushAttrib(GL_ALL_ATTRIB_BITS);
 	glMatrixMode(GL_PROJECTION);
 	glPushMatrix();
 	glLoadIdentity();
@@ -74,10 +102,9 @@ void MVGManipContainer::draw(M3dView & view, const MDagPath & path,
 	glPopMatrix();
 	glMatrixMode(GL_PROJECTION);
 	glPopMatrix();
+
 	glPopAttrib();
 	view.endGL();
-
-
 }
 
 void MVGManipContainer::setContext(MVGContext * ctx) {
