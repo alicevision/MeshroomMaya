@@ -14,6 +14,19 @@
 
 using namespace mayaMVG;
 
+
+namespace {
+	MStatus getCameraPathFromQbject(const QObject* obj, MDagPath& path) {
+		if(!obj)
+			return MS::kFailure;
+		QVariant panelName = obj->property("mvg_panel");
+		if(panelName.type()==QVariant::Invalid)
+			return MS::kFailure;
+		return (panelName.toString()=="left") ? MVGUtil::getMVGLeftCamera(path) : MVGUtil::getMVGRightCamera(path);
+	}
+}
+
+
 //
 // MVGKeyEventFilter
 //
@@ -58,41 +71,33 @@ bool MVGMouseEventFilter::eventFilter(QObject * obj, QEvent * e)
 		Qt::KeyboardModifiers modifiers = QApplication::keyboardModifiers();
 		// Camera Pan (Alt + Mid button)
 		if((modifiers & Qt::AltModifier) && (mouseevent->button() & Qt::MidButton)) {
-			// get panel name
-			QVariant panelName = obj->property("mvg_panel");
-			if(panelName.type()==QVariant::Invalid)
-				return QObject::eventFilter(obj, e);
-			// get camera dagpath
-			if(panelName.toString()=="left") {
-				if(!MVGUtil::getMVGLeftCamera(m_camPath))
-					return QObject::eventFilter(obj, e);
-			} else {
-				if(!MVGUtil::getMVGRightCamera(m_camPath))
-					return QObject::eventFilter(obj, e);
+			MDagPath cameraPath;
+			if(getCameraPathFromQbject(obj, cameraPath)) {
+				MFnCamera camera(cameraPath);
+				// enable camera pan/zoom
+				camera.setPanZoomEnabled(true);
+				// register click position
+				m_clickPos = mouseevent->pos();
+				// register camera film offset
+				m_cameraHPan = camera.horizontalPan();
+				m_cameraVPan = camera.verticalPan();
+				// set as tracking
+				m_tracking = true;
 			}
-			// register camera dagpath
-			MFnCamera camera(m_camPath);
-			// enable camera pan/zoom
-			camera.setPanZoomEnabled(true);
-			// register click position
-			m_clickPos = mouseevent->pos();
-			// register camera film offset
-			m_cameraHPan = camera.horizontalPan();
-			m_cameraVPan = camera.verticalPan();
-			// set as tracking
-			m_tracking = true;
 		}
 	} else if(e->type() == QEvent::MouseMove) {
 		if(!m_tracking)
 			return QObject::eventFilter(obj, e);
-		MFnCamera camera(m_camPath);
-		// compute mouse offset
-		QPointF offset = m_clickPos - mouseevent->pos();
-		offset /= camera.zoom()*500.f; // FIXME
-		// update camera pan
-		camera.setHorizontalPan(m_cameraHPan+offset.x());
-		camera.setVerticalPan(m_cameraVPan-offset.y());
-
+		MDagPath cameraPath;
+		if(getCameraPathFromQbject(obj, cameraPath)) {
+			MFnCamera camera(cameraPath);
+			// compute mouse offset
+			QPointF offset = m_clickPos - mouseevent->pos();
+			offset /= camera.zoom()*500.f; // FIXME
+			// update camera pan
+			camera.setHorizontalPan(m_cameraHPan+offset.x());
+			camera.setVerticalPan(m_cameraVPan-offset.y());
+		}
 	} else if(e->type() == QEvent::MouseButtonRelease) {
 		// disable tracking
 		m_tracking = false;
@@ -104,9 +109,12 @@ bool MVGMouseEventFilter::eventFilter(QObject * obj, QEvent * e)
 		float numSteps = numDegrees / 15.f;
 		numSteps /= 5.f; // FIXME
 		// update camera zoom
-		MFnCamera camera(m_camPath);
-		camera.setZoom(camera.zoom()-numSteps);
-		
+		MDagPath cameraPath;
+		if(getCameraPathFromQbject(obj, cameraPath)) {
+			MFnCamera camera(cameraPath);
+			camera.setZoom(camera.zoom()-numSteps);
+		}
+
 	}
 	return QObject::eventFilter(obj, e);
 }
