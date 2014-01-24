@@ -55,7 +55,7 @@ bool MVGMouseEventFilter::eventFilter(QObject * obj, QEvent * e)
 {
 	QMouseEvent * mouseevent = static_cast<QMouseEvent *>(e);
 	if (e->type() == QEvent::MouseButtonPress) {
-		Qt::KeyboardModifiers modifiers = QApplication::queryKeyboardModifiers();
+		Qt::KeyboardModifiers modifiers = QApplication::keyboardModifiers();
 		// Camera Pan (Alt + Mid button)
 		if((modifiers & Qt::AltModifier) && (mouseevent->button() & Qt::MidButton)) {
 			// get panel name
