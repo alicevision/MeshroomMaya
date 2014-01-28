@@ -1,0 +1,3 @@
+[submodule "src/openMVG"]
+	path = src/openMVG
+	url = http://github.com/openMVG/openMVG.git
