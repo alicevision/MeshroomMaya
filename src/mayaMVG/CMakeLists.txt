@@ -8,8 +8,8 @@ set(PLUGIN_VERSION_MINOR 0)
 # Compiler settings
 #
 if(UNIX)
-	set(CMAKE_C_COMPILER gcc-4.1)
-	set(CMAKE_CXX_COMPILER g++-4.1)
+	set(CMAKE_C_COMPILER gcc)
+	set(CMAKE_CXX_COMPILER g++)
 endif()
 
 #
@@ -40,6 +40,10 @@ set(project_BIN ${PROJECT_NAME}-${PLUGIN_VERSION_MAJOR}.${PLUGIN_VERSION_MINOR})
 # Plugin sources
 #
 file(GLOB_RECURSE PLUGIN_SRCS *.cpp *.cxx *.cc *.C *.c *.h *.hpp)
+file(GLOB_RECURSE REMOVEFILESUNITTEST *_test.cpp)
+
+#Remove the unit test files (not been used by the library)
+list(REMOVE_ITEM PLUGIN_SRCS ${REMOVEFILESUNITTEST})
 
 #
 # Qt MOC
@@ -61,3 +65,6 @@ include_directories(${CMAKE_CURRENT_BINARY_DIR})
 add_library(${project_BIN} SHARED ${PLUGIN_SRCS} ${MOC_SRCS} ${UISrcs})
 target_link_libraries(${project_BIN} ${MAYA_Foundation_LIBRARY} ${MAYA_OpenMaya_LIBRARY} ${MAYA_OpenMayaUI_LIBRARY} ${MAYA_OpenMayaFX_LIBRARY})
 maya_set_plugin_properties(${project_BIN})
+
+add_subdirectory(geometry)
+add_subdirectory(conversion)

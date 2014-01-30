@@ -13,8 +13,13 @@ set(CMAKE_MODULE_PATH "${MAINFOLDER}/cmake")
 #
 set(LIBRARY_OUTPUT_PATH "${MAINFOLDER}/lib")
 
+
+include_directories(openMVG/src/
+openMVG/src/third_party/eigen)
+
+add_subdirectory(openMVG/src/)
+
 #
 # Add Build Targets
 #
 add_subdirectory(mayaMVG)
-
