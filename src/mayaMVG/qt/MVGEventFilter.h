@@ -23,7 +23,6 @@ class MVGMouseEventFilter: public QObject {
         bool eventFilter(QObject *obj, QEvent *e);
 	private:
 		QPoint m_clickPos;
-		MDagPath m_camPath;
 		double m_cameraHPan;
 		double m_cameraVPan;
 		bool m_tracking;

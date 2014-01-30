@@ -18,7 +18,8 @@ public:
 	void selectCameras(const QList<QString>& cameraNames);
 
 private slots:
-	void on_camList_itemSelectionChanged();
+	void on_cameraList_itemSelectionChanged();
+	void on_cameraImportButton_clicked();
 
 private:
 	Ui::MVGMenu ui;
