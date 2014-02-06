@@ -20,8 +20,10 @@ public:
 private slots:
        void on_cameraList_itemSelectionChanged();
        void on_cameraImportButton_clicked();
+       void on_pointCloudImportButton_clicked();
+       
 private:
-	Ui::MVGMenu ui;
+       Ui::MVGMenu ui;
 };
 
-} // mayaMVG
+} // mayaMVG

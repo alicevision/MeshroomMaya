@@ -202,3 +202,56 @@ void MVGMenu::on_cameraImportButton_clicked() {
 // {
 //     directory.setPath(path);
 // }
+
+/**
+ * Get all points containing on the ply file
+ * Create for each points a maya particle
+ */
+void MVGMenu::on_pointCloudImportButton_clicked()
+{
+  std::string sPathToPly = ui.pointCloudFile->text().toStdString();
+  std::vector<readerMVG::Point3D> vec_point3D;
+  
+  if( !getPointCloudFromPly( sPathToPly, vec_point3D ) )
+  {
+    return;
+  }
+  
+  // Create particle context
+  MStatus status;
+  MObject particleNode;
+  
+  MString particleName = MString("PointCloud") + MString("ParticleShape");
+  MString nodeType = MString("particle");
+
+  MFnDependencyNode fnDn;
+  MObject parent = fnDn.create( nodeType, particleName, &status );
+  
+  MFnDagNode fnDag(parent);
+  particleNode = fnDag.child(0, &status);
+
+  MFnParticleSystem fnParticle( particleNode, &status );
+  MVectorArray array_position;
+  MVectorArray array_color;
+
+  // Get values
+  for( std::vector<readerMVG::Point3D>::const_iterator iter_point = vec_point3D.begin();
+          iter_point != vec_point3D.end();
+          iter_point++ )
+  {
+    array_position.append( MVector ( iter_point->position[0], iter_point->position[1], iter_point->position[2] ) );
+    array_color.append( MVector ( iter_point->color[0], iter_point->color[1], iter_point->color[2] ) );
+  }
+  
+  // Create new attribute particle
+  MFnTypedAttribute fnAttr;
+  fnParticle.addAttribute( fnAttr.create( MString( "rgbPP" ), MString( "rgbPP" ), MFnData::kVectorArray), MFnDependencyNode::kLocalDynamicAttr );
+  // Create an attribute to save the visibility of every points
+  //TODO To remove : fnParticle.addAttribute( fnAttr.create( MString( "visibility" ), MString( "visibility" ), MFnData::kIntArray ), MFnDependencyNode::kLocalDynamicAttr );
+  
+  // Save data
+  fnParticle.setPerParticleAttribute( MString("position"), array_position, &status );
+  fnParticle.setPerParticleAttribute( MString("rgbPP"), array_color, &status );
+  
+  status = fnParticle.saveInitialState();
+}
