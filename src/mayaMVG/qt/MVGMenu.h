@@ -6,23 +6,22 @@
 namespace mayaMVG {
 
 class MVGMenu: public QWidget {
-	Q_OBJECT
+       Q_OBJECT
 
 public:
-	MVGMenu(QWidget * parent = 0);
-	~MVGMenu();
+       MVGMenu(QWidget * parent = 0);
+       ~MVGMenu();
 
 public:
-	void addCamera(const QString& text);
-	void clear();
-	void selectCameras(const QList<QString>& cameraNames);
+       void addCamera(const QString& text);
+       void clear();
+       void selectCameras(const QList<QString>& cameraNames);
 
 private slots:
-	void on_cameraList_itemSelectionChanged();
-	void on_cameraImportButton_clicked();
-
+       void on_cameraList_itemSelectionChanged();
+       void on_cameraImportButton_clicked();
 private:
 	Ui::MVGMenu ui;
 };
 
-} // mayaMVG
+} // mayaMVG

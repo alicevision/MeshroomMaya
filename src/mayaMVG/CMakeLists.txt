@@ -58,13 +58,9 @@ qt4_wrap_ui(UISrcs
 	qt/ui/menuItem.ui)
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
-
 #
 # Maya plugin properties
 #
-add_library(${project_BIN} SHARED ${PLUGIN_SRCS} ${MOC_SRCS} ${UISrcs})
-target_link_libraries(${project_BIN} ${MAYA_Foundation_LIBRARY} ${MAYA_OpenMaya_LIBRARY} ${MAYA_OpenMayaUI_LIBRARY} ${MAYA_OpenMayaFX_LIBRARY})
+add_library(${project_BIN} SHARED ${PLUGIN_SRCS} ${MOC_SRCS} ${UISrcs} ../openMVG/src/software/SfMViewer/Ply.cpp)
+target_link_libraries(${project_BIN} ${MAYA_Foundation_LIBRARY} ${MAYA_OpenMaya_LIBRARY} ${MAYA_OpenMayaUI_LIBRARY} ${MAYA_OpenMayaFX_LIBRARY} stlplus openMVG_numeric openMVG_multiview )
 maya_set_plugin_properties(${project_BIN})
-
-add_subdirectory(geometry)
-add_subdirectory(conversion)
