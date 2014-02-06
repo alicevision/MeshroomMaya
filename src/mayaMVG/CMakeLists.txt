@@ -58,6 +58,7 @@ qt4_wrap_ui(UISrcs
 	qt/ui/menuItem.ui)
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
+add_subdirectory ( geometry )
 #
 # Maya plugin properties
 #
