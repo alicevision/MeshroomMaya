@@ -95,7 +95,7 @@ MStatus MVGContext::doPress(MEvent & event)
         MStatus status = selectionList.getDependNode( 0, objectParticles );
         if ( status == MStatus::kInvalidParameter )
         {
-          std::cout << "Point cloud doesn't exist" << std::endl;
+          LOG_ERROR("MVGContext::doPress", "Point cloud doesn't exist")
           return status;
         }
         
@@ -106,7 +106,7 @@ MStatus MVGContext::doPress(MEvent & event)
         MFnParticleSystem particles( particleNode, &status );
         if ( status == MStatus::kInvalidParameter )
         {
-          std::cout << "particleNode doesn't a MFnParticleSystem" << std::endl;
+          LOG_ERROR("MVGContext::doPress", "Invalid particle object")
           return status;
         }
 
@@ -219,14 +219,17 @@ MStatus MVGContext::doPress(MEvent & event)
         }
         
         //-----------------------------------------
-                
-        MFnMesh fn;
-        MObject m = fn.addPolygon(verticesReprojected, true, kMFnMeshPointTolerance, m_mesh);
-        if(m_mesh == MObject::kNullObj) {
-          MDagPath p;
-          MDagPath::getAPathTo(m, p);
-          p.extendToShape();
-          m_mesh = p.node();
+
+        MObject meshObj;               
+        if(!m_meshPath.isValid() || (m_meshPath.length() <= 0)) {
+          MFnMesh fn;
+          meshObj = fn.addPolygon(verticesReprojected, true, kMFnMeshPointTolerance, MObject::kNullObj, &status);        
+          MDagPath::getAPathTo(meshObj, m_meshPath);
+          m_meshPath.extendToShape();
+        } else {
+          MFnMesh fn(m_meshPath, &status);
+          MPlug outMeshPlug = fn.findPlug("inMesh", &status);
+          fn.addPolygon(verticesReprojected, true, kMFnMeshPointTolerance, outMeshPlug.node(), &status);
         }
 
         m_points.clear();
