@@ -306,6 +306,16 @@ MStatus MVGContext::doPress(MEvent & event)
   // Get current camera
   MDagPath dagPathCamera;
   currentView().getCamera( dagPathCamera );    
+  MFnDagNode dagNodeTr ( dagPathCamera.transform() );  
+  MDagPath dagPathCameraTr;
+  dagNodeTr.getPath( dagPathCameraTr );
+  MString cameraName = dagPathCameraTr.partialPathName();
+  if(cameraName == "persp" || cameraName == "top"
+    || cameraName == "front" || cameraName == "side")
+  {
+    return MPxContext::doPress(event);
+  }
+  
   openMVG::PinholeCamera camera = getCameraMVG( dagPathCamera );
   
   // Get 2D point in the openMVG space
@@ -361,6 +371,15 @@ MStatus MVGContext::doRelease(MEvent & event)
   // Get current camera
   MDagPath dagPathCamera;
   currentView().getCamera( dagPathCamera );    
+  
+  MFnDagNode dagNodeTr ( dagPathCamera.transform() );  
+  MDagPath dagPathCameraTr;
+  dagNodeTr.getPath( dagPathCameraTr );
+  MString cameraName = dagPathCameraTr.partialPathName();
+  if(cameraName == "persp" || cameraName == "top"
+    || cameraName == "front" || cameraName == "side")
+    return MPxContext::doRelease(event);
+  
   openMVG::PinholeCamera camera = getCameraMVG( dagPathCamera );
   
   // Get 2D point in the openMVG space
