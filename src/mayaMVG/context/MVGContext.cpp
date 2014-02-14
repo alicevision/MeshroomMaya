@@ -1,3 +1,4 @@
+#include <mayaMVG/geometry/nView2DpointTo3D.hpp>
 #include <mayaMVG/geometry/oneView2DpolygonTo3D.hpp>
 #include <openMVG/cameras/PinholeCamera.hpp>
 
@@ -25,6 +26,8 @@
 
 #include <maya/MFnNumericAttribute.h>  
 #include <maya/MPlugArray.h>  
+#include <maya/MFloatPointArray.h>  
+#include <maya/MItDependencyNodes.h>
 
 using namespace mayaMVG;
 
@@ -300,27 +303,48 @@ void MVGContext::addPointToAttribute( const MString& attributeName,
 
 MStatus MVGContext::doPress(MEvent & event)
 {
-  if (event.mouseButton() == MEvent::kLeftMouse) {
-    if (!event.isModifierShift() && !event.isModifierControl()
-            && !event.isModifierMiddleMouseButton()) {
-
-      short x, y;
-      event.getPosition(x, y);
-
-      if(m_points.size() > 3) 
-      {        
-        return createMesh( event );
+  // Get current camera
+  MDagPath dagPathCamera;
+  currentView().getCamera( dagPathCamera );    
+  openMVG::PinholeCamera camera = getCameraMVG( dagPathCamera );
+  
+  // Get 2D point in the openMVG space
+  short x, y;
+  event.getPosition(x, y);
+  MPoint pos3D;
+  MVector vec3D;
+  currentView().viewToWorld( x, y, pos3D, vec3D );
+    
+  openMVG::Vec2 pos2D = camera.Project( openMVG::Vec3( pos3D[0], 
+                                                       pos3D[1], 
+                                                       pos3D[2] ) );
+  // Check if there is a point under the mouse
+  MStatus status;
+  MFnMesh fnMesh( m_meshPath, &status );
+  
+  MFloatPointArray vertexArray;
+  fnMesh.getPoints( vertexArray );
+  if ( status && vertexArray.length( ) >= 4 )
+  {
+    for( int index = 0; index < vertexArray.length( ); index++ )
+    {
+      MFloatPoint point3D = vertexArray[index];
+      openMVG::Vec2 point2D = camera.Project( openMVG::Vec3( point3D[0], 
+                                                             point3D[1], 
+                                                             point3D[2] ) );
+      
+      double distance = (point2D - pos2D).cwiseAbs().sum();
+      
+      if ( distance < 7.0 )
+      {
+        selectedPoint.x = pos2D(0);
+        selectedPoint.y = pos2D(1);
+        selectedPoint.index = index;
+        continue;
       }
-      MVGPoint p;
-      currentView().viewToWorld(x, y, p.wpos, p.wdir);
-      p.spos[0] = x;
-      p.spos[1] = y;
-      p.wdir.normalize();
-      m_points.push_back(p);
-      currentView().refresh();
     }
   }
-
+  
   return MPxContext::doPress(event);
 }
 
@@ -331,6 +355,130 @@ MStatus MVGContext::doDrag(MEvent & event)
 
 MStatus MVGContext::doRelease(MEvent & event)
 {
+  MStatus status;
+  // Check if the 2D point moved 
+  
+  // Get current camera
+  MDagPath dagPathCamera;
+  currentView().getCamera( dagPathCamera );    
+  openMVG::PinholeCamera camera = getCameraMVG( dagPathCamera );
+  
+  // Get 2D point in the openMVG space
+  short x, y;
+  event.getPosition(x, y);
+  MPoint pos3D;
+  MVector vec3D;
+  currentView().viewToWorld( x, y, pos3D, vec3D );
+    
+  openMVG::Vec2 pos2D = camera.Project( openMVG::Vec3( pos3D[0], 
+                                                       pos3D[1], 
+                                                       pos3D[2] ) );
+  
+  double distance = (openMVG::Vec2( selectedPoint.x, selectedPoint.y ) - pos2D).cwiseAbs().sum();
+  
+  MFnMesh fnMesh( m_meshPath, &status );
+  
+  if ( status && selectedPoint.index != -1 && distance != 0.0 )
+  {
+    // Update the point
+    
+    // Add the new coordinate into mesh attribute 
+    MFnMesh fnMesh( m_meshPath );
+    MFloatPointArray vertexArray;
+    fnMesh.getPoints( vertexArray );
+    MObject cameraTransform = dagPathCamera.transform();  
+    MFnTransform transformCamera( cameraTransform );  
+    
+    // Write the new coordinate into mesh attribute
+    createCameraAttribute( transformCamera.partialPathName() );
+    addPointToAttribute( transformCamera.partialPathName(), selectedPoint.index, pos3D );
+    
+    // Compute triangulation if it is possible
+    
+    // Find all 2D positions and associated openMVG cameras
+    std::vector<geometry::PositionByCam> vec_position2dByCamera;
+    MFnDependencyNode depNodeMesh( m_meshPath.node( ) );
+    for(MItDependencyNodes it(MFn::kDependencyNode); !it.isDone(); it.next()) 
+    {
+      MDagPath p;
+      MDagPath::getAPathTo(it.item(), p);
+      MFnDependencyNode fn(p.node());
+      if(fn.typeName() == "camera") 
+      {
+        MFnDependencyNode fn(p.transform());
+        MString attributeName = fn.name();
+        
+        // Get 2D point
+        MPlug plugAttribute = depNodeMesh.findPlug( attributeName, &status );
+        if ( !status )
+          continue;
+        MPoint point3D;
+        if ( plugAttribute.isArray() )
+        {
+          MPlug plugtmp = plugAttribute.elementByLogicalIndex( selectedPoint.index );
+          for( unsigned i = 0; i<3; i++ )
+          {
+            MPlug child = plugtmp.child( i );
+            child.getValue( point3D[ i ]);
+          }
+        }
+        
+        // Get camera
+        MDagPath dagCamera;
+        MDagPath::getAPathTo( p.node(), dagCamera );
+        openMVG::PinholeCamera camera;
+        camera = getCameraMVG( dagCamera );
+        
+        // Project 3D point to 2D point in the camera space
+        openMVG::Vec2 point2D = camera.Project( openMVG::Vec3( point3D[0],
+                                                              point3D[1],
+                                                              point3D[2] ) );
+        
+        vec_position2dByCamera.push_back( geometry::PositionByCam( point2D, camera ) );
+      }
+    }
+    
+    // Triangulate if the point is already setted in 2 cameras
+    if ( vec_position2dByCamera.size() >= 2 )
+    {
+      // Triangulate point positon  
+      openMVG::Vec3 outPoint3D;
+      geometry::triangulatePosition( vec_position2dByCamera, outPoint3D );
+      
+      // Apply point triangluation  
+      MPlug plugPosition = depNodeMesh.findPlug( "position", true, &status );  
+      
+      vertexArray[selectedPoint.index][0] = outPoint3D(0);
+      vertexArray[selectedPoint.index][1] = outPoint3D(1);
+      vertexArray[selectedPoint.index][2] = outPoint3D(2);
+      fnMesh.setPoints( vertexArray );
+    }
+  }
+  else // Add point to create a face
+  { 
+    if (event.mouseButton() == MEvent::kLeftMouse) {
+      if (!event.isModifierShift() && !event.isModifierControl()
+              && !event.isModifierMiddleMouseButton()) {
+
+        short x, y;
+        event.getPosition(x, y);
+
+        if(m_points.size() > 3) 
+        {        
+          return createMesh( event );
+        }
+        MVGPoint p;
+        currentView().viewToWorld(x, y, p.wpos, p.wdir);
+        p.spos[0] = x;
+        p.spos[1] = y;
+        p.wdir.normalize();
+        m_points.push_back(p);
+        currentView().refresh();
+      }
+    }
+  }
+  selectedPoint.index = -1;
+  
   return MPxContext::doRelease(event);
 }
 

@@ -18,6 +18,11 @@ class MVGContext: public MPxContext {
             MPoint spos;
             MVector wdir;
         };
+        struct SelectedPoint {
+            double x;
+            double y;
+            size_t index;
+        };
         typedef std::vector<MVGPoint> vpoint_t;
         typedef std::vector<MVGPoint>::const_iterator vpointIt_t;
     public:
@@ -47,6 +52,8 @@ class MVGContext: public MPxContext {
         vpoint_t m_points;
         MDagPath m_meshPath;
         MVGContextEventFilter* m_eventFilter;
+        SelectedPoint selectedPoint;
+        
 };
 
 } // mayaMVG
