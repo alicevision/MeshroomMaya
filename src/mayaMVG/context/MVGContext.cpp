@@ -150,7 +150,7 @@ MStatus MVGContext::createMesh( MEvent & event )
   MStatus status = selectionList.getDependNode( 0, objectParticles );
   if ( status == MStatus::kInvalidParameter )
   {
-    std::cout << "Point cloud doesn't exist" << std::endl;
+    LOG_ERROR("MVGContext::doPress", "Point cloud doesn't exist")
     return status;
   }
   
@@ -161,7 +161,7 @@ MStatus MVGContext::createMesh( MEvent & event )
   MFnParticleSystem particles( particleNode, &status );
   if ( status == MStatus::kInvalidParameter )
   {
-    std::cout << "particleNode doesn't a MFnParticleSystem" << std::endl;
+    LOG_ERROR("MVGContext::doPress", "Invalid particle object")
     return status;
   }
 
@@ -193,10 +193,6 @@ MStatus MVGContext::createMesh( MEvent & event )
     vec_point2D.push_back( camera.Project( openMVG::Vec3( vertices[i][0], 
                                                           vertices[i][1], 
                                                           vertices[i][2] ) ) );
-    std::cout << " m_points[i].spos : " << m_points[i].spos[0] << "  " <<  m_points[i].spos[1] << std::endl; 
-    std::cout << " m_points[i].wpos : " << m_points[i].wpos[0] << "  " <<  m_points[i].wpos[1] << "  " <<  m_points[i].wpos[2] << std::endl; 
-    std::cout << " vec_point2D : " << vec_point2D[i][0] << "  " << vec_point2D[i][1] << std::endl; 
-    std::cout << " (*iter_point3D) : " << vertices[i][0] << "   " <<   vertices[i][1] << "   " <<   vertices[i][2] << std::endl; 
   }
   
   // Compute new position
@@ -224,32 +220,33 @@ MStatus MVGContext::createMesh( MEvent & event )
   {
     verticesReprojected.append( (*iter_point3D)[0], (*iter_point3D)[1], (*iter_point3D)[2], 0 );
     openMVG::Vec2 test = camera.Project(*iter_point3D);
-    std::cout << " (*iter_point2D AFTER) : " << test[0] << "   " << test[1] << std::endl; 
-    std::cout << " (*iter_point3D) : " << (*iter_point3D)[0] << "   " <<   (*iter_point3D)[1] << "   " <<   (*iter_point3D)[2] << std::endl; 
   }  
   
   //-----------------------------------------
-          
-  MFnMesh fn;
-  MObject m = fn.addPolygon( verticesReprojected, true, kMFnMeshPointTolerance, m_mesh );
-  MFnMesh fnMesh( m_mesh );
-  size_t nbVerticesBefore = fnMesh.numVertices();
-  if(m_mesh == MObject::kNullObj) {
-    MDagPath p;
-    MDagPath::getAPathTo(m, p);
-    p.extendToShape();
-    m_mesh = p.node();
+         
+  MObject meshObj;       
+  size_t nbVerticesBefore = 0, nbVerticesAfter;
+  if(!m_meshPath.isValid() || (m_meshPath.length() <= 0)) {
+    MFnMesh fn;
+    meshObj = fn.addPolygon(verticesReprojected, true, kMFnMeshPointTolerance, MObject::kNullObj, &status);        
+    MDagPath::getAPathTo(meshObj, m_meshPath);
+    m_meshPath.extendToShape();
+    nbVerticesAfter = fn.numVertices();    
+  } else {
+    MFnMesh fn(m_meshPath, &status);
+    nbVerticesBefore = fn.numVertices();
+    MPlug outMeshPlug = fn.findPlug("inMesh", &status);
+    fn.addPolygon(verticesReprojected, true, kMFnMeshPointTolerance, outMeshPlug.node(), &status);
+    nbVerticesAfter = fn.numVertices();
   }
-  MFnMesh fnMeshAfter( m_mesh );
-  size_t nbVerticesAfter = fnMeshAfter.numVertices();
+  
   // Create the attribute if it doesn't exists
   createCameraAttribute( transformCamera.partialPathName() );
   
-  //TODO Mettre a jour quand la création des faces sera bonne
-  for( size_t index = 0 /*nbVerticesBefore*/; index < nbVerticesAfter; index++ ) // Get the 4 new point ==> Get the associed MPlug ==> logicalIndex 
-  // Get the MObject to use  
+  int index4 = 0;
+  for( size_t index = nbVerticesBefore; index < nbVerticesAfter; index++, index4++ )
   {
-    addPointToAttribute( transformCamera.partialPathName(), index, verticesReprojected[ index ] ); //TODO put the vertex index
+    addPointToAttribute( transformCamera.partialPathName(), index, verticesReprojected[ index4 ] );
   }
   
   m_points.clear();
@@ -262,7 +259,7 @@ MStatus MVGContext::createMesh( MEvent & event )
  */
 void MVGContext::createCameraAttribute( const MString& attributeName )
 {
-  MFnDependencyNode depNodeMesh( m_mesh );
+  MFnDependencyNode depNodeMesh( m_meshPath.node() );
   if ( depNodeMesh.attribute( attributeName ).isNull( ) )
   {
     MFnNumericAttribute nAttr;
@@ -287,7 +284,7 @@ void MVGContext::addPointToAttribute( const MString& attributeName,
                                       const MPoint& point )
 {
   MStatus status;
-  MFnDependencyNode depNodeMesh( m_mesh );
+  MFnDependencyNode depNodeMesh( m_meshPath.node() );
   MPlug plugMeshIndex = depNodeMesh.findPlug( attributeName, true, &status );  
   if ( plugMeshIndex.isArray() )
   {
@@ -309,6 +306,7 @@ MStatus MVGContext::doPress(MEvent & event)
 
       short x, y;
       event.getPosition(x, y);
+
       if(m_points.size() > 3) 
       {        
         return createMesh( event );
