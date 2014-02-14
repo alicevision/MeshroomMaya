@@ -23,6 +23,8 @@
 #include <maya/MQuaternion.h>
 #include <maya/MMatrix.h>
 
+#include <maya/MFnNumericAttribute.h>  
+#include <maya/MPlugArray.h>  
 
 using namespace mayaMVG;
 
