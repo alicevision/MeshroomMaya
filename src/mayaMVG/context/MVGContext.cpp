@@ -22,7 +22,6 @@
 #include <maya/MFnTransform.h>
 #include <maya/MQuaternion.h>
 #include <maya/MMatrix.h>
-#include <maya/MPlugArray.h>
 
 
 using namespace mayaMVG;
@@ -33,6 +32,68 @@ namespace {
   }
 }
 
+openMVG::PinholeCamera getCameraMVG( const MDagPath& dagPathCamera )
+{
+  MStatus status;
+  
+  MObject cameraShape = dagPathCamera.node();
+  MObject cameraTransform = dagPathCamera.transform();
+  MFnCamera fnCamera( cameraShape );     
+  MFnTransform transformCamera( cameraTransform );  
+    
+  openMVG::Mat3 mat_K;
+  openMVG::Mat3 mat_R;
+  openMVG::Vec3 vec_t;
+  
+  // Get rotation MVG matrix
+  MQuaternion quaternion;
+  transformCamera.getRotation( quaternion,
+                                MSpace::kTransform );
+  MMatrix matrixRotationMaya = quaternion.asMatrix();
+  
+  // TODO To simplify        
+  for( int i = 0; i < 3; i++ )
+  {
+    for( int j = 0; j < 3; j++ )
+    {
+      if ( i == 0 )
+        mat_R(i, j) = matrixRotationMaya[i][j];
+      else
+        mat_R(i, j) = -matrixRotationMaya[i][j];
+    }
+  }
+  
+  // Get translation MVG vector
+  MVector opticalCenterMaya = transformCamera.getTranslation( MSpace::kTransform );
+  openMVG::Vec3 opticalCenterOpenMVG( opticalCenterMaya[0], opticalCenterMaya[1], opticalCenterMaya[2] );
+  vec_t = (-1) * mat_R * opticalCenterOpenMVG;
+  
+  // Get intrinsic MVG matrix
+  MPlug plugCamera = fnCamera.findPlug( "imagePlane" ); 
+  MPlugArray array_plug;
+  plugCamera.connectedTo( array_plug, true, true );
+  MObject objectPlane = array_plug[0].node();        
+  MFnDagNode fnDagNodePlane( objectPlane, &status );
+  MDagPath dagPathImagePlane;
+  fnDagNodePlane.getPath( dagPathImagePlane );
+  dagPathImagePlane.extendToShape( );
+  MFnDependencyNode depNodePlane( dagPathImagePlane.node(), &status );
+  
+  int width = 0; 
+  int height = 0; 
+  
+  depNodePlane.findPlug( "width" ).getValue( width );
+  depNodePlane.findPlug( "height" ).getValue( height );
+  
+  double fov = fnCamera.horizontalFieldOfView( );
+  double focal = (double)width / tan( fov / 2. ) / 2.;
+  
+  mat_K << focal, 0, width / 2,
+            0, focal, height / 2,
+            0, 0, 1;
+
+  return openMVG::PinholeCamera( mat_K, mat_R, vec_t );
+}
 MVGContext::MVGContext()
   : m_eventFilter(NULL)
 {
@@ -64,6 +125,180 @@ void MVGContext::toolOffCleanup()
   MPxContext::toolOffCleanup();
 }
 
+MStatus MVGContext::createMesh( MEvent & event )
+{
+  // get distance to origin
+  double distance = m_points[0].wpos.distanceTo(MPoint(0,0,0));
+
+  // as MPointArray
+  MPointArray vertices;
+  for(size_t i = 0; i < m_points.size(); ++i)
+    vertices.append(m_points[i].wpos+m_points[i].wdir*10); // FIXME
+
+        
+  //-----------------------------------------
+  // Compute projected position
+  //-----------------------------------------
+  
+  // Get visible points for the current camera //TODO
+  MSelectionList selectionList;
+  selectionList.clear();
+  selectionList.add( "PointCloudParticle" );
+  MObject objectParticles;
+  MStatus status = selectionList.getDependNode( 0, objectParticles );
+  if ( status == MStatus::kInvalidParameter )
+  {
+    std::cout << "Point cloud doesn't exist" << std::endl;
+    return status;
+  }
+  
+  MObject particleNode;
+  MFnDagNode fnDag(objectParticles);
+  particleNode = fnDag.child(0, &status);
+  
+  MFnParticleSystem particles( particleNode, &status );
+  if ( status == MStatus::kInvalidParameter )
+  {
+    std::cout << "particleNode doesn't a MFnParticleSystem" << std::endl;
+    return status;
+  }
+
+  
+  MVectorArray array_position;
+  particles.getPerParticleAttribute( MString("position"), array_position, &status );
+  
+  std::vector<openMVG::Vec3> vec_particles;
+  for( int i = 0; i < array_position.length(); i++ )
+  {
+    vec_particles.push_back( openMVG::Vec3( array_position[i][0], array_position[i][1], array_position[i][2] ) );
+  }
+  
+  // Get current pinhole camera
+  MDagPath dagPathCamera;
+  currentView().getCamera( dagPathCamera );        
+  MObject cameraShape = dagPathCamera.node();
+  MObject cameraTransform = dagPathCamera.transform();
+  MFnCamera fnCamera( cameraShape );     
+  MFnTransform transformCamera( cameraTransform );  
+  
+  openMVG::PinholeCamera camera;
+  camera = getCameraMVG( dagPathCamera );
+  
+  // Get 2D position
+  std::vector<openMVG::Vec2> vec_point2D;
+  for(size_t i = 0; i < m_points.size(); ++i)
+  {
+    vec_point2D.push_back( camera.Project( openMVG::Vec3( vertices[i][0], 
+                                                          vertices[i][1], 
+                                                          vertices[i][2] ) ) );
+    std::cout << " m_points[i].spos : " << m_points[i].spos[0] << "  " <<  m_points[i].spos[1] << std::endl; 
+    std::cout << " m_points[i].wpos : " << m_points[i].wpos[0] << "  " <<  m_points[i].wpos[1] << "  " <<  m_points[i].wpos[2] << std::endl; 
+    std::cout << " vec_point2D : " << vec_point2D[i][0] << "  " << vec_point2D[i][1] << std::endl; 
+    std::cout << " (*iter_point3D) : " << vertices[i][0] << "   " <<   vertices[i][1] << "   " <<   vertices[i][2] << std::endl; 
+  }
+  
+  // Compute new position
+  // Get 3D points inside the face
+  std::vector<openMVG::Vec3> vec_insidePoints;
+  geometry::getInsidePoints( vec_point2D,
+                             vec_particles,
+                             camera, 
+                             vec_insidePoints );
+  
+          
+  // Compute the plane equation
+  std::vector<openMVG::Vec3> vec_facePoints3D;
+  geometry::computePlanEquation( vec_point2D,
+                                 vec_insidePoints,
+                                 camera,
+                                 vec_facePoints3D );
+  
+    
+  MPointArray verticesReprojected;
+  for( std::vector<openMVG::Vec3>::const_iterator iter_point3D = vec_facePoints3D.begin();
+            iter_point3D != vec_facePoints3D.end();
+            iter_point3D++
+      )
+  {
+    verticesReprojected.append( (*iter_point3D)[0], (*iter_point3D)[1], (*iter_point3D)[2], 0 );
+    openMVG::Vec2 test = camera.Project(*iter_point3D);
+    std::cout << " (*iter_point2D AFTER) : " << test[0] << "   " << test[1] << std::endl; 
+    std::cout << " (*iter_point3D) : " << (*iter_point3D)[0] << "   " <<   (*iter_point3D)[1] << "   " <<   (*iter_point3D)[2] << std::endl; 
+  }  
+  
+  //-----------------------------------------
+          
+  MFnMesh fn;
+  MObject m = fn.addPolygon( verticesReprojected, true, kMFnMeshPointTolerance, m_mesh );
+  MFnMesh fnMesh( m_mesh );
+  size_t nbVerticesBefore = fnMesh.numVertices();
+  if(m_mesh == MObject::kNullObj) {
+    MDagPath p;
+    MDagPath::getAPathTo(m, p);
+    p.extendToShape();
+    m_mesh = p.node();
+  }
+  MFnMesh fnMeshAfter( m_mesh );
+  size_t nbVerticesAfter = fnMeshAfter.numVertices();
+  // Create the attribute if it doesn't exists
+  createCameraAttribute( transformCamera.partialPathName() );
+  
+  //TODO Mettre a jour quand la création des faces sera bonne
+  for( size_t index = 0 /*nbVerticesBefore*/; index < nbVerticesAfter; index++ ) // Get the 4 new point ==> Get the associed MPlug ==> logicalIndex 
+  // Get the MObject to use  
+  {
+    addPointToAttribute( transformCamera.partialPathName(), index, verticesReprojected[ index ] ); //TODO put the vertex index
+  }
+  
+  m_points.clear();
+  return MPxContext::doPress(event);
+}
+
+/**
+ * Add an array point attribute to the mesh
+ *\param[in] attributeName 
+ */
+void MVGContext::createCameraAttribute( const MString& attributeName )
+{
+  MFnDependencyNode depNodeMesh( m_mesh );
+  if ( depNodeMesh.attribute( attributeName ).isNull( ) )
+  {
+    MFnNumericAttribute nAttr;
+    nAttr.setArray( true );
+    nAttr.setStorable( false );
+    nAttr.setWritable( false );  
+    
+    MObject pointObj = nAttr.createPoint( attributeName, attributeName );
+    nAttr.setArray( true );
+    depNodeMesh.addAttribute( pointObj, MFnDependencyNode::kLocalDynamicAttr );
+  }  
+}
+
+/**
+ * Add a point on the attribute
+ * \param[in] attributeName 
+ * \param[in] vertexIndex Index of the vertex into the mesh
+ * \param[in] point coordinate of the point
+ */
+void MVGContext::addPointToAttribute( const MString& attributeName,
+                                      const size_t vertexIndex,
+                                      const MPoint& point )
+{
+  MStatus status;
+  MFnDependencyNode depNodeMesh( m_mesh );
+  MPlug plugMeshIndex = depNodeMesh.findPlug( attributeName, true, &status );  
+  if ( plugMeshIndex.isArray() )
+  {
+    MPlug plugtmp = plugMeshIndex.elementByLogicalIndex( vertexIndex );
+    for( unsigned i = 0; i<3; i++ )
+    {
+      MPlug child = plugtmp.child( i );
+      child.setValue( point[ i ]);
+    }
+  }
+}
+       
+
 MStatus MVGContext::doPress(MEvent & event)
 {
   if (event.mouseButton() == MEvent::kLeftMouse) {
@@ -72,165 +307,9 @@ MStatus MVGContext::doPress(MEvent & event)
 
       short x, y;
       event.getPosition(x, y);
-      if(m_points.size() > 3) {
-        
-        // get distance to origin
-        double distance = m_points[0].wpos.distanceTo(MPoint(0,0,0));
-
-        // as MPointArray
-        MPointArray vertices;
-        for(size_t i = 0; i < m_points.size(); ++i)
-          vertices.append(m_points[i].wpos+m_points[i].wdir*10); // FIXME
-
-              
-        //-----------------------------------------
-        // Compute projected position
-        //-----------------------------------------
-        
-        // Get visible points for the current camera //TODO
-        MSelectionList selectionList;
-        selectionList.clear();
-        selectionList.add( "PointCloudParticle" );
-        MObject objectParticles;
-        MStatus status = selectionList.getDependNode( 0, objectParticles );
-        if ( status == MStatus::kInvalidParameter )
-        {
-          std::cout << "Point cloud doesn't exist" << std::endl;
-          return status;
-        }
-        
-        MObject particleNode;
-        MFnDagNode fnDag(objectParticles);
-        particleNode = fnDag.child(0, &status);
-        
-        MFnParticleSystem particles( particleNode, &status );
-        if ( status == MStatus::kInvalidParameter )
-        {
-          std::cout << "particleNode doesn't a MFnParticleSystem" << std::endl;
-          return status;
-        }
-
-        
-        MVectorArray array_position;
-        particles.getPerParticleAttribute( MString("position"), array_position, &status );
-        
-        std::vector<openMVG::Vec3> vec_particles;
-        for( int i = 0; i < array_position.length(); i++ )
-        {
-          vec_particles.push_back( openMVG::Vec3( array_position[i][0], array_position[i][1], array_position[i][2] ) );
-        }
-        
-        // Get current pinhole camera
-        MDagPath dagPathCamera;
-        currentView().getCamera( dagPathCamera );        
-        MObject cameraShape = dagPathCamera.node();
-        MObject cameraTransform = dagPathCamera.transform();
-        MFnCamera fnCamera( cameraShape );     
-        MFnTransform transformCamera( cameraTransform );  
-        
-        // Create openMVG camera from Maya camera
-        openMVG::Mat3 mat_K;
-        openMVG::Mat3 mat_R;
-        openMVG::Vec3 vec_t;
-        
-        // Get rotation MVG matrix
-        MQuaternion quaternion;
-        transformCamera.getRotation( quaternion,
-                                     MSpace::kTransform );
-        MMatrix matrixRotationMaya = quaternion.asMatrix();
-        
-        // TODO To simplify        
-        for( int i = 0; i < 3; i++ )
-        {
-          for( int j = 0; j < 3; j++ )
-          {
-            if ( i == 0 )
-              mat_R(j, i) = matrixRotationMaya[i][j];
-            else
-              mat_R(j, i) = -matrixRotationMaya[i][j];
-          }
-        }
-        
-        // Get translation MVG vector
-        MVector opticalCenterMaya = transformCamera.getTranslation( MSpace::kTransform );
-        openMVG::Vec3 opticalCenterOpenMVG( opticalCenterMaya[0], opticalCenterMaya[1], opticalCenterMaya[2] );
-        vec_t = (-1) * mat_R.inverse() * opticalCenterOpenMVG;
-        
-        // Get intrinsic MVG matrix
-        MPlug plugCamera = fnCamera.findPlug( "imagePlane" ); 
-        MPlugArray array_plug;
-        plugCamera.connectedTo( array_plug, true, true );
-        MObject objectPlane = array_plug[0].node();        
-        MFnDagNode fnDagNodePlane( objectPlane, &status );
-        MDagPath dagPathImagePlane;
-        fnDagNodePlane.getPath( dagPathImagePlane );
-        dagPathImagePlane.extendToShape( );
-        MFnDependencyNode depNodePlane( dagPathImagePlane.node(), &status );
-        
-        int width = 0; 
-        int height = 0; 
-        
-        depNodePlane.findPlug( "width" ).getValue( width );
-        depNodePlane.findPlug( "height" ).getValue( height );
-        
-        double fov = fnCamera.horizontalFieldOfView( );
-        double focal = (double)width / tan( fov / 2. ) / 2.;
-        
-        mat_K << focal, 0, width / 2,
-                 0, focal, height / 2,
-                 0, 0, 1;
-                         
-        openMVG::PinholeCamera camera( mat_K, mat_R.inverse(), vec_t );
-        
-        // Get 2D position
-        std::vector<openMVG::Vec2> vec_point2D;
-        for(size_t i = 0; i < m_points.size(); ++i)
-        {
-          vec_point2D.push_back( camera.Project( openMVG::Vec3( vertices[i][0], 
-                                                                vertices[i][1], 
-                                                                vertices[i][2] ) ) );
-        }
-        
-        // Compute new position
-        // Get 3D points inside the face
-        std::vector<openMVG::Vec3> vec_insidePoints;
-        geometry::getInsidePoints( vec_point2D,
-                                   vec_particles,
-                                   camera, 
-                                   vec_insidePoints );
-        
-                
-        // Compute the plane equation
-        std::vector<openMVG::Vec3> vec_facePoints3D;
-        geometry::computePlanEquation( vec_point2D,
-                                       vec_insidePoints,
-                                       camera,
-                                       vec_facePoints3D );
-        
-        MPointArray verticesReprojected;
-        size_t i = 0;
-        for( std::vector<openMVG::Vec3>::const_iterator iter_point3D = vec_facePoints3D.begin();
-                  iter_point3D != vec_facePoints3D.end();
-                  iter_point3D++,
-                  i++
-           )
-        {
-          verticesReprojected.append( (*iter_point3D)[0], (*iter_point3D)[1], (*iter_point3D)[2], 0 );
-        }
-        
-        //-----------------------------------------
-                
-        MFnMesh fn;
-        MObject m = fn.addPolygon(verticesReprojected, true, kMFnMeshPointTolerance, m_mesh);
-        if(m_mesh == MObject::kNullObj) {
-          MDagPath p;
-          MDagPath::getAPathTo(m, p);
-          p.extendToShape();
-          m_mesh = p.node();
-        }
-
-        m_points.clear();
-        return MPxContext::doPress(event);
+      if(m_points.size() > 3) 
+      {        
+        return createMesh( event );
       }
       MVGPoint p;
       currentView().viewToWorld(x, y, p.wpos, p.wdir);
