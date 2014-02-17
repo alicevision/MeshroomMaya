@@ -388,7 +388,7 @@ MStatus MVGContext::doRelease(MEvent & event)
   MPoint pos3D;
   MVector vec3D;
   currentView().viewToWorld( x, y, pos3D, vec3D );
-    
+  pos3D += vec3D * 10;
   openMVG::Vec2 pos2D = camera.Project( openMVG::Vec3( pos3D[0], 
                                                        pos3D[1], 
                                                        pos3D[2] ) );
