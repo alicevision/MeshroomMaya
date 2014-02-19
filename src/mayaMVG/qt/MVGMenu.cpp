@@ -8,6 +8,7 @@
 
 #include <QHBoxLayout>
 #include <QPushButton>
+#include <QFileDialog>
 #include "mayaMVG/qt/MVGMenu.h"
 #include "mayaMVG/qt/MVGMenuItem.h"
 #include "mayaMVG/util/MVGLog.h"
@@ -270,4 +271,19 @@ void MVGMenu::importPointCloud( const std::string& sPathToPly,
   fnParticle.setPerParticleAttribute( MString("rgbPP"), array_color, &status );
   
   status = fnParticle.saveInitialState();
+}
+
+
+void MVGMenu::on_projectBrowseButton_clicked()
+{
+  QString dir = QFileDialog::getExistingDirectory( this,
+                                                   tr("Choose outIncremental directory "),
+                                                   QString::null);
+  if (dir.isEmpty())
+  {    
+    LOG_ERROR("MVGMenu::on_projectBrowseButton_clicked", "OutIncremental directory doesn't exist")
+    return;
+  }
+  std::cout << "dir : " << dir.toStdString() << std::endl;
+  ui.outIncrementalDir->setText( dir );
 }

@@ -22,7 +22,8 @@ private slots:
       void on_cameraImportButton_clicked();
       void on_pointCloudImportButton_clicked();
       void on_densePointCloudImportButton_clicked();
-       
+      void on_projectBrowseButton_clicked();
+      
 private:
       void importPointCloud( const std::string& sPathToPly,
                              const std::string& sParticleName );

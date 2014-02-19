@@ -102,7 +102,7 @@
                  </widget>
                 </item>
                 <item>
-                 <widget class="QToolButton" name="cameraBrowseButton">
+                 <widget class="QToolButton" name="projectBrowseButton">
                   <property name="text">
                    <string>...</string>
                   </property>
