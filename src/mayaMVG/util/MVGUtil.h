@@ -30,6 +30,7 @@ struct MVGUtil {
 	// context
 	static MStatus createMVGContext();
 	static MStatus deleteMVGContext();
+  static MStatus activeContext(); 
 	// cameras
 	static MStatus getMVGLeftCamera(MDagPath& path);
 	static MStatus setMVGLeftCamera(MString camera);

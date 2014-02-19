@@ -23,6 +23,7 @@ private slots:
       void on_pointCloudImportButton_clicked();
       void on_densePointCloudImportButton_clicked();
       void on_projectBrowseButton_clicked();
+      void on_activeContextButton_clicked();
       
 private:
       void importPointCloud( const std::string& sPathToPly,

@@ -284,6 +284,10 @@ void MVGMenu::on_projectBrowseButton_clicked()
     LOG_ERROR("MVGMenu::on_projectBrowseButton_clicked", "OutIncremental directory doesn't exist")
     return;
   }
-  std::cout << "dir : " << dir.toStdString() << std::endl;
   ui.outIncrementalDir->setText( dir );
+}
+
+void MVGMenu::on_activeContextButton_clicked()
+{
+  MVGUtil::activeContext();
 }

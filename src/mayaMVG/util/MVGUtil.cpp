@@ -175,7 +175,14 @@ MStatus MVGUtil::addToMayaSelection(MString camera) {
 }
 
 MStatus MVGUtil::clearMayaSelection() {
-	return MGlobal::executePythonCommand(
-		"import maya.cmds as cmds\n"
-		"cmds.select(cl=True)");
+  return MGlobal::executePythonCommand(
+    "import maya.cmds as cmds\n"
+    "cmds.select(cl=True)");
+}
+
+MStatus MVGUtil::activeContext() 
+{
+  return MGlobal::executePythonCommand(
+    "import maya.cmds as cmds\n"
+    "cmds.setToolTo('MVGTool1')\n");
 }
