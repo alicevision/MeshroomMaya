@@ -101,7 +101,7 @@ bool MVGMouseEventFilter::eventFilter(QObject * obj, QEvent * e)
     {
       MFnCamera camera(cameraPath);
       // compute mouse offset
-      QPoint offset = m_clickPos - mouseevent->pos();
+      QPointF offset = m_clickPos - mouseevent->pos();
       offset *= camera.zoom() / 1050.f; // FIXME
       
       camera.setHorizontalPan( m_cameraHPan + offset.x( ) );
@@ -122,10 +122,10 @@ bool MVGMouseEventFilter::eventFilter(QObject * obj, QEvent * e)
     if(getCameraPathFromQbject(obj, cameraPath)) 
     {
       MFnCamera camera(cameraPath);
-      QPoint positionAfterZoom;
+      QPointF positionAfterZoom;
       
       QWidget* wid = (QWidget*)obj;
-      QPoint center( wid->width( ) / 2, wid->height( ) / 2 );
+      QPointF center( wid->width( ) / 2, wid->height( ) / 2 );
       
       if( wheelevent->delta() > 0 )
       {
@@ -142,7 +142,7 @@ bool MVGMouseEventFilter::eventFilter(QObject * obj, QEvent * e)
         positionAfterZoom.setY( ( mouseevent->pos().y() - center.y() ) * 1.15 + center.y() );
       }
       // Apply pan to stay at the same point
-      QPoint offset = mouseevent->pos() - positionAfterZoom;
+      QPointF offset = mouseevent->pos() - positionAfterZoom;
       offset *= camera.zoom() / 1050.f; // FIXME
       
       camera.setHorizontalPan( camera.horizontalPan() + offset.x( ) );

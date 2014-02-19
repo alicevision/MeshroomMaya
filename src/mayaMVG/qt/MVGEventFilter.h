@@ -1,7 +1,7 @@
 #pragma once
 
 #include <QObject>
-#include <QPoint>
+#include <QPointF>
 #include <maya/MDagPath.h>
 #include <maya/MCallbackIdArray.h>
 
@@ -22,7 +22,7 @@ class MVGMouseEventFilter: public QObject {
     protected:
         bool eventFilter(QObject *obj, QEvent *e);
   private:
-    QPoint m_clickPos;
+    QPointF m_clickPos;
     double m_cameraHPan;
     double m_cameraVPan;
     bool m_tracking;
