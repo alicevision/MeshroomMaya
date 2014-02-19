@@ -21,11 +21,11 @@ class MVGMouseEventFilter: public QObject {
         MVGMouseEventFilter();
     protected:
         bool eventFilter(QObject *obj, QEvent *e);
-	private:
-		QPoint m_clickPos;
-		double m_cameraHPan;
-		double m_cameraVPan;
-		bool m_tracking;
+  private:
+    QPoint m_clickPos;
+    double m_cameraHPan;
+    double m_cameraVPan;
+    bool m_tracking;
 };
 
 class MVGWindowEventFilter: public QObject {
@@ -34,9 +34,9 @@ class MVGWindowEventFilter: public QObject {
     protected:
         bool eventFilter(QObject *obj, QEvent *e);
     private:
-		MCallbackIdArray m_ids;
-    	MVGMouseEventFilter* m_mouseFilter;
-    	MVGKeyEventFilter* m_keyFilter;
+    MCallbackIdArray m_ids;
+      MVGMouseEventFilter* m_mouseFilter;
+      MVGKeyEventFilter* m_keyFilter;
 };
 
 class MVGContextEventFilter: public QObject {
