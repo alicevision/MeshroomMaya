@@ -124,8 +124,8 @@ void createMayaCamera( const readerMVG::CameraOpenMVG& cameraOpenMVG )
   // Apply transation
   openMVG::Vec3 optical_center = (-1) * cameraOpenMVG.camera._R.transpose() * cameraOpenMVG.camera._t;
   fnTransformCamera.setTranslation( MVector( optical_center( 0 ),
-                                            optical_center( 1 ),
-                                            optical_center( 2 ) ),
+                                             optical_center( 1 ),
+                                             optical_center( 2 ) ),
                                   MSpace::kTransform );
   
   // Lock transformation
@@ -172,7 +172,7 @@ void createMayaCamera( const readerMVG::CameraOpenMVG& cameraOpenMVG )
 void MVGMenu::on_cameraImportButton_clicked() {
   ui.progressBar->setVisible(true);
   ui.cancelButton->setVisible(true);
-  std::string pathViewTxt = ui.cameraFile->text().toStdString();
+  std::string pathViewTxt = ui.outIncrementalDir->text().toStdString() + "/SfM_output/views.txt";
   
   std::vector<readerMVG::CameraOpenMVG> vec_cameraOpenMVG;
   if ( !readerMVG::readCameras( pathViewTxt, vec_cameraOpenMVG ) )
@@ -202,6 +202,16 @@ void MVGMenu::on_cameraImportButton_clicked() {
 // {
 //     directory.setPath(path);
 // }
+/**
+ * Get all points containing on the dense ply file
+ * Create for each points a maya particle
+ */
+void MVGMenu::on_densePointCloudImportButton_clicked()
+{  
+  std::string sPathToPly = ui.outIncrementalDir->text().toStdString() + "/PMVS/models/pmvs_optionMiMode/new.ply";
+  importPointCloud( sPathToPly, "DensePointCloudParticleShapeDense" ) ;
+}
+
 
 /**
  * Get all points containing on the ply file
@@ -209,7 +219,14 @@ void MVGMenu::on_cameraImportButton_clicked() {
  */
 void MVGMenu::on_pointCloudImportButton_clicked()
 {
-  std::string sPathToPly = ui.pointCloudFile->text().toStdString();
+  std::string sPathToPly = ui.outIncrementalDir->text().toStdString() + "/SfM_output/clouds/calib.ply";
+  importPointCloud( sPathToPly, "PointCloudParticleShape" );
+}
+
+void MVGMenu::importPointCloud( const std::string& sPathToPly,
+                                const std::string& sParticleName )
+{
+  MString particleName = sParticleName.c_str();
   std::vector<readerMVG::Point3D> vec_point3D;
   
   if( !getPointCloudFromPly( sPathToPly, vec_point3D ) )
@@ -221,7 +238,6 @@ void MVGMenu::on_pointCloudImportButton_clicked()
   MStatus status;
   MObject particleNode;
   
-  MString particleName = MString("PointCloud") + MString("ParticleShape");
   MString nodeType = MString("particle");
 
   MFnDependencyNode fnDn;

@@ -95,9 +95,9 @@
                  <number>0</number>
                 </property>
                 <item>
-                 <widget class="QLineEdit" name="cameraFile">
+                 <widget class="QLineEdit" name="outIncrementalDir">
                   <property name="placeholderText">
-                   <string>(*.bin)</string>
+                   <string>(outIncremental directory)</string>
                   </property>
                  </widget>
                 </item>
@@ -121,52 +121,7 @@
                 <item>
                  <widget class="QPushButton" name="cameraImportButton">
                   <property name="text">
-                   <string>Import</string>
-                  </property>
-                 </widget>
-                </item>
-               </layout>
-              </item>
-             </layout>
-            </widget>
-           </item>
-           <item>
-            <widget class="QGroupBox" name="pointCloudGroupBox">
-             <property name="title">
-              <string>Point cloud</string>
-             </property>
-             <property name="flat">
-              <bool>true</bool>
-             </property>
-             <layout class="QVBoxLayout" name="verticalLayout_4">
-              <property name="spacing">
-               <number>2</number>
-              </property>
-              <property name="leftMargin">
-               <number>6</number>
-              </property>
-              <property name="rightMargin">
-               <number>6</number>
-              </property>
-              <item>
-               <layout class="QHBoxLayout" name="pointCloudHLayout">
-                <property name="spacing">
-                 <number>0</number>
-                </property>
-                <item>
-                 <widget class="QLineEdit" name="pointCloudFile">
-                  <property name="placeholderText">
-                   <string>(*.ply)</string>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <widget class="QToolButton" name="pointCloudBrowseButton">
-                  <property name="text">
-                   <string>...</string>
-                  </property>
-                  <property name="arrowType">
-                   <enum>Qt::NoArrow</enum>
+                   <string>Import camera</string>
                   </property>
                  </widget>
                 </item>
@@ -180,7 +135,21 @@
                 <item>
                  <widget class="QPushButton" name="pointCloudImportButton">
                   <property name="text">
-                   <string>Import</string>
+                   <string>Import point cloud</string>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
+              </item>
+              <item>
+               <layout class="QHBoxLayout" name="densePointCloudCmdHLayout">
+                <property name="spacing">
+                 <number>0</number>
+                </property>
+                <item>
+                 <widget class="QPushButton" name="densePointCloudImportButton">
+                  <property name="text">
+                   <string>Import dense point cloud (PMVS)</string>
                   </property>
                  </widget>
                 </item>
