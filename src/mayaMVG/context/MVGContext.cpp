@@ -472,6 +472,13 @@ MStatus MVGContext::doRelease(MEvent & event)
       vertexArray[selectedPoint.index][2] = outPoint3D(2);
       fnMesh.setPoints( vertexArray );
     }
+    else
+    {
+      vertexArray[selectedPoint.index][0] = pos3D(0);
+      vertexArray[selectedPoint.index][1] = pos3D(1);
+      vertexArray[selectedPoint.index][2] = pos3D(2);
+      fnMesh.setPoints( vertexArray );
+    }
   }
   else // Add point to create a face
   { 
