@@ -99,7 +99,7 @@ void createMayaCamera( const readerMVG::CameraOpenMVG& cameraOpenMVG )
   
   // Insert intrinsic parameters
   camera.setVerticalFilmAperture( defVFA );
-  camera.setFilmFit( MFnCamera:: kVerticalFilmFit );
+  camera.setFilmFit( MFnCamera:: kHorizontalFilmFit );
   camera.setHorizontalFieldOfView( fov );
   
   // Apply rotation
@@ -137,7 +137,6 @@ void createMayaCamera( const readerMVG::CameraOpenMVG& cameraOpenMVG )
   depNodeCamera.findPlug( "rotateY" ).setLocked( true );
   depNodeCamera.findPlug( "rotateZ" ).setLocked( true );
   
-  
   // Create image plane
   MObject planeTransform = dagModifier.createNode("imagePlane", MObject::kNullObj, &status);
   dagModifier.doIt();
@@ -159,6 +158,9 @@ void createMayaCamera( const readerMVG::CameraOpenMVG& cameraOpenMVG )
   depNodePlane.findPlug( "dic" ).setValue( 1 );
   depNodePlane.findPlug( "width" ).setValue( (int)width );
   depNodePlane.findPlug( "height" ).setValue( (int)height );
+  depNodePlane.findPlug( "displayOnlyIfCurrent" ).setValue( 1 );
+  depNodePlane.findPlug( "fit" ).setValue( 2 );
+  
   
   // Connect image plane to camera
   MPlug plugMessage = depNodePlane.findPlug( "message" );
