@@ -78,8 +78,6 @@ bool MVGMouseEventFilter::eventFilter(QObject * obj, QEvent * e)
       MDagPath cameraPath;
       if(getCameraPathFromQbject(obj, cameraPath)) {
         MFnCamera camera(cameraPath);
-        // enable camera pan/zoom
-        camera.setPanZoomEnabled(true);
         // register click position
         m_clickPos = mouseevent->pos();
         // register camera film offset
@@ -102,7 +100,7 @@ bool MVGMouseEventFilter::eventFilter(QObject * obj, QEvent * e)
       MFnCamera camera(cameraPath);
       // compute mouse offset
       QPointF offset = m_clickPos - mouseevent->pos();
-      offset *= camera.zoom() / 1050.f; // FIXME
+      offset *= camera.zoom() / 190.f; // FIXME
       
       camera.setHorizontalPan( m_cameraHPan + offset.x( ) );
       camera.setVerticalPan( m_cameraVPan - offset.y( ) );
@@ -143,7 +141,7 @@ bool MVGMouseEventFilter::eventFilter(QObject * obj, QEvent * e)
       }
       // Apply pan to stay at the same point
       QPointF offset = mouseevent->pos() - positionAfterZoom;
-      offset *= camera.zoom() / 1050.f; // FIXME
+      offset *= camera.zoom() / 190.f; // FIXME
       
       camera.setHorizontalPan( camera.horizontalPan() + offset.x( ) );
       camera.setVerticalPan( camera.verticalPan() - offset.y( ) );

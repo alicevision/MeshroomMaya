@@ -137,6 +137,9 @@ void createMayaCamera( const readerMVG::CameraOpenMVG& cameraOpenMVG )
   depNodeCamera.findPlug( "rotateY" ).setLocked( true );
   depNodeCamera.findPlug( "rotateZ" ).setLocked( true );
   
+  // enable camera pan/zoom
+  camera.setPanZoomEnabled(true);
+  
   // Create image plane
   MObject planeTransform = dagModifier.createNode("imagePlane", MObject::kNullObj, &status);
   dagModifier.doIt();
