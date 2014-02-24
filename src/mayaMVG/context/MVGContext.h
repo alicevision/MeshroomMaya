@@ -47,12 +47,13 @@ class MVGContext: public MPxContext {
                                   const size_t vertexIndex,
                                   const MPoint& point );
         void createCameraAttribute( const MString& nameAttribute );
-    	size_t m_mousePosX;
-    	size_t m_mousePosY;
+        size_t m_mousePosX;
+        size_t m_mousePosY;
         vpoint_t m_points;
-        MDagPath m_meshPath;
         MVGContextEventFilter* m_eventFilter;
         SelectedPoint selectedPoint;
+    public:
+        MDagPath m_meshPath;
         
 };
 

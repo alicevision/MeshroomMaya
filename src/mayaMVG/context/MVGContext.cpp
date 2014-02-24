@@ -28,6 +28,8 @@
 #include <maya/MPlugArray.h>  
 #include <maya/MFloatPointArray.h>  
 #include <maya/MItDependencyNodes.h>
+#include <maya/MNodeMessage.h>
+
 
 using namespace mayaMVG;
 
@@ -128,6 +130,125 @@ void MVGContext::toolOffCleanup()
   if(rightViewport)
     rightViewport->installEventFilter(m_eventFilter);
   MPxContext::toolOffCleanup();
+}
+
+/** 
+ * Remove node attributes when it is remove
+ */
+void removeNode(MNodeMessage::AttributeMessage msg, MPlug &plug, void *clientData)
+{
+  if ( msg & MNodeMessage::kAttributeEval )
+  {
+    std::cout << "kAttributeEval    an attribute of this node has been evaluated" << std::endl;
+  }
+  else if ( msg & MNodeMessage::kAttributeSet )
+  {
+    std::cout << "kAttributeSet   an attribute value of this node has been set" << std::endl;
+  }
+  
+  else if ( msg & MNodeMessage::kConnectionBroken )
+  {
+    std::cout << "kConnectionBroken   a connection has been broken for an attribute of this node" << std::endl;
+  }
+  else if ( msg & MNodeMessage::kConnectionMade )
+  {
+    std::cout << "kConnectionMade   a connection has been made to an attribute of this node" << std::endl;
+  }
+  
+  else if ( msg & MNodeMessage::kAttributeLocked )
+  {
+    std::cout << "kAttributeLocked    an attribute of this node has been locked" << std::endl;
+  }
+  else if ( msg & MNodeMessage::kAttributeUnlocked )
+  {
+    std::cout << "kAttributeUnlocked    an attribute of this node has been unlocked" << std::endl;
+  }
+  
+  else if ( msg & MNodeMessage::kAttributeAdded )
+  {
+    std::cout << "kAttributeAdded   an attribute has been added to this node" << std::endl;
+  }
+  else if ( msg & MNodeMessage::kAttributeRemoved )
+  {
+    std::cout << "kAttributeRemoved   an attribute has been removed from this node" << std::endl;
+  }
+  
+  else if ( msg & MNodeMessage::kAttributeRenamed )
+  {
+    std::cout << "kAttributeRenamed   an attribute of this node has been renamed" << std::endl;
+  }
+  else if ( msg & MNodeMessage::kAttributeKeyable )
+  {
+    std::cout << "kAttributeKeyable   an attribute of this node has been marked keyable" << std::endl;
+  }
+  else if ( msg & MNodeMessage::kAttributeUnkeyable )
+  {
+    std::cout << "kAttributeUnkeyable   an attribute of this node has been marked unkeyable" << std::endl;
+  }
+  else if ( msg & MNodeMessage::kIncomingDirection )
+  {
+    std::cout << "kIncomingDirection    the connection was coming into the node" << std::endl;
+  }
+  else if ( msg & MNodeMessage::kAttributeArrayAdded )
+  {
+    std::cout << "kAttributeArrayAdded    an array attribute has been added to this node" << std::endl;
+  }
+  else if ( msg & MNodeMessage::kAttributeArrayRemoved )
+  {
+    std::cout << "kAttributeArrayRemoved    an array attribute has been removed from this node" << std::endl;
+  }
+  else if ( msg & MNodeMessage::kOtherPlugSet )
+  {
+    std::cout << "kOtherPlugSet   the otherPlug data has been set" << std::endl;
+  }
+  else if ( msg & MNodeMessage::kLast )
+  {
+    std::cout << "kLast   last value of the enum" << std::endl;
+  }
+  else
+    std::cout << "Banane" << std::endl;
+  
+  
+  std::cout << "removeNode" << std::endl;
+  std::cout << "removeNode : " << msg <<  std::endl;
+  if ( !(msg & MNodeMessage::kAttributeRemoved) )
+  {
+    return;
+  }
+  
+  std::cout << "removeNode2" << std::endl;
+  MStatus status;
+  MVGContext* contextMVG = (MVGContext*) clientData;
+  int index = plug.logicalIndex();
+  for(MItDependencyNodes it(MFn::kDependencyNode); !it.isDone(); it.next()) 
+  {
+    MDagPath p;
+    MDagPath::getAPathTo(it.item(), p);
+    MFnDependencyNode fn(p.node());
+    MFnDependencyNode depNodeMesh( contextMVG->m_meshPath.node() );
+    if(fn.typeName() == "camera") 
+    {
+      MFnDependencyNode fn(p.transform());
+      MString attributeName = fn.name();
+      
+      // Get 2D point
+      MPlug plugAttribute = depNodeMesh.findPlug( attributeName, &status );
+      if ( !status )
+        continue;
+      MPoint point3D;
+      if ( plugAttribute.isArray() )
+      {
+        MPlug plugtmp = plugAttribute.elementByPhysicalIndex( index );
+        
+        //Remove the plug
+        //TODO
+        MSelectionList list;
+        list.add( plugtmp );
+        list.remove( 0 );
+        std::cout << "Remove index : " << index << std::endl;
+      }
+    }
+  }
 }
 
 MStatus MVGContext::createMesh( MEvent & event )
@@ -235,6 +356,8 @@ MStatus MVGContext::createMesh( MEvent & event )
     MDagPath::getAPathTo(meshObj, m_meshPath);
     m_meshPath.extendToShape();
     nbVerticesAfter = fn.numVertices();    
+    MObject obj = m_meshPath.node();
+    MNodeMessage::addAttributeAddedOrRemovedCallback ( obj, removeNode, this );
   } else {
     MFnMesh fn(m_meshPath, &status);
     nbVerticesBefore = fn.numVertices();
