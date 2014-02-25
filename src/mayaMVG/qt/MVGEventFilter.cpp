@@ -63,6 +63,7 @@ bool MVGKeyEventFilter::eventFilter(QObject * obj, QEvent * e)
 // MVGMouseEventFilter
 //
 MVGMouseEventFilter::MVGMouseEventFilter()
+: m_tracking(false)
 {
 }
 
@@ -88,7 +89,7 @@ bool MVGMouseEventFilter::eventFilter(QObject * obj, QEvent * e)
         m_tracking = true;
       }
     }
-  } 
+  }
   // Apply Pan 
   else if(e->type() == QEvent::MouseMove) 
   {
