@@ -17,7 +17,6 @@ struct MVGUtil {
 	static MStatus deleteMVGWindow();
 	static QWidget* getMVGWindow();
 	// window menu
-	static void populateMVGMenu(MVGMenu* menu);
 	static QWidget* getMVGMenuLayout();
 	// viewports
 	static QWidget* getMVGLeftViewportLayout();

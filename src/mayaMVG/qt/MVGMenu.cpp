@@ -24,48 +24,95 @@
 #include <maya/MFnTypedAttribute.h>
 #include <maya/MSelectionList.h>
 
-
+#include <maya/MItDependencyNodes.h>
 
 
 using namespace mayaMVG;
 
-MVGMenu::MVGMenu(QWidget * parent) : QWidget(parent) {
+MVGMenu::MVGMenu(QWidget * parent)
+: QWidget(parent)
+, _updateEnabled(true)
+{
 	ui.setupUi(this);
 	ui.progressBar->setVisible(false);
 	ui.cancelButton->setVisible(false);
 }
 
-MVGMenu::~MVGMenu() {
+MVGMenu::~MVGMenu()
+{
 }
 
-void MVGMenu::addCamera(const QString& cameraName) {
+void MVGMenu::addCamera(const QString& cameraName)
+{
 	if(cameraName.isEmpty())
 		return;
 	if(cameraName == "persp" || cameraName == "top"
 		|| cameraName == "front" || cameraName == "side")
 		return;
+	
 	MVGMenuItem * itemWidget = new MVGMenuItem(cameraName);
 	ui.cameraList->addItem(cameraName);
+	connect(
+		itemWidget, SIGNAL(signalWillChangeSelectedView(const QString&)),
+		this, SLOT(clearSelectedView(const QString&)));
+	
 	QListWidgetItem * item = ui.cameraList->item(ui.cameraList->count()-1);
 	ui.cameraList->setItemWidget(item, itemWidget);
 	item->setSizeHint(QSize(item->sizeHint().width(), 66));
 }
 
-void MVGMenu::clear() {
+void MVGMenu::populateMVGMenu()
+{
+  if( !_updateEnabled )
+    return;
+  
+	clear();
+  
+	for(MItDependencyNodes it(MFn::kDependencyNode); !it.isDone(); it.next())
+  {
+		MDagPath p;
+		MDagPath::getAPathTo(it.item(), p);
+		MFnDependencyNode fn(p.node());
+		if(fn.typeName() == "camera")
+    {
+			MFnDependencyNode fn(p.transform());
+			addCamera(fn.name().asChar());
+		}
+	}
+}
+
+void MVGMenu::clear()
+{
+	for(size_t i = 0; i <  ui.cameraList->count(); ++i)
+	{
+		disconnect(
+			ui.cameraList->itemWidget(ui.cameraList->item(i)), SIGNAL(signalWillChangeSelectedView(const QString&)),
+			this, SLOT(clearSelectedView(const QString&)));
+	}
 	ui.cameraList->clear();
 }
 
-void MVGMenu::selectCameras(const QList<QString>& cameraNames) {
+void MVGMenu::selectCameras(const QList<QString>& cameraNames)
+{
 	for(size_t i = 0; i <  ui.cameraList->count(); ++i)
 		ui.cameraList->item(i)->setSelected(cameraNames.contains(ui.cameraList->item(i)->text()));
 }
 
-// slot
-void MVGMenu::on_cameraList_itemSelectionChanged() {
+void MVGMenu::on_cameraList_itemSelectionChanged()
+{
 	QList<QListWidgetItem *> selectedItems = ui.cameraList->selectedItems();
 	MVGUtil::clearMayaSelection();
-	for(size_t i = 0; i < selectedItems.size(); ++i) {
+	for(size_t i = 0; i < selectedItems.size(); ++i)
+	{
 		MVGUtil::addToMayaSelection(MQtUtil::toMString(selectedItems[i]->text()));
+	}
+}
+
+void MVGMenu::clearSelectedView(const QString& view)
+{
+	for(size_t i = 0; i <  ui.cameraList->count(); ++i)
+	{
+		((MVGMenuItem *)ui.cameraList->itemWidget(ui.cameraList->item(i)))->clearView(view);
 	}
 }
 
@@ -175,7 +222,9 @@ void createMayaCamera( const readerMVG::CameraOpenMVG& cameraOpenMVG )
 }
 
 // slot
-void MVGMenu::on_cameraImportButton_clicked() {
+void MVGMenu::on_cameraImportButton_clicked()
+{
+  _updateEnabled = false;
   ui.progressBar->setVisible(true);
   ui.cancelButton->setVisible(true);
   std::string pathViewTxt = ui.outIncrementalDir->text().toStdString() + "/SfM_output/views.txt";
@@ -185,8 +234,6 @@ void MVGMenu::on_cameraImportButton_clicked() {
   {
     return;
   }
-    
-  
   
   size_t index = 1;
   size_t nbImages = vec_cameraOpenMVG.size();
@@ -201,6 +248,9 @@ void MVGMenu::on_cameraImportButton_clicked() {
   }
   ui.progressBar->setVisible(false);
   ui.cancelButton->setVisible(false);
+  
+  _updateEnabled = true;
+  populateMVGMenu();
 }
 
 // QString path = QFileDialog::getExistingDirectory (this, tr("Directory"), directory.path());

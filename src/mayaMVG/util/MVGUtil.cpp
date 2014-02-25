@@ -56,19 +56,6 @@ QWidget* MVGUtil::getMVGWindow() {
 	return MQtUtil::findWindow("mayaMVG");
 }
 
-void MVGUtil::populateMVGMenu(MVGMenu* menu) {
-	menu->clear();
-	for(MItDependencyNodes it(MFn::kDependencyNode); !it.isDone(); it.next()) {
-		MDagPath p;
-		MDagPath::getAPathTo(it.item(), p);
-		MFnDependencyNode fn(p.node());
-		if(fn.typeName() == "camera") {
-			MFnDependencyNode fn(p.transform());
-			menu->addCamera(fn.name().asChar());
-		}
-	}
-}
-
 QWidget* MVGUtil::getMVGMenuLayout() {
 	return MQtUtil::findLayout("mvgMenuPanel");
 }

@@ -65,7 +65,7 @@ namespace {
 		if(nodeFn.name().substring(0, 23)=="__PrenotatoPerDuplicare_")
 			return; // FIXME - allow duplication
 		MVGMenu* menu = static_cast<MVGMenu*>(userData);
-		MVGUtil::populateMVGMenu(menu);
+		menu->populateMVGMenu();
 	}
 
 
@@ -120,7 +120,7 @@ MStatus MVGCmd::doIt(const MArgList& args) {
 
 	// create MVG menu
 	MVGMenu* menu = new MVGMenu(NULL);
-	MVGUtil::populateMVGMenu(menu);
+	menu->populateMVGMenu();
 	MQtUtil::addWidgetToMayaLayout(menu, menuLayout);
 
 	// create maya MVGContext
