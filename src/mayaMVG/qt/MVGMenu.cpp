@@ -283,7 +283,7 @@ void MVGMenu::importPointCloud( const std::string& sPathToPly,
                                 const std::string& sParticleName )
 {
   MString particleName = sParticleName.c_str();
-  std::vector<readerMVG::Point3D> vec_point3D;
+  std::vector<readerMVG::PointCloudItem> vec_point3D;
   
   if( !getPointCloudFromPly( sPathToPly, vec_point3D ) )
   {
@@ -307,7 +307,7 @@ void MVGMenu::importPointCloud( const std::string& sPathToPly,
   MVectorArray array_color;
 
   // Get values
-  for( std::vector<readerMVG::Point3D>::const_iterator iter_point = vec_point3D.begin();
+  for( std::vector<readerMVG::PointCloudItem>::const_iterator iter_point = vec_point3D.begin();
           iter_point != vec_point3D.end();
           iter_point++ )
   {
