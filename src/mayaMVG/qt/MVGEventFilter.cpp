@@ -16,6 +16,11 @@
 
 using namespace mayaMVG;
 
+std::ostream& operator<<(std::ostream& os, const QPointF& point)
+{
+  os << "x: " << point.x() << ", y: " << point.y();
+  return os;
+}
 
 namespace {
   MStatus getCameraPathFromQbject(const QObject* obj, MDagPath& path) {
@@ -68,16 +73,24 @@ MVGMouseEventFilter::MVGMouseEventFilter()
 }
 
 bool MVGMouseEventFilter::eventFilter(QObject * obj, QEvent * e)
-{  
+{
+  // Image is fitted on width.
+  // In maya, width is not 1 but math.sqrt(2).
+  const double unit_maya = 1.4142135623730951;
   QMouseEvent * mouseevent = static_cast<QMouseEvent *>(e);
   
+  // TODO: Key Press "F" to fit image plane
+  
   // Init pan and zoom
-  if (e->type() == QEvent::MouseButtonPress) {
-    Qt::KeyboardModifiers modifiers = QApplication::keyboardModifiers();
+  if (e->type() == QEvent::MouseButtonPress)
+  {
+    // Qt::KeyboardModifiers modifiers = QApplication::keyboardModifiers();
     // Camera Pan (Alt + Mid button)
-    if((modifiers & Qt::AltModifier) && (mouseevent->button() & Qt::MidButton)) {
+    if(/*(modifiers & Qt::AltModifier) &&*/ (mouseevent->button() & Qt::MidButton))
+    {
       MDagPath cameraPath;
-      if(getCameraPathFromQbject(obj, cameraPath)) {
+      if(getCameraPathFromQbject(obj, cameraPath))
+      {
         MFnCamera camera(cameraPath);
         // register click position
         m_clickPos = mouseevent->pos();
@@ -95,13 +108,16 @@ bool MVGMouseEventFilter::eventFilter(QObject * obj, QEvent * e)
   {
     if(!m_tracking)
       return QObject::eventFilter(obj, e);
+
+    QWidget* widget = qobject_cast<QWidget*>(obj);
     MDagPath cameraPath;
     if(getCameraPathFromQbject(obj, cameraPath)) 
     {
       MFnCamera camera(cameraPath);
       // compute mouse offset
-      QPointF offset = m_clickPos - mouseevent->pos();
-      offset *= camera.zoom() / 190.f; // FIXME
+      QPointF offset_screen = m_clickPos - mouseevent->pos();
+      const double viewport_width = widget->width();
+      QPointF offset = (offset_screen / viewport_width) * unit_maya * camera.zoom();
       
       camera.setHorizontalPan( m_cameraHPan + offset.x( ) );
       camera.setVerticalPan( m_cameraVPan - offset.y( ) );
@@ -113,39 +129,36 @@ bool MVGMouseEventFilter::eventFilter(QObject * obj, QEvent * e)
     m_tracking = false;
   }
   // Apply zoom
-  else if (e->type() == QEvent::Wheel) 
+  else if (e->type() == QEvent::Wheel)
   {
     // compute wheel offset
-    QWheelEvent * wheelevent = static_cast<QWheelEvent *>(e);
+    QWheelEvent* wheelevent = static_cast<QWheelEvent*>(e);
     MDagPath cameraPath;
-    if(getCameraPathFromQbject(obj, cameraPath)) 
+    if(getCameraPathFromQbject(obj, cameraPath))
     {
       MFnCamera camera(cameraPath);
-      QPointF positionAfterZoom;
+      QWidget* widget = qobject_cast<QWidget*>(obj);
       
-      QWidget* wid = (QWidget*)obj;
-      QPointF center( wid->width( ) / 2, wid->height( ) / 2 );
+      const double viewport_width = widget->width();
+      const double viewport_height = widget->height();
+      const QPointF pan_maya(camera.horizontalPan(), camera.verticalPan());
       
-      if( wheelevent->delta() > 0 )
-      {
-        //Zoom in
-        camera.setZoom(camera.zoom() / 1.15 );
-        positionAfterZoom.setX( ( mouseevent->pos().x() - center.x() ) / 1.15 + center.x() );
-        positionAfterZoom.setY( ( mouseevent->pos().y() - center.y() ) / 1.15 + center.y() );
-      }
-      else
-      {
-        //Zooming out
-        camera.setZoom(camera.zoom() * 1.15 );
-        positionAfterZoom.setX( ( mouseevent->pos().x() - center.x() ) * 1.15 + center.x() );
-        positionAfterZoom.setY( ( mouseevent->pos().y() - center.y() ) * 1.15 + center.y() );
-      }
-      // Apply pan to stay at the same point
-      QPointF offset = mouseevent->pos() - positionAfterZoom;
-      offset *= camera.zoom() / 190.f; // FIXME
+      static const double wheelStep = 1.15;
+      const double previousZoom = camera.zoom();
+      double newZoom = wheelevent->delta() > 0 ? previousZoom / wheelStep : previousZoom * wheelStep;
+      newZoom = std::max( newZoom, 0.0001 );  // zoom max
+      camera.setZoom( newZoom );
+      const double scaleRatio = newZoom / previousZoom;
       
-      camera.setHorizontalPan( camera.horizontalPan() + offset.x( ) );
-      camera.setVerticalPan( camera.verticalPan() - offset.y( ) );
+      // compute mouse offset
+      QPointF center_ratio(0.5, 0.5 * viewport_height / viewport_width);
+      QPointF mouse_ratio_center = (center_ratio - (mouseevent->posF() / viewport_width));
+      QPointF mouse_maya_center = mouse_ratio_center * unit_maya * previousZoom;
+      QPointF mouseAfterZoom_maya_center = mouse_maya_center * scaleRatio;
+      QPointF offset = mouse_maya_center - mouseAfterZoom_maya_center;
+
+      camera.setHorizontalPan( camera.horizontalPan() - offset.x() );
+      camera.setVerticalPan( camera.verticalPan() + offset.y() );
     }
   }
   return QObject::eventFilter(obj, e);
