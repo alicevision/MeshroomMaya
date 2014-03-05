@@ -42,7 +42,7 @@ class MVGContext: public MPxContext {
         size_t mousePosY() const;
         vpoint_t points() const;
     private:
-        MStatus createMesh( MEvent & event );
+        void createMesh();
         void addPointToAttribute( const MString& attributeName,
                                   const size_t vertexIndex,
                                   const MPoint& point );

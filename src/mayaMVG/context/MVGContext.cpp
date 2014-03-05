@@ -251,17 +251,16 @@ void removeNode(MNodeMessage::AttributeMessage msg, MPlug &plug, void *clientDat
   }
 }
 
-MStatus MVGContext::createMesh( MEvent & event )
+void MVGContext::createMesh()
 {
-  // get distance to origin
-  double distance = m_points[0].wpos.distanceTo(MPoint(0,0,0));
+//  // get distance to origin
+//  double distance = m_points[0].wpos.distanceTo(MPoint(0,0,0));
 
   // as MPointArray
   MPointArray vertices;
   for(size_t i = 0; i < m_points.size(); ++i)
     vertices.append(m_points[i].wpos+m_points[i].wdir*10); // FIXME
 
-        
   //-----------------------------------------
   // Compute projected position
   //-----------------------------------------
@@ -269,13 +268,14 @@ MStatus MVGContext::createMesh( MEvent & event )
   // Get visible points for the current camera //TODO
   MSelectionList selectionList;
   selectionList.clear();
+  // TODO: use all clouds loaded: main points cloud and/or dense points cloud
   selectionList.add( "PointCloudParticle" );
   MObject objectParticles;
   MStatus status = selectionList.getDependNode( 0, objectParticles );
   if ( status == MStatus::kInvalidParameter )
   {
-    LOG_ERROR("MVGContext::doPress", "Point cloud doesn't exist")
-    return status;
+    LOG_ERROR("MVGContext::createMesh", "Point cloud doesn't exist")
+    return;
   }
   
   MObject particleNode;
@@ -286,13 +286,13 @@ MStatus MVGContext::createMesh( MEvent & event )
   if ( status == MStatus::kInvalidParameter )
   {
     LOG_ERROR("MVGContext::doPress", "Invalid particle object")
-    return status;
+    return;
   }
 
-  
   MVectorArray array_position;
   particles.getPerParticleAttribute( MString("position"), array_position, &status );
   
+  // TODO: use visibility to only use points visible from that camera.
   std::vector<openMVG::Vec3> vec_particles;
   for( int i = 0; i < array_position.length(); i++ )
   {
@@ -306,10 +306,10 @@ MStatus MVGContext::createMesh( MEvent & event )
   MObject cameraTransform = dagPathCamera.transform();
   MFnCamera fnCamera( cameraShape );     
   MFnTransform transformCamera( cameraTransform );  
-  
+
   openMVG::PinholeCamera camera;
   camera = getCameraMVG( dagPathCamera );
-  
+
   // Get 2D position
   std::vector<openMVG::Vec2> vec_point2D;
   for(size_t i = 0; i < m_points.size(); ++i)
@@ -318,7 +318,7 @@ MStatus MVGContext::createMesh( MEvent & event )
                                                           vertices[i][1], 
                                                           vertices[i][2] ) ) );
   }
-  
+
   // Compute new position
   // Get 3D points inside the face
   std::vector<openMVG::Vec3> vec_insidePoints;
@@ -326,16 +326,14 @@ MStatus MVGContext::createMesh( MEvent & event )
                              vec_particles,
                              camera, 
                              vec_insidePoints );
-  
-          
+
   // Compute the plane equation
   std::vector<openMVG::Vec3> vec_facePoints3D;
   geometry::computePlanEquation( vec_point2D,
                                  vec_insidePoints,
                                  camera,
                                  vec_facePoints3D );
-  
-    
+
   MPointArray verticesReprojected;
   for( std::vector<openMVG::Vec3>::const_iterator iter_point3D = vec_facePoints3D.begin();
             iter_point3D != vec_facePoints3D.end();
@@ -345,12 +343,13 @@ MStatus MVGContext::createMesh( MEvent & event )
     verticesReprojected.append( (*iter_point3D)[0], (*iter_point3D)[1], (*iter_point3D)[2], 0 );
     openMVG::Vec2 test = camera.Project(*iter_point3D);
   }  
-  
+
   //-----------------------------------------
-         
+
   MObject meshObj;       
   size_t nbVerticesBefore = 0, nbVerticesAfter;
-  if(!m_meshPath.isValid() || (m_meshPath.length() <= 0)) {
+  if(!m_meshPath.isValid() || (m_meshPath.length() <= 0))
+  {
     MFnMesh fn;
     meshObj = fn.addPolygon(verticesReprojected, true, kMFnMeshPointTolerance, MObject::kNullObj, &status);        
     MDagPath::getAPathTo(meshObj, m_meshPath);
@@ -358,17 +357,19 @@ MStatus MVGContext::createMesh( MEvent & event )
     nbVerticesAfter = fn.numVertices();    
     MObject obj = m_meshPath.node();
     MNodeMessage::addAttributeAddedOrRemovedCallback ( obj, removeNode, this );
-  } else {
+  }
+  else
+  {
     MFnMesh fn(m_meshPath, &status);
     nbVerticesBefore = fn.numVertices();
     MPlug outMeshPlug = fn.findPlug("inMesh", &status);
     fn.addPolygon(verticesReprojected, true, kMFnMeshPointTolerance, outMeshPlug.node(), &status);
     nbVerticesAfter = fn.numVertices();
   }
-  
+
   // Create the attribute if it doesn't exists
   createCameraAttribute( transformCamera.partialPathName() );
-  
+
   int index4 = 0;
   for( size_t index = nbVerticesBefore; index < nbVerticesAfter; index++, index4++ )
   {
@@ -376,7 +377,6 @@ MStatus MVGContext::createMesh( MEvent & event )
   }
   
   m_points.clear();
-  return MPxContext::doPress(event);
 }
 
 /**
@@ -415,7 +415,7 @@ void MVGContext::addPointToAttribute( const MString& attributeName,
   if ( plugMeshIndex.isArray() )
   {
     MPlug plugtmp = plugMeshIndex.elementByLogicalIndex( vertexIndex );
-    for( unsigned i = 0; i<3; i++ )
+    for( unsigned i = 0; i < 3; i++ )
     {
       MPlug child = plugtmp.child( i );
       child.setValue( point[ i ]);
@@ -438,7 +438,7 @@ MStatus MVGContext::doPress(MEvent & event)
   {
     return MPxContext::doPress(event);
   }
-  
+
   openMVG::PinholeCamera camera = getCameraMVG( dagPathCamera );
   
   // Get 2D point in the openMVG space
@@ -501,7 +501,9 @@ MStatus MVGContext::doRelease(MEvent & event)
   MString cameraName = dagPathCameraTr.partialPathName();
   if(cameraName == "persp" || cameraName == "top"
     || cameraName == "front" || cameraName == "side")
+  {
     return MPxContext::doRelease(event);
+  }
   
   openMVG::PinholeCamera camera = getCameraMVG( dagPathCamera );
   
@@ -613,8 +615,9 @@ MStatus MVGContext::doRelease(MEvent & event)
         event.getPosition(x, y);
 
         if(m_points.size() > 3) 
-        {        
-          return createMesh( event );
+        {
+          createMesh();
+          return MPxContext::doRelease(event);
         }
         MVGPoint p;
         currentView().viewToWorld(x, y, p.wpos, p.wdir);
@@ -649,13 +652,15 @@ void MVGContext::updateManipulators(void * data)
   MVGManipContainer * manipulator =
       static_cast<MVGManipContainer *>(MVGManipContainer::newManipulator(
               manipName, manipObject));
-  if (manipulator) {
+  if (manipulator)
+  {
     ctxPtr->addManipulator(manipObject);
     manipulator->setContext(ctxPtr);
   }
 }
 
-void MVGContext::setMousePos(size_t x, size_t y) {
+void MVGContext::setMousePos(size_t x, size_t y)
+{
   m_mousePosX = x;
   m_mousePosY = currentView().portHeight() - y;
   updateManipulators(this);
