@@ -1,7 +1,7 @@
 #include <maya/MFnPlugin.h>
-#include "cmd/MVGCmd.h"
-#include "util/MVGLog.h"
-#include "util/MVGUtil.h"
+#include "mayaMVG/maya/cmd/MVGCmd.h"
+#include "mayaMVG/core/MVGLog.h"
+#include "mayaMVG/maya/MVGMayaUtil.h"
 #include "context/MVGContextCmd.h"
 #include "context/MVGManipContainer.h"
 
@@ -31,8 +31,8 @@ MStatus uninitializePlugin(MObject obj) {
 	MStatus status;
 	MFnPlugin plugin(obj);
 
-	MVGUtil::deleteMVGContext();
-	MVGUtil::deleteMVGWindow();
+	MVGMayaUtil::deleteMVGContext();
+	MVGMayaUtil::deleteMVGWindow();
 
 	// deregister commands
 	status = plugin.deregisterCommand("MVGCmd");

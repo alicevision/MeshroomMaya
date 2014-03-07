@@ -4,18 +4,14 @@
 #include <QWheelEvent>
 #include <QWidget>
 #include <QApplication>
-
 #include "mayaMVG/qt/MVGEventFilter.h"
-#include "mayaMVG/util/MVGUtil.h"
-#include "mayaMVG/util/MVGLog.h"
-#include "mayaMVG/context/MVGContext.h"
-
+#include "mayaMVG/maya/MVGMayaUtil.h"
+#include "mayaMVG/core/MVGLog.h"
+#include "mayaMVG/maya/context/MVGContext.h"
 #include <maya/MDagPath.h>
 #include <maya/MFnCamera.h>
 
-
 using namespace mayaMVG;
-
 
 namespace {
   MStatus getCameraPathFromQbject(const QObject* obj, MDagPath& path) {
@@ -24,7 +20,7 @@ namespace {
     QVariant panelName = obj->property("mvg_panel");
     if(panelName.type()==QVariant::Invalid)
       return MS::kFailure;
-    return (panelName.toString()=="left") ? MVGUtil::getMVGLeftCamera(path) : MVGUtil::getMVGRightCamera(path);
+    return (panelName.toString()=="left") ? MVGMayaUtil::getMVGLeftCamera(path) : MVGMayaUtil::getMVGRightCamera(path);
   }
 }
 
@@ -175,8 +171,8 @@ bool MVGWindowEventFilter::eventFilter(QObject * obj, QEvent * e)
     if(m_ids.length()>0)
       MMessage::removeCallbacks(m_ids);
     // delete maya context
-    MVGUtil::deleteMVGContext();
-     // remove window event filter
+    MVGMayaUtil::deleteMVGContext();
+    // remove window event filter
     obj->removeEventFilter(this);
   }
   return QObject::eventFilter(obj, e);
@@ -205,9 +201,9 @@ bool MVGContextEventFilter::eventFilter(QObject * obj, QEvent * e)
       return QObject::eventFilter(obj, e);
     // set focus
     if(panelName.toString()=="left")
-      MVGUtil::setFocusOnLeftView();
+      MVGMayaUtil::setFocusOnLeftView();
     else
-      MVGUtil::setFocusOnRightView();
+      MVGMayaUtil::setFocusOnRightView();
   } else if (e->type() == QEvent::Leave) {
   }
   return QObject::eventFilter(obj, e);

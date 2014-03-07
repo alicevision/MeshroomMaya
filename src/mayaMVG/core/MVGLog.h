@@ -3,6 +3,8 @@
 #include <maya/MGlobal.h>
 #include <sstream>
 
+namespace mayaMVG {
+
 #define LOG_ERROR(func, msg) { std::stringstream s;\
 					 s << "[" << func << "] " << msg; \
 					 MGlobal::displayError(s.str().c_str()); \
@@ -15,3 +17,5 @@
 					 s << "[" << func << "] " << msg; \
 					 MGlobal::displayInfo(s.str().c_str()); \
 				   }
+
+} // mayaMVG

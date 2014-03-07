@@ -1,5 +1,5 @@
-#include "mayaMVG/context/MVGContextCmd.h"
-#include "mayaMVG/context/MVGContext.h"
+#include "mayaMVG/maya/context/MVGContextCmd.h"
+#include "mayaMVG/maya/context/MVGContext.h"
 
 using namespace mayaMVG;
 

@@ -1,5 +1,5 @@
-#include "mayaMVG/util/MVGUtil.h"
-#include "mayaMVG/util/MVGLog.h"
+#include "mayaMVG/maya/MVGMayaUtil.h"
+#include "mayaMVG/core/MVGLog.h"
 #include "mayaMVG/qt/MVGMenu.h"
 #include <maya/MFnDependencyNode.h>
 #include <maya/MItDependencyNodes.h>
@@ -9,10 +9,9 @@
 #include <maya/MSelectionList.h>
 #include <maya/M3dView.h>
 
-
 using namespace mayaMVG;
 
-MStatus MVGUtil::createMVGWindow() {
+MStatus MVGMayaUtil::createMVGWindow() {
 	MStatus status;
 	MString windowName;
 	status = MGlobal::executePythonCommand(
@@ -51,57 +50,57 @@ MStatus MVGUtil::createMVGWindow() {
 	return status;
 }
 
-MStatus MVGUtil::deleteMVGWindow() {
+MStatus MVGMayaUtil::deleteMVGWindow() {
 	return MGlobal::executePythonCommand(
 		"import maya.cmds as cmds\n"
 		"if cmds.window('mayaMVG', exists=True):\n"
 		"    cmds.deleteUI('mayaMVG', window=True)\n");
 }
 
-QWidget* MVGUtil::getMVGWindow() {
+QWidget* MVGMayaUtil::getMVGWindow() {
 	return MQtUtil::findWindow("mayaMVG");
 }
 
-QWidget* MVGUtil::getMVGMenuLayout() {
+QWidget* MVGMayaUtil::getMVGMenuLayout() {
 	return MQtUtil::findLayout("mvgMenuPanel");
 }
 
-QWidget* MVGUtil::getMVGLeftViewportLayout() {
+QWidget* MVGMayaUtil::getMVGLeftViewportLayout() {
 	M3dView leftView;
 	M3dView::getM3dViewFromModelPanel("mvgLPanel", leftView);
 	return leftView.widget();
 }
 
-QWidget* MVGUtil::getMVGRightViewportLayout() {
+QWidget* MVGMayaUtil::getMVGRightViewportLayout() {
 	M3dView rightView;
 	M3dView::getM3dViewFromModelPanel("mvgRPanel", rightView);
 	return rightView.widget();
 }
 
-MStatus MVGUtil::setFocusOnLeftView() {
+MStatus MVGMayaUtil::setFocusOnLeftView() {
 	return MGlobal::executePythonCommand(
 		"import maya.cmds as cmds\n"
 		"cmds.setFocus('mvgLPanel')\n");
 }
 
-MStatus MVGUtil::setFocusOnRightView() {
+MStatus MVGMayaUtil::setFocusOnRightView() {
 	return MGlobal::executePythonCommand(
 		"import maya.cmds as cmds\n"
 		"cmds.setFocus('mvgRPanel')\n");
 }
 
-bool MVGUtil::isMVGView(const M3dView & view) {
-	QWidget* leftViewport = MVGUtil::getMVGLeftViewportLayout();
-	QWidget* rightViewport = MVGUtil::getMVGRightViewportLayout();
+bool MVGMayaUtil::isMVGView(const M3dView & view) {
+	QWidget* leftViewport = MVGMayaUtil::getMVGLeftViewportLayout();
+	QWidget* rightViewport = MVGMayaUtil::getMVGRightViewportLayout();
 	return ((view.widget() == leftViewport) || (view.widget() == rightViewport));
 }
 
-bool MVGUtil::isActiveView(const M3dView & view) {
+bool MVGMayaUtil::isActiveView(const M3dView & view) {
 	M3dView activeView = M3dView::active3dView();
 	return (activeView.widget() == view.widget());
 }
 
-bool MVGUtil::mouseUnderView(const M3dView & view) {
+bool MVGMayaUtil::mouseUnderView(const M3dView & view) {
 	QWidget * viewWidget = view.widget();
 	if (viewWidget->rect().contains(viewWidget->mapFromGlobal(QCursor::pos()))) {
 		return true;
@@ -109,7 +108,7 @@ bool MVGUtil::mouseUnderView(const M3dView & view) {
 	return false;
 }
 
-MStatus MVGUtil::createMVGContext() {
+MStatus MVGMayaUtil::createMVGContext() {
 	return MGlobal::executePythonCommand(
 		"import maya.cmds as cmds\n"
 		"if cmds.contextInfo('MVGTool1', exists=True):\n"
@@ -117,7 +116,7 @@ MStatus MVGUtil::createMVGContext() {
 		"cmds.MVGTool('MVGTool1')\n");
 }
 
-MStatus MVGUtil::deleteMVGContext() {
+MStatus MVGMayaUtil::deleteMVGContext() {
 	return MGlobal::executePythonCommand(
 		"import maya.cmds as cmds\n"
 		"cmds.setToolTo('selectSuperContext')\n"
@@ -125,7 +124,7 @@ MStatus MVGUtil::deleteMVGContext() {
 		"    cmds.deleteUI('MVGTool1', toolContext=True)\n");
 }
 
-MStatus MVGUtil::getMVGLeftCamera(MDagPath& path) {
+MStatus MVGMayaUtil::getMVGLeftCamera(MDagPath& path) {
 	MString camera;
 	MGlobal::executePythonCommand(
 		"import maya.cmds as cmds\n"
@@ -137,13 +136,13 @@ MStatus MVGUtil::getMVGLeftCamera(MDagPath& path) {
 	return sList.isEmpty() ? MS::kFailure : sList.getDagPath(0, path);
 }
 
-MStatus MVGUtil::setMVGLeftCamera(MString camera) {
+MStatus MVGMayaUtil::setMVGLeftCamera(MString camera) {
 	return MGlobal::executePythonCommand(
 		"import maya.cmds as cmds\n"
 		"cmds.modelPanel('mvgLPanel', e=True, cam='"+camera+"')");
 }
 
-MStatus MVGUtil::getMVGRightCamera(MDagPath& path) {
+MStatus MVGMayaUtil::getMVGRightCamera(MDagPath& path) {
 	MString camera;
 	MGlobal::executePythonCommand(
 		"import maya.cmds as cmds\n"
@@ -155,25 +154,25 @@ MStatus MVGUtil::getMVGRightCamera(MDagPath& path) {
 	return sList.isEmpty() ? MS::kFailure : sList.getDagPath(0, path);
 }
 
-MStatus MVGUtil::setMVGRightCamera(MString camera) {
+MStatus MVGMayaUtil::setMVGRightCamera(MString camera) {
 	return MGlobal::executePythonCommand(
 		"import maya.cmds as cmds\n"
 		"cmds.modelPanel('mvgRPanel', e=True, cam='"+camera+"')");
 }
 
-MStatus MVGUtil::addToMayaSelection(MString camera) {
+MStatus MVGMayaUtil::addToMayaSelection(MString camera) {
 	return MGlobal::executePythonCommand(
 		"import maya.cmds as cmds\n"
 		"cmds.select('"+camera+"', add=True)");
 }
 
-MStatus MVGUtil::clearMayaSelection() {
+MStatus MVGMayaUtil::clearMayaSelection() {
   return MGlobal::executePythonCommand(
     "import maya.cmds as cmds\n"
     "cmds.select(cl=True)");
 }
 
-MStatus MVGUtil::activeContext() 
+MStatus MVGMayaUtil::activeContext() 
 {
   return MGlobal::executePythonCommand(
     "import maya.cmds as cmds\n"

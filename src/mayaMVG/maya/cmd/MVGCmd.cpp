@@ -1,9 +1,9 @@
 #include <QWidgetList>
 #include <QApplication>
 #include <QLayout>
-#include "mayaMVG/util/MVGLog.h"
-#include "mayaMVG/util/MVGUtil.h"
-#include "mayaMVG/cmd/MVGCmd.h"
+#include "mayaMVG/core/MVGLog.h"
+#include "mayaMVG/maya/MVGMayaUtil.h"
+#include "mayaMVG/maya/cmd/MVGCmd.h"
 #include "mayaMVG/qt/MVGMenu.h"
 #include "mayaMVG/qt/MVGEventFilter.h"
 #include <maya/MArgList.h>
@@ -106,13 +106,13 @@ MStatus MVGCmd::doIt(const MArgList& args) {
 	}
 
 	// create maya window
-	status = MVGUtil::createMVGWindow();
+	status = MVGMayaUtil::createMVGWindow();
 	if(!status) {
 		LOG_ERROR("MVGCmd", "Unable to create MVGContext.")
 		return status;
 	}
-	QWidget* mayaWindow = MVGUtil::getMVGWindow();
-	QWidget* menuLayout = MVGUtil::getMVGMenuLayout();
+	QWidget* mayaWindow = MVGMayaUtil::getMVGWindow();
+	QWidget* menuLayout = MVGMayaUtil::getMVGMenuLayout();
 	if(!mayaWindow || !menuLayout) {
 		LOG_ERROR("MVGCmd", "Unable to retrieve MVGWindow.")
 		return status;
@@ -124,7 +124,7 @@ MStatus MVGCmd::doIt(const MArgList& args) {
 	MQtUtil::addWidgetToMayaLayout(menu, menuLayout);
 
 	// create maya MVGContext
-	status = MVGUtil::createMVGContext();
+	status = MVGMayaUtil::createMVGContext();
 	if(!status) {
 		LOG_ERROR("MVGCmd", "Unable to create MVGContext.")
 		return status;
@@ -132,8 +132,8 @@ MStatus MVGCmd::doIt(const MArgList& args) {
 
 	// install mouse event filter on maya viewports
 	MVGMouseEventFilter * mouseEventFilter = new MVGMouseEventFilter();
-	QWidget* leftViewport = MVGUtil::getMVGLeftViewportLayout();
-	QWidget* rightViewport = MVGUtil::getMVGRightViewportLayout();
+	QWidget* leftViewport = MVGMayaUtil::getMVGLeftViewportLayout();
+	QWidget* rightViewport = MVGMayaUtil::getMVGRightViewportLayout();
 	if(!leftViewport || !rightViewport) {
 		LOG_ERROR("MVGCmd", "Unable to retrieve maya viewport layouts.")
 		return MS::kFailure;

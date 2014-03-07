@@ -1,7 +1,7 @@
-#include "mayaMVG/context/MVGManipContainer.h"
-#include "mayaMVG/context/MVGContext.h"
-#include "mayaMVG/util/MVGLog.h"
-#include "mayaMVG/util/MVGUtil.h"
+#include "mayaMVG/maya/context/MVGManipContainer.h"
+#include "mayaMVG/maya/context/MVGContext.h"
+#include "mayaMVG/core/MVGLog.h"
+#include "mayaMVG/maya/MVGMayaUtil.h"
 #include <maya/MFnDagNode.h>
 
 using namespace mayaMVG;
@@ -58,7 +58,7 @@ void MVGManipContainer::draw(M3dView & view, const MDagPath & path,
 	view.endGL();
 
 
-	if(!MVGUtil::isMVGView(view) || !MVGUtil::isActiveView(view))
+	if(!MVGMayaUtil::isMVGView(view) || !MVGMayaUtil::isActiveView(view))
 		return;
 
 	// POINTS
