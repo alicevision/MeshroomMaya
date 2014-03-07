@@ -1,4 +1,5 @@
 #include "mayaMVG/core/MVGScene.h"
+#include "mayaMVG/core/MVGCameraReader.h"
 
 using namespace mayaMVG;
 
@@ -10,17 +11,19 @@ MVGScene::~MVGScene()
 {
 }
 
-bool MVGScene::load(const MString& directory)
+bool MVGScene::load(const std::string& directory)
 {
-	return false;
+	bool result;
+	result = MVGCameraReader::read(_cameras, directory);
+	return result;
 }
 
-bool MVGScene::loadCameras(const MString& filename)
+bool MVGScene::loadCameras(const std::string& filename)
 {
-	return false;
+	return MVGCameraReader::read(_cameras, directory);
 }
 
-bool MVGScene::loadPointCloud(const MString& filename)
+bool MVGScene::loadPointCloud(const std::string& filename)
 {
 	return false;
 }

@@ -5,8 +5,6 @@
 #include "mayaMVG/core/MVGMesh.h"
 #include <vector>
 
-class MString;
-
 namespace mayaMVG {
 
 class MVGScene {
@@ -19,13 +17,15 @@ class MVGScene {
 		MVGScene(const MVGScene&);
 		
 	public:
-		bool load(const MString&);
-		bool loadCameras(const MString&);
-		bool loadPointCloud(const MString&);
+		static bool load(const std::string&);
+		static bool loadCameras(const std::string&);
+		static bool loadPointCloud(const std::string&);
 		std::vector<MVGCamera> getCameras() const;
 		std::vector<MVGPointCloud> getPointClouds() const;
 		std::vector<MVGMesh> getMeshes() const;
 
+	private:
+		static std::vector<MVGCamera> _cameras;
 };
 
 } // mayaMVG

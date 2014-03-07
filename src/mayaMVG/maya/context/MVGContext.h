@@ -1,9 +1,6 @@
 #pragma once
 
 #include <maya/MPxContext.h>
-#include <maya/MDagPath.h>
-#include <maya/MPoint.h>
-#include <maya/MVector.h>
 #include <vector>
 
 namespace mayaMVG {
@@ -12,19 +9,7 @@ namespace mayaMVG {
 class MVGContextEventFilter;
 
 class MVGContext: public MPxContext {
-    public:
-        struct MVGPoint {
-            MPoint wpos;
-            MPoint spos;
-            MVector wdir;
-        };
-        struct SelectedPoint {
-            double x;
-            double y;
-            size_t index;
-        };
-        typedef std::vector<MVGPoint> vpoint_t;
-        typedef std::vector<MVGPoint>::const_iterator vpointIt_t;
+
     public:
         MVGContext();
         virtual ~MVGContext(){}
@@ -34,24 +19,19 @@ class MVGContext: public MPxContext {
         virtual MStatus doRelease(MEvent & e);
         virtual MStatus doDrag(MEvent & e);
         virtual void getClassName(MString & name) const;
+
     public:
         static void updateManipulators(void* clientData);
+
     public:
         void setMousePos(size_t x, size_t y);
         size_t mousePosX() const;
         size_t mousePosY() const;
-        vpoint_t points() const;
+
     private:
-        // MStatus createMesh( MEvent & event );
-        // void addPointToAttribute(const MString&, const size_t, const MPoint&);
-        // void createCameraAttribute(const MString&);
         size_t m_mousePosX;
         size_t m_mousePosY;
-        vpoint_t m_points;
         MVGContextEventFilter* m_eventFilter;
-        SelectedPoint selectedPoint;
-    public:
-        MDagPath m_meshPath;
         
 };
 

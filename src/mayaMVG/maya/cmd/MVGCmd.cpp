@@ -1,16 +1,12 @@
-#include <QWidgetList>
-#include <QApplication>
-#include <QLayout>
-#include "mayaMVG/core/MVGLog.h"
-#include "mayaMVG/maya/MVGMayaUtil.h"
 #include "mayaMVG/maya/cmd/MVGCmd.h"
+#include "mayaMVG/maya/MVGMayaUtil.h"
 #include "mayaMVG/qt/MVGMenu.h"
 #include "mayaMVG/qt/MVGEventFilter.h"
-#include <maya/MArgList.h>
-#include <maya/MArgDatabase.h>
+#include "mayaMVG/core/MVGLog.h"
 #include <maya/MQtUtil.h>
+#include <maya/MGlobal.h>
+#include <maya/MDagPath.h>
 #include <maya/MEventMessage.h>
-#include <maya/MDGMessage.h>
 #include <maya/MSelectionList.h>
 #include <maya/MFnDependencyNode.h>
 
@@ -20,23 +16,6 @@ namespace {
 
 	static const char * helpFlag = "-h";
 	static const char * helpFlagLong = "-help";
-
-	void _debug_printMayaTree(const QObject* object) {
-		QString path;
-		QObject* parent = NULL;
-		QList<QWidget *> children = object->findChildren<QWidget *>();
-		for (int i = 0; i < children.size(); ++i) {
-			path = children[i]->objectName();
-			parent = children[i]->parent();
-			while(parent != object) {
-				if(!parent)
-					break;
-				path = parent->objectName() + QString("|") + path;
-				parent = parent->parent();
-			}
-			LOG_INFO("TREE", path.toStdString())
-		}
-	}
 
 	void selectionChangedCB(void* userData) {
 		if(!userData)
@@ -55,19 +34,8 @@ namespace {
 				selectedCameras.push_back(fn.name().asChar());
 			}
 		}
-		menu->selectCameras(selectedCameras);
+		menu->selectItems(selectedCameras);
 	}
-
-	void cameraAddedOrRemovedCB(MObject& node, void* userData) {
-		if(!userData)
-			return;
-		MFnDependencyNode nodeFn(node);
-		if(nodeFn.name().substring(0, 23)=="__PrenotatoPerDuplicare_")
-			return; // FIXME - allow duplication
-		MVGMenu* menu = static_cast<MVGMenu*>(userData);
-		menu->populateMVGMenu();
-	}
-
 
 }
 
@@ -120,7 +88,6 @@ MStatus MVGCmd::doIt(const MArgList& args) {
 
 	// create MVG menu
 	MVGMenu* menu = new MVGMenu(NULL);
-	menu->populateMVGMenu();
 	MQtUtil::addWidgetToMayaLayout(menu, menuLayout);
 
 	// create maya MVGContext
@@ -148,8 +115,6 @@ MStatus MVGCmd::doIt(const MArgList& args) {
 	// maya callbacks
 	MCallbackIdArray callbackIDs;
 	callbackIDs.append(MEventMessage::addEventCallback("SelectionChanged", selectionChangedCB, menu));
-	callbackIDs.append(MDGMessage::addNodeAddedCallback(cameraAddedOrRemovedCB, "camera", menu));
-	callbackIDs.append(MDGMessage::addNodeRemovedCallback(cameraAddedOrRemovedCB, "camera", menu));
 
 	// install a window event filter on 'mayaWindow'
 	// needed to remove all maya callbacks and all Qt event filters 
