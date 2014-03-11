@@ -39,17 +39,17 @@ void MVGCamera::instantiate()
 	openMVG::Vec3 pos = (-1) * _pinhole._R.transpose() * _pinhole._t;
 	fnTransform.setTranslation(MVector(pos(0), pos(1), pos(2)), MSpace::kTransform);
 
-	// orientation
+	// orientation 
 	MMatrix m = MMatrix::identity;
 	m[0][0] = _pinhole._R(0, 0);
 	m[0][1] = _pinhole._R(0, 1);
 	m[0][2] = _pinhole._R(0, 2);
-	m[1][0] = _pinhole._R(1, 0) * -1; // ???
-	m[1][1] = _pinhole._R(1, 1) * -1;
-	m[1][2] = _pinhole._R(1, 2) * -1;
-	m[2][0] = _pinhole._R(2, 0) * -1;
-	m[2][1] = _pinhole._R(2, 1) * -1;
-	m[2][2] = _pinhole._R(2, 2) * -1;
+	m[1][0] = _pinhole._R(1, 0) * -1; // FIXME
+	m[1][1] = _pinhole._R(1, 1) * -1; // ?
+	m[1][2] = _pinhole._R(1, 2) * -1; // ?
+	m[2][0] = _pinhole._R(2, 0) * -1; // ?
+	m[2][1] = _pinhole._R(2, 1) * -1; // ?
+	m[2][2] = _pinhole._R(2, 2) * -1; // ?
 	MQuaternion quaternion;
 	quaternion = m;
 	fnTransform.setRotation(quaternion, MSpace::kTransform);
@@ -94,7 +94,7 @@ void MVGCamera::setImageName(const std::string& img)
 	if(_dagpath.isValid())
 	{
 		// check if imageplane already exists
-		//FIXME
+		// FIXME
 
 		// create image plane
 		MStatus status;

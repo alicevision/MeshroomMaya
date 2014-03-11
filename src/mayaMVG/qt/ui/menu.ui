@@ -123,8 +123,11 @@
            <pointsize>13</pointsize>
           </font>
          </property>
+         <property name="text">
+          <string/>
+         </property>
          <property name="placeholderText">
-          <string>project directory</string>
+          <string>[project directory]</string>
          </property>
         </widget>
        </item>

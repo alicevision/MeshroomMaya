@@ -1,7 +1,7 @@
 #pragma once
 
-#include <maya/MPxContext.h>
 #include <vector>
+#include <maya/MPxContext.h>
 
 namespace mayaMVG {
 
@@ -23,14 +23,7 @@ class MVGContext: public MPxContext {
     public:
         static void updateManipulators(void* clientData);
 
-    public:
-        void setMousePos(size_t x, size_t y);
-        size_t mousePosX() const;
-        size_t mousePosY() const;
-
     private:
-        size_t m_mousePosX;
-        size_t m_mousePosY;
         MVGContextEventFilter* m_eventFilter;
         
 };

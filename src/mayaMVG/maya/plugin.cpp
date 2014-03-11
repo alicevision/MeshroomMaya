@@ -3,7 +3,7 @@
 #include "mayaMVG/core/MVGLog.h"
 #include "mayaMVG/maya/MVGMayaUtil.h"
 #include "context/MVGContextCmd.h"
-#include "context/MVGManipContainer.h"
+#include "context/MVGBuildFaceManipulator.h"
 
 using namespace mayaMVG;
 
@@ -18,9 +18,8 @@ MStatus initializePlugin(MObject obj) {
 	status = plugin.registerContextCommand(MVGContextCmd::name, &MVGContextCmd::creator);
 
 	// nodes
-	status = plugin.registerNode("MVGManip", MVGManipContainer::id, &MVGManipContainer::creator
-								, &MVGManipContainer::initialize, MPxNode::kManipContainer
-								/*, &PaintManipContainer::drawDbClassification*/);
+	status = plugin.registerNode("MVGBuildFaceManipulator", MVGBuildFaceManipulator::_id, &MVGBuildFaceManipulator::creator
+								, &MVGBuildFaceManipulator::initialize, MPxNode::kManipulatorNode);
 	if (!status)
 		LOG_ERROR("initializePlugin", "unexpected error");
 	return status;
@@ -41,7 +40,7 @@ MStatus uninitializePlugin(MObject obj) {
 	status = plugin.deregisterContextCommand(MVGContextCmd::name);
 
 	// nodes
-	status = plugin.deregisterNode(MVGManipContainer::id);
+	status = plugin.deregisterNode(MVGBuildFaceManipulator::_id);
 
 	if (!status)
 		LOG_ERROR("uninitializePlugin", "unexpected error");
