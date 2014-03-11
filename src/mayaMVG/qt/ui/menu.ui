@@ -124,7 +124,7 @@
           </font>
          </property>
          <property name="placeholderText">
-          <string>[outIncremental directory]</string>
+          <string>project directory</string>
          </property>
         </widget>
        </item>
@@ -300,7 +300,8 @@
       <bool>false</bool>
      </property>
      <property name="styleSheet">
-      <string notr="true"/>
+      <string notr="true">color: rgba(0, 0, 0, 0);
+selection-color: rgba(0, 0, 0, 0);</string>
      </property>
      <property name="frameShape">
       <enum>QFrame::HLine</enum>

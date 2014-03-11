@@ -17,14 +17,29 @@ class MVGScene {
 		MVGScene(const MVGScene&);
 		
 	public:
-		static bool load(const std::string&);
-		static bool loadCameras(const std::string&);
-		static bool loadPointCloud(const std::string&);
-		std::vector<MVGCamera> getCameras() const;
-		std::vector<MVGPointCloud> getPointClouds() const;
-		std::vector<MVGMesh> getMeshes() const;
+		static bool load();
+		static bool loadCameras();
+		static bool loadPointCloud();
+
+		static void setProjectDirectory(const std::string&);
+		static void setCameraDirectoryName(const std::string&);
+		static void setImageDirectoryName(const std::string&);
+		static const std::string& projectDirectory();
+		static std::string cameraDirectory();
+		static const std::string& cameraDirectoryName();
+		static std::string imageDirectory();
+		static const std::string& imageDirectoryName();
+		static std::string fullPath(const std::string&, const std::string&);
+
+		static const std::vector<MVGCamera>& cameras();
+		// static std::vector<MVGPointCloud>& pointClouds();
+		// static std::vector<MVGMesh>& meshes();
+
 
 	private:
+		static std::string _projectDirectory;
+		static std::string _cameraDirectoryName;
+		static std::string _imageDirectoryName;
 		static std::vector<MVGCamera> _cameras;
 };
 

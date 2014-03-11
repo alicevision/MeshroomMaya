@@ -5,6 +5,8 @@
 
 namespace mayaMVG {
 
+class MVGCamera;
+
 class MVGMenu: public QWidget
 {
     Q_OBJECT
@@ -15,8 +17,10 @@ class MVGMenu: public QWidget
 
   public:
     void clear();
-    void addItem(const QString&);
     void selectItems(const QList<QString>& cameraNames);
+
+  private:
+    void addItem(const MVGCamera&);
 
   private slots:
     void on_cameraList_itemSelectionChanged();
@@ -24,6 +28,7 @@ class MVGMenu: public QWidget
     void on_selectContextButton_clicked();
     void on_placeContextButton_clicked();
     void on_moveContextButton_clicked();
+    void selectedViewChanged(const QString&);
 
   private:
     Ui::MVGMenu ui;
