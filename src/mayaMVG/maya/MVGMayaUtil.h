@@ -10,6 +10,7 @@ class M3dView;
 namespace mayaMVG {
 
 class MVGMenu;
+class MVGCamera;
 
 struct MVGMayaUtil {
 	// window
@@ -32,11 +33,11 @@ struct MVGMayaUtil {
 	static MStatus activeContext(); 
 	// cameras
 	static MStatus getMVGLeftCamera(MDagPath& path);
-	static MStatus setMVGLeftCamera(MString camera);
+	static MStatus setMVGLeftCamera(const MVGCamera& camera);
 	static MStatus getMVGRightCamera(MDagPath& path);
-	static MStatus setMVGRightCamera(MString camera);
-	static MStatus addToMayaSelection(MString camera);
+	static MStatus setMVGRightCamera(const MVGCamera& camera);
 	// maya selection
+	static MStatus addToMayaSelection(MString objectName);
 	static MStatus clearMayaSelection();
 };
 

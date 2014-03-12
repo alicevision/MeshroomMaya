@@ -1,4 +1,5 @@
 #include "mayaMVG/maya/MVGMayaUtil.h"
+#include "mayaMVG/core/MVGCamera.h"
 #include "mayaMVG/core/MVGLog.h"
 #include "mayaMVG/qt/MVGMenu.h"
 #include <maya/MFnDependencyNode.h>
@@ -143,10 +144,10 @@ MStatus MVGMayaUtil::getMVGLeftCamera(MDagPath& path) {
 	return sList.isEmpty() ? MS::kFailure : sList.getDagPath(0, path);
 }
 
-MStatus MVGMayaUtil::setMVGLeftCamera(MString camera) {
+MStatus MVGMayaUtil::setMVGLeftCamera(const MVGCamera& camera) {
 	return MGlobal::executePythonCommand(
-		"import maya.cmds as cmds\n"
-		"cmds.modelPanel('mvgLPanel', e=True, cam='"+camera+"')");
+		MString("import maya.cmds as cmds\n"
+		"cmds.modelPanel('mvgLPanel', e=True, cam='")+camera.name().c_str()+"')");
 }
 
 MStatus MVGMayaUtil::getMVGRightCamera(MDagPath& path) {
@@ -161,16 +162,16 @@ MStatus MVGMayaUtil::getMVGRightCamera(MDagPath& path) {
 	return sList.isEmpty() ? MS::kFailure : sList.getDagPath(0, path);
 }
 
-MStatus MVGMayaUtil::setMVGRightCamera(MString camera) {
+MStatus MVGMayaUtil::setMVGRightCamera(const MVGCamera& camera) {
 	return MGlobal::executePythonCommand(
-		"import maya.cmds as cmds\n"
-		"cmds.modelPanel('mvgRPanel', e=True, cam='"+camera+"')");
+		MString("import maya.cmds as cmds\n"
+		"cmds.modelPanel('mvgRPanel', e=True, cam='")+camera.name().c_str()+"')");
 }
 
-MStatus MVGMayaUtil::addToMayaSelection(MString camera) {
+MStatus MVGMayaUtil::addToMayaSelection(MString objectName) {
 	return MGlobal::executePythonCommand(
 		"import maya.cmds as cmds\n"
-		"cmds.select('"+camera+"', add=True)");
+		"cmds.select('"+objectName+"', add=True)");
 }
 
 MStatus MVGMayaUtil::clearMayaSelection() {
