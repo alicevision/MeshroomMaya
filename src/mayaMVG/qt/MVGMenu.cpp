@@ -64,6 +64,7 @@ void MVGMenu::on_selectContextButton_clicked()
 
 void MVGMenu::on_placeContextButton_clicked()
 {
+	MVGMayaUtil::activeContext();
 }
 
 void MVGMenu::on_moveContextButton_clicked()

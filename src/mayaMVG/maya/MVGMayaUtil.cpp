@@ -124,6 +124,13 @@ MStatus MVGMayaUtil::deleteMVGContext() {
 		"    cmds.deleteUI('MVGTool1', toolContext=True)\n");
 }
 
+MStatus MVGMayaUtil::activeContext() 
+{
+	return MGlobal::executePythonCommand(
+		"import maya.cmds as cmds\n"
+		"cmds.setToolTo('MVGTool1')");
+}
+
 MStatus MVGMayaUtil::getMVGLeftCamera(MDagPath& path) {
 	MString camera;
 	MGlobal::executePythonCommand(
@@ -167,14 +174,7 @@ MStatus MVGMayaUtil::addToMayaSelection(MString camera) {
 }
 
 MStatus MVGMayaUtil::clearMayaSelection() {
-  return MGlobal::executePythonCommand(
-    "import maya.cmds as cmds\n"
-    "cmds.select(cl=True)");
-}
-
-MStatus MVGMayaUtil::activeContext() 
-{
-  return MGlobal::executePythonCommand(
-    "import maya.cmds as cmds\n"
-    "cmds.setToolTo('MVGTool1')\n");
+	return MGlobal::executePythonCommand(
+		"import maya.cmds as cmds\n"
+		"cmds.select(cl=True)");
 }
