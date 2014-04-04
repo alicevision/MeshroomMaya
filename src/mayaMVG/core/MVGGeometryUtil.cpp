@@ -1,15 +1,17 @@
 #include "mayaMVG/core/MVGGeometryUtil.h"
+#include "mayaMVG/core/MVGPointCloud.h"
+#include "mayaMVG/core/MVGCamera.h"
+#include <vector>
 
 using namespace mayaMVG;
 
-// static bool MVGGeometryUtil::projectFace2D(MVGFace3D&, MVGPointCloud, MVGCamera, MVGFace2D)
-// {
-// }
-
-// static bool MVGGeometryUtil::isInProjection(MVGPoint2D&, MVGCamera, MVGPoint2D)
-// {
-// }
-
-// static bool MVGGeometryUtil::isInProjection(MVGPoint3D&, list<MVGMesh>, MVGCamera, MVGPoint2D)
-// {
-// }
+bool MVGGeometryUtil::projectFace2D(MVGFace3D& face3D, MVGPointCloud& pointCloud, MVGCamera& camera, MVGFace2D& face2D)
+{
+	std::vector<MVGPointCloudItem> items;
+	pointCloud.getItemsFromProjection(items, camera, face2D);
+	if(items.size() < 3)
+		return false;
+	// Ransac
+	// ...
+	return false;
+}

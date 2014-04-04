@@ -11,17 +11,56 @@
 #include <maya/MDagModifier.h>
 #include <maya/MFnTypedAttribute.h>
 #include <maya/MSelectionList.h>
+#include <stdexcept>
 
 using namespace mayaMVG;
 
 MVGCamera::MVGCamera(const std::string& name)
 	: _name(name)
-	, _step(STEP_NEW)
+{
+	if(name.empty())
+		throw std::invalid_argument(name);
+	MSelectionList list;
+	MStatus status = list.add(name.c_str());
+	if(!status)
+		throw std::invalid_argument(name);
+	list.getDagPath(0, _dagpath);
+	if(!_dagpath.isValid())
+		throw std::invalid_argument(name);
+	_dagpath.pop(); // registering the transform node
+}
+
+MVGCamera::MVGCamera(const MDagPath& dagPath)
+	: _dagpath(dagPath)
 {
 }
 
 MVGCamera::~MVGCamera()
 {
+}
+
+MVGCamera MVGCamera::create(const std::string& name)
+{
+	MStatus status;
+	MFnCamera fnCamera;
+	MObject transform = fnCamera.create(&status);
+	
+	// register dag path
+	MDagPath path;
+	MDagPath::getAPathTo(transform, path);
+	MVGCamera camera(path);
+	camera.setName(name);
+	return camera;
+}
+
+const MDagPath& MVGCamera::dagPath() const
+{
+	return _dagpath;
+}
+
+void MVGCamera::setDagPath(const MDagPath& dagpath)
+{
+	_dagpath = dagpath;
 }
 
 const std::string& MVGCamera::name() const
@@ -34,8 +73,6 @@ void MVGCamera::setName(const std::string& name)
 	_name = name;
 
 	// set maya camera name
-	if(!_dagpath.isValid())
-		instantiate();
 	MFnDependencyNode depNode(_dagpath.node());
 	depNode.setName(_name.c_str());
 }
@@ -52,8 +89,8 @@ void MVGCamera::setImageName(const std::string& img)
 	if(_imageName.empty())
 		return;
 
-	if(!_dagpath.isValid())
-		instantiate();
+
+	assert(_dagpath.isValid());
 	// FIXME : check if imageplane already exists
 
 	// image plane creation
@@ -70,13 +107,13 @@ void MVGCamera::setImageName(const std::string& img)
 	// MFnTypedAttribute tAttr;
 	// MObject dynAdd = tAttr.create("mvgImageName", "min", MFnData::kString);
 	// dagModifier.addAttribute(_dagpathImg.node(), dynAdd);
-	// dagModifier.doIt();	
+	// dagModifier.doIt();
 
 	// image plane parameters
 	MFnDependencyNode fnDep(_dagpathImg.node(), &status);
-	//fnDep.findPlug("imageName").setValue(MVGScene::fullPath(MVGScene::imageDirectory(), _imageName).c_str());
+	// disabling image loading : do not fill the 'imageName' field
+	// fnDep.findPlug("imageName").setValue(MVGScene::fullPath(MVGScene::imageDirectory(), _imageName).c_str());
 	fnDep.findPlug("depth").setValue(50);
-	fnDep.findPlug("alphaGain").setValue(0.55);
 	fnDep.findPlug("dic").setValue(1);
 	fnDep.findPlug("displayOnlyIfCurrent").setValue(1);
 	fnDep.findPlug("fit").setValue(2);
@@ -100,8 +137,7 @@ void MVGCamera::setPinholeCamera(const openMVG::PinholeCamera& cam)
 {
 	_pinhole = cam;
 
-	if(!_dagpath.isValid())
-		instantiate();
+	assert(_dagpath.isValid());
 
 	// set maya camera position
 	MFnTransform fnTransform(_dagpath);
@@ -142,13 +178,33 @@ void MVGCamera::setPinholeCamera(const openMVG::PinholeCamera& cam)
 	fnTransform.findPlug("rotateZ").setLocked(true);
 }
 
-void MVGCamera::setZoom(float z)
-{
-}
+// double MVGCamera::zoom() const
+// {
+// 	assert(_dagpath.isValid());
+// 	MFnCamera fnCamera(_dagpath.child(0));
+// 	return fnCamera.zoom();
+// }
 
-void MVGCamera::setPan(float x, float y)
-{
-}
+// void MVGCamera::setZoom(double z)
+// {
+// 	assert(_dagpath.isValid());
+// 	MFnCamera fnCamera(_dagpath.child(0));
+// 	fnCamera.setZoom(z);
+// }
+
+// void MVGCamera::pan(float x, float y)
+// {
+// 	assert(_dagpath.isValid());
+// 	MFnCamera fnCamera(_dagpath.child(0));
+// 	return fnCamera.zoom();
+// }
+
+// void MVGCamera::setPan(float x, float y)
+// {
+// 	assert(_dagpath.isValid());
+// 	MFnCamera fnCamera(_dagpath.child(0));
+// 	return fnCamera.zoom();
+// }
 
 void MVGCamera::add2DPoint(const MPoint&)
 {
@@ -171,25 +227,4 @@ void MVGCamera::select() const
 		MFnDependencyNode fn(_dagpathImg.node());
 		fn.findPlug("imageName").setValue(MVGScene::fullPath(MVGScene::imageDirectory(), _imageName).c_str());
 	}
-}
-
-void MVGCamera::instantiate() 
-{
-	if(_dagpath.isValid())
-		return;
-
-	MStatus status;
-	MFnCamera fnCamera;
-	MObject transform = fnCamera.create(&status);
-	
-	// register dag path
-	MDagPath::getAPathTo(transform, _dagpath);
-	if(!_dagpath.isValid())
-		return;
-
-	// set camera parameters
-	setName(name());
-	setImageName(imageName());
-	setPinholeCamera(pinholeCamera());
-
 }

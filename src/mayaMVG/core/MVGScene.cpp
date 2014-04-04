@@ -1,13 +1,15 @@
 #include "mayaMVG/core/MVGScene.h"
 #include "mayaMVG/io/MVGCameraReader.h"
+#include "mayaMVG/io/MVGPointCloudReader.h"
 #include <third_party/stlplus3/filesystemSimplified/file_system.hpp>
 
 using namespace mayaMVG;
 
-std::vector<MVGCamera> MVGScene::_cameras;
 std::string MVGScene::_projectDirectory;
 std::string MVGScene::_cameraDirectoryName;
 std::string MVGScene::_imageDirectoryName;
+std::vector<MVGCamera> MVGScene::_cameras;
+std::vector<MVGPointCloud> MVGScene::_pointClouds;
 
 MVGScene::MVGScene()
 {
@@ -19,9 +21,11 @@ MVGScene::~MVGScene()
 
 bool MVGScene::load()
 {
-	bool result;
-	result = MVGCameraReader::read(_cameras);
-	return result;
+	if(!MVGCameraReader::read(_cameras))
+		return false;
+	if(!MVGPointCloudReader::read(_pointClouds))
+		return false;
+	return true;
 }
 
 bool MVGScene::loadCameras()
@@ -31,7 +35,7 @@ bool MVGScene::loadCameras()
 
 bool MVGScene::loadPointCloud()
 {
-	return false;
+	return MVGPointCloudReader::read(_pointClouds);
 }
 
 const std::vector<MVGCamera>& MVGScene::cameras()

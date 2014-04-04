@@ -3,17 +3,10 @@
 using namespace mayaMVG;
 
 MVGPointCloudItem::MVGPointCloudItem()
+	: _weight(0.f)
 {
 }
 
 MVGPointCloudItem::~MVGPointCloudItem()
-{
-}
-
-MPoint MVGPointCloudItem::point() const
-{
-}
-
-MColor MVGPointCloudItem::color() const
 {
 }

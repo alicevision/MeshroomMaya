@@ -1,5 +1,6 @@
 #include <QWidget>
 #include "mayaMVG/maya/context/MVGContext.h"
+#include "mayaMVG/core/MVGMesh.h"
 #include "mayaMVG/maya/context/MVGBuildFaceManipulator.h"
 #include "mayaMVG/maya/MVGMayaUtil.h"
 #include "mayaMVG/qt/MVGEventFilter.h"
@@ -23,6 +24,8 @@ void MVGContext::toolOnSetup(MEvent & event)
 		return;
 	leftViewport->installEventFilter(m_eventFilter);
 	rightViewport->installEventFilter(m_eventFilter);
+
+	MVGMesh::create("mvgMesh");
 }
 
 void MVGContext::toolOffCleanup()

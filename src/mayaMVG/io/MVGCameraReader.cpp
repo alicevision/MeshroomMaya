@@ -55,7 +55,8 @@ bool MVGCameraReader::read(std::vector<MVGCamera>& cameraList)
 	    if (!(iss >> imageName >> width >> height >> cameraBin >> near >> far))
   			break;
 	    // create camera
-		MVGCamera camera(std::string("camera_") + stlplus::basename_part(cameraBin));
+	    MVGCamera camera = MVGCamera::create(std::string("camera_") + stlplus::basename_part(cameraBin));
+		// MVGCamera camera(std::string("camera_") + stlplus::basename_part(cameraBin));
 		setPinholeFromBinary(camera, cameraBin);
 		camera.setImageName(imageName);
 		// register camera

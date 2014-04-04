@@ -2,6 +2,7 @@
 
 #include <maya/MPoint.h>
 #include <maya/MColor.h>
+#include <vector>
 
 namespace mayaMVG {
 
@@ -11,18 +12,12 @@ class MVGPointCloudItem {
 		MVGPointCloudItem();
 		virtual ~MVGPointCloudItem();
 
-	private:
-		MVGPointCloudItem(const MVGPointCloudItem&);
-
 	public:
-		MPoint point() const;
-		MColor color() const;
-
-	private:
-		MPoint _point;
+		MPoint _position;
 		MColor _color;
+		std::vector<size_t> _visibility;
+		float _weight;
 		// xxx _sift;
-
 };
 
 } // mayaMVG

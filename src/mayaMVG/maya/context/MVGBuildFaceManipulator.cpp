@@ -1,10 +1,14 @@
 #include "mayaMVG/maya/context/MVGBuildFaceManipulator.h"
 #include "mayaMVG/maya/MVGMayaUtil.h"
 #include "mayaMVG/core/MVGLog.h"
+#include "mayaMVG/core/MVGGeometryUtil.h"
+#include "mayaMVG/core/MVGPointCloud.h"
+#include <maya/MFnCamera.h>
+
 
 using namespace mayaMVG;
 
-MTypeId MVGBuildFaceManipulator::_id(0x99999);
+MTypeId MVGBuildFaceManipulator::_id(0x99999); // FIXME /!\ 
 
 
 MVGBuildFaceManipulator::MVGBuildFaceManipulator()
@@ -79,29 +83,40 @@ void MVGBuildFaceManipulator::draw(M3dView & view, const MDagPath & path,
 			           (GLfloat)(mousey + (sin(-M_PI / 4.0f) * (radius + 10.0f))));
 			glEnd();
 
-			// draw GL lines between clicked points
-			MDagPath cameraPath;
-			view.getCamera(cameraPath);
-			if(cameraPath == _lastCameraPath)
+			if(!_wpoints.empty()) 
 			{
-				if(_points.size() > 2)
+				MDagPath cameraPath;
+				view.getCamera(cameraPath);
+				if(cameraPath == _lastCameraPath)
 				{
-					glBegin(GL_POLYGON);
-					for(size_t i = 0; i < _points.size(); ++i)
-						glVertex2f(_points[i].x, _points[i].y);
+					short x;
+					short y;
+					if(_wpoints.size() > 2)
+					{
+						glBegin(GL_POLYGON);
+						for(size_t i = 0; i < _wpoints.size(); ++i){
+							view.worldToView(_wpoints[i], x, y);
+							glVertex2f(x, y);
+						}
+						glEnd();
+					}
+					else if(_wpoints.size() > 1)
+					{
+						glBegin(GL_LINES);
+						view.worldToView(_wpoints[0], x, y);
+						glVertex2f(x, y);
+						view.worldToView(_wpoints[1], x, y);
+						glVertex2f(x, y);
+						glEnd();
+					}
+					glPointSize(4.f);
+					glBegin(GL_POINTS);
+					for(size_t i = 0; i < _wpoints.size(); ++i){
+						view.worldToView(_wpoints[i], x, y);
+						glVertex2f(x, y);
+					}
 					glEnd();
 				}
-				else if(_points.size() > 1) {
-					glBegin(GL_LINES);
-					glVertex2f(_points[0].x, _points[0].y);
-					glVertex2f(_points[1].x, _points[1].y);
-					glEnd();
-				}
-				glPointSize(4.f);
-				glBegin(GL_POINTS);
-				for(size_t i = 0; i < _points.size(); ++i)
-					glVertex2f(_points[i].x, _points[i].y);
-				glEnd();
 			}
 
 			glPopMatrix();
@@ -116,43 +131,63 @@ void MVGBuildFaceManipulator::draw(M3dView & view, const MDagPath & path,
 	view.endGL();
 }
 
-
-
-
 MStatus MVGBuildFaceManipulator::doPress(M3dView& view)
 {
 	MDagPath cameraPath;
 	view.getCamera(cameraPath);
 
-	// view changed - clear all points
+	// view changed : clear all points & register the new camera path
 	if((_lastCameraPath.length() > 0) && !(cameraPath == _lastCameraPath))
-	{
-		_points.clear();
-	}
+		_wpoints.clear();
 	_lastCameraPath = cameraPath;
 
-	// prepare for new 2D face
-	if(_points.size() > 3)
+	// we may have to prepare for next face2D
+	if(_wpoints.size() > 3)
 	{
+		// keep the 2 last created points
 		MPoint first, second;
-		first = _points[3];
-		second = _points[2];
-		_points.clear();
-		_points.push_back(first);
-		_points.push_back(second);
+		first = _wpoints[3];
+		second = _wpoints[2];
+		_wpoints.clear();
+		_wpoints.push_back(first);
+		_wpoints.push_back(second);
 	}
 
 	// add a new point
+	MPoint wpos;
+	MVector wdir;
 	short mousex, mousey;
 	mousePosition(mousex, mousey);
-	_points.push_back(MPoint(mousex, mousey));
+	view.viewToWorld(mousex, mousey, wpos, wdir);
+	_wpoints.push_back(wpos);
 
-	// build the face
-	if(_points.size() > 2)
+	// TODO
+	// check if this point intersect an existing Point2D
+
+	// in case we can add a new polygon (quad)
+	if(_wpoints.size() > 2)
 	{
-		MPoint barycenter = (_points[_points.size()-3] + _points[_points.size()-1]) / 2.0;
-		MPoint p = _points[_points.size()-2] + (2 * ( barycenter - _points[_points.size()-2]));
-		_points.push_back(p);
+		// auto-compute the last point of our Face2D
+		MPoint barycenter = (_wpoints[_wpoints.size()-3] + _wpoints[_wpoints.size()-1]) / 2.0;
+		MPoint p = _wpoints[_wpoints.size()-2] + (2 * (barycenter - _wpoints[_wpoints.size()-2]));
+		_wpoints.push_back(p);
+
+		// TODO
+		// find the corresponding Face3D
+		MVGFace3D face3D;
+		MVGFace2D face2D;
+		face2D._a = _wpoints[0];
+		face2D._b = _wpoints[1];
+		face2D._c = _wpoints[2];
+		face2D._d = _wpoints[3];
+		MVGPointCloud pointCloud("pointCloud");
+		MVGCamera camera = getMVGCamera();
+		if(MVGGeometryUtil::projectFace2D(face3D, pointCloud, camera, face2D))
+		{
+			// add face3D to the mesh
+
+		}
+
 	}
 	
 	return MPxManipulatorNode::doPress(view);
@@ -180,7 +215,20 @@ void MVGBuildFaceManipulator::drawUI(MHWRender::MUIDrawManager& drawManager, con
 		return;
 	drawManager.beginDrawable();
 	drawManager.setColor(MColor(1.0, 0.0, 0.0, 0.6));
-	for(size_t i = 1; i < _points.size(); ++i)
-		drawManager.line2d(_points[i-1], _points[i]);
+	for(size_t i = 1; i < _wpoints.size(); ++i)
+		drawManager.line2d(_wpoints[i-1], _wpoints[i]);
 	drawManager.endDrawable();
+}
+
+MVGCamera MVGBuildFaceManipulator::getMVGCamera()
+{
+	return MVGCamera(_lastCameraPath.partialPathName().asChar());
+}
+
+MVGCamera MVGBuildFaceManipulator::getMVGCamera(M3dView& view)
+{
+	MDagPath cameraPath;
+	view.getCamera(cameraPath);
+	// cameraPath.pop();
+	return MVGCamera(cameraPath.partialPathName().asChar());
 }

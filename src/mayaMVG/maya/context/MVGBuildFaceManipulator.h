@@ -1,8 +1,11 @@
 #pragma once
 
+#include "mayaMVG/core/MVGCamera.h"
 #include <maya/MPxManipulatorNode.h>
 #include <maya/MDagPath.h>
 #include <vector>
+
+class M3dView;
 
 namespace mayaMVG {
 
@@ -27,9 +30,12 @@ class MVGBuildFaceManipulator: public MPxManipulatorNode
 		virtual void preDrawUI(const M3dView&);
 		virtual void drawUI(MHWRender::MUIDrawManager&,	const MHWRender::MFrameContext&) const;
 
+		MVGCamera getMVGCamera();
+		MVGCamera getMVGCamera(M3dView&);
+
 	public:
 		static MTypeId _id;
-		std::vector<MPoint> _points;
+		std::vector<MPoint> _wpoints;
 		MDagPath _lastCameraPath;
 		bool _drawEnabled;
 };

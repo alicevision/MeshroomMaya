@@ -38,7 +38,7 @@
       <widget class="QToolButton" name="leftButton">
        <property name="minimumSize">
         <size>
-         <width>20</width>
+         <width>40</width>
          <height>60</height>
         </size>
        </property>
@@ -51,7 +51,7 @@
       <widget class="QToolButton" name="rightButton">
        <property name="minimumSize">
         <size>
-         <width>20</width>
+         <width>40</width>
          <height>60</height>
         </size>
        </property>

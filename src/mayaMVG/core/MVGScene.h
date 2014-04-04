@@ -41,6 +41,7 @@ class MVGScene {
 		static std::string _cameraDirectoryName;
 		static std::string _imageDirectoryName;
 		static std::vector<MVGCamera> _cameras;
+		static std::vector<MVGPointCloud> _pointClouds;
 };
 
 } // mayaMVG
