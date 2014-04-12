@@ -76,13 +76,13 @@ MStatus MVGCmd::doIt(const MArgList& args) {
 	// create maya window
 	status = MVGMayaUtil::createMVGWindow();
 	if(!status) {
-		LOG_ERROR("MVGCmd", "Unable to create MVGContext.")
+		LOG_ERROR("Unable to create MVGContext.")
 		return status;
 	}
 	QWidget* mayaWindow = MVGMayaUtil::getMVGWindow();
 	QWidget* menuLayout = MVGMayaUtil::getMVGMenuLayout();
 	if(!mayaWindow || !menuLayout) {
-		LOG_ERROR("MVGCmd", "Unable to retrieve MVGWindow.")
+		LOG_ERROR("Unable to retrieve MVGWindow.")
 		return status;
 	}
 
@@ -93,7 +93,7 @@ MStatus MVGCmd::doIt(const MArgList& args) {
 	// create maya MVGContext
 	status = MVGMayaUtil::createMVGContext();
 	if(!status) {
-		LOG_ERROR("MVGCmd", "Unable to create MVGContext.")
+		LOG_ERROR("Unable to create MVGContext.")
 		return status;
 	}
 
@@ -102,7 +102,7 @@ MStatus MVGCmd::doIt(const MArgList& args) {
 	QWidget* leftViewport = MVGMayaUtil::getMVGLeftViewportLayout();
 	QWidget* rightViewport = MVGMayaUtil::getMVGRightViewportLayout();
 	if(!leftViewport || !rightViewport) {
-		LOG_ERROR("MVGCmd", "Unable to retrieve maya viewport layouts.")
+		LOG_ERROR("Unable to retrieve maya viewport layouts.")
 		return MS::kFailure;
 	}
 	leftViewport->installEventFilter(mouseEventFilter);

@@ -21,7 +21,7 @@ MStatus initializePlugin(MObject obj) {
 	status = plugin.registerNode("MVGBuildFaceManipulator", MVGBuildFaceManipulator::_id, &MVGBuildFaceManipulator::creator
 								, &MVGBuildFaceManipulator::initialize, MPxNode::kManipulatorNode);
 	if (!status)
-		LOG_ERROR("initializePlugin", "unexpected error");
+		LOG_ERROR("unexpected error");
 	return status;
 }
 
@@ -43,6 +43,6 @@ MStatus uninitializePlugin(MObject obj) {
 	status = plugin.deregisterNode(MVGBuildFaceManipulator::_id);
 
 	if (!status)
-		LOG_ERROR("uninitializePlugin", "unexpected error");
+		LOG_ERROR("unexpected error");
 	return status;
 }

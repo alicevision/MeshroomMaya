@@ -50,7 +50,7 @@ void MVGMenu::on_browseButton_clicked()
 	ui.directoryLineEdit->setText(directory);
 	MVGScene::setProjectDirectory(directory.toStdString());
 	if(!MVGScene::load())
-		LOG_ERROR("MVGMenu", "An error occured when loading project.")
+		LOG_ERROR("An error occured when loading project.")
 	// populate menu
 	const std::vector<MVGCamera>& cameraList = MVGScene::cameras();
 	std::vector<MVGCamera>::const_iterator it = cameraList.begin();

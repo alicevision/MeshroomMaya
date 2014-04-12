@@ -32,7 +32,7 @@ bool MVGCameraReader::read(std::vector<MVGCamera>& cameraList)
 	std::ifstream infile(file.c_str());
 	if (!infile.is_open())
 	{
-		LOG_ERROR("MVGCameraReader", "Camera file not found.")
+		LOG_ERROR("Camera file not found.")
 		return false;
 	}
 

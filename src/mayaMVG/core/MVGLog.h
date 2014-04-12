@@ -5,16 +5,16 @@
 
 namespace mayaMVG {
 
-#define LOG_ERROR(func, msg) { std::stringstream s;\
-					 s << "[" << func << "] " << msg; \
+#define LOG_ERROR(msg) { std::stringstream s;\
+					 s << "[MayaMVG] " << msg; \
 					 MGlobal::displayError(s.str().c_str()); \
 				   }
-#define LOG_WARNING(func, msg) { std::stringstream s;\
-					 s << "[" << func << "] " << msg; \
+#define LOG_WARNING(msg) { std::stringstream s;\
+					 s << "[MayaMVG] " << msg; \
 					 MGlobal::displayWarning(s.str().c_str()); \
 				   }
-#define LOG_INFO(func, msg) { std::stringstream s;\
-					 s << "[" << func << "] " << msg; \
+#define LOG_INFO(msg) { std::stringstream s;\
+					 s << "[MayaMVG] " << msg; \
 					 MGlobal::displayInfo(s.str().c_str()); \
 				   }
 

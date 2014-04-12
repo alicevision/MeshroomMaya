@@ -12,7 +12,7 @@ bool MVGPointCloudReader::read(std::vector<MVGPointCloud>& pointClouds)
 	Ply ply;
 	if(!ply.open(file))
 	{
-		LOG_ERROR("MVGPointCloudReader", "File doesn't open")
+		LOG_ERROR("File doesn't open")
 		ply.close();
 		return false;
 	}
