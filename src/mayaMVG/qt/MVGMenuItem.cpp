@@ -30,6 +30,7 @@ void MVGMenuItem::on_leftButton_clicked()
 	selectedViewChanged("L");
 	ui.leftButton->setStyleSheet("QToolButton {background-color: rgb(230,230,230); color: rgb(67,67,67);}");
 	_camera.select();
+	_camera.loadImagePlane();
 	MVGMayaUtil::setMVGLeftCamera(_camera);
 }
 
@@ -38,6 +39,7 @@ void MVGMenuItem::on_rightButton_clicked()
 	selectedViewChanged("R");
 	ui.rightButton->setStyleSheet("QToolButton {background-color: rgb(230,230,230); color: rgb(67,67,67);}");
 	_camera.select();
+	_camera.loadImagePlane();
 	MVGMayaUtil::setMVGRightCamera(_camera);
 }
 

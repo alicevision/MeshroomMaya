@@ -74,12 +74,12 @@ void MVGCamera::setName(const std::string& name)
 	depNode.setName(name.c_str());
 }
 
-const std::string& MVGCamera::imageName() const
+const std::string& MVGCamera::imagePlane() const
 {
 	return _imageName;
 }
 
-void MVGCamera::setImageName(const std::string& img)
+void MVGCamera::setImagePlane(const std::string& img)
 {
 	_imageName = img;
 
@@ -123,6 +123,17 @@ void MVGCamera::setImageName(const std::string& img)
 	dagModifier.reparentNode(transform, _dagpath.node());
 	dagModifier.connect(fnDep.findPlug("message"), fnCamera.findPlug("imagePlane"));
 	dagModifier.doIt();
+}
+
+void MVGCamera::loadImagePlane() const
+{
+	// set imageName attribute on imagePlane
+	// starts loading...
+	if(_dagpathImg.isValid())
+	{
+		MFnDependencyNode fn(_dagpathImg.node());
+		fn.findPlug("imageName").setValue(MVGScene::fullPath(MVGScene::imageDirectory(), _imageName).c_str());
+	}
 }
 
 const openMVG::PinholeCamera& MVGCamera::pinholeCamera() const
@@ -216,12 +227,4 @@ void MVGCamera::select() const
 	MSelectionList list;
 	list.add(_dagpath);
 	MGlobal::setActiveSelectionList(list);
-
-	// set imageName attribute on imagePlane
-	// starts loading...
-	if(_dagpathImg.isValid())
-	{
-		MFnDependencyNode fn(_dagpathImg.node());
-		fn.findPlug("imageName").setValue(MVGScene::fullPath(MVGScene::imageDirectory(), _imageName).c_str());
-	}
 }

@@ -33,8 +33,9 @@ class MVGCamera {
 		void setDagPath(const MDagPath& dagpath);
 		void setName(const std::string&);
 		const std::string name() const;
-		void setImageName(const std::string&);
-		const std::string& imageName() const;
+		void setImagePlane(const std::string&);
+		const std::string& imagePlane() const;
+		void loadImagePlane() const;
 		void setPinholeCamera(const openMVG::PinholeCamera&);
 		const openMVG::PinholeCamera& pinholeCamera() const;
 		// double zoom() const;
