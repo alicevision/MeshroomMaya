@@ -16,7 +16,6 @@
 using namespace mayaMVG;
 
 MVGCamera::MVGCamera(const std::string& name)
-	: _name(name)
 {
 	if(name.empty())
 		throw std::invalid_argument(name);
@@ -63,18 +62,16 @@ void MVGCamera::setDagPath(const MDagPath& dagpath)
 	_dagpath = dagpath;
 }
 
-const std::string& MVGCamera::name() const
+const std::string MVGCamera::name() const
 {
-	return _name;
+	MFnDependencyNode depNode(_dagpath.node());
+	return depNode.name().asChar();
 }
 
 void MVGCamera::setName(const std::string& name)
 {
-	_name = name;
-
-	// set maya camera name
 	MFnDependencyNode depNode(_dagpath.node());
-	depNode.setName(_name.c_str());
+	depNode.setName(name.c_str());
 }
 
 const std::string& MVGCamera::imageName() const

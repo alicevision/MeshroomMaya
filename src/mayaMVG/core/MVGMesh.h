@@ -18,12 +18,11 @@ class MVGMesh {
 
 	public:
 		void setName(const std::string&);
-		const std::string& name() const;
+		const std::string name() const;
 		void add3DPoint(const MPoint&);
 		void move3DPoint(const MPoint&);
 
 	private:
-		std::string _name;
 		MDagPath _dagpath;
 		std::vector<MPoint> _points;
 

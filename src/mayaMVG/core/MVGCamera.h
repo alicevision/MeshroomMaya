@@ -32,7 +32,7 @@ class MVGCamera {
 		const MDagPath& dagPath() const;
 		void setDagPath(const MDagPath& dagpath);
 		void setName(const std::string&);
-		const std::string& name() const;
+		const std::string name() const;
 		void setImageName(const std::string&);
 		const std::string& imageName() const;
 		void setPinholeCamera(const openMVG::PinholeCamera&);
@@ -47,7 +47,6 @@ class MVGCamera {
 		void select() const;
 
 	private:
-		std::string _name;
 		std::string _imageName;
 		openMVG::PinholeCamera _pinhole;
 		STEP _step;

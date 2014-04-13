@@ -9,7 +9,6 @@ using namespace mayaMVG;
 
 		
 MVGMesh::MVGMesh(const std::string& name)
-	: _name(name)
 {
 	if(name.empty())
 		throw std::invalid_argument(name);
@@ -50,18 +49,16 @@ MVGMesh::~MVGMesh()
 {
 }
 
-const std::string& MVGMesh::name() const
+const std::string MVGMesh::name() const
 {
-	return _name;
+	MFnDependencyNode depNode(_dagpath.node());
+	return depNode.name().asChar();
 }
 
 void MVGMesh::setName(const std::string& name)
 {
-	_name = name;
-
-	// set maya camera name
 	MFnDependencyNode depNode(_dagpath.node());
-	depNode.setName(_name.c_str());
+	depNode.setName(name.c_str());
 }
 
 void MVGMesh::add3DPoint(const MPoint&)

@@ -9,7 +9,6 @@
 using namespace mayaMVG;
 
 MVGPointCloud::MVGPointCloud(const std::string& name)
-	: _name(name)
 {
 	if(name.empty())
 		throw std::invalid_argument(name);
@@ -46,18 +45,16 @@ MVGPointCloud::~MVGPointCloud()
 {
 }
 
-const std::string& MVGPointCloud::name() const
+const std::string MVGPointCloud::name() const
 {
-	return _name;
+	MFnDependencyNode depNode(_dagpath.node());
+	return depNode.name().asChar();
 }
 
 void MVGPointCloud::setName(const std::string& name)
 {
-	_name = name;
-
-	// set maya camera name
 	MFnDependencyNode depNode(_dagpath.node());
-	depNode.setName(_name.c_str());
+	depNode.setName(name.c_str());
 }
 
 void MVGPointCloud::setItems(const std::vector<MVGPointCloudItem>& items)
