@@ -5,7 +5,7 @@
 
 using namespace mayaMVG;
 
-bool MVGPointCloudReader::read(std::vector<MVGPointCloud>& pointClouds)
+bool MVGPointCloudReader::read(MVGPointCloud& pointCloud)
 {
 	std::string file = MVGScene::fullPath(MVGScene::fullPath(MVGScene::projectDirectory(), "clouds"), "calib.ply");
 
@@ -17,7 +17,6 @@ bool MVGPointCloudReader::read(std::vector<MVGPointCloud>& pointClouds)
 		return false;
 	}
 
-	MVGPointCloud pointCloud = MVGPointCloud::create("pointCloud");
 	std::vector<MVGPointCloudItem> items;
 	// iterate over elements
 	for(Ply::ElementsIterator it = ply.elements_begin(); it != ply.elements_end(); ++it)
@@ -86,7 +85,6 @@ bool MVGPointCloudReader::read(std::vector<MVGPointCloud>& pointClouds)
 		}
 	}
 	pointCloud.setItems(items);
-	pointClouds.push_back(pointCloud);
 	ply.close();
 	return true;
 }

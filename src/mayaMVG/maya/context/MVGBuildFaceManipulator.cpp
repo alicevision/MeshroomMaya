@@ -180,14 +180,12 @@ MStatus MVGBuildFaceManipulator::doPress(M3dView& view)
 		face2D._b = _wpoints[1];
 		face2D._c = _wpoints[2];
 		face2D._d = _wpoints[3];
-		MVGPointCloud pointCloud("pointCloud");
+		MVGPointCloud pointCloud("mvgPointCloud");
 		MVGCamera camera = getMVGCamera();
 		if(MVGGeometryUtil::projectFace2D(face3D, pointCloud, camera, face2D))
 		{
 			// add face3D to the mesh
-
 		}
-
 	}
 	
 	return MPxManipulatorNode::doPress(view);

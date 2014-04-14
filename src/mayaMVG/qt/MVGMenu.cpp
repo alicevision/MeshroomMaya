@@ -83,6 +83,6 @@ void MVGMenu::addItem(const MVGCamera& camera)
 
 void MVGMenu::selectedViewChanged(const QString& view) 
 {
-	for(size_t i = 0; i <  ui.cameraList->count(); ++i)
+	for(size_t i = 0; i < ui.cameraList->count(); ++i)
 		((MVGMenuItem *)ui.cameraList->itemWidget(ui.cameraList->item(i)))->clearSelectedView(view);
 }

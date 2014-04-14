@@ -20,7 +20,8 @@ namespace {
 		QVariant panelName = obj->property("mvg_panel");
 		if(panelName.type()==QVariant::Invalid)
 			return MS::kFailure;
-		return (panelName.toString()=="left") ? MVGMayaUtil::getMVGLeftCamera(path) : MVGMayaUtil::getMVGRightCamera(path);
+		return (panelName.toString()=="left") ? 
+        MVGMayaUtil::getMVGLeftCamera(path) : MVGMayaUtil::getMVGRightCamera(path);
 	}
 }
 
@@ -34,6 +35,10 @@ MVGKeyEventFilter::MVGKeyEventFilter()
 
 bool MVGKeyEventFilter::eventFilter(QObject * obj, QEvent * e)
 {
+  
+  // TODO
+  // Key Press "F" to fit image plane
+
 	if ((e->type() == QEvent::KeyPress)) {
 		QKeyEvent * keyevent = static_cast<QKeyEvent *>(e);
 		if (keyevent->isAutoRepeat()) {
@@ -70,14 +75,12 @@ bool MVGMouseEventFilter::eventFilter(QObject * obj, QEvent * e)
   const double unit_maya = 1.4142135623730951;
   QMouseEvent * mouseevent = static_cast<QMouseEvent *>(e);
   
-  // TODO: Key Press "F" to fit image plane
-  
   // Init pan and zoom
   if (e->type() == QEvent::MouseButtonPress)
   {
-    // Qt::KeyboardModifiers modifiers = QApplication::keyboardModifiers();
     // Camera Pan (Alt + Mid button)
-    if(/*(modifiers & Qt::AltModifier) &&*/ (mouseevent->button() & Qt::MidButton))
+    Qt::KeyboardModifiers modifiers = QApplication::keyboardModifiers();
+    if((modifiers & Qt::AltModifier) && (mouseevent->button() & Qt::MidButton))
     {
       MDagPath cameraPath;
       if(getCameraPathFromQbject(obj, cameraPath))
@@ -88,7 +91,6 @@ bool MVGMouseEventFilter::eventFilter(QObject * obj, QEvent * e)
         // register camera film offset
         m_cameraHPan = camera.horizontalPan();
         m_cameraVPan = camera.verticalPan();
-        
         // set as tracking
         m_tracking = true;
       }
@@ -110,8 +112,8 @@ bool MVGMouseEventFilter::eventFilter(QObject * obj, QEvent * e)
       const double viewport_width = widget->width();
       QPointF offset = (offset_screen / viewport_width) * unit_maya * camera.zoom();
       
-      camera.setHorizontalPan( m_cameraHPan + offset.x( ) );
-      camera.setVerticalPan( m_cameraVPan - offset.y( ) );
+      camera.setHorizontalPan(m_cameraHPan + offset.x());
+      camera.setVerticalPan(m_cameraVPan - offset.y());
     }
   }
   else if(e->type() == QEvent::MouseButtonRelease) 
@@ -137,7 +139,7 @@ bool MVGMouseEventFilter::eventFilter(QObject * obj, QEvent * e)
       static const double wheelStep = 1.15;
       const double previousZoom = camera.zoom();
       double newZoom = wheelevent->delta() > 0 ? previousZoom / wheelStep : previousZoom * wheelStep;
-      newZoom = std::max( newZoom, 0.0001 );  // zoom max
+      newZoom = std::max(newZoom, 0.0001);  // zoom max
       camera.setZoom( newZoom );
       const double scaleRatio = newZoom / previousZoom;
       

@@ -1,4 +1,5 @@
 #include "mayaMVG/core/MVGScene.h"
+#include "mayaMVG/core/MVGLog.h"
 #include "mayaMVG/io/MVGCameraReader.h"
 #include "mayaMVG/io/MVGPointCloudReader.h"
 #include <third_party/stlplus3/filesystemSimplified/file_system.hpp>
@@ -9,7 +10,6 @@ std::string MVGScene::_projectDirectory;
 std::string MVGScene::_cameraDirectoryName;
 std::string MVGScene::_imageDirectoryName;
 std::vector<MVGCamera> MVGScene::_cameras;
-std::vector<MVGPointCloud> MVGScene::_pointClouds;
 
 MVGScene::MVGScene()
 {
@@ -21,10 +21,14 @@ MVGScene::~MVGScene()
 
 bool MVGScene::load()
 {
-	if(!MVGCameraReader::read(_cameras))
+	// cameras
+	if(!loadCameras())
 		return false;
-	if(!MVGPointCloudReader::read(_pointClouds))
+	// point cloud
+	if(!loadPointCloud())
 		return false;
+	// mesh
+	MVGMesh::create("mvgMesh");
 	return true;
 }
 
@@ -35,7 +39,8 @@ bool MVGScene::loadCameras()
 
 bool MVGScene::loadPointCloud()
 {
-	return MVGPointCloudReader::read(_pointClouds);
+	MVGPointCloud pointCloud = MVGPointCloud::create("mvgPointCloud");
+	return MVGPointCloudReader::read(pointCloud);
 }
 
 const std::vector<MVGCamera>& MVGScene::cameras()
@@ -87,15 +92,3 @@ std::string MVGScene::fullPath(const std::string& directory, const  std::string&
 {
 	return stlplus::create_filespec(directory, file);
 }
-
-// std::vector<MVGPointCloud>& MVGScene::getPointClouds()
-// {
-// 	std::vector<MVGPointCloud> v;
-// 	return v;
-// }
-
-// std::vector<MVGMesh>& MVGScene::getMeshes()
-// {
-// 	std::vector<MVGMesh> v;
-// 	return v;
-// }

@@ -20,7 +20,8 @@ class MVGScene {
 		static bool load();
 		static bool loadCameras();
 		static bool loadPointCloud();
-
+	
+	public:
 		static void setProjectDirectory(const std::string&);
 		static void setCameraDirectoryName(const std::string&);
 		static void setImageDirectoryName(const std::string&);
@@ -30,18 +31,15 @@ class MVGScene {
 		static std::string imageDirectory();
 		static const std::string& imageDirectoryName();
 		static std::string fullPath(const std::string&, const std::string&);
-
+	
+	public:
 		static const std::vector<MVGCamera>& cameras();
-		// static std::vector<MVGPointCloud>& pointClouds();
-		// static std::vector<MVGMesh>& meshes();
-
 
 	private:
 		static std::string _projectDirectory;
 		static std::string _cameraDirectoryName;
 		static std::string _imageDirectoryName;
 		static std::vector<MVGCamera> _cameras;
-		static std::vector<MVGPointCloud> _pointClouds;
 };
 
 } // mayaMVG
