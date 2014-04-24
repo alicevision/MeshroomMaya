@@ -16,6 +16,7 @@ namespace mayaMVG {
 #define LOG_INFO(msg) { std::stringstream s;\
 					 s << "[MayaMVG] " << msg; \
 					 MGlobal::displayInfo(s.str().c_str()); \
+					 std::cout << msg << std::endl; \
 				   }
 
 } // mayaMVG

@@ -11,12 +11,12 @@ namespace { // empty namespace
 	bool setPinholeFromBinary(MVGCamera& camera, const std::string& binaryName)
 	{
 		std::string file = MVGScene::fullPath(MVGScene::cameraDirectory(), binaryName);
-		openMVG::PinholeCamera pinholeCamera;
 		std::ifstream infile(file.c_str(), std::ios::binary);
 		if(infile.fail())
 			return false;
-		infile.read((char*)pinholeCamera._P.data(), (std::streamsize)(3 * 4) * sizeof(double));
-		openMVG::KRt_From_P(pinholeCamera._P, &pinholeCamera._K, &pinholeCamera._R, &pinholeCamera._t);
+		openMVG::Mat34 P;
+		infile.read((char*)P.data(), (std::streamsize)(3 * 4) * sizeof(double));
+		openMVG::PinholeCamera pinholeCamera(P);		
 		camera.setPinholeCamera(pinholeCamera);
 		infile.close();
 		return true;
@@ -28,7 +28,6 @@ namespace { // empty namespace
 bool MVGCameraReader::read(std::vector<MVGCamera>& cameraList)
 {
 	std::string file = MVGScene::fullPath(MVGScene::projectDirectory(), "views.txt");
-
 	std::ifstream infile(file.c_str());
 	if (!infile.is_open())
 	{

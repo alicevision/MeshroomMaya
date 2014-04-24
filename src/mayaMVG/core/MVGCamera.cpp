@@ -9,7 +9,8 @@
 #include <maya/MFnTransform.h>
 #include <maya/MPlug.h>
 #include <maya/MDagModifier.h>
-#include <maya/MFnTypedAttribute.h>
+#include <maya/MFnNumericAttribute.h>
+#include <maya/MFnCompoundAttribute.h>
 #include <maya/MSelectionList.h>
 #include <stdexcept>
 
@@ -100,12 +101,6 @@ void MVGCamera::setImagePlane(const std::string& img)
 	_dagpathImg = MDagPath::getAPathTo(transform);
 	_dagpathImg.extendToShape();
 
-	// // then add a dynamic attribute
-	// MFnTypedAttribute tAttr;
-	// MObject dynAdd = tAttr.create("mvgImageName", "min", MFnData::kString);
-	// dagModifier.addAttribute(_dagpathImg.node(), dynAdd);
-	// dagModifier.doIt();
-
 	// image plane parameters
 	MFnDependencyNode fnDep(_dagpathImg.node(), &status);
 	// disabling image loading : do not fill the 'imageName' field
@@ -136,21 +131,39 @@ void MVGCamera::loadImagePlane() const
 	}
 }
 
-const openMVG::PinholeCamera& MVGCamera::pinholeCamera() const
+const openMVG::PinholeCamera& MVGCamera::pinholeCamera()
 {
+	// get pinhole if exists
+	if(_pinhole._P != openMVG::Mat34::Identity())
+		return _pinhole;
+	
+	// or retrieve it from maya attributes
+	MFnDependencyNode fn(_dagpath.node());
+	openMVG::Mat34 P;
+	P(0, 0) = fn.findPlug("p00").asFloat();
+	P(0, 1) = fn.findPlug("p01").asFloat();
+	P(0, 2) = fn.findPlug("p02").asFloat();
+	P(0, 3) = fn.findPlug("p03").asFloat();
+	P(1, 0) = fn.findPlug("p10").asFloat();
+	P(1, 1) = fn.findPlug("p11").asFloat();
+	P(1, 2) = fn.findPlug("p12").asFloat();
+	P(1, 3) = fn.findPlug("p13").asFloat();
+	P(2, 0) = fn.findPlug("p20").asFloat();
+	P(2, 1) = fn.findPlug("p21").asFloat();
+	P(2, 2) = fn.findPlug("p22").asFloat();
+	P(2, 3) = fn.findPlug("p23").asFloat();
+	_pinhole = openMVG::PinholeCamera(P);
 	return _pinhole;
 }
 
 void MVGCamera::setPinholeCamera(const openMVG::PinholeCamera& cam)
 {
-	_pinhole = cam;
-
 	assert(_dagpath.isValid());
+	_pinhole = cam;
 
 	// set maya camera position
 	MFnTransform fnTransform(_dagpath);
-	openMVG::Vec3 pos = (-1) * _pinhole._R.transpose() * _pinhole._t;
-	fnTransform.setTranslation(MVector(pos(0), pos(1), pos(2)), MSpace::kTransform);
+	fnTransform.setTranslation(MVector(_pinhole._C(0), _pinhole._C(1), _pinhole._C(2)), MSpace::kTransform);
 
 	// set maya camera orientation 
 	MMatrix m = MMatrix::identity;
@@ -184,6 +197,50 @@ void MVGCamera::setPinholeCamera(const openMVG::PinholeCamera& cam)
 	fnTransform.findPlug("rotateX").setLocked(true);
 	fnTransform.findPlug("rotateY").setLocked(true);
 	fnTransform.findPlug("rotateZ").setLocked(true);
+
+	// register pinhole attribute P (projection matrix P = K[R|t])
+	MDagModifier dagModifier;
+	MFnCompoundAttribute cAttr;
+	MObject dynP = cAttr.create("pinholeProjectionMatrix", "ppm");
+	MFnNumericAttribute nAttr;
+	MObject o00 = nAttr.create("pinholeP00", "p00", MFnNumericData::kFloat, _pinhole._P(0,0));
+	dagModifier.addAttribute(_dagpath.node(), o00);
+	cAttr.addChild(o00);
+	MObject o01 = nAttr.create("pinholeP01", "p01", MFnNumericData::kFloat, _pinhole._P(0,1));
+	dagModifier.addAttribute(_dagpath.node(), o01);
+	cAttr.addChild(o01);
+	MObject o02 = nAttr.create("pinholeP02", "p02", MFnNumericData::kFloat, _pinhole._P(0,2));
+	dagModifier.addAttribute(_dagpath.node(), o02);
+	cAttr.addChild(o02);
+	MObject o03 = nAttr.create("pinholeP03", "p03", MFnNumericData::kFloat, _pinhole._P(0,3));
+	dagModifier.addAttribute(_dagpath.node(), o03);
+	cAttr.addChild(o03);
+	MObject o10 = nAttr.create("pinholeP10", "p10", MFnNumericData::kFloat, _pinhole._P(1,0));
+	dagModifier.addAttribute(_dagpath.node(), o10);
+	cAttr.addChild(o10);
+	MObject o11 = nAttr.create("pinholeP11", "p11", MFnNumericData::kFloat, _pinhole._P(1,1));
+	dagModifier.addAttribute(_dagpath.node(), o11);
+	cAttr.addChild(o11);
+	MObject o12 = nAttr.create("pinholeP12", "p12", MFnNumericData::kFloat, _pinhole._P(1,2));
+	dagModifier.addAttribute(_dagpath.node(), o12);
+	cAttr.addChild(o12);
+	MObject o13 = nAttr.create("pinholeP13", "p13", MFnNumericData::kFloat, _pinhole._P(1,3));
+	dagModifier.addAttribute(_dagpath.node(), o13);
+	cAttr.addChild(o13);
+	MObject o20 = nAttr.create("pinholeP20", "p20", MFnNumericData::kFloat, _pinhole._P(2,0));
+	dagModifier.addAttribute(_dagpath.node(), o20);
+	cAttr.addChild(o20);
+	MObject o21 = nAttr.create("pinholeP21", "p21", MFnNumericData::kFloat, _pinhole._P(2,1));
+	dagModifier.addAttribute(_dagpath.node(), o21);
+	cAttr.addChild(o21);
+	MObject o22 = nAttr.create("pinholeP22", "p22", MFnNumericData::kFloat, _pinhole._P(2,2));
+	dagModifier.addAttribute(_dagpath.node(), o22);
+	cAttr.addChild(o22);
+	MObject o23 = nAttr.create("pinholeP23", "p23", MFnNumericData::kFloat, _pinhole._P(2,3));
+	dagModifier.addAttribute(_dagpath.node(), o23);
+	cAttr.addChild(o23);
+	dagModifier.addAttribute(_dagpath.node(), dynP);
+	dagModifier.doIt();
 }
 
 // double MVGCamera::zoom() const

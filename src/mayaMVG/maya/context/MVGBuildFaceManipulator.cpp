@@ -3,6 +3,7 @@
 #include "mayaMVG/core/MVGLog.h"
 #include "mayaMVG/core/MVGGeometryUtil.h"
 #include "mayaMVG/core/MVGPointCloud.h"
+#include "mayaMVG/core/MVGMesh.h"
 #include <maya/MFnCamera.h>
 
 
@@ -141,17 +142,8 @@ MStatus MVGBuildFaceManipulator::doPress(M3dView& view)
 		_wpoints.clear();
 	_lastCameraPath = cameraPath;
 
-	// we may have to prepare for next face2D
 	if(_wpoints.size() > 3)
-	{
-		// keep the 2 last created points
-		MPoint first, second;
-		first = _wpoints[3];
-		second = _wpoints[2];
 		_wpoints.clear();
-		_wpoints.push_back(first);
-		_wpoints.push_back(second);
-	}
 
 	// add a new point
 	MPoint wpos;
@@ -164,27 +156,17 @@ MStatus MVGBuildFaceManipulator::doPress(M3dView& view)
 	// TODO
 	// check if this point intersect an existing Point2D
 
-	// in case we can add a new polygon (quad)
-	if(_wpoints.size() > 2)
+	if(_wpoints.size() > 3)
 	{
-		// auto-compute the last point of our Face2D
-		MPoint barycenter = (_wpoints[_wpoints.size()-3] + _wpoints[_wpoints.size()-1]) / 2.0;
-		MPoint p = _wpoints[_wpoints.size()-2] + (2 * (barycenter - _wpoints[_wpoints.size()-2]));
-		_wpoints.push_back(p);
-
-		// TODO
 		// find the corresponding Face3D
 		MVGFace3D face3D;
-		MVGFace2D face2D;
-		face2D._a = _wpoints[0];
-		face2D._b = _wpoints[1];
-		face2D._c = _wpoints[2];
-		face2D._d = _wpoints[3];
+		MVGFace2D face2D(_wpoints);
+		MVGMesh mesh("mvgMesh");
 		MVGPointCloud pointCloud("mvgPointCloud");
 		MVGCamera camera = getMVGCamera();
-		if(MVGGeometryUtil::projectFace2D(face3D, pointCloud, camera, face2D))
+		if(MVGGeometryUtil::projectFace2D(face3D, pointCloud, view, camera, face2D))
 		{
-			// add face3D to the mesh
+			mesh.addPolygon(face3D);
 		}
 	}
 	

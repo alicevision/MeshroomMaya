@@ -24,12 +24,11 @@ class MVGPointCloud {
 		void setName(const std::string&);
 		const std::string name() const;
 		void setItems(const std::vector<MVGPointCloudItem>& items);
-		void getItemsFromProjection(std::vector<MVGPointCloudItem>& items, MVGCamera& camera, MVGFace2D& face2D) const;
+		std::vector<MVGPointCloudItem> getItems() const;
 		
 	private:
 		MDagPath _dagpath;
-		std::vector<MVGPointCloudItem> _items;
-		
+	
 };
 
 } // mayaMVG

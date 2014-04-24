@@ -35,10 +35,8 @@ MVGKeyEventFilter::MVGKeyEventFilter()
 
 bool MVGKeyEventFilter::eventFilter(QObject * obj, QEvent * e)
 {
-  
   // TODO
   // Key Press "F" to fit image plane
-
 	if ((e->type() == QEvent::KeyPress)) {
 		QKeyEvent * keyevent = static_cast<QKeyEvent *>(e);
 		if (keyevent->isAutoRepeat()) {

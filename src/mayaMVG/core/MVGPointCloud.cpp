@@ -3,7 +3,11 @@
 #include "mayaMVG/core/MVGLog.h"
 #include <maya/MFnParticleSystem.h>
 #include <maya/MVectorArray.h>
+#include <maya/MPointArray.h>
 #include <maya/MSelectionList.h>
+#include <maya/MDagModifier.h>
+#include <maya/MFnTypedAttribute.h>
+#include <maya/MFnVectorArrayData.h>
 #include <stdexcept>
 
 using namespace mayaMVG;
@@ -32,7 +36,6 @@ MVGPointCloud MVGPointCloud::create(const std::string& name)
 	MStatus status;
 	MFnParticleSystem fnParticle;
 	MObject transform = fnParticle.create(&status);
-	
 	// register dag path
 	MDagPath path;
 	MDagPath::getAPathTo(transform, path);
@@ -59,30 +62,55 @@ void MVGPointCloud::setName(const std::string& name)
 
 void MVGPointCloud::setItems(const std::vector<MVGPointCloudItem>& items)
 {
-	_items = items;
-
 	if(!_dagpath.isValid())
 		return;
 
 	MStatus status;
 	MFnParticleSystem fnParticle(_dagpath.node(), &status);
-	MVectorArray array_position;
+
+	// as MVectorArray
+	MPointArray array_position;
 	MVectorArray array_color;
-	// as vectorArray
-	std::vector<MVGPointCloudItem>::const_iterator it = _items.begin();
-	for(; it != _items.end(); it++)
+	std::vector<MVGPointCloudItem>::const_iterator it = items.begin();
+	for(; it != items.end(); it++)
 	{
-		array_position.append(MVector(it->_position[0], it->_position[1], it->_position[2]));
+		array_position.append(MPoint(it->_position[0], it->_position[1], it->_position[2]));
 		array_color.append(MVector(it->_color[0], it->_color[1], it->_color[2]));
 	}
 
-	// set particle attributes
-	fnParticle.setPerParticleAttribute(MString("position"), array_position, &status);
-	fnParticle.setPerParticleAttribute(MString("rgbPP"), array_color, &status);
+	// emit particles
+	status = fnParticle.emit(array_position);
+	
+	MDagModifier dagModifier;
+	MFnTypedAttribute tAttr;
+
+	MObject rgbpp = tAttr.create("rgbPP", "rgb", MFnData::kVectorArray);
+	dagModifier.addAttribute(_dagpath.node(), rgbpp);
+	dagModifier.doIt();
+
+	fnParticle.setPerParticleAttribute("rgbPP", array_color, &status);
+
 	status = fnParticle.saveInitialState();
+
 }
 
-void MVGPointCloud::getItemsFromProjection(std::vector<MVGPointCloudItem>& items, MVGCamera& camera, MVGFace2D& face2D) const
+std::vector<MVGPointCloudItem> MVGPointCloud::getItems() const
 {
-	// items.push_back();
+	MStatus status;
+	std::vector<MVGPointCloudItem> items;
+
+	MFnParticleSystem fnParticle(_dagpath.child(0), &status);
+	if(!status) {
+		LOG_INFO(status.errorString().asChar());
+	}
+
+	MVectorArray positionArray;
+	fnParticle.position(positionArray);
+	for(int i = 0; i < positionArray.length(); ++i)
+	{
+		MVGPointCloudItem item;
+		item._position = positionArray[i];
+		items.push_back(item);
+	}
+	return items;
 }

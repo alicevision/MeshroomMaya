@@ -1,4 +1,6 @@
 #include "mayaMVG/core/MVGMesh.h"
+#include "mayaMVG/core/MVGLog.h"
+#include "mayaMVG/core/MVGGeometryUtil.h"
 #include <maya/MFnMesh.h>
 #include <maya/MPointArray.h>
 #include <maya/MIntArray.h>
@@ -19,7 +21,7 @@ MVGMesh::MVGMesh(const std::string& name)
 	list.getDagPath(0, _dagpath);
 	if(!_dagpath.isValid())
 		throw std::invalid_argument(name);
-	_dagpath.pop(); // registering the transform node
+	//_dagpath.pop(); // registering the transform node
 }
 	
 MVGMesh::MVGMesh(const MDagPath& dagPath)
@@ -67,4 +69,21 @@ void MVGMesh::add3DPoint(const MPoint&)
 
 void MVGMesh::move3DPoint(const MPoint&)
 {
+}
+
+void MVGMesh::addPolygon(const MVGFace3D& face3d)
+{
+	MStatus status;
+	MFnMesh fnMesh(_dagpath.child(0), &status);
+	if(!status)
+		LOG_ERROR("MVGMesh: " << status.errorString().asChar());
+
+	MPointArray pointArray;
+	pointArray.append(face3d._p[0]);
+	pointArray.append(face3d._p[1]);
+	pointArray.append(face3d._p[2]);
+	pointArray.append(face3d._p[3]);
+	fnMesh.addPolygon(pointArray, true, kMFnMeshPointTolerance, MObject::kNullObj, &status);
+	if(!status)
+		LOG_ERROR("MVGMesh: " << status.errorString().asChar());
 }
