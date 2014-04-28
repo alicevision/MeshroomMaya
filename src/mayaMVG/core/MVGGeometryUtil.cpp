@@ -2,12 +2,10 @@
 #include "mayaMVG/core/MVGPointCloud.h"
 #include "mayaMVG/core/MVGCamera.h"
 #include "mayaMVG/maya/context/MVGBuildFaceManipulator.h"
-#include <openMVG/robust_estimation/robust_estimator_LMeds.hpp>
 #include "mayaMVG/core/MVGLog.h"
-
+#include <openMVG/robust_estimation/robust_estimator_LMeds.hpp>
 #include <maya/MPointArray.h>
 #include <maya/MVectorArray.h>
-
 #include <vector>
 
 using namespace mayaMVG;
@@ -79,7 +77,8 @@ bool MVGGeometryUtil::projectFace2D(MVGFace3D& face3D, MVGPointCloud& pointCloud
 {
 	// TODO 
 	// use visible points
-	std::vector<MVGPointCloudItem> items = pointCloud.getItems();
+	// std::vector<MVGPointCloudItem> items = pointCloud.getItems();
+	std::vector<MVGPointCloudItem> items = camera.visibleItems();
 	if(items.size() < 3) {
 		LOG_ERROR("Need more than " << items.size() << " point cloud items. Abort.");
 		return false;

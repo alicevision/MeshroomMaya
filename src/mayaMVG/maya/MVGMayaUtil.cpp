@@ -9,6 +9,11 @@
 #include <maya/MQtUtil.h>
 #include <maya/MSelectionList.h>
 #include <maya/M3dView.h>
+#include <maya/MPlug.h>
+#include <maya/MDataHandle.h>
+#include <maya/MFnIntArrayData.h>
+#include <maya/MFnDoubleArrayData.h>
+#include <maya/MPlugArray.h>
 
 using namespace mayaMVG;
 
@@ -178,4 +183,150 @@ MStatus MVGMayaUtil::clearMayaSelection() {
 	return MGlobal::executePythonCommand(
 		"import maya.cmds as cmds\n"
 		"cmds.select(cl=True)");
+}
+
+MStatus MVGMayaUtil::getIntArrayAttribute(const MObject& object, const MString& param, MIntArray& intArray, bool networked)
+{
+	MStatus status;
+	MFnDependencyNode fn(object, &status);
+	CHECK_RETURN_STATUS(status);
+	MPlug plug(fn.findPlug(param, networked, &status));
+	CHECK_RETURN_STATUS(status);
+	intArray.clear();
+	if (plug.isArray()) {
+		for(size_t i = 0; i < plug.numElements(); ++i) {
+			MPlug plugElmt = plug[i];
+			intArray.append(plugElmt.asInt());
+		}
+	} else {
+		MDataHandle dataHandle = plug.asMDataHandle(MDGContext::fsNormal, &status);
+		CHECK_RETURN_STATUS(status);
+		MFnIntArrayData arrayData(dataHandle.data(), &status);
+		CHECK_RETURN_STATUS(status);
+		status = arrayData.copyTo(intArray);
+	}
+	return status;
+}
+
+MStatus MVGMayaUtil::setIntArrayAttribute(const MObject &object, const MString &param, const MIntArray &intArray, bool networked)
+{
+	MStatus status;
+	MFnDependencyNode fn(object, &status);
+	CHECK_RETURN_STATUS(status);
+	MPlug plug(fn.findPlug(param, networked, &status));
+	CHECK_RETURN_STATUS(status);
+	MFnIntArrayData fnData;
+	MObject obj = fnData.create(intArray, &status);
+	CHECK_RETURN_STATUS(status);
+	status = plug.setValue(obj);
+	return status;
+}
+
+MStatus MVGMayaUtil::getIntAttribute(const MObject& object, const MString& param, int& value, bool networked)
+{
+	MStatus status;
+	MFnDependencyNode fn(object, &status);
+	CHECK_RETURN_STATUS(status);
+	MPlug plug(fn.findPlug(param, networked, &status));
+	CHECK_RETURN_STATUS(status);
+	value = plug.asInt();
+	return status;
+}
+
+MStatus MVGMayaUtil::setIntAttribute(const MObject& object, const MString& param, const int& value, bool networked)
+{
+	MStatus status;
+	MFnDependencyNode fn(object, &status);
+	CHECK_RETURN_STATUS(status);
+	MPlug plug(fn.findPlug(param, networked, &status));
+	CHECK_RETURN_STATUS(status);
+	plug.setInt(value);
+	return status;
+}
+
+MStatus MVGMayaUtil::getDoubleArrayAttribute(const MObject& object, const MString& param, MDoubleArray& doubleArray, bool networked)
+{
+	MStatus status;
+	MFnDependencyNode fn(object, &status);
+	CHECK_RETURN_STATUS(status);
+	MPlug plug(fn.findPlug(param, networked, &status));
+	CHECK_RETURN_STATUS(status);
+	doubleArray.clear();
+	if (plug.isArray()) {
+		for(size_t i = 0; i < plug.numElements(); ++i) {
+			MPlug plugElmt = plug[i];
+			doubleArray.append(plugElmt.asDouble());
+		}
+	} else {
+		MDataHandle dataHandle = plug.asMDataHandle(MDGContext::fsNormal, &status);
+		CHECK_RETURN_STATUS(status);
+		MFnDoubleArrayData arrayData(dataHandle.data(), &status);
+		CHECK_RETURN_STATUS(status);
+		status = arrayData.copyTo(doubleArray);
+	}
+	return status;
+}
+
+MStatus MVGMayaUtil::setDoubleArrayAttribute(const MObject& object, const MString& param, const MDoubleArray& doubleArray, bool networked)
+{
+	MStatus status;
+	MFnDependencyNode fn(object, &status);
+	CHECK_RETURN_STATUS(status);
+	MPlug plug(fn.findPlug(param, networked, &status));
+	CHECK_RETURN_STATUS(status);
+	MFnDoubleArrayData fnData;
+	MObject obj = fnData.create(doubleArray, &status);
+	CHECK_RETURN_STATUS(status);
+	status = plug.setValue(obj);
+	return status;
+}
+
+MStatus MVGMayaUtil::findConnectedNodes(const MObject& object, const MString& param, std::vector<MObject>& nodes)
+{
+	MStatus status;
+	MFnDependencyNode fn(object, &status);
+	CHECK_RETURN_STATUS(status);
+	MPlug plug = fn.findPlug(param, &status);
+	CHECK_RETURN_STATUS(status);
+	if (plug.isArray()) {
+		plug.evaluateNumElements(&status);
+		CHECK_RETURN_STATUS(status);
+		for (unsigned int i = 0; i < plug.numElements(); ++i) {
+			MPlug plugElmt = plug[i];
+			MPlugArray plugArray;
+			plugElmt.connectedTo(plugArray, true, true, &status);
+			if(plugArray.length() > 0) {
+				for (unsigned int j = 0; j < plugArray.length(); ++j)
+					nodes.push_back(plugArray[j].node(&status));
+			}
+		}
+	} else {
+		MPlugArray plugArray;
+		plug.connectedTo(plugArray, true, true, &status);
+		if(plugArray.length() > 0) {
+			for (unsigned int i=0; i<plugArray.length(); ++i)
+				nodes.push_back(plugArray[i].node(&status));
+		}
+	}
+	CHECK_RETURN_STATUS(status);
+	return status;
+}
+
+MStatus MVGMayaUtil::getObjectByName(const MString& name, MObject& obj)
+{
+    obj = MObject::kNullObj;
+    MSelectionList list;
+    MStatus status = list.add(name);
+    if (status == MS::kSuccess)
+        status = list.getDependNode(0, obj);
+    return status;
+}
+
+MStatus MVGMayaUtil::getDagPathByName(const MString& name, MDagPath& path)
+{
+    MSelectionList list;
+    MStatus status = list.add(name);
+    if (status == MS::kSuccess)
+        status = list.getDagPath(0, path);
+    return status;
 }

@@ -5,20 +5,27 @@
 
 using namespace mayaMVG;
 
-bool MVGPointCloudReader::read(MVGPointCloud& pointCloud)
+bool MVGPointCloudReader::read()
 {
-	std::string file = MVGScene::fullPath(MVGScene::fullPath(MVGScene::projectDirectory(), "clouds"), "calib.ply");
+	MVGPointCloud pointCloud(MVGScene::_CLOUD);
+	if(!pointCloud.isValid()) {
+		pointCloud = MVGPointCloud::create(MVGScene::_CLOUD);
+		LOG_INFO("New MVG Point Cloud.")
+	}
 
+	std::string file = MVGScene::pointCloudFile();
 	Ply ply;
-	if(!ply.open(file))
-	{
-		LOG_ERROR("File doesn't open")
+	if(!ply.open(file)) {
+		LOG_ERROR("Point cloud file not found (" << file << ")")
 		ply.close();
 		return false;
 	}
 
+
+	std::vector<MVGCamera> cameraList = MVGCamera::list();
+	std::sort(cameraList.begin(), cameraList.end()); // sort by camera id
+
 	std::vector<MVGPointCloudItem> items;
-	// iterate over elements
 	for(Ply::ElementsIterator it = ply.elements_begin(); it != ply.elements_end(); ++it)
 	{
 		const Ply::Element& element = *it;
@@ -64,14 +71,14 @@ bool MVGPointCloudReader::read(MVGPointCloud& pointCloud)
 					ply.read(property, item._weight);
 				else if(property.name() == "visibility")
 				{
+					item._id = i;
 					size_t cameraVisibilityCount;
 					ply.read_count(property, cameraVisibilityCount);
-					item._visibility.reserve(cameraVisibilityCount);
-					while(cameraVisibilityCount--)
-					{
-						int cameraId;
+					int cameraId;
+					while(cameraVisibilityCount--) {
 						ply.read_value(property, cameraId);
-						item._visibility.push_back(cameraId);
+						if(cameraId < cameraList.size())
+							cameraList[cameraId].addVisibleItem(item);							
 					}
 				}
 				else if(!ply.skip(property))

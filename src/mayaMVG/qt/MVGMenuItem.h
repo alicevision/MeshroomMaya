@@ -1,11 +1,10 @@
 #pragma once
 
+#include "mayaMVG/core/MVGCamera.h"
 #include "ui_menuItem.h"
 #include <QWidget>
 
 namespace mayaMVG {
-
-class MVGCamera;
 
 class MVGMenuItem: public QWidget {
 	Q_OBJECT
@@ -29,7 +28,7 @@ class MVGMenuItem: public QWidget {
 		
 	private:
 		Ui::MVGMenuItem ui;
-		const MVGCamera& _camera;
+		MVGCamera _camera;
 };
 
 } // mayaMVG

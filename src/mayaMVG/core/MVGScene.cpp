@@ -6,89 +6,74 @@
 
 using namespace mayaMVG;
 
-std::string MVGScene::_projectDirectory;
-std::string MVGScene::_cameraDirectoryName;
-std::string MVGScene::_imageDirectoryName;
-std::vector<MVGCamera> MVGScene::_cameras;
-
-MVGScene::MVGScene()
-{
-}
-
-MVGScene::~MVGScene()
-{
-}
+std::string MVGScene::_CLOUD = "mvgPointCloud";
+std::string MVGScene::_MESH = "mvgMesh";
 
 bool MVGScene::load()
 {
-	// cameras
 	if(!loadCameras())
 		return false;
-	// point cloud
 	if(!loadPointCloud())
 		return false;
-	// mesh
-	MVGMesh::create("mvgMesh");
 	return true;
 }
 
 bool MVGScene::loadCameras()
 {
-	return MVGCameraReader::read(_cameras);
+	return MVGCameraReader::read();
 }
 
 bool MVGScene::loadPointCloud()
 {
-	MVGPointCloud pointCloud = MVGPointCloud::create("mvgPointCloud");
-	return MVGPointCloudReader::read(pointCloud);
+	return MVGPointCloudReader::read();
 }
 
-const std::vector<MVGCamera>& MVGScene::cameras()
+std::string MVGScene::projectDirectory()
 {
-	return _cameras;
+	MStringArray result;
+	MGlobal::executeCommand("fileInfo -q \"openMVG_root_dir\";", result);
+	return (result.length() > 0) ? result[0].asChar() : "";
 }
 
 void MVGScene::setProjectDirectory(const std::string& directory)
 {
-	_projectDirectory = stlplus::folder_append_separator(directory);
+	MGlobal::executeCommand(
+		MString("fileInfo \"openMVG_root_dir\" \"")+directory.c_str()+"\";");
 }
 
-void MVGScene::setCameraDirectoryName(const std::string& name)
+std::string MVGScene::cameraFile()
 {
-	_cameraDirectoryName = stlplus::folder_append_separator(name);
+	return stlplus::create_filespec(projectDirectory(), "views.txt");
 }
 
-void MVGScene::setImageDirectoryName(const std::string& name)
+std::string MVGScene::cameraBinary(const std::string& bin)
 {
-	_imageDirectoryName = stlplus::folder_append_separator(name);
-}
-
-const std::string& MVGScene::projectDirectory()
-{
-	return _projectDirectory;
+	return stlplus::create_filespec(cameraDirectory(), bin);
 }
 
 std::string MVGScene::cameraDirectory()
 {
-	return stlplus::create_filespec(_projectDirectory, _cameraDirectoryName);
+	return stlplus::create_filespec(projectDirectory(), "cameras");
 }
 
-const std::string& MVGScene::cameraDirectoryName()
+std::string MVGScene::imageFile(const std::string& img)
 {
-	return _cameraDirectoryName;
+	return stlplus::create_filespec(imageDirectory(), img);
 }
 
 std::string MVGScene::imageDirectory()
 {
-	return stlplus::create_filespec(_projectDirectory, _imageDirectoryName);
+	return stlplus::create_filespec(projectDirectory(), "images");
 }
 
-const std::string& MVGScene::imageDirectoryName()
+std::string MVGScene::pointCloudFile()
 {
-	return _imageDirectoryName;
-}
-
-std::string MVGScene::fullPath(const std::string& directory, const  std::string& file)
-{
-	return stlplus::create_filespec(directory, file);
+	return stlplus::create_filespec(
+			stlplus::create_filespec(
+				stlplus::create_filespec(
+					stlplus::create_filespec(
+						stlplus::create_filespec(
+							projectDirectory(), ".."), "PMVS"), "models"), "pmvs_optionMiMode"), "new.ply");
+	// return stlplus::create_filespec(
+	// 	stlplus::create_filespec(projectDirectory(), "clouds"), "calib.ply");
 }

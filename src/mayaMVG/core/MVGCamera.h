@@ -1,62 +1,51 @@
 #pragma once
 
-#include <maya/MDagPath.h>
-#include <maya/MPoint.h>
-#include <vector>
+#include "mayaMVG/core/MVGNodeWrapper.h"
+#include "mayaMVG/core/MVGPointCloudItem.h"
 #include <openMVG/cameras/PinholeCamera.hpp>
+#include <vector>
 
 class MString;
 class MFnCamera;
 
 namespace mayaMVG {
 
-class MVGCamera {
-
-	public:
-		enum STEP {
-			STEP_NEW = 0,
-			STEP_WIP,
-			STEP_DEF,
-			STEP_DISABLED
-		};
+class MVGCamera : public MVGNodeWrapper {
 
 	public:
 		MVGCamera(const std::string& name);
 		MVGCamera(const MDagPath& dagPath);
+		MVGCamera(const int& id);
 		virtual ~MVGCamera();
+	
+	public:
+		bool operator<(const MVGCamera&) const;
+
+	public:
+		virtual bool isValid() const;
 
 	public:
 		static MVGCamera create(const std::string& name);
+		static std::vector<MVGCamera> list();
 
 	public:
-		const MDagPath& dagPath() const;
-		void setDagPath(const MDagPath& dagpath);
-		void setName(const std::string&);
-		const std::string name() const;
-		void setImagePlane(const std::string&);
-		const std::string& imagePlane() const;
+		int id() const;
+		void setId(const int&) const;
+		MDagPath imagePath() const;
+		std::string imagePlane() const;
+		void setImagePlane(const std::string&) const;
 		void loadImagePlane() const;
-		void setPinholeCamera(const openMVG::PinholeCamera&);
-		const openMVG::PinholeCamera& pinholeCamera();
-		// double zoom() const;
-		// void setZoom(double z);
-		// void setPan(float x, float y);
-		void add2DPoint(const MPoint&);
-		void move2DPoint(const MPoint&);
-	
-	public:
-		void select() const;
+		openMVG::PinholeCamera pinholeCamera() const;
+		void setPinholeCamera(const openMVG::PinholeCamera&) const;
+		std::vector<MVGPointCloudItem> visibleItems() const;
+		void addVisibleItem(const MVGPointCloudItem& item) const;
 
 	private:
-		std::string _imageName;
-		openMVG::PinholeCamera _pinhole;
-		STEP _step;
-		MDagPath _dagpath;
-		MDagPath _dagpathImg;
-		// std::vector<std::pair<MPoint, size_t> > _points;
-		// list<MVGPoint2D> cachePointCloudProjection
-		// list<MVGPoint2D> cacheMeshProjection
-
+		// dynamic attributes
+		static MString _ID;
+		static MString _PINHOLE;
+		static MString _ITEMS;
+		static MString _DEFERRED;
 };
 
 } // mayaMVG

@@ -52,7 +52,7 @@ void MVGMenu::on_browseButton_clicked()
 	if(!MVGScene::load())
 		LOG_ERROR("An error occured when loading project.")
 	// populate menu
-	const std::vector<MVGCamera>& cameraList = MVGScene::cameras();
+	std::vector<MVGCamera> cameraList = MVGCamera::list();
 	std::vector<MVGCamera>::const_iterator it = cameraList.begin();
 	for(; it != cameraList.end(); ++it)
 		addItem(*it);

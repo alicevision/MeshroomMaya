@@ -50,4 +50,3 @@ void MVGMenuItem::clearSelectedView(const QString& view)
 	if(view == "R")
 		ui.rightButton->setStyleSheet("");
 }
-

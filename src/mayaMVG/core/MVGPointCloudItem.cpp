@@ -3,7 +3,6 @@
 using namespace mayaMVG;
 
 MVGPointCloudItem::MVGPointCloudItem()
-	: _weight(0.f)
 {
 }
 

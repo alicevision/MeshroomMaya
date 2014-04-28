@@ -2,10 +2,14 @@
 
 #include <maya/MString.h>
 #include <maya/MStatus.h>
+#include <vector>
 
-class QWidget;
+class MObject;
+class MIntArray;
+class MDoubleArray;
 class MDagPath;
 class M3dView;
+class QWidget;
 
 namespace mayaMVG {
 
@@ -39,6 +43,17 @@ struct MVGMayaUtil {
 	// maya selection
 	static MStatus addToMayaSelection(MString objectName);
 	static MStatus clearMayaSelection();
+	// attributes
+	static MStatus getIntArrayAttribute(const MObject&, const MString&, MIntArray&, bool=false);
+	static MStatus setIntArrayAttribute(const MObject&, const MString&, const MIntArray&, bool=false);
+	static MStatus getIntAttribute(const MObject&, const MString&, int&, bool=false);
+	static MStatus setIntAttribute(const MObject&, const MString&, const int&, bool=false);
+	static MStatus getDoubleArrayAttribute(const MObject&, const MString&, MDoubleArray&, bool=false);
+	static MStatus setDoubleArrayAttribute(const MObject&, const MString&, const MDoubleArray&, bool=false);
+	static MStatus findConnectedNodes(const MObject&, const MString&, std::vector<MObject>&);
+	// nodes
+	static MStatus getObjectByName(const MString&, MObject&);
+	static MStatus getDagPathByName(const MString&, MDagPath&);
 };
 
 } // mayaMVG

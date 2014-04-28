@@ -13,11 +13,10 @@ class MVGPointCloudItem {
 		virtual ~MVGPointCloudItem();
 
 	public:
+		int _id;
 		MPoint _position;
-		MColor _color;
-		std::vector<size_t> _visibility;
+		MVector _color;
 		float _weight;
-		// xxx _sift;
 };
 
 } // mayaMVG

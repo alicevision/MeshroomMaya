@@ -5,9 +5,7 @@
 namespace mayaMVG {
 
 struct MVGCameraReader {
-
-	static bool read(std::vector<MVGCamera>&);
-
+	static bool read();
 };
 
 } // mayaMVG

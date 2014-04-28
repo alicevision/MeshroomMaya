@@ -1,14 +1,12 @@
 #pragma once
 
-#include <maya/MPoint.h>
-#include <maya/MDagPath.h>
-#include <vector>
+#include "mayaMVG/core/MVGNodeWrapper.h"
 
 namespace mayaMVG {
 
 class MVGFace3D;
 
-class MVGMesh {
+class MVGMesh : public MVGNodeWrapper  {
 
 	public:
 		MVGMesh(const std::string& name);
@@ -16,18 +14,14 @@ class MVGMesh {
 		virtual ~MVGMesh();
 
 	public:
+		virtual bool isValid() const;
+		
+	public:
 		static MVGMesh create(const std::string& name);
 
 	public:
-		void setName(const std::string&);
-		const std::string name() const;
-		void add3DPoint(const MPoint&);
-		void move3DPoint(const MPoint&);
 		void addPolygon(const MVGFace3D& face3d);
 
-	private:
-		MDagPath _dagpath;
-		std::vector<MPoint> _points;
 };
 
 } // mayaMVG

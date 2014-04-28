@@ -5,9 +5,7 @@
 namespace mayaMVG {
 
 struct MVGPointCloudReader {
-
-	static bool read(MVGPointCloud&);
-
+	static bool read();
 };
 
 } // mayaMVG

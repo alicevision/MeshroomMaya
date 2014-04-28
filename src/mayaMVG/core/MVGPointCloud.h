@@ -1,16 +1,14 @@
 #pragma once
 
+#include "mayaMVG/core/MVGNodeWrapper.h"
 #include "mayaMVG/core/MVGPointCloudItem.h"
-#include "mayaMVG/core/MVGGeometryUtil.h"
-#include <maya/MDagPath.h>
-#include <maya/MPoint.h>
 #include <vector>
 
 namespace mayaMVG {
 
 class MVGCamera;
 
-class MVGPointCloud {
+class MVGPointCloud : public MVGNodeWrapper  {
 
 	public:
 		MVGPointCloud(const std::string& name);
@@ -18,17 +16,18 @@ class MVGPointCloud {
 		virtual ~MVGPointCloud();
 
 	public:
+		virtual bool isValid() const;
+		
+	public:
 		static MVGPointCloud create(const std::string& name);
 
 	public:
-		void setName(const std::string&);
-		const std::string name() const;
 		void setItems(const std::vector<MVGPointCloudItem>& items);
 		std::vector<MVGPointCloudItem> getItems() const;
 		
 	private:
-		MDagPath _dagpath;
-	
+		// dynamic attributes
+		static MString _RGBPP;
 };
 
 } // mayaMVG

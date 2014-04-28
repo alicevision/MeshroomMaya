@@ -1,6 +1,7 @@
 #include "mayaMVG/core/MVGPointCloud.h"
 #include "mayaMVG/core/MVGCamera.h"
 #include "mayaMVG/core/MVGLog.h"
+#include "mayaMVG/maya/MVGMayaUtil.h"
 #include <maya/MFnParticleSystem.h>
 #include <maya/MVectorArray.h>
 #include <maya/MPointArray.h>
@@ -12,52 +13,50 @@
 
 using namespace mayaMVG;
 
+// dynamic attributes
+MString MVGPointCloud::_RGBPP = "rgbPP";
+
 MVGPointCloud::MVGPointCloud(const std::string& name)
+	: MVGNodeWrapper(name)
 {
-	if(name.empty())
-		throw std::invalid_argument(name);
-	MSelectionList list;
-	MStatus status = list.add(name.c_str());
-	if(!status)
-		throw std::invalid_argument(name);
-	list.getDagPath(0, _dagpath);
-	if(!_dagpath.isValid())
-		throw std::invalid_argument(name);
-	_dagpath.pop(); // registering the transform node
 }
 	
 MVGPointCloud::MVGPointCloud(const MDagPath& dagPath)
-	: _dagpath(dagPath)
+	: MVGNodeWrapper(dagPath)
 {
-}
-
-MVGPointCloud MVGPointCloud::create(const std::string& name)
-{
-	MStatus status;
-	MFnParticleSystem fnParticle;
-	MObject transform = fnParticle.create(&status);
-	// register dag path
-	MDagPath path;
-	MDagPath::getAPathTo(transform, path);
-	MVGPointCloud cloud(path);
-	cloud.setName(name);
-	return cloud;
 }
 
 MVGPointCloud::~MVGPointCloud()
 {
 }
 
-const std::string MVGPointCloud::name() const
+// virtual
+bool MVGPointCloud::isValid() const
 {
-	MFnDependencyNode depNode(_dagpath.node());
-	return depNode.name().asChar();
+	return _dagpath.isValid();
 }
 
-void MVGPointCloud::setName(const std::string& name)
+// static
+MVGPointCloud MVGPointCloud::create(const std::string& name)
 {
-	MFnDependencyNode depNode(_dagpath.node());
-	depNode.setName(name.c_str());
+	MStatus status;
+	MFnParticleSystem fnParticle;
+	MObject transform = fnParticle.create(&status);
+
+	// register dag path
+	MDagPath path;
+	MDagPath::getAPathTo(transform, path);
+	path.extendToShape();
+
+	MDagModifier dagModifier;
+	MFnTypedAttribute tAttr;
+	MObject rgbAttr = tAttr.create(_RGBPP, "rgb", MFnData::kVectorArray);
+	dagModifier.addAttribute(path.node(), rgbAttr);
+	dagModifier.doIt();
+
+	MVGPointCloud cloud(path);
+	cloud.setName(name);
+	return cloud;
 }
 
 void MVGPointCloud::setItems(const std::vector<MVGPointCloudItem>& items)
@@ -74,24 +73,16 @@ void MVGPointCloud::setItems(const std::vector<MVGPointCloudItem>& items)
 	std::vector<MVGPointCloudItem>::const_iterator it = items.begin();
 	for(; it != items.end(); it++)
 	{
-		array_position.append(MPoint(it->_position[0], it->_position[1], it->_position[2]));
-		array_color.append(MVector(it->_color[0], it->_color[1], it->_color[2]));
+		array_position.append(it->_position);
+		array_color.append(it->_color);
 	}
 
 	// emit particles
 	status = fnParticle.emit(array_position);
 	
-	MDagModifier dagModifier;
-	MFnTypedAttribute tAttr;
-
-	MObject rgbpp = tAttr.create("rgbPP", "rgb", MFnData::kVectorArray);
-	dagModifier.addAttribute(_dagpath.node(), rgbpp);
-	dagModifier.doIt();
-
-	fnParticle.setPerParticleAttribute("rgbPP", array_color, &status);
-
+	// set color
+	fnParticle.setPerParticleAttribute(_RGBPP, array_color, &status);
 	status = fnParticle.saveInitialState();
-
 }
 
 std::vector<MVGPointCloudItem> MVGPointCloud::getItems() const
@@ -99,11 +90,7 @@ std::vector<MVGPointCloudItem> MVGPointCloud::getItems() const
 	MStatus status;
 	std::vector<MVGPointCloudItem> items;
 
-	MFnParticleSystem fnParticle(_dagpath.child(0), &status);
-	if(!status) {
-		LOG_INFO(status.errorString().asChar());
-	}
-
+	MFnParticleSystem fnParticle(_dagpath.node(), &status);
 	MVectorArray positionArray;
 	fnParticle.position(positionArray);
 	for(int i = 0; i < positionArray.length(); ++i)
