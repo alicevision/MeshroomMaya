@@ -35,7 +35,7 @@ class MVGCamera {
 		const std::string name() const;
 		void setImagePlane(const std::string&);
 		const std::string& imagePlane() const;
-		void loadImagePlane() const;
+		void loadImagePlane(const std::string&) const;
 		void setPinholeCamera(const openMVG::PinholeCamera&);
 		const openMVG::PinholeCamera& pinholeCamera() const;
 		// double zoom() const;

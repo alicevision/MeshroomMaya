@@ -1,0 +1,58 @@
+#ifndef MVGCAMERAWRAPPER_H
+#define	MVGCAMERAWRAPPER_H
+
+#include <QObject>
+
+#include "mayaMVG/core/MVGCamera.h"
+
+namespace mayaMVG {
+
+class MVGCameraWrapper : public QObject
+{
+	Q_OBJECT
+	
+	Q_PROPERTY(QString name READ name CONSTANT)
+	Q_PROPERTY(QString imagePath READ imagePath CONSTANT)
+	
+	Q_PROPERTY(QString state READ state NOTIFY stateChanged)	
+	Q_PROPERTY(bool isLeftChecked READ isLeftChecked WRITE setLeftChecked NOTIFY isLeftCheckedChanged)
+	Q_PROPERTY(bool isRightChecked READ isRightChecked WRITE setRightChecked NOTIFY isRightCheckedChanged)
+
+public:
+	MVGCameraWrapper(const MVGCamera& camera);
+
+	~MVGCameraWrapper();
+
+	// Getters & Setters
+	const MVGCamera& camera() const;
+	Q_INVOKABLE const QString name() const;
+	Q_INVOKABLE const QString imagePath() const;
+	Q_INVOKABLE const QString& state() const;	
+	Q_INVOKABLE const bool isLeftChecked() const;
+	Q_INVOKABLE const bool isRightChecked() const;
+	
+	Q_INVOKABLE void setState(const QString& state);	
+	Q_INVOKABLE void setLeftChecked(const bool state);
+	Q_INVOKABLE void setRightChecked(const bool state);
+	
+	Q_INVOKABLE void onLeftButtonClicked();
+	Q_INVOKABLE void onRightButtonClicked();
+
+signals:
+	void stateChanged();
+	void isLeftCheckedChanged();
+	void isRightCheckedChanged();	
+
+private:
+	const MVGCamera&	_camera;
+			
+	QString				_state;
+	bool				_isLeftChecked;
+	bool				_isRightChecked;
+
+};
+
+}
+
+
+#endif

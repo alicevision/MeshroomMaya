@@ -1,16 +1,17 @@
-#include "mayaMVG/io/MVGPointCloudReader.h"
-#include "mayaMVG/core/MVGScene.h"
+#pragma once
+
+#include "mayaMVG/core/MVGPointCloud.h"
+
+#include "mayaMVG/io/pointCloudIO.h"
 #include "mayaMVG/core/MVGLog.h"
 #include <software/SfMViewer/Ply.h>
 
-using namespace mayaMVG;
-
-bool MVGPointCloudReader::read(MVGPointCloud& pointCloud)
+namespace mayaMVG {
+	
+bool readPointCloud(MVGPointCloud& pointCloud, std::string filePath)	
 {
-	std::string file = MVGScene::fullPath(MVGScene::fullPath(MVGScene::projectDirectory(), "clouds"), "calib.ply");
-
 	Ply ply;
-	if(!ply.open(file))
+	if(!ply.open(filePath))
 	{
 		LOG_ERROR("File doesn't open")
 		ply.close();
@@ -88,3 +89,5 @@ bool MVGPointCloudReader::read(MVGPointCloud& pointCloud)
 	ply.close();
 	return true;
 }
+
+} // mayaMVG

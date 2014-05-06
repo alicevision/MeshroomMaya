@@ -29,6 +29,7 @@ link_directories(${MAYA_Foundation_LIBRARY} ${MAYA_OpenMaya_LIBRARY} ${MAYA_Open
 #
 find_package(Qt4 ${MAYA_QT_VERSION_SHORT} REQUIRED)
 set(QT_USE_QTOPENGL TRUE)
+set(QT_USE_QTDECLARATIVE TRUE)
 include(${QT_USE_FILE})
 
 #
@@ -49,8 +50,14 @@ list(REMOVE_ITEM PLUGIN_SRCS ${REMOVEFILESUNITTEST})
 # Qt MOC
 #
 set(MOC_HDRS
-  qt/MVGMenu.h
-  qt/MVGMenuItem.h
+#  qt/MVGMenu.h
+#  qt/MVGMenuItem.h
+  qt/MVGMainWidget.h
+  qt/MVGCameraWrapper.h
+  qt/MVGProjectWrapper.h
+  qt/QmlInstantCoding.h
+  qt/MVGMayaEvent.h
+  qt/MVGMayaViewportEvent.h
 )
 qt4_wrap_cpp(MOC_SRCS ${MOC_HDRS})
 qt4_wrap_ui(UISrcs 
@@ -63,5 +70,6 @@ include_directories(${CMAKE_CURRENT_BINARY_DIR})
 # Maya plugin properties
 #
 add_library(${project_BIN} SHARED ${PLUGIN_SRCS} ${MOC_SRCS} ${UISrcs} ../openMVG/src/software/SfMViewer/Ply.cpp)
-target_link_libraries(${project_BIN} ${MAYA_Foundation_LIBRARY} ${MAYA_OpenMaya_LIBRARY} ${MAYA_OpenMayaUI_LIBRARY} ${MAYA_OpenMayaFX_LIBRARY} stlplus openMVG_numeric openMVG_multiview )
+target_link_libraries(${project_BIN} ${MAYA_Foundation_LIBRARY} ${MAYA_OpenMaya_LIBRARY} ${MAYA_OpenMayaUI_LIBRARY} ${MAYA_OpenMayaFX_LIBRARY} stlplus openMVG_numeric openMVG_multiview ${QT_LIBRARIES})
 maya_set_plugin_properties(${project_BIN})
+

@@ -1,8 +1,14 @@
+#include "QtDeclarative/QDeclarativeView"
+#include "QtDeclarative/qdeclarativecontext.h"
+
 #include "mayaMVG/maya/cmd/MVGCmd.h"
 #include "mayaMVG/maya/MVGMayaUtil.h"
-#include "mayaMVG/qt/MVGMenu.h"
-#include "mayaMVG/qt/MVGEventFilter.h"
+#include "mayaMVG/qt/MVGMayaViewportEvent.h"
+#include "mayaMVG/qt/MVGMayaEvent.h"
 #include "mayaMVG/core/MVGLog.h"
+#include "mayaMVG/qt/MVGMainWidget.h"
+#include <mayaMVG/qt/MVGProjectWrapper.h>
+
 #include <maya/MQtUtil.h>
 #include <maya/MGlobal.h>
 #include <maya/MDagPath.h>
@@ -20,7 +26,7 @@ namespace {
 	void selectionChangedCB(void* userData) {
 		if(!userData)
 			return;
-		MVGMenu* menu = static_cast<MVGMenu*>(userData);
+
 		MDagPath path;
 		MObject component;
 		MSelectionList list;
@@ -34,7 +40,8 @@ namespace {
 				selectedCameras.push_back(fn.name().asChar());
 			}
 		}
-		menu->selectItems(selectedCameras);
+		
+		MVGProjectWrapper::instance().selectItems(selectedCameras);
 	}
 
 }
@@ -87,9 +94,9 @@ MStatus MVGCmd::doIt(const MArgList& args) {
 	}
 
 	// create MVG menu
-	MVGMenu* menu = new MVGMenu(NULL);
-	MQtUtil::addWidgetToMayaLayout(menu, menuLayout);
-
+	MVGMainWidget* menuQML = new MVGMainWidget(menuLayout);
+	MQtUtil::addWidgetToMayaLayout(menuQML->view(), menuLayout);
+			
 	// create maya MVGContext
 	status = MVGMayaUtil::createMVGContext();
 	if(!status) {
@@ -98,11 +105,11 @@ MStatus MVGCmd::doIt(const MArgList& args) {
 	}
 
 	// install mouse event filter on maya viewports
-	MVGMouseEventFilter * mouseEventFilter = new MVGMouseEventFilter();
+	MVGMayaViewportMouseEventFilter * mouseEventFilter = new MVGMayaViewportMouseEventFilter(mayaWindow);
 	QWidget* leftViewport = MVGMayaUtil::getMVGLeftViewportLayout();
 	QWidget* rightViewport = MVGMayaUtil::getMVGRightViewportLayout();
 	if(!leftViewport || !rightViewport) {
-		LOG_ERROR("Unable to retrieve maya viewport layouts.")
+		LOG_ERROR("Unable to retrieve maya viewport layouts.");
 		return MS::kFailure;
 	}
 	leftViewport->installEventFilter(mouseEventFilter);
@@ -114,11 +121,11 @@ MStatus MVGCmd::doIt(const MArgList& args) {
 
 	// maya callbacks
 	MCallbackIdArray callbackIDs;
-	callbackIDs.append(MEventMessage::addEventCallback("SelectionChanged", selectionChangedCB, menu));
+	callbackIDs.append(MEventMessage::addEventCallback("SelectionChanged", selectionChangedCB, menuQML->view()));
 
 	// install a window event filter on 'mayaWindow'
 	// needed to remove all maya callbacks and all Qt event filters 
-	MVGWindowEventFilter * windowEventFilter = new MVGWindowEventFilter(callbackIDs, mouseEventFilter);
+	MVGWindowEventFilter * windowEventFilter = new MVGWindowEventFilter(callbackIDs, mouseEventFilter, NULL, mayaWindow);
 	mayaWindow->installEventFilter(windowEventFilter);
 
 	return status;

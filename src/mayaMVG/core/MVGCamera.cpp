@@ -1,5 +1,6 @@
 #include "mayaMVG/core/MVGCamera.h"
-#include "mayaMVG/core/MVGScene.h"
+
+#include "mayaMVG/qt/MVGProjectWrapper.h"
 #include "mayaMVG/core/MVGLog.h"
 #include <maya/MPoint.h>
 #include <maya/MString.h>
@@ -125,14 +126,15 @@ void MVGCamera::setImagePlane(const std::string& img)
 	dagModifier.doIt();
 }
 
-void MVGCamera::loadImagePlane() const
+void MVGCamera::loadImagePlane(const std::string& imagePath) const
 {
 	// set imageName attribute on imagePlane
 	// starts loading...
 	if(_dagpathImg.isValid())
 	{
 		MFnDependencyNode fn(_dagpathImg.node());
-		fn.findPlug("imageName").setValue(MVGScene::fullPath(MVGScene::imageDirectory(), _imageName).c_str());
+
+		fn.findPlug("imageName").setValue(imagePath.c_str());		
 	}
 }
 
