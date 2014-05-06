@@ -21,10 +21,17 @@ bool MVGPointCloudReader::read()
 		return false;
 	}
 
-
+	// camera list
 	std::vector<MVGCamera> cameraList = MVGCamera::list();
 	std::sort(cameraList.begin(), cameraList.end()); // sort by camera id
+	
+	// items per camera tmp list
+	std::vector<std::vector<MVGPointCloudItem> > itemsPerCam;
+	itemsPerCam.reserve(cameraList.size());
+	for(size_t i=0; i<cameraList.size(); ++i)
+		itemsPerCam.push_back(std::vector<MVGPointCloudItem>());
 
+	// parse ply file
 	std::vector<MVGPointCloudItem> items;
 	for(Ply::ElementsIterator it = ply.elements_begin(); it != ply.elements_end(); ++it)
 	{
@@ -77,8 +84,10 @@ bool MVGPointCloudReader::read()
 					int cameraId;
 					while(cameraVisibilityCount--) {
 						ply.read_value(property, cameraId);
-						// if(cameraId < cameraList.size())
-						// 	cameraList[cameraId].addVisibleItem(item);							
+						if(cameraId > itemsPerCam.size())
+							LOG_ERROR("Invalid camera id (" << cameraId << ")")
+						else
+							itemsPerCam[cameraId].push_back(item);
 					}
 				}
 				else if(!ply.skip(property))
@@ -91,6 +100,11 @@ bool MVGPointCloudReader::read()
 			ply.read_end();
 		}
 	}
+
+	// set items visibility
+	for(size_t i=0; i<cameraList.size(); ++i)
+		cameraList[i].setVisibleItems(itemsPerCam[i]);
+
 	pointCloud.setItems(items);
 	ply.close();
 	return true;

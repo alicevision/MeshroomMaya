@@ -38,7 +38,7 @@ class MVGCamera : public MVGNodeWrapper {
 		openMVG::PinholeCamera pinholeCamera() const;
 		void setPinholeCamera(const openMVG::PinholeCamera&) const;
 		std::vector<MVGPointCloudItem> visibleItems() const;
-		void addVisibleItem(const MVGPointCloudItem& item) const;
+		void setVisibleItems(const std::vector<MVGPointCloudItem>& item) const;
 
 	private:
 		// dynamic attributes

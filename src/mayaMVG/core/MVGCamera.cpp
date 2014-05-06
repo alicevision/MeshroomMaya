@@ -281,10 +281,12 @@ std::vector<MVGPointCloudItem> MVGCamera::visibleItems() const
 	return items;
 }
 
-void MVGCamera::addVisibleItem(const MVGPointCloudItem& item) const
+void MVGCamera::setVisibleItems(const std::vector<MVGPointCloudItem>& items) const
 {
 	MIntArray intArray;
-	MVGMayaUtil::getIntArrayAttribute(_dagpath.node(), _ITEMS, intArray);
-	intArray.append(item._id);
+	intArray.setLength(items.size());
+	for(size_t i = 0; i < items.size(); ++i)
+		intArray.set(items[i]._id, i);
 	MVGMayaUtil::setIntArrayAttribute(_dagpath.node(), _ITEMS, intArray);
 }
+
