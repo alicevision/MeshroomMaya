@@ -40,10 +40,6 @@ set(project_BIN ${PROJECT_NAME}-${PLUGIN_VERSION_MAJOR}.${PLUGIN_VERSION_MINOR})
 # Plugin sources
 #
 file(GLOB_RECURSE PLUGIN_SRCS *.cpp *.cxx *.cc *.C *.c *.h *.hpp)
-file(GLOB_RECURSE REMOVEFILESUNITTEST *_test.cpp)
-
-#Remove the unit test files (not been used by the library)
-list(REMOVE_ITEM PLUGIN_SRCS ${REMOVEFILESUNITTEST})
 
 #
 # Qt MOC
@@ -58,7 +54,7 @@ qt4_wrap_ui(UISrcs
 	qt/ui/menuItem.ui)
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
-add_subdirectory ( geometry )
+
 #
 # Maya plugin properties
 #

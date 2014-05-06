@@ -1,0 +1,51 @@
+#pragma once
+
+#include "mayaMVG/core/MVGNodeWrapper.h"
+#include "mayaMVG/core/MVGPointCloudItem.h"
+#include <openMVG/cameras/PinholeCamera.hpp>
+#include <vector>
+
+class MString;
+class MFnCamera;
+
+namespace mayaMVG {
+
+class MVGCamera : public MVGNodeWrapper {
+
+	public:
+		MVGCamera(const std::string& name);
+		MVGCamera(const MDagPath& dagPath);
+		MVGCamera(const int& id);
+		virtual ~MVGCamera();
+	
+	public:
+		bool operator<(const MVGCamera&) const;
+
+	public:
+		virtual bool isValid() const;
+
+	public:
+		static MVGCamera create(const std::string& name);
+		static std::vector<MVGCamera> list();
+
+	public:
+		int id() const;
+		void setId(const int&) const;
+		MDagPath imagePath() const;
+		std::string imagePlane() const;
+		void setImagePlane(const std::string&) const;
+		void loadImagePlane() const;
+		openMVG::PinholeCamera pinholeCamera() const;
+		void setPinholeCamera(const openMVG::PinholeCamera&) const;
+		std::vector<MVGPointCloudItem> visibleItems() const;
+		void addVisibleItem(const MVGPointCloudItem& item) const;
+
+	private:
+		// dynamic attributes
+		static MString _ID;
+		static MString _PINHOLE;
+		static MString _ITEMS;
+		static MString _DEFERRED;
+};
+
+} // mayaMVG

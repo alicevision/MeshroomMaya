@@ -1,43 +1,52 @@
 #include <QHBoxLayout>
 #include <QPushButton>
 #include "mayaMVG/qt/MVGMenuItem.h"
-#include "mayaMVG/util/MVGUtil.h"
-#include "mayaMVG/util/MVGLog.h"
+#include "mayaMVG/maya/MVGMayaUtil.h"
+#include "mayaMVG/core/MVGCamera.h"
+#include "mayaMVG/core/MVGLog.h"
 #include <maya/MQtUtil.h>
 
 using namespace mayaMVG;
 
-MVGMenuItem::MVGMenuItem(const QString & cameraName, QWidget * parent)
-: QWidget(parent)
-, m_cameraName(cameraName)
+MVGMenuItem::MVGMenuItem(const MVGCamera& camera, QWidget * parent)
+	: QWidget(parent)
+	, _camera(camera)
 {
 	ui.setupUi(this);
-	ui.cameraLabel->setText(cameraName);
-	QMetaObject::connectSlotsByName(this);
+	ui.cameraLabel->setText(camera.name().c_str());
 }
 
 MVGMenuItem::~MVGMenuItem()
 {
 }
 
-void MVGMenuItem::clearView(const QString& view)
+const MVGCamera& MVGMenuItem::camera() const
 {
-	if( view == "L" )
-		ui.leftButton->setStyleSheet("");
-	else if( view == "R" )
-		ui.rightButton->setStyleSheet("");
+	return _camera;
 }
 
 void MVGMenuItem::on_leftButton_clicked()
 {
-	signalWillChangeSelectedView("L");
-	ui.leftButton->setStyleSheet("QToolButton { background-color: DarkOrange }");
-	MVGUtil::setMVGLeftCamera(MQtUtil::toMString(m_cameraName));
+	selectedViewChanged("L");
+	ui.leftButton->setStyleSheet("QToolButton {background-color: rgb(230,230,230); color: rgb(67,67,67);}");
+	_camera.select();
+	_camera.loadImagePlane();
+	MVGMayaUtil::setMVGLeftCamera(_camera);
 }
 
 void MVGMenuItem::on_rightButton_clicked()
 {
-	signalWillChangeSelectedView("R");
-	ui.rightButton->setStyleSheet("QToolButton { background-color: DarkOrange }");
-	MVGUtil::setMVGRightCamera(MQtUtil::toMString(m_cameraName));
+	selectedViewChanged("R");
+	ui.rightButton->setStyleSheet("QToolButton {background-color: rgb(230,230,230); color: rgb(67,67,67);}");
+	_camera.select();
+	_camera.loadImagePlane();
+	MVGMayaUtil::setMVGRightCamera(_camera);
+}
+
+void MVGMenuItem::clearSelectedView(const QString& view)
+{
+	if(view == "L")
+		ui.leftButton->setStyleSheet("");
+	if(view == "R")
+		ui.rightButton->setStyleSheet("");
 }
