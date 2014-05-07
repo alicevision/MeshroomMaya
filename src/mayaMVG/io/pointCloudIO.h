@@ -1,22 +1,25 @@
-#include "mayaMVG/io/MVGPointCloudReader.h"
-#include "mayaMVG/core/MVGScene.h"
+#pragma once
+
+#include "mayaMVG/core/MVGPointCloud.h"
+#include "mayaMVG/io/pointCloudIO.h"
 #include "mayaMVG/core/MVGLog.h"
 #include <software/SfMViewer/Ply.h>
 
-using namespace mayaMVG;
 
-bool MVGPointCloudReader::read()
+namespace mayaMVG {
+	
+bool readPointCloud(std::string filePath)	
 {
-	MVGPointCloud pointCloud(MVGScene::_CLOUD);
+	MVGPointCloud pointCloud(MVGProject::_CLOUD);
 	if(!pointCloud.isValid()) {
-		pointCloud = MVGPointCloud::create(MVGScene::_CLOUD);
+		pointCloud = MVGPointCloud::create(MVGProject::_CLOUD);
 		LOG_INFO("New MVG Point Cloud.")
 	}
 
-	std::string file = MVGScene::pointCloudFile();
 	Ply ply;
-	if(!ply.open(file)) {
-		LOG_ERROR("Point cloud file not found (" << file << ")")
+	if(!ply.open(filePath))
+	{
+		LOG_ERROR("Point cloud file not found (" << filePath << ")")
 		ply.close();
 		return false;
 	}
@@ -109,3 +112,5 @@ bool MVGPointCloudReader::read()
 	ply.close();
 	return true;
 }
+
+} // mayaMVG

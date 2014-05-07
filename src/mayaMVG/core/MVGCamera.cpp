@@ -1,5 +1,6 @@
 #include "mayaMVG/core/MVGCamera.h"
-#include "mayaMVG/core/MVGScene.h"
+#include "mayaMVG/core/MVGPointCloud.h"
+#include "mayaMVG/core/MVGProject.h"
 #include "mayaMVG/core/MVGLog.h"
 #include "mayaMVG/maya/MVGMayaUtil.h"
 #include <maya/MPoint.h>
@@ -267,7 +268,7 @@ void MVGCamera::setPinholeCamera(const openMVG::PinholeCamera& pinhole) const
 std::vector<MVGPointCloudItem> MVGCamera::visibleItems() const
 {
 	std::vector<MVGPointCloudItem> allItems, items;
-	MVGPointCloud pointCloud(MVGScene::_CLOUD);
+	MVGPointCloud pointCloud(MVGProject::_CLOUD);
 	allItems = pointCloud.getItems();
 
 	MIntArray intArray;

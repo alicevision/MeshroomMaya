@@ -1,10 +1,12 @@
-#include "mayaMVG/io/MVGCameraReader.h"
-#include "mayaMVG/core/MVGScene.h"
+#pragma once
+
+#include "mayaMVG/core/MVGCamera.h"
 #include "mayaMVG/core/MVGLog.h"
+#include <third_party/stlplus3/filesystemSimplified/file_system.hpp>
 #include <fstream>
 
-using namespace mayaMVG;
-
+namespace mayaMVG {
+		
 namespace { // empty namespace
 
 	std::string getCameraName(const std::string& binaryName)
@@ -16,12 +18,11 @@ namespace { // empty namespace
 		return "camera_"+name;
 	}
 
-	bool setPinholeFromBinary(MVGCamera& camera, const std::string& binaryName)
+	bool setPinholeFromBinary(MVGCamera& camera, const std::string& binaryPath)
 	{
-		std::string file = MVGScene::cameraBinary(binaryName);
-		std::ifstream infile(file.c_str(), std::ios::binary);
+		std::ifstream infile(binaryPath.c_str(), std::ios::binary);
 		if (!infile.is_open()) {
-			LOG_ERROR("Camera binary not found (" << file << ")")
+			LOG_ERROR("Camera binary not found (" << binaryPath << ")")
 			return false;
 		}
 		openMVG::Mat34 P;
@@ -35,12 +36,12 @@ namespace { // empty namespace
 } // empty namespace
 
 
-bool MVGCameraReader::read()
+bool readCamera(std::string filePath, std::string imageDir, std::string cameraDir)
 {
-	std::string file = MVGScene::cameraFile();
-	std::ifstream infile(file.c_str());
-	if (!infile.is_open()) {
-		LOG_ERROR("Camera file not found (" << file << ")")
+	std::ifstream infile(filePath.c_str());
+	if (!infile.is_open())
+	{
+		LOG_ERROR("Camera file not found (" << filePath << ")")
 		return false;
 	}
 
@@ -55,27 +56,30 @@ bool MVGCameraReader::read()
 	std::string line;
 	while (std::getline(infile, line))
 	{
-	    std::istringstream iss(line);
+		std::istringstream iss(line);
 		std::string imageName, binaryName;
 		size_t width, height;
 		float near, far;
-	    if (!(iss >> imageName >> width >> height >> binaryName >> near >> far))
-  			break;
-	    // get or create camera
+		if (!(iss >> imageName >> width >> height >> binaryName >> near >> far))
+			break;
+
+		// get or create camera
 		std::string cameraName = getCameraName(binaryName);
 		MVGCamera camera(cameraName);
 		if(!camera.isValid()) {
 			camera = MVGCamera::create(cameraName);
 			LOG_INFO("New OpenMVG camera:" << cameraName)
 		}
-		// MVGCamera camera = MVGCamera::create(cameraName);
-		setPinholeFromBinary(camera, binaryName);
-		camera.setImagePlane(MVGScene::imageFile(imageName));
+		setPinholeFromBinary(camera, stlplus::create_filespec(cameraDir, binaryName));
+		camera.setImagePlane(stlplus::create_filespec(imageDir, imageName));
 		camera.setId(cameraId);
 		cameraId++;
+
 		line.clear();
 	}
 	
 	infile.close();
 	return true;
 }
+
+} // mayaMVG

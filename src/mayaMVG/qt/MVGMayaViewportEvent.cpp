@@ -1,17 +1,15 @@
+#include "mayaMVG/qt/MVGMayaViewportEvent.h"
+#include "mayaMVG/maya/MVGMayaUtil.h"
 #include <QEvent>
 #include <QMouseEvent>
 #include <QKeyEvent>
-#include <QWheelEvent>
-#include <QWidget>
 #include <QApplication>
-#include "mayaMVG/qt/MVGEventFilter.h"
-#include "mayaMVG/maya/MVGMayaUtil.h"
-#include "mayaMVG/core/MVGLog.h"
-#include "mayaMVG/maya/context/MVGContext.h"
+#include <QWidget>
 #include <maya/MDagPath.h>
 #include <maya/MFnCamera.h>
 
 using namespace mayaMVG;
+
 
 namespace {
 	MStatus getCameraPathFromQbject(const QObject* obj, MDagPath& path) {
@@ -29,11 +27,12 @@ namespace {
 //
 // MVGKeyEventFilter
 //
-MVGKeyEventFilter::MVGKeyEventFilter()
+MVGMayaViewportKeyEventFilter::MVGMayaViewportKeyEventFilter(QObject* parent)
+: QObject(parent)
 {
 }
 
-bool MVGKeyEventFilter::eventFilter(QObject * obj, QEvent * e)
+bool MVGMayaViewportKeyEventFilter::eventFilter(QObject * obj, QEvent * e)
 {
   // TODO
   // Key Press "F" to fit image plane
@@ -61,12 +60,13 @@ bool MVGKeyEventFilter::eventFilter(QObject * obj, QEvent * e)
 //
 // MVGMouseEventFilter
 //
-MVGMouseEventFilter::MVGMouseEventFilter()
-: m_tracking(false)
+MVGMayaViewportMouseEventFilter::MVGMayaViewportMouseEventFilter(QObject* parent)
+: QObject(parent)
+, m_tracking(false)
 {
 }
 
-bool MVGMouseEventFilter::eventFilter(QObject * obj, QEvent * e)
+bool MVGMayaViewportMouseEventFilter::eventFilter(QObject * obj, QEvent * e)
 {  
   // Image is fitted on width.
   // In maya, width is not 1 but math.sqrt(2).
@@ -155,62 +155,4 @@ bool MVGMouseEventFilter::eventFilter(QObject * obj, QEvent * e)
     }
   }
   return QObject::eventFilter(obj, e);
-}
-
-
-//
-// MVGWindowEventFilter
-//
-MVGWindowEventFilter::MVGWindowEventFilter(const MCallbackIdArray& ids, MVGMouseEventFilter* mouseFilter, MVGKeyEventFilter* keyFilter)
-	: m_ids(ids), m_mouseFilter(mouseFilter), m_keyFilter(keyFilter)
-{
-}
-
-bool MVGWindowEventFilter::eventFilter(QObject * obj, QEvent * e)
-{
-	if ((e->type() == QEvent::Close)) {
-		// remove mouse and key filters on tagged objects
-		QList<QWidget *> children = obj->findChildren<QWidget *>();
-		for (int i = 0; i < children.size(); ++i) {
-			if(m_mouseFilter && children[i]->property("mvg_mouseFiltered").type()!=QVariant::Invalid)
-				children[i]->removeEventFilter(m_mouseFilter);
-			if(m_keyFilter && children[i]->property("mvg_keyFiltered").type()!=QVariant::Invalid)
-				children[i]->removeEventFilter(m_keyFilter);
-		}
-		// remove maya callbacks
-		if(m_ids.length()>0)
-			MMessage::removeCallbacks(m_ids);
-		// delete maya context
-		MVGMayaUtil::deleteMVGContext();
-		// remove window event filter
-		obj->removeEventFilter(this);
-	}
-	return QObject::eventFilter(obj, e);
-}
-
-
-//
-// MVGContextEventFilter
-//
-MVGContextEventFilter::MVGContextEventFilter(MVGContext* ctx)
-	: m_context(ctx)
-{
-}
-
-bool MVGContextEventFilter::eventFilter(QObject * obj, QEvent * e)
-{
-	if(!m_context)
-		return QObject::eventFilter(obj, e);
-	else if (e->type() == QEvent::Enter) {
-		QVariant panelName = obj->property("mvg_panel");
-		if(panelName.type()==QVariant::Invalid)
-			return QObject::eventFilter(obj, e);
-		// set focus
-		if(panelName.toString()=="left")
-			MVGMayaUtil::setFocusOnLeftView();
-		else
-			MVGMayaUtil::setFocusOnRightView();
-	} else if (e->type() == QEvent::Leave) {
-	}
-	return QObject::eventFilter(obj, e);
 }

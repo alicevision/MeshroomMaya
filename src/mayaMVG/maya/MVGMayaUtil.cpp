@@ -1,7 +1,9 @@
 #include "mayaMVG/maya/MVGMayaUtil.h"
+
+#include <QWidget>
+
 #include "mayaMVG/core/MVGCamera.h"
 #include "mayaMVG/core/MVGLog.h"
-#include "mayaMVG/qt/MVGMenu.h"
 #include <maya/MFnDependencyNode.h>
 #include <maya/MItDependencyNodes.h>
 #include <maya/MDagPath.h>
@@ -14,6 +16,8 @@
 #include <maya/MFnIntArrayData.h>
 #include <maya/MFnDoubleArrayData.h>
 #include <maya/MPlugArray.h>
+
+
 
 using namespace mayaMVG;
 

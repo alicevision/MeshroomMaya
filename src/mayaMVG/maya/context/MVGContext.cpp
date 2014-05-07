@@ -2,7 +2,7 @@
 #include "mayaMVG/maya/context/MVGContext.h"
 #include "mayaMVG/maya/context/MVGBuildFaceManipulator.h"
 #include "mayaMVG/maya/MVGMayaUtil.h"
-#include "mayaMVG/qt/MVGEventFilter.h"
+#include "mayaMVG/qt/MVGMayaEvent.h"
 
 using namespace mayaMVG;
 
@@ -16,11 +16,11 @@ void MVGContext::toolOnSetup(MEvent & event)
 {
 	updateManipulators(this);
 	// install context event filter
-	m_eventFilter = new MVGContextEventFilter(this);
 	QWidget* leftViewport = MVGMayaUtil::getMVGLeftViewportLayout();
 	QWidget* rightViewport = MVGMayaUtil::getMVGRightViewportLayout();
 	if(!leftViewport || !rightViewport)
 		return;
+	m_eventFilter = new MVGContextEventFilter(this, leftViewport);
 	leftViewport->installEventFilter(m_eventFilter);
 	rightViewport->installEventFilter(m_eventFilter);
 }
