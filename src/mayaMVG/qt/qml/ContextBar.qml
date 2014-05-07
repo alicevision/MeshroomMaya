@@ -4,22 +4,32 @@ import QtDesktop 0.1
 Item {
     id: contextBar
     width: 30
-    height: 120
+    height: 150
 
     property bool settingsVisibility : true
+
+    function getSettingsSource()
+    {
+        if(settingsVisibility)
+            return "img/right_arrow.png"
+        else
+            return "img/down_arrow.png"
+
+    }
 
     ColumnLayout
     {
         width: parent.width
         height: parent.height
+        spacing: 0
 
 
         ToolButton {
             id: settingsButton
 
-            width: 30
-            height: 150
-            iconSource: "img/down_arrow.png"
+            width: parent.width
+            implicitHeight: parent.width
+            iconSource: getSettingsSource()
             tooltip: "Show/Hide settings"
 
             onClicked: {
@@ -35,7 +45,7 @@ Item {
 
         Item {
             width: parent.width
-            implicitHeight: parent.height
+            implicitHeight: 3*parent.width
 
 
             ButtonColumn
@@ -86,7 +96,7 @@ Item {
             width: parent.width
             Layout.verticalSizePolicy: Layout.Expanding
 
-            color: "red"
+            color: "transparent"
 
         }
     }
