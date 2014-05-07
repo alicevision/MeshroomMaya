@@ -118,24 +118,24 @@ bool MVGMayaUtil::mouseUnderView(const M3dView & view) {
 MStatus MVGMayaUtil::createMVGContext() {
 	return MGlobal::executePythonCommand(
 		"import maya.cmds as cmds\n"
-		"if cmds.contextInfo('MVGTool1', exists=True):\n"
-		"    cmds.deleteUI('MVGTool1', toolContext=True)\n"
-		"cmds.MVGTool('MVGTool1')\n");
+		"if cmds.contextInfo('mayaMVGTool1', exists=True):\n"
+		"    cmds.deleteUI('mayaMVGTool1', toolContext=True)\n"
+		"cmds.mayaMVGTool('mayaMVGTool1')\n");
 }
 
 MStatus MVGMayaUtil::deleteMVGContext() {
 	return MGlobal::executePythonCommand(
 		"import maya.cmds as cmds\n"
 		"cmds.setToolTo('selectSuperContext')\n"
-		"if cmds.contextInfo('MVGTool1', exists=True):\n"
-		"    cmds.deleteUI('MVGTool1', toolContext=True)\n");
+		"if cmds.contextInfo('mayaMVGTool1', exists=True):\n"
+		"    cmds.deleteUI('mayaMVGTool1', toolContext=True)\n");
 }
 
 MStatus MVGMayaUtil::activeContext() 
 {
 	return MGlobal::executePythonCommand(
 		"import maya.cmds as cmds\n"
-		"cmds.setToolTo('MVGTool1')");
+		"cmds.setToolTo('mayaMVGTool1')");
 }
 
 MStatus MVGMayaUtil::getMVGLeftCamera(MDagPath& path) {

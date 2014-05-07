@@ -1,0 +1,16 @@
+
+global proc mayaMVGToolValues(string $toolName) 
+{
+    string $parent = `toolPropertyWindow -q -location`;
+	setParent ($parent);
+
+	string $icon = "mayaMVGTool.png";
+	string $help = "";
+	toolPropertySetCommon $toolName $icon $help;
+	toolPropertySelect mvgToolLayout;
+	mayaMVGToolOptionValues($toolName);
+}
+
+global proc mayaMVGToolOptionValues(string $toolName)
+{
+}
