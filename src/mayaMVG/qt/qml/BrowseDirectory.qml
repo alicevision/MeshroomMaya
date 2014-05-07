@@ -38,6 +38,12 @@ Item {
 
                 onAccepted: _project.loadProject(text)
             }
+
+            TooltipArea {
+                id: qualityComboBoxTooltip
+                anchors.fill: parent
+                text: "Project directory path"
+            }
         }
 
         // Folder button
@@ -46,8 +52,8 @@ Item {
 
             implicitWidth: 30
             height: 30
-
             iconSource: "img/Folder.png"
+            tooltip: "Browse project folder"
 
             MouseArea {
                 id: folderButtonMouseArea
