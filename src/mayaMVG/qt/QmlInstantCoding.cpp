@@ -31,7 +31,6 @@ QmlInstantCoding::QmlInstantCoding (QDeclarativeView* attachedView, bool watchin
 QmlInstantCoding::~QmlInstantCoding()
 {
 	delete _fileWatcher;
-	delete _attachedView;
 }
 
 
