@@ -49,8 +49,14 @@ struct PlaneKernel
 	size_t NumSamples() const {
 		return _pt.cols();
 	}
-	void Fit(const std::vector<size_t> &samples, std::vector<Model> * equation) const {
-		assert(samples.size() > 3);
+	/**
+	 * 
+     * @param samples
+     * @param equation
+     */
+	void Fit(const std::vector<size_t> &samples, std::vector<Model> * equation) const
+	{
+		assert(samples.size() >= MINIMUM_SAMPLES);
 		equation->clear();
 		openMVG::Mat sampled_xs = openMVG::ExtractColumns(_pt, samples);
 		openMVG::Vec3 p0 = sampled_xs.col(0);
@@ -75,7 +81,9 @@ struct PlaneKernel
 		m[3] = -1.0 * (m.head<3>().dot(p0));
 		equation->push_back(m);
 	}
-	double Error(size_t sample, const Model & model) const {
+	
+	double Error(size_t sample, const Model & model) const
+	{
 		// Calculate the distance from the point to the plane normal as the dot product
 		// D = (P-A).N/|N|
 		openMVG::Vec3 pt3 = _pt.col(sample);

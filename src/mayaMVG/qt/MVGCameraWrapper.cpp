@@ -76,9 +76,10 @@ void MVGCameraWrapper::onLeftButtonClicked()
 	setLeftChecked(true);
 	
 	// Update left view
-	camera().select();
-	camera().loadImagePlane();
-	MVGMayaUtil::setMVGLeftCamera(camera());
+	MVGProjectWrapper::instance().setLeftView(*this);
+//	camera().select();
+//	camera().loadImagePlane();
+//	MVGMayaUtil::setMVGLeftCamera(camera());
 }
 
 void MVGCameraWrapper::onRightButtonClicked()
@@ -93,9 +94,11 @@ void MVGCameraWrapper::onRightButtonClicked()
 	setRightChecked(true);
 	
 	// Update right view
-	camera().select();
-	camera().loadImagePlane();
-	MVGMayaUtil::setMVGRightCamera(camera());
-}
+	MVGProjectWrapper::instance().setRightView(*this);
+//	camera().select();
+//	camera().loadImagePlane();
+//	MVGMayaUtil::setMVGRightCamera(camera());
+//}
 
+}
 }

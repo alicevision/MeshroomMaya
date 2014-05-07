@@ -98,21 +98,37 @@ void MVGProjectWrapper::loadProject(QString projectDirectoryPath)
 	for(; it != cameraList.end(); ++it) {
 		addCamera(*it);
 	}
+	
+	// Select the two first cameras for the views
+	if(_cameraList.size() > 1)
+	{
+		MVGCameraWrapper* leftCamera = dynamic_cast<MVGCameraWrapper*>(getCameraAtIndex(0));
+		MVGCameraWrapper* rightCamera = dynamic_cast<MVGCameraWrapper*>(getCameraAtIndex(1));
+		
+		leftCamera->setLeftChecked(true);
+		MVGProjectWrapper::instance().setLeftView(*leftCamera);
+			
+		rightCamera->setRightChecked(true);
+		MVGProjectWrapper::instance().setRightView(*rightCamera);
+	}
 }
 
 void MVGProjectWrapper::selectItems(const QList<QString>& cameraNames)
 {
 	for(int i = 0; i < _cameraList.size(); ++i)
 	{
-		dynamic_cast<MVGCameraWrapper*>(getCameraAtIndex(i))->setState("NORMAL");
+		dynamic_cast<MVGCameraWrapper*>(getCameraAtIndex(i))->setState("NORMAL");		
 		if(cameraNames.contains(dynamic_cast<MVGCameraWrapper*>(getCameraAtIndex(i))->name()))
 			dynamic_cast<MVGCameraWrapper*>(getCameraAtIndex(i))->setState("SELECTED");
 	}
 }
 
-//void MVGProjectWrapper::createProject(std::string projectDirectory, std::string imageDirectoryName, std::string cameraDirectoryName)
-//{
-//	_project->setProjectDirectory(projectDirectory);
-//	_project->setImageDirectoryName(imageDirectoryName);
-//	_project->setCameraDirectoryName(cameraDirectoryName);
-//}
+void MVGProjectWrapper::setLeftView(MVGCameraWrapper& camera) const
+{
+	_project->setLeftView(camera.camera());
+}
+
+void MVGProjectWrapper::setRightView(MVGCameraWrapper& camera) const
+{
+	_project->setRightView(camera.camera());
+}

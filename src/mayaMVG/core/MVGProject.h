@@ -16,6 +16,9 @@ class MVGProject {
 		bool load();
 		bool loadCameras();
 		bool loadPointCloud();
+		
+		void setLeftView(const MVGCamera& camera) const;
+		void setRightView(const MVGCamera& camera) const;
 	
 	public:
 		std::string projectDirectory();

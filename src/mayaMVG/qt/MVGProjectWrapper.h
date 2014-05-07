@@ -36,6 +36,9 @@ class MVGProjectWrapper : public QObject, public Singleton<MVGProjectWrapper> {
 		Q_INVOKABLE void onMoveContextButtonClicked();	
 		Q_INVOKABLE void loadProject(QString projectDirectoryPath);
 		void selectItems(const QList<QString>& cameraNames);
+		
+		void setLeftView(MVGCameraWrapper& camera) const;
+		void setRightView(MVGCameraWrapper& camera) const;
 
 	private:
 		void addCamera(const MVGCamera& camera);

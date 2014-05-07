@@ -3,6 +3,8 @@
 #include "mayaMVG/core/MVGLog.h"
 #include "mayaMVG/io/cameraIO.h"
 #include "mayaMVG/io/pointCloudIO.h"
+
+#include "mayaMVG/maya/MVGMayaUtil.h"
 #include <third_party/stlplus3/filesystemSimplified/file_system.hpp>
 
 using namespace mayaMVG;
@@ -38,6 +40,20 @@ bool MVGProject::loadPointCloud()
 {
 
 	return readPointCloud(pointCloudFile());
+}
+
+void MVGProject::setLeftView(const MVGCamera& camera) const
+{
+	camera.select();
+	camera.loadImagePlane();
+	MVGMayaUtil::setMVGLeftCamera(camera);
+}
+
+void MVGProject::setRightView(const MVGCamera& camera) const
+{
+	camera.select();
+	camera.loadImagePlane();
+	MVGMayaUtil::setMVGRightCamera(camera);
 }
 
 std::string MVGProject::projectDirectory()
