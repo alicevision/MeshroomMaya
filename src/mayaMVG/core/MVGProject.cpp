@@ -16,29 +16,32 @@ MVGProject::~MVGProject()
 {
 }
 
-bool MVGProject::load()
-{
+bool MVGProject::load(std::string projectDirectoryPath)
+{	
+	
+	setProjectDirectory(projectDirectoryPath);
+	
 	// cameras
-	if(!loadCameras())
+	if(!loadCameras(fullPath(_projectDirectory, "views.txt")))
 		return false;
 	// point cloud
-	if(!loadPointCloud())
+	if(!loadPointCloud(fullPath(fullPath(_projectDirectory, "clouds"), "calib.ply")))
 		return false;
 	// mesh
 	MVGMesh::create("mvgMesh");
 	return true;
 }
 
-bool MVGProject::loadCameras()
+bool MVGProject::loadCameras(std::string filePath)
 {
-	return readCamera(_cameras, fullPath(_projectDirectory, "views.txt"), _imageDirectoryName, _cameraDirectoryName);	
+	return readCamera(_cameras, filePath, _imageDirectoryName, _cameraDirectoryName);	
 }
 
-bool MVGProject::loadPointCloud()
+bool MVGProject::loadPointCloud(std::string filePath)
 {
 	MVGPointCloud pointCloud = MVGPointCloud::create("mvgPointCloud");
 	
-	return readPointCloud(pointCloud, fullPath(fullPath(_projectDirectory, "clouds"), "calib.ply"));
+	return readPointCloud(pointCloud, filePath);
 }
 
 const std::vector<MVGCamera>& MVGProject::cameras()

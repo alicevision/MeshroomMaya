@@ -46,8 +46,6 @@ void MVGProjectWrapper::setProjectDirectory(const QString& directory)
 {
 	_project->setProjectDirectory(directory.toStdString());
 	
-	
-	//loadProject();
 	emit projectDirectoryChanged();
 }
 
@@ -68,8 +66,7 @@ void MVGProjectWrapper::onBrowseDirectoryButtonClicked()
 		return;
 	}
 	
-	setProjectDirectory(directory);	
-	loadProject();
+	loadProject(directory);
 }
 
 void MVGProjectWrapper::onSelectContextButtonClicked() {
@@ -88,12 +85,14 @@ void MVGProjectWrapper::onMoveContextButtonClicked()
 	LOG_INFO("MoveContextButton clicked");
 }
 
-void MVGProjectWrapper::loadProject()
+void MVGProjectWrapper::loadProject(QString projectDirectoryPath)
 {
-	if(!_project->load())
+	if(!_project->load(projectDirectoryPath.toStdString()))
 	{
 		LOG_ERROR("An error occured when loading project.")
 	}
+	
+	emit projectDirectoryChanged();
 	
 	// Populate menu
 	const std::vector<MVGCamera>& cameraList = _project->cameras();

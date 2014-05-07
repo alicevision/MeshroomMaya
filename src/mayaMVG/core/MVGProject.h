@@ -15,9 +15,9 @@ class MVGProject {
 		MVGProject();
 		virtual ~MVGProject();	
 	
-		bool load();
-		bool loadCameras();
-		bool loadPointCloud();
+		bool load(std::string projectDirectoryPath);
+		bool loadCameras(std::string filePath);
+		bool loadPointCloud(std::string filePath);
 	
 	public:
 		void setProjectDirectory(const std::string&);

@@ -38,10 +38,11 @@ namespace mayaMVG {
 		Q_INVOKABLE void onSelectContextButtonClicked();
 		Q_INVOKABLE void onPlaceContextButtonClicked();
 		Q_INVOKABLE void onMoveContextButtonClicked();	
-				
+		
+		Q_INVOKABLE void loadProject(QString projectDirectoryPath);
+						
 		void selectItems(const QList<QString>& cameraNames);
-		//void createProject(std::string projectDirectory, std::string imageDirectoryName, std::string cameraDirectoryName);
-				
+		
 		private:
 			void addCamera(const MVGCamera& camera);
 		
@@ -53,8 +54,7 @@ namespace mayaMVG {
 		void cameraModelChanged();
 		
 	private:
-		Q_INVOKABLE void loadProject();
-	
+		
 	private:
 		QList<QObject*>		_cameraList;
 		MVGProject*			_project;

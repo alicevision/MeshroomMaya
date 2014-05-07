@@ -35,6 +35,8 @@ Item {
                 selectedTextColor: "white"
                 selectByMouse: true
                 font.pointSize: 13
+
+                onAccepted: _project.loadProject(text)
             }
         }
 
@@ -51,9 +53,7 @@ Item {
                 id: folderButtonMouseArea
                 anchors.fill: parent
 
-                onClicked: {
-                    _project.onBrowseDirectoryButtonClicked();
-                }
+                onClicked: _project.onBrowseDirectoryButtonClicked()
             }
         }
     }
