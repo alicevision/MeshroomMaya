@@ -20,6 +20,7 @@ Item {
             width: 30
             height: 150
             iconSource: "img/down_arrow.png"
+            tooltip: "Show/Hide settings"
 
             onClicked: {
 
@@ -46,11 +47,12 @@ Item {
                 height: parent.height
 
                 ToolButton {
-                    id: selectContectButton
+                    id: selectContextButton
 
                     width:  parent.width
                     height:  parent.width
                     text: "S"
+                    tooltip: "Select mode"
 
                     onClicked: _project.onSelectContextButtonClicked();
                 }
@@ -61,6 +63,7 @@ Item {
                     width:  parent.width
                     height:  parent.width
                     text: "M"
+                    tooltip: "Move mode"
 
                     onClicked: _project.onMoveContextButtonClicked();
                 }
@@ -71,6 +74,7 @@ Item {
                     width:  parent.width
                     height:  parent.width
                     text: "P"
+                    tooltip: "Place mode"
 
                     onClicked: _project.onPlaceContextButtonClicked();
                 }

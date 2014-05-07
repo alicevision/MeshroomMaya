@@ -42,10 +42,18 @@ Item {
 
                     minimumValue: 0
                     maximumValue: 30
-                    value: 10//_project.coresCount
+                    value: 10
                     Layout.minimumWidth: 40
                     Layout.maximumWidth: 60
                     Layout.horizontalSizePolicy: Layout.Expanding
+
+                    TooltipArea {
+                        id: coresSpinBoxTooltip
+                        anchors.fill: parent
+                        text: coresLabel.text
+                    }
+
+
                 }
 
                 Slider {
@@ -53,10 +61,17 @@ Item {
 
                     minimumValue: 0
                     maximumValue: 30
-                    value: 10//_project.coresCount
+                    value: 10
                     Layout.minimumWidth: 100
                     Layout.maximumWidth: 200
                     Layout.horizontalSizePolicy: Layout.Expanding
+
+
+                    TooltipArea {
+                        id: coresSliderTooltip
+                        anchors.fill: parent
+                        text: coresLabel.text
+                    }
                 }
 
                 Rectangle
@@ -107,6 +122,13 @@ Item {
                     id: qualityComboBox
 
                     model:qualityChoices
+
+                }
+
+                TooltipArea {
+                    id: qualityComboBoxTooltip
+                    anchors.fill: qualityComboBox
+                    text: qualityLabel.text
                 }
 
                 Rectangle

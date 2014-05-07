@@ -18,6 +18,7 @@ MVGProject::~MVGProject()
 {
 }
 
+
 bool MVGProject::load()
 {
 	if(!loadCameras())
@@ -29,11 +30,13 @@ bool MVGProject::load()
 
 bool MVGProject::loadCameras()
 {
+
 	return readCamera(cameraFile(), imageDirectory(), cameraDirectory());
 }
 
 bool MVGProject::loadPointCloud()
 {
+
 	return readPointCloud(pointCloudFile());
 }
 
@@ -77,14 +80,14 @@ std::string MVGProject::imageDirectory()
 
 std::string MVGProject::pointCloudFile()
 {
-	return stlplus::create_filespec(
-			stlplus::create_filespec(
-				stlplus::create_filespec(
-					stlplus::create_filespec(
-						stlplus::create_filespec(
-							projectDirectory(), ".."), "PMVS"), "models"), "pmvs_optionMiMode"), "new.ply");
 	// return stlplus::create_filespec(
-	// 	stlplus::create_filespec(projectDirectory(), "clouds"), "calib.ply");
+	// 		stlplus::create_filespec(
+	// 			stlplus::create_filespec(
+	// 				stlplus::create_filespec(
+	// 					stlplus::create_filespec(
+	// 						projectDirectory(), ".."), "PMVS"), "models"), "pmvs_optionMiMode"), "new.ply");
+	return stlplus::create_filespec(
+		stlplus::create_filespec(projectDirectory(), "clouds"), "calib.ply");
 }
 
 std::string getPath(const std::string& dir, const std::string& filename)

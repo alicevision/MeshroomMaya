@@ -13,7 +13,7 @@ bool readPointCloud(std::string filePath)
 	MVGPointCloud pointCloud(MVGProject::_CLOUD);
 	if(!pointCloud.isValid()) {
 		pointCloud = MVGPointCloud::create(MVGProject::_CLOUD);
-		LOG_INFO("New MVG Point Cloud.")
+		LOG_INFO("New OpenMVG Point Cloud.")
 	}
 
 	Ply ply;

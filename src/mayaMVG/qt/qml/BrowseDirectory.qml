@@ -35,6 +35,14 @@ Item {
                 selectedTextColor: "white"
                 selectByMouse: true
                 font.pointSize: 13
+
+                onAccepted: _project.loadProject(text)
+            }
+
+            TooltipArea {
+                id: qualityComboBoxTooltip
+                anchors.fill: parent
+                text: "Project directory path"
             }
         }
 
@@ -44,16 +52,14 @@ Item {
 
             implicitWidth: 30
             height: 30
-
             iconSource: "img/Folder.png"
+            tooltip: "Browse project folder"
 
             MouseArea {
                 id: folderButtonMouseArea
                 anchors.fill: parent
 
-                onClicked: {
-                    _project.onBrowseDirectoryButtonClicked();
-                }
+                onClicked: _project.onBrowseDirectoryButtonClicked()
             }
         }
     }

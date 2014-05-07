@@ -12,11 +12,11 @@ MVGMainWidget::MVGMainWidget(QWidget * parent)
 	_view = new QDeclarativeView(parent);
 	
 	// QtDesktop Components
-	_view->engine()->addPluginPath("/usr/lib64/qt4/plugins/imports");
-	_view->engine()->addImportPath("/usr/lib64/qt4/plugins/imports");
+	_view->engine()->addPluginPath("/usr/local/Trolltech/Qt-4.8.2/imports");
+	_view->engine()->addImportPath("/usr/local/Trolltech/Qt-4.8.2/imports");
 
 	// Qml source
-	_view->setSource(QUrl::fromLocalFile("/datas/nro/dev/openMVGUI/src/mayaMVG/qt/qml/main.qml"));
+	_view->setSource(QUrl::fromLocalFile("/datas/pra/openMVG-UI/src/mayaMVG/qt/qml/main.qml"));
 	_view->setResizeMode(QDeclarativeView::SizeRootObjectToView);
 
 	// Expose Project to QML
@@ -24,7 +24,7 @@ MVGMainWidget::MVGMainWidget(QWidget * parent)
 
 	// Instant coding
 	QmlInstantCoding* qic = new QmlInstantCoding(_view, true);
-	qic->addFilesFromDirectory("/datas/nro/dev/openMVGUI/src/mayaMVG/qt/qml", true);
+	qic->addFilesFromDirectory("/datas/pra/openMVG-UI/src/mayaMVG/qt/qml", true);
 
 }
 

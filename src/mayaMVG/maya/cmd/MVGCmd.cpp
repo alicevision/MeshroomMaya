@@ -22,6 +22,8 @@ namespace {
 
 	static const char * helpFlag = "-h";
 	static const char * helpFlagLong = "-help";
+	static const char * projectPathFlag = "-p";
+	static const char * projectPathFlagLong = "-project";
 
 	void selectionChangedCB(void* userData) {
 		if(!userData)
@@ -59,6 +61,7 @@ void * MVGCmd::creator() {
 MSyntax MVGCmd::newSyntax() {
 	MSyntax s;
 	s.addFlag(helpFlag, helpFlagLong);
+	s.addFlag(projectPathFlag, projectPathFlagLong, MSyntax::kString);
 	s.enableEdit(false);
 	s.enableQuery(false);
 	return s;
@@ -79,7 +82,7 @@ MStatus MVGCmd::doIt(const MArgList& args) {
 	if (argData.isFlagSet(helpFlag)) {
 		// TODO
 	}
-
+	
 	// create maya window
 	status = MVGMayaUtil::createMVGWindow();
 	if(!status) {
@@ -127,6 +130,15 @@ MStatus MVGCmd::doIt(const MArgList& args) {
 	// needed to remove all maya callbacks and all Qt event filters 
 	MVGWindowEventFilter * windowEventFilter = new MVGWindowEventFilter(callbackIDs, mouseEventFilter, NULL, mayaWindow);
 	mayaWindow->installEventFilter(windowEventFilter);
+	
+	// -p
+	if(argData.isFlagSet(projectPathFlag)) {
+		
+		MString projectPath;
+		argData.getFlagArgument(projectPathFlag, 0, projectPath);
+			
+		MVGProjectWrapper::instance().loadProject(MQtUtil::toQString(projectPath));
+	}
 
 	return status;
 }
