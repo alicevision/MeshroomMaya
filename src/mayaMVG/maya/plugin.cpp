@@ -20,6 +20,9 @@ MStatus initializePlugin(MObject obj) {
 	// nodes
 	status = plugin.registerNode("MVGBuildFaceManipulator", MVGBuildFaceManipulator::_id, &MVGBuildFaceManipulator::creator
 								, &MVGBuildFaceManipulator::initialize, MPxNode::kManipulatorNode);
+
+	status = plugin.registerUI("mayaMVGCreateUI", "mayaMVGDeleteUI");
+
 	if (!status)
 		LOG_ERROR("unexpected error");
 	return status;

@@ -33,6 +33,13 @@ set(QT_USE_QTDECLARATIVE TRUE)
 include(${QT_USE_FILE})
 
 #
+# OpenMVG dependency 
+#
+include_directories(
+			../openMVG/src
+			../openMVG/src/third_party/eigen)
+
+#
 # Plugin name
 #
 set(project_BIN	${PROJECT_NAME}-${PLUGIN_VERSION_MAJOR}.${PLUGIN_VERSION_MINOR})
@@ -58,7 +65,38 @@ include_directories(${CMAKE_CURRENT_BINARY_DIR})
 #
 # Maya plugin properties
 #
-add_library(${project_BIN} SHARED ${PLUGIN_SRCS} ${MOC_SRCS} ${UISrcs} ../openMVG/src/software/SfMViewer/Ply.cpp)
-target_link_libraries(${project_BIN} ${MAYA_Foundation_LIBRARY} ${MAYA_OpenMaya_LIBRARY} ${MAYA_OpenMayaUI_LIBRARY} ${MAYA_OpenMayaFX_LIBRARY} stlplus openMVG_numeric openMVG_multiview ${QT_LIBRARIES})
+add_library(${project_BIN} SHARED 
+				${PLUGIN_SRCS}
+				${MOC_SRCS}
+				../openMVG/src/software/SfMViewer/Ply.cpp)
+target_link_libraries(
+				${project_BIN}
+				${MAYA_Foundation_LIBRARY}
+				${MAYA_OpenMaya_LIBRARY}
+				${MAYA_OpenMayaUI_LIBRARY}
+				${MAYA_OpenMayaFX_LIBRARY}
+				stlplus
+				openMVG_numeric
+				openMVG_multiview
+				${QT_LIBRARIES})
 maya_set_plugin_properties(${project_BIN})
 
+#
+# Install settings
+#
+### install path
+if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+	set(CMAKE_INSTALL_PREFIX ${MAINFOLDER}/dist/plugin CACHE STRING "Plugin install path" FORCE)
+endif(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+
+### plugin file
+install(TARGETS ${project_BIN}
+		DESTINATION "${CMAKE_INSTALL_PREFIX}/plug-ins")
+
+### .mod file
+install(CODE "file(WRITE ${CMAKE_INSTALL_PREFIX}/${PROJECT_NAME}.mod 
+		\"+ ${PROJECT_NAME} ${PLUGIN_VERSION_MAJOR}.${PLUGIN_VERSION_MINOR} .\")")
+
+### scripts
+install(DIRECTORY "${PROJECT_SOURCE_DIR}/maya/scripts"
+		DESTINATION "${CMAKE_INSTALL_PREFIX}")

@@ -1,0 +1,8 @@
+
+global proc mayaMVGCreateUI() {
+	print "\n[MayaMVG] Plugin loaded.\n";
+}
+
+global proc mayaMVGDeleteUI() {
+	print "\n[MayaMVG] Plugin unloaded.\n";
+}

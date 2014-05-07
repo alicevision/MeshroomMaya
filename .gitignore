@@ -22,4 +22,6 @@
 # Distribution & packaging
 build/
 lib/
+bin/
+dist/
 
