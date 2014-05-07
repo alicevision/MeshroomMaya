@@ -5,7 +5,7 @@ Item {
     id: context
 
     width: 500
-    height: 200
+    height: 120
 
 
     RowLayout
