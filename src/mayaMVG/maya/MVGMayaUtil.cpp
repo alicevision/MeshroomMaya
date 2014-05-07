@@ -1,7 +1,5 @@
 #include "mayaMVG/maya/MVGMayaUtil.h"
-
 #include <QWidget>
-
 #include "mayaMVG/core/MVGCamera.h"
 #include "mayaMVG/core/MVGLog.h"
 #include <maya/MFnDependencyNode.h>
@@ -16,8 +14,7 @@
 #include <maya/MFnIntArrayData.h>
 #include <maya/MFnDoubleArrayData.h>
 #include <maya/MPlugArray.h>
-
-
+#include <maya/MCommonSystemUtils.h>
 
 using namespace mayaMVG;
 
@@ -318,19 +315,33 @@ MStatus MVGMayaUtil::findConnectedNodes(const MObject& object, const MString& pa
 
 MStatus MVGMayaUtil::getObjectByName(const MString& name, MObject& obj)
 {
-    obj = MObject::kNullObj;
-    MSelectionList list;
-    MStatus status = list.add(name);
-    if (status == MS::kSuccess)
-        status = list.getDependNode(0, obj);
-    return status;
+	obj = MObject::kNullObj;
+	MSelectionList list;
+	MStatus status = list.add(name);
+	if (status == MS::kSuccess)
+		status = list.getDependNode(0, obj);
+	return status;
 }
 
 MStatus MVGMayaUtil::getDagPathByName(const MString& name, MDagPath& path)
 {
-    MSelectionList list;
-    MStatus status = list.add(name);
-    if (status == MS::kSuccess)
-        status = list.getDagPath(0, path);
-    return status;
+	MSelectionList list;
+	MStatus status = list.add(name);
+	if (status == MS::kSuccess)
+		status = list.getDagPath(0, path);
+	return status;
+}
+
+MString MVGMayaUtil::getEnv(const MString& var)
+{
+	MString result;
+	MCommonSystemUtils::getEnv(var, result);
+	return result;
+}
+
+MString MVGMayaUtil::getModulePath()
+{
+	MString result;
+	MGlobal::executeCommand("getModulePath -moduleName \"mayaMVG\";", result);
+	return result;
 }

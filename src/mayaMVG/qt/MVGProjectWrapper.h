@@ -22,6 +22,7 @@ class MVGProjectWrapper : public QObject, public Singleton<MVGProjectWrapper> {
 	public:
 
 		// Getters & Setters
+		Q_INVOKABLE const QString moduleDirectory() const;
 		Q_INVOKABLE const QString projectDirectory() const;
 		Q_INVOKABLE const QString cameraDirectory() const;
 		Q_INVOKABLE const QString imageDirectory() const;

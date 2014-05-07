@@ -17,6 +17,11 @@ MVGProjectWrapper::~MVGProjectWrapper()
 	delete _project;
 }
 
+const QString MVGProjectWrapper::moduleDirectory() const
+{
+	return QString(_project->moduleDirectory().c_str());
+}
+
 const QString MVGProjectWrapper::projectDirectory() const
 {
 	return QString(_project->projectDirectory().c_str());

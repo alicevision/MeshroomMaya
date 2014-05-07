@@ -100,3 +100,10 @@ install(CODE "file(WRITE ${CMAKE_INSTALL_PREFIX}/${PROJECT_NAME}.mod
 ### scripts
 install(DIRECTORY "${PROJECT_SOURCE_DIR}/maya/scripts"
 		DESTINATION "${CMAKE_INSTALL_PREFIX}")
+
+### .qml files
+install(DIRECTORY "${PROJECT_SOURCE_DIR}/qt/qml/"
+		DESTINATION "${CMAKE_INSTALL_PREFIX}/qml/mvg")
+
+INSTALL(CODE "message(
+		\"---\n QtQuick Desktop Components need to be copied in:\n '${CMAKE_INSTALL_PREFIX}/qml/QtDesktop'\n---\")")

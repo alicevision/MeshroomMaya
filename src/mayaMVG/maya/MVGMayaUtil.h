@@ -54,6 +54,9 @@ struct MVGMayaUtil {
 	// nodes
 	static MStatus getObjectByName(const MString&, MObject&);
 	static MStatus getDagPathByName(const MString&, MDagPath&);
+	// environment
+	static MString getEnv(const MString&);
+	static MString getModulePath();
 };
 
 } // mayaMVG

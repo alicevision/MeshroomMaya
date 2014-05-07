@@ -13,14 +13,17 @@ class MVGProject {
 		MVGProject();
 		virtual ~MVGProject();	
 	
+	public:
 		bool load();
 		bool loadCameras();
 		bool loadPointCloud();
-		
-		void setLeftView(const MVGCamera& camera) const;
-		void setRightView(const MVGCamera& camera) const;
 	
 	public:
+		// views
+		void setLeftView(const MVGCamera& camera) const;
+		void setRightView(const MVGCamera& camera) const;
+		// filesystem
+		std::string moduleDirectory();
 		std::string projectDirectory();
 		void setProjectDirectory(const std::string&);
 		std::string cameraFile();
@@ -29,6 +32,7 @@ class MVGProject {
 		std::string imageFile(const std::string&);
 		std::string imageDirectory();
 		std::string pointCloudFile();
+		// nodes
 		std::vector<MVGCamera> cameras();
 	
 	public:
