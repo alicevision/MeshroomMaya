@@ -3,6 +3,8 @@
 #include "mayaMVG/core/MVGGeometryUtil.h"
 #include "mayaMVG/maya/MVGMayaUtil.h"
 #include <maya/MFnMesh.h>
+#include <maya/MFnSet.h>
+#include <maya/MSelectionList.h>
 #include <maya/MPointArray.h>
 #include <maya/MIntArray.h>
 
@@ -46,6 +48,16 @@ MVGMesh MVGMesh::create(const std::string& name)
 
 	MVGMesh mesh(path);
 	mesh.setName(name);
+
+	// connect to initialShadingGroup
+	MObject sgObj;
+	MSelectionList list;
+	status = MGlobal::getSelectionListByName("initialShadingGroup", list);
+	status = list.getDependNode(0, sgObj);
+	MFnSet fnSet(sgObj, &status);
+ 	status = fnSet.addMember(path);
+	CHECK(status)
+
 	return mesh;
 }
 

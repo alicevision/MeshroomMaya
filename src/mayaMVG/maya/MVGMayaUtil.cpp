@@ -1,7 +1,5 @@
 #include "mayaMVG/maya/MVGMayaUtil.h"
-
 #include <QWidget>
-
 #include "mayaMVG/core/MVGCamera.h"
 #include "mayaMVG/core/MVGLog.h"
 #include <maya/MFnDependencyNode.h>
@@ -16,8 +14,7 @@
 #include <maya/MFnIntArrayData.h>
 #include <maya/MFnDoubleArrayData.h>
 #include <maya/MPlugArray.h>
-
-
+#include <maya/MCommonSystemUtils.h>
 
 using namespace mayaMVG;
 
@@ -121,24 +118,24 @@ bool MVGMayaUtil::mouseUnderView(const M3dView & view) {
 MStatus MVGMayaUtil::createMVGContext() {
 	return MGlobal::executePythonCommand(
 		"import maya.cmds as cmds\n"
-		"if cmds.contextInfo('MVGTool1', exists=True):\n"
-		"    cmds.deleteUI('MVGTool1', toolContext=True)\n"
-		"cmds.MVGTool('MVGTool1')\n");
+		"if cmds.contextInfo('mayaMVGTool1', exists=True):\n"
+		"    cmds.deleteUI('mayaMVGTool1', toolContext=True)\n"
+		"cmds.mayaMVGTool('mayaMVGTool1')\n");
 }
 
 MStatus MVGMayaUtil::deleteMVGContext() {
 	return MGlobal::executePythonCommand(
 		"import maya.cmds as cmds\n"
 		"cmds.setToolTo('selectSuperContext')\n"
-		"if cmds.contextInfo('MVGTool1', exists=True):\n"
-		"    cmds.deleteUI('MVGTool1', toolContext=True)\n");
+		"if cmds.contextInfo('mayaMVGTool1', exists=True):\n"
+		"    cmds.deleteUI('mayaMVGTool1', toolContext=True)\n");
 }
 
 MStatus MVGMayaUtil::activeContext() 
 {
 	return MGlobal::executePythonCommand(
 		"import maya.cmds as cmds\n"
-		"cmds.setToolTo('MVGTool1')");
+		"cmds.setToolTo('mayaMVGTool1')");
 }
 
 MStatus MVGMayaUtil::getMVGLeftCamera(MDagPath& path) {
@@ -318,19 +315,33 @@ MStatus MVGMayaUtil::findConnectedNodes(const MObject& object, const MString& pa
 
 MStatus MVGMayaUtil::getObjectByName(const MString& name, MObject& obj)
 {
-    obj = MObject::kNullObj;
-    MSelectionList list;
-    MStatus status = list.add(name);
-    if (status == MS::kSuccess)
-        status = list.getDependNode(0, obj);
-    return status;
+	obj = MObject::kNullObj;
+	MSelectionList list;
+	MStatus status = list.add(name);
+	if (status == MS::kSuccess)
+		status = list.getDependNode(0, obj);
+	return status;
 }
 
 MStatus MVGMayaUtil::getDagPathByName(const MString& name, MDagPath& path)
 {
-    MSelectionList list;
-    MStatus status = list.add(name);
-    if (status == MS::kSuccess)
-        status = list.getDagPath(0, path);
-    return status;
+	MSelectionList list;
+	MStatus status = list.add(name);
+	if (status == MS::kSuccess)
+		status = list.getDagPath(0, path);
+	return status;
+}
+
+MString MVGMayaUtil::getEnv(const MString& var)
+{
+	MString result;
+	MCommonSystemUtils::getEnv(var, result);
+	return result;
+}
+
+MString MVGMayaUtil::getModulePath()
+{
+	MString result;
+	MGlobal::executeCommand("getModulePath -moduleName \"mayaMVG\";", result);
+	return result;
 }

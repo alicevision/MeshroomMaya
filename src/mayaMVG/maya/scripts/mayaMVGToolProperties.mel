@@ -1,0 +1,22 @@
+
+global proc mayaMVGToolProperties ()
+{
+	setUITemplate -pushTemplate DefaultTemplate;
+	string $parent = `toolPropertyWindow -q -location`;
+	setParent $parent;
+
+	if(!`columnLayout -exists mvgToolLayout`) {
+		columnLayout -adjustableColumn true mvgToolLayout;
+			frameLayout -collapsable false -collapse false -label "Properties";
+			setParent ..;
+		setParent ..;
+	}
+	
+	setUITemplate -popTemplate;
+	mayaMVGToolSetCallbacks($parent);
+}
+
+global proc mayaMVGToolSetCallbacks(string $parent)
+{
+	setParent $parent;
+}

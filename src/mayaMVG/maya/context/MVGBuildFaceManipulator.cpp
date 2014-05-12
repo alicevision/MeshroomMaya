@@ -4,6 +4,7 @@
 #include "mayaMVG/core/MVGGeometryUtil.h"
 #include "mayaMVG/core/MVGPointCloud.h"
 #include "mayaMVG/core/MVGMesh.h"
+#include "mayaMVG/core/MVGProject.h"
 #include <maya/MFnCamera.h>
 
 
@@ -256,8 +257,16 @@ void MVGBuildFaceManipulator::createFace3d(M3dView& view, std::vector<MPoint> fa
 	MVGFace3D face3D;
 	MVGFace2D face2D(_wpoints);
 	
-	MVGMesh mesh("mvgMesh");
-	MVGPointCloud pointCloud("mvgPointCloud");
+	MVGMesh mesh(MVGProject::_MESH);
+	if(!mesh.isValid()) {
+		mesh = MVGMesh::create(MVGProject::_MESH);
+		LOG_INFO("New OpenMVG Mesh.")
+	}
+	MVGPointCloud pointCloud(MVGProject::_CLOUD);
+	if(!pointCloud.isValid()) {
+		pointCloud = MVGPointCloud::create(MVGProject::_CLOUD);
+		LOG_INFO("New OpenMVG Point Cloud.")
+	}
 	MVGCamera camera = getMVGCamera();
 	
 	if(MVGGeometryUtil::projectFace2D(face3D, pointCloud, view, camera, face2D))

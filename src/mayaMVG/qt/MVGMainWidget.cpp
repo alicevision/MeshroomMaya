@@ -11,21 +11,24 @@ MVGMainWidget::MVGMainWidget(QWidget * parent)
 {
 	_view = new QDeclarativeView(parent);
 	
+	MVGProjectWrapper& project = MVGProjectWrapper::instance();
+	QString importDirectory = project.moduleDirectory()+"/qml";
+	QString sourceDirectory = importDirectory+"/mvg/main.qml";
+
 	// QtDesktop Components
-	_view->engine()->addPluginPath("/usr/local/Trolltech/Qt-4.8.2/imports");
-	_view->engine()->addImportPath("/usr/local/Trolltech/Qt-4.8.2/imports");
+	_view->engine()->addPluginPath(importDirectory);
+	_view->engine()->addImportPath(importDirectory);
 
 	// Qml source
-	_view->setSource(QUrl::fromLocalFile("/datas/pra/openMVG-UI/src/mayaMVG/qt/qml/main.qml"));
+	_view->setSource(QUrl::fromLocalFile(sourceDirectory));
 	_view->setResizeMode(QDeclarativeView::SizeRootObjectToView);
 
 	// Expose Project to QML
-	_view->rootContext()->setContextProperty("_project", &(MVGProjectWrapper::instance()));
+	_view->rootContext()->setContextProperty("_project", &project);
 
 	// Instant coding
 	QmlInstantCoding* qic = new QmlInstantCoding(_view, true);
-	qic->addFilesFromDirectory("/datas/pra/openMVG-UI/src/mayaMVG/qt/qml", true);
-
+	qic->addFilesFromDirectory(importDirectory, true);
 }
 
 MVGMainWidget::~MVGMainWidget()

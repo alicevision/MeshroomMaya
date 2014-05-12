@@ -3,7 +3,7 @@
 
 using namespace mayaMVG;
 
-MString MVGContextCmd::name("MVGTool");
+MString MVGContextCmd::name("mayaMVGTool");
 
 MVGContextCmd::MVGContextCmd() : m_pContext(NULL) {
 }

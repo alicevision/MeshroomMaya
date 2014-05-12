@@ -95,8 +95,15 @@ install(TARGETS ${project_BIN}
 
 ### .mod file
 install(CODE "file(WRITE ${CMAKE_INSTALL_PREFIX}/${PROJECT_NAME}.mod 
-		\"+ ${PROJECT_NAME} ${PLUGIN_VERSION_MAJOR}.${PLUGIN_VERSION_MINOR} .\")")
+		\"+ ${PROJECT_NAME} ${PLUGIN_VERSION_MAJOR}.${PLUGIN_VERSION_MINOR} .\nPYTHONPATH:=scripts\")")
 
 ### scripts
 install(DIRECTORY "${PROJECT_SOURCE_DIR}/maya/scripts"
 		DESTINATION "${CMAKE_INSTALL_PREFIX}")
+
+### .qml files
+install(DIRECTORY "${PROJECT_SOURCE_DIR}/qt/qml/"
+		DESTINATION "${CMAKE_INSTALL_PREFIX}/qml/mvg")
+
+INSTALL(CODE "message(
+		\"---\n QtQuick Desktop Components need to be copied in:\n '${CMAKE_INSTALL_PREFIX}/qml/QtDesktop'\n---\")")

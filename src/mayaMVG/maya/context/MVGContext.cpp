@@ -54,7 +54,7 @@ MStatus MVGContext::doRelease(MEvent & event)
 
 void MVGContext::getClassName(MString & name) const
 {
-	name.set("MVGTool");
+	name.set("mayaMVGTool");
 }
 
 // static
