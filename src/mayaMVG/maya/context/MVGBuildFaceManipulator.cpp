@@ -12,9 +12,10 @@ using namespace mayaMVG;
 
 MTypeId MVGBuildFaceManipulator::_id(0x99999); // FIXME /!\ 
 
-MVGBuildFaceManipulator::MVGBuildFaceManipulator()
+MVGBuildFaceManipulator::MVGBuildFaceManipulator() : 
+	_connectFace(true),
+	_computeLastPoint(true)
 {
-	_connectedFace = false;
 }
 
 MVGBuildFaceManipulator::~MVGBuildFaceManipulator()
@@ -93,24 +94,8 @@ void MVGBuildFaceManipulator::draw(M3dView & view, const MDagPath & path,
 				{
 					short x;
 					short y;
-					if(_connectedFace && _wpoints.size() > 3)
-					{				
-						MVector height = _wpoints[3] - _wpoints[2];
-						_lastPoint = _mousePoint + height;
 						
-						glColor4f(1.f, 1.f, 1.f, 0.6f);
-						glBegin(GL_POLYGON);
-							view.worldToView(_wpoints[3], x, y);
-							glVertex2f(x, y);
-							view.worldToView(_wpoints[2], x, y);
-							glVertex2f(x, y);
-							view.worldToView(_mousePoint, x, y);
-							glVertex2f(x, y);
-							view.worldToView(_lastPoint, x, y);
-							glVertex2f(x, y);
-						glEnd();
-					}			
-					else if(_wpoints.size() > 2)
+					if(_wpoints.size() > 2)
 					{
 						glBegin(GL_POLYGON);
 						for(size_t i = 0; i < _wpoints.size(); ++i){
@@ -126,15 +111,36 @@ void MVGBuildFaceManipulator::draw(M3dView & view, const MDagPath & path,
 						glVertex2f(x, y);
 						view.worldToView(_wpoints[1], x, y);
 						glVertex2f(x, y);
-						glEnd();						
+						glEnd();	
+						
+						glPointSize(4.f);
+						glBegin(GL_POINTS);
+						for(size_t i = 0; i < _wpoints.size(); ++i){
+							view.worldToView(_wpoints[i], x, y);
+							glVertex2f(x, y);
+						}					
+						glEnd();
+						
+						// Preview of quad
+						if(_computeLastPoint)
+						{										
+							MVector height = _wpoints[0] - _wpoints[1];
+							_lastPoint = _mousePoint + height;
+
+							glColor4f(1.f, 1.f, 1.f, 0.6f);
+							glBegin(GL_POLYGON);
+								view.worldToView(_wpoints[0], x, y);
+								glVertex2f(x, y);
+								view.worldToView(_wpoints[1], x, y);
+								glVertex2f(x, y);
+								view.worldToView(_mousePoint, x, y);
+								glVertex2f(x, y);
+								view.worldToView(_lastPoint, x, y);
+								glVertex2f(x, y);
+							glEnd();
+						}		
 					}					
-					glPointSize(4.f);
-					glBegin(GL_POINTS);
-					for(size_t i = 0; i < _wpoints.size(); ++i){
-						view.worldToView(_wpoints[i], x, y);
-						glVertex2f(x, y);
-					}					
-					glEnd();
+					
 				}
 			}
 
@@ -159,21 +165,6 @@ MStatus MVGBuildFaceManipulator::doPress(M3dView& view)
 	if((_lastCameraPath.length() > 0) && !(cameraPath == _lastCameraPath))
 		_wpoints.clear();
 	_lastCameraPath = cameraPath;
-
-	if(_wpoints.size() > 3)
-	{	
-		// Keep the two last points to connect face
-		if(_connectedFace) {
-			std::vector<MPoint> tmp(_wpoints);
-			_wpoints.clear();
-			_wpoints.push_back(tmp[3]);
-			_wpoints.push_back(tmp[2]);
-		}
-		else
-		{
-			_wpoints.clear();
-		}	
-	}
 	
 	// Add a new point
 	MPoint wpos;
@@ -186,8 +177,8 @@ MStatus MVGBuildFaceManipulator::doPress(M3dView& view)
 	// TODO
 	// check if this point intersect an existing Point2D
 	
-	// Add fourth point
-	if(_connectedFace && _wpoints.size() > 2)
+	// Find fourth point
+	if(_computeLastPoint && _wpoints.size() > 2)
 	{		
 		_wpoints.push_back(_lastPoint);
 	}
@@ -196,11 +187,19 @@ MStatus MVGBuildFaceManipulator::doPress(M3dView& view)
 	if(_wpoints.size() > 3)
 	{
 		createFace3d(view, _wpoints);
+		
+		// Keep the last two points to connect the next face
+		if(_connectFace) {
+			std::vector<MPoint> tmp(_wpoints);
+			_wpoints.clear();
+			_wpoints.push_back(tmp[2]);
+			_wpoints.push_back(tmp[3]);
+		}
+		else
+		{
+			_wpoints.clear();
+		}	
 	}
-	
-	// Active _connectedFace when a fourth point is clicked
-	if(_wpoints.size() > 3)
-		_connectedFace = true;
 		
 	return MPxManipulatorNode::doPress(view);
 }

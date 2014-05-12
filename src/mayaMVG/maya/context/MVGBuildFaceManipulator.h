@@ -37,13 +37,14 @@ class MVGBuildFaceManipulator: public MPxManipulatorNode
 		
 
 	public:
-		static MTypeId		_id;
-		std::vector<MPoint> _wpoints;
-		MPoint				_mousePoint;
-		MPoint				_lastPoint;
-		MDagPath			_lastCameraPath;
-		bool				_drawEnabled;
-		bool				_connectedFace;
+		static MTypeId			_id;
+		std::vector<MPoint>		_wpoints;
+		MPoint					_mousePoint;
+		MPoint					_lastPoint;
+		MDagPath				_lastCameraPath;
+		bool					_drawEnabled;
+		bool				_connectFace;
+		bool				_computeLastPoint;
 };
 
 } // mayaMVG
