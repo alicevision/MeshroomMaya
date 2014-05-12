@@ -11,9 +11,9 @@ using namespace mayaMVG;
 
 MTypeId MVGBuildFaceManipulator::_id(0x99999); // FIXME /!\ 
 
-
 MVGBuildFaceManipulator::MVGBuildFaceManipulator()
 {
+	_connectedFace = false;
 }
 
 MVGBuildFaceManipulator::~MVGBuildFaceManipulator()
@@ -92,7 +92,24 @@ void MVGBuildFaceManipulator::draw(M3dView & view, const MDagPath & path,
 				{
 					short x;
 					short y;
-					if(_wpoints.size() > 2)
+					if(_connectedFace && _wpoints.size() > 3)
+					{				
+						MVector height = _wpoints[3] - _wpoints[2];
+						_lastPoint = _mousePoint + height;
+						
+						glColor4f(1.f, 1.f, 1.f, 0.6f);
+						glBegin(GL_POLYGON);
+							view.worldToView(_wpoints[3], x, y);
+							glVertex2f(x, y);
+							view.worldToView(_wpoints[2], x, y);
+							glVertex2f(x, y);
+							view.worldToView(_mousePoint, x, y);
+							glVertex2f(x, y);
+							view.worldToView(_lastPoint, x, y);
+							glVertex2f(x, y);
+						glEnd();
+					}			
+					else if(_wpoints.size() > 2)
 					{
 						glBegin(GL_POLYGON);
 						for(size_t i = 0; i < _wpoints.size(); ++i){
@@ -100,7 +117,7 @@ void MVGBuildFaceManipulator::draw(M3dView & view, const MDagPath & path,
 							glVertex2f(x, y);
 						}
 						glEnd();
-					}
+					}			
 					else if(_wpoints.size() > 1)
 					{
 						glBegin(GL_LINES);
@@ -108,14 +125,14 @@ void MVGBuildFaceManipulator::draw(M3dView & view, const MDagPath & path,
 						glVertex2f(x, y);
 						view.worldToView(_wpoints[1], x, y);
 						glVertex2f(x, y);
-						glEnd();
-					}
+						glEnd();						
+					}					
 					glPointSize(4.f);
 					glBegin(GL_POINTS);
 					for(size_t i = 0; i < _wpoints.size(); ++i){
 						view.worldToView(_wpoints[i], x, y);
 						glVertex2f(x, y);
-					}
+					}					
 					glEnd();
 				}
 			}
@@ -137,39 +154,53 @@ MStatus MVGBuildFaceManipulator::doPress(M3dView& view)
 	MDagPath cameraPath;
 	view.getCamera(cameraPath);
 
-	// view changed : clear all points & register the new camera path
+	// View changed : clear all points & register the new camera path
 	if((_lastCameraPath.length() > 0) && !(cameraPath == _lastCameraPath))
 		_wpoints.clear();
 	_lastCameraPath = cameraPath;
 
 	if(_wpoints.size() > 3)
-		_wpoints.clear();
-
-	// add a new point
+	{	
+		// Keep the two last points to connect face
+		if(_connectedFace) {
+			std::vector<MPoint> tmp(_wpoints);
+			_wpoints.clear();
+			_wpoints.push_back(tmp[3]);
+			_wpoints.push_back(tmp[2]);
+		}
+		else
+		{
+			_wpoints.clear();
+		}	
+	}
+	
+	// Add a new point
 	MPoint wpos;
 	MVector wdir;
 	short mousex, mousey;
 	mousePosition(mousex, mousey);
 	view.viewToWorld(mousex, mousey, wpos, wdir);
 	_wpoints.push_back(wpos);
-
+	
 	// TODO
 	// check if this point intersect an existing Point2D
-
-	if(_wpoints.size() > 3)
-	{
-		// find the corresponding Face3D
-		MVGFace3D face3D;
-		MVGFace2D face2D(_wpoints);
-		MVGMesh mesh("mvgMesh");
-		MVGPointCloud pointCloud("mvgPointCloud");
-		MVGCamera camera = getMVGCamera();
-		if(MVGGeometryUtil::projectFace2D(face3D, pointCloud, view, camera, face2D))
-		{
-			mesh.addPolygon(face3D);
-		}
+	
+	// Add fourth point
+	if(_connectedFace && _wpoints.size() > 2)
+	{		
+		_wpoints.push_back(_lastPoint);
 	}
 	
+	// Create face3D
+	if(_wpoints.size() > 3)
+	{
+		createFace3d(view, _wpoints);
+	}
+	
+	// Active _connectedFace when a fourth point is clicked
+	if(_wpoints.size() > 3)
+		_connectedFace = true;
+		
 	return MPxManipulatorNode::doPress(view);
 }
 
@@ -181,6 +212,13 @@ MStatus MVGBuildFaceManipulator::doRelease(M3dView& view)
 MStatus MVGBuildFaceManipulator::doMove(M3dView& view, bool& refresh)
 {
 	refresh = true;
+	
+	// Update mousePoint
+	MVector wdir;
+	short mousex, mousey;
+	mousePosition(mousex, mousey);
+	view.viewToWorld(mousex, mousey, _mousePoint, wdir);
+
 	return MPxManipulatorNode::doMove(view, refresh);
 }
 
@@ -211,4 +249,19 @@ MVGCamera MVGBuildFaceManipulator::getMVGCamera(M3dView& view)
 	view.getCamera(cameraPath);
 	// cameraPath.pop();
 	return MVGCamera(cameraPath.partialPathName().asChar());
+}
+
+void MVGBuildFaceManipulator::createFace3d(M3dView& view, std::vector<MPoint> facePoints)
+{
+	MVGFace3D face3D;
+	MVGFace2D face2D(_wpoints);
+	
+	MVGMesh mesh("mvgMesh");
+	MVGPointCloud pointCloud("mvgPointCloud");
+	MVGCamera camera = getMVGCamera();
+	
+	if(MVGGeometryUtil::projectFace2D(face3D, pointCloud, view, camera, face2D))
+	{
+		mesh.addPolygon(face3D);
+	}
 }

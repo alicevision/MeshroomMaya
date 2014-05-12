@@ -32,12 +32,18 @@ class MVGBuildFaceManipulator: public MPxManipulatorNode
 
 		MVGCamera getMVGCamera();
 		MVGCamera getMVGCamera(M3dView&);
+		
+		void createFace3d(M3dView& view, std::vector<MPoint> facePoints);
+		
 
 	public:
-		static MTypeId _id;
+		static MTypeId		_id;
 		std::vector<MPoint> _wpoints;
-		MDagPath _lastCameraPath;
-		bool _drawEnabled;
+		MPoint				_mousePoint;
+		MPoint				_lastPoint;
+		MDagPath			_lastCameraPath;
+		bool				_drawEnabled;
+		bool				_connectedFace;
 };
 
 } // mayaMVG
