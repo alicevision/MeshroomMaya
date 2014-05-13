@@ -43,8 +43,8 @@ class MVGBuildFaceManipulator: public MPxManipulatorNode
 		MPoint					_lastPoint;
 		MDagPath				_lastCameraPath;
 		bool					_drawEnabled;
-		bool				_connectFace;
-		bool				_computeLastPoint;
+		static bool				_connectFace;
+		static bool				_computeLastPoint;
 };
 
 } // mayaMVG

@@ -3,6 +3,8 @@
 #include "mayaMVG/maya/MVGMayaUtil.h"
 #include "mayaMVG/core/MVGLog.h"
 
+#include "mayaMVG/maya/context/MVGBuildFaceManipulator.h"
+
 using namespace mayaMVG;
 
 using namespace mayaMVG;
@@ -40,6 +42,16 @@ const QString MVGProjectWrapper::imageDirectory() const
 const QList<QObject*>& MVGProjectWrapper::cameraModel() const
 {
 	return _cameraList;
+}
+
+const bool MVGProjectWrapper::connectFace() const
+{
+	return MVGBuildFaceManipulator::_connectFace;
+}
+
+const bool MVGProjectWrapper::computeLastPoint() const
+{
+	return MVGBuildFaceManipulator::_computeLastPoint;
 }
 
 QObject* MVGProjectWrapper::getCameraAtIndex(int index) const
@@ -86,6 +98,16 @@ void MVGProjectWrapper::onPlaceContextButtonClicked()
 void MVGProjectWrapper::onMoveContextButtonClicked()
 {
 	LOG_INFO("MoveContextButton clicked");
+}
+
+void MVGProjectWrapper::onComputeLastPointCheckBoxClicked(bool checked)
+{
+	MVGBuildFaceManipulator::_computeLastPoint = checked;
+}
+
+void MVGProjectWrapper::onConnectFaceCheckBoxClicked(bool checked)
+{
+	MVGBuildFaceManipulator::_connectFace = checked;
 }
 
 void MVGProjectWrapper::loadProject(QString projectDirectoryPath)

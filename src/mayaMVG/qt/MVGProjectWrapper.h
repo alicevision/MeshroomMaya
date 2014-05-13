@@ -16,6 +16,8 @@ class MVGProjectWrapper : public QObject, public Singleton<MVGProjectWrapper> {
 		Q_PROPERTY(QString cameraDirectory READ cameraDirectory NOTIFY cameraDirectoryChanged);
 		Q_PROPERTY(QString imageDirectory READ imageDirectory NOTIFY imageDirectoryChanged);
 		Q_PROPERTY(QList<QObject*> cameraModel READ cameraModel NOTIFY cameraModelChanged);
+		Q_PROPERTY(bool connectFace READ connectFace NOTIFY connectFaceChanged);
+		Q_PROPERTY(bool computeLastPoint READ computeLastPoint NOTIFY computeLastPointChanged);
 
 		MAKE_SINGLETON_WITHCONSTRUCTORS(MVGProjectWrapper)
 
@@ -27,6 +29,8 @@ class MVGProjectWrapper : public QObject, public Singleton<MVGProjectWrapper> {
 		Q_INVOKABLE const QString cameraDirectory() const;
 		Q_INVOKABLE const QString imageDirectory() const;
 		Q_INVOKABLE const QList<QObject*>& cameraModel() const;
+		Q_INVOKABLE const bool connectFace() const;
+		Q_INVOKABLE const bool computeLastPoint() const;
 		Q_INVOKABLE QObject* getCameraAtIndex(int index) const;
 		Q_INVOKABLE void setProjectDirectory(const QString& directory);
 
@@ -35,20 +39,24 @@ class MVGProjectWrapper : public QObject, public Singleton<MVGProjectWrapper> {
 		Q_INVOKABLE void onSelectContextButtonClicked();
 		Q_INVOKABLE void onPlaceContextButtonClicked();
 		Q_INVOKABLE void onMoveContextButtonClicked();	
+		Q_INVOKABLE void onComputeLastPointCheckBoxClicked(bool checked);	
+		Q_INVOKABLE void onConnectFaceCheckBoxClicked(bool checked);	
 		Q_INVOKABLE void loadProject(QString projectDirectoryPath);
 		void selectItems(const QList<QString>& cameraNames);
 		
 		void setLeftView(MVGCameraWrapper& camera) const;
 		void setRightView(MVGCameraWrapper& camera) const;
-
-	private:
+		
+		private:
 		void addCamera(const MVGCamera& camera);
 
-	signals:
+		signals:
 		void projectDirectoryChanged();
 		void cameraDirectoryChanged();
 		void imageDirectoryChanged();
 		void cameraModelChanged();
+		void connectFaceChanged();
+		void computeLastPointChanged();
 
 	private:
 		QList<QObject*>	_cameraList;

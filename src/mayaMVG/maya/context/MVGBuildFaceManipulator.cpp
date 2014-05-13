@@ -7,15 +7,46 @@
 #include "mayaMVG/core/MVGProject.h"
 #include <maya/MFnCamera.h>
 
-
 using namespace mayaMVG;
 
+namespace {
+	double crossProduct2d(MVector& A, MVector& B) {
+		return A[0]*B[1] - A[1]*B[0];
+	}
+
+	bool segmentIntersection(MPoint A, MPoint B, MVector AD,  MVector BC)
+	{		
+		// r x s = 0
+		double cross = crossProduct2d(AD, BC);
+		double eps = 0.00001;
+		if(cross < eps && cross > -eps)
+			return false;
+
+		MVector AB = B - A;
+
+		double x =  crossProduct2d(AB, BC) / crossProduct2d(AD, BC);
+		double y = crossProduct2d(AB, AD) / crossProduct2d(AD, BC);
+
+		if( x >= 0 
+			&& x <= 1 
+			&& y >= 0 
+			&& y <= 1)
+		{
+			return true;
+		}
+
+		return false;
+	}
+}
+
+bool MVGBuildFaceManipulator::_connectFace(true);
+bool MVGBuildFaceManipulator::_computeLastPoint(true);
 MTypeId MVGBuildFaceManipulator::_id(0x99999); // FIXME /!\ 
 
-MVGBuildFaceManipulator::MVGBuildFaceManipulator() : 
-	_connectFace(true),
-	_computeLastPoint(true)
+MVGBuildFaceManipulator::MVGBuildFaceManipulator()
 {
+//	MVGBuildFaceManipulator::_connectFace = true;
+//	MVGBuildFaceManipulator::_computeLastPoint = true;
 }
 
 MVGBuildFaceManipulator::~MVGBuildFaceManipulator()
@@ -122,7 +153,7 @@ void MVGBuildFaceManipulator::draw(M3dView & view, const MDagPath & path,
 						glEnd();
 						
 						// Preview of quad
-						if(_computeLastPoint)
+						if(MVGBuildFaceManipulator::_computeLastPoint)
 						{										
 							MVector height = _wpoints[0] - _wpoints[1];
 							_lastPoint = _mousePoint + height;
@@ -178,7 +209,7 @@ MStatus MVGBuildFaceManipulator::doPress(M3dView& view)
 	// check if this point intersect an existing Point2D
 	
 	// Find fourth point
-	if(_computeLastPoint && _wpoints.size() > 2)
+	if(MVGBuildFaceManipulator::_computeLastPoint && _wpoints.size() > 2)
 	{		
 		_wpoints.push_back(_lastPoint);
 	}
@@ -189,7 +220,7 @@ MStatus MVGBuildFaceManipulator::doPress(M3dView& view)
 		createFace3d(view, _wpoints);
 		
 		// Keep the last two points to connect the next face
-		if(_connectFace) {
+		if(MVGBuildFaceManipulator::_connectFace) {
 			std::vector<MPoint> tmp(_wpoints);
 			_wpoints.clear();
 			_wpoints.push_back(tmp[2]);
@@ -253,9 +284,20 @@ MVGCamera MVGBuildFaceManipulator::getMVGCamera(M3dView& view)
 
 void MVGBuildFaceManipulator::createFace3d(M3dView& view, std::vector<MPoint> facePoints)
 {
+	// Check points order
+	MVector AD = _wpoints[3] - _wpoints[0];
+	MVector BC = _wpoints[2] - _wpoints[1];
+		
+	if(segmentIntersection(_wpoints[0], _wpoints[1], AD, BC))
+	{
+		std::vector<MPoint>	tmp(_wpoints);
+		_wpoints[3] = tmp[2];
+		_wpoints[2] = tmp[3];
+	}
+	
 	MVGFace3D face3D;
 	MVGFace2D face2D(_wpoints);
-	
+		
 	MVGMesh mesh(MVGProject::_MESH);
 	if(!mesh.isValid()) {
 		mesh = MVGMesh::create(MVGProject::_MESH);
