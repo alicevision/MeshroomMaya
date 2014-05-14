@@ -35,6 +35,8 @@ struct MVGMayaUtil {
 	static MStatus createMVGContext();
 	static MStatus deleteMVGContext();
 	static MStatus activeContext(); 
+	
+	static MStatus activeSelectionContext();
 	// cameras
 	static MStatus getMVGLeftCamera(MDagPath& path);
 	static MStatus setMVGLeftCamera(const MVGCamera& camera);
@@ -57,6 +59,9 @@ struct MVGMayaUtil {
 	// environment
 	static MString getEnv(const MString&);
 	static MString getModulePath();
+	
+	// filedialog
+	static MStatus openFileDialog(MString& directory);
 };
 
 } // mayaMVG

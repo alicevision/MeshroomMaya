@@ -18,6 +18,20 @@
 
 using namespace mayaMVG;
 
+MStatus MVGMayaUtil::openFileDialog(MString& directory)
+{
+	MStatus status;
+	MGlobal::executePythonCommand(
+		"import maya.cmds as cmds\n"
+		"def openFileDialog():\n"
+		"	directory = cmds.fileDialog2(caption=\"Choose projectdirectory\", fileMode=3)\n"
+		"	return directory[0].encode('ascii')\n");
+	
+	status = MGlobal::executePythonCommand("openFileDialog()", directory);
+	
+	return status;
+}
+
 MStatus MVGMayaUtil::createMVGWindow() {
 	MStatus status;
 	MString windowName;
@@ -136,6 +150,13 @@ MStatus MVGMayaUtil::activeContext()
 	return MGlobal::executePythonCommand(
 		"import maya.cmds as cmds\n"
 		"cmds.setToolTo('mayaMVGTool1')");
+}
+
+MStatus MVGMayaUtil::activeSelectionContext()
+{
+	return MGlobal::executePythonCommand(
+		"import maya.cmds as cmds\n"
+		"cmds.setToolTo('selectSuperContext')\n");
 }
 
 MStatus MVGMayaUtil::getMVGLeftCamera(MDagPath& path) {

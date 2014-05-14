@@ -2,6 +2,7 @@
 #include "mayaMVG/qt/MVGCameraWrapper.h"
 #include "mayaMVG/maya/MVGMayaUtil.h"
 #include "mayaMVG/core/MVGLog.h"
+#include <maya/MQtUtil.h>
 
 #include "mayaMVG/maya/context/MVGBuildFaceManipulator.h"
 
@@ -73,8 +74,10 @@ void MVGProjectWrapper::addCamera(const MVGCamera& camera)
 
 void MVGProjectWrapper::onBrowseDirectoryButtonClicked()
 {
-	// TODO : add parent Widget
-	QString directory = QFileDialog::getExistingDirectory(NULL, "Choose directory");
+
+	MString directoryPath;
+	MVGMayaUtil::openFileDialog(directoryPath);	
+	QString directory = MQtUtil::toQString(directoryPath);
 
 	if(directory.isEmpty()) {
 		LOG_INFO("Directory is empty");
@@ -86,6 +89,7 @@ void MVGProjectWrapper::onBrowseDirectoryButtonClicked()
 
 void MVGProjectWrapper::onSelectContextButtonClicked() {
 	LOG_INFO("SelectContextButton clicked");
+	MVGMayaUtil::activeSelectionContext();
 
 }
 
@@ -111,7 +115,7 @@ void MVGProjectWrapper::onConnectFaceCheckBoxClicked(bool checked)
 }
 
 void MVGProjectWrapper::loadProject(QString projectDirectoryPath)
-{
+{	
 	_project->setProjectDirectory(projectDirectoryPath.toStdString());
 	if(!_project->load())
 		LOG_ERROR("An error occured when loading project.")
