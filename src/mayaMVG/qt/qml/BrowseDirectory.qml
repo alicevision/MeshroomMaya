@@ -20,7 +20,7 @@ Item {
 
             Layout.horizontalSizePolicy: Layout.Expanding
             height: parent.height
-            color: "white"
+            color: "grey"
             radius: 2
 
             TextInput{

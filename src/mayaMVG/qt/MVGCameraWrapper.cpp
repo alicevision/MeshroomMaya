@@ -64,6 +64,16 @@ void  MVGCameraWrapper::setRightChecked(const bool state)
 	emit isRightCheckedChanged();
 }
 
+const QSize MVGCameraWrapper::sourceSize() const
+{
+	//QVector<int> result(2);
+	QImage image(imagePath());
+//	result.append(image.width());
+//	result.append(image.height());
+	
+	return QSize(image.width(), image.height());
+}
+
 void MVGCameraWrapper::onLeftButtonClicked() 
 {	
 	// Reset left states

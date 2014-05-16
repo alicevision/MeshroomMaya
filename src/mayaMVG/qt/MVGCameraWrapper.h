@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QObject>
+#include <QSize>
 #include "mayaMVG/core/MVGCamera.h"
 
 namespace mayaMVG {
@@ -14,7 +15,8 @@ class MVGCameraWrapper : public QObject
 		Q_PROPERTY(QString state READ state NOTIFY stateChanged)	
 		Q_PROPERTY(bool isLeftChecked READ isLeftChecked WRITE setLeftChecked NOTIFY isLeftCheckedChanged)
 		Q_PROPERTY(bool isRightChecked READ isRightChecked WRITE setRightChecked NOTIFY isRightCheckedChanged)
-
+		
+		Q_PROPERTY(QSize sourceSize READ sourceSize CONSTANT)
 	public:
 		MVGCameraWrapper(const MVGCamera& camera);
 		~MVGCameraWrapper();
@@ -29,6 +31,8 @@ class MVGCameraWrapper : public QObject
 		Q_INVOKABLE void setState(const QString& state);	
 		Q_INVOKABLE void setLeftChecked(const bool state);
 		Q_INVOKABLE void setRightChecked(const bool state);
+		
+		Q_INVOKABLE const QSize sourceSize() const;
 		Q_INVOKABLE void onLeftButtonClicked();
 		Q_INVOKABLE void onRightButtonClicked();
 

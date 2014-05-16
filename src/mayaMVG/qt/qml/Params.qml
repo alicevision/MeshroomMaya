@@ -8,11 +8,39 @@ Item {
     height: 100
 
     visible: true
+    state: heightStateGroup.state
+
+    StateGroup {
+        id: heightStateGroup
+
+        states: [
+            State {
+                name: "OPENED"
+                when: (visible)
+                PropertyChanges {target: settings; height:130}
+            },
+            State {
+                name: "CLOSED"
+                when: (!visible)
+                PropertyChanges {target: settings; height:0}
+            }
+
+        ]
+    }
 
     ColumnLayout {
         width: parent.width
         height: parent.height
         spacing: 0
+
+        // Directory
+        BrowseDirectory
+        {
+            id: browseDirectory
+
+            width: parent.width
+            implicitHeight: 30
+        }
 
         // ComputeLastPoint
         Item {
@@ -30,7 +58,7 @@ Item {
                 CheckBox {
                     id: computeLastPointCheckBox
 //                    checked: true
-                    implicitWidth: 15
+                    implicitWidth: 20
 
                     checked: _project.computeLastPoint
                     onClicked: _project.onComputeLastPointCheckBoxClicked(checked)
@@ -40,7 +68,7 @@ Item {
                     id: computeLastPointLabel
 
                     text: "Compute last point"
-                    color: "white"
+                    color: main.textColor
                     font.pointSize: 11
                     horizontalAlignment: Text.AlignLeft
                     Layout.horizontalSizePolicy: Layout.Expanding
@@ -64,8 +92,7 @@ Item {
                 CheckBox {
                     id: connectFaceCheckBox
 //                    checked: true
-                    implicitWidth: 15
-
+                    implicitWidth: 20
                     checked: _project.connectFace
                     onClicked: _project.onConnectFaceCheckBoxClicked(checked)
                 }
@@ -74,7 +101,7 @@ Item {
                     id: connectFaceLabel
 
                     text: "Connect face"
-                    color: "white"
+                    color: main.textColor
                     font.pointSize: 11
                     horizontalAlignment: Text.AlignLeft
                     Layout.horizontalSizePolicy: Layout.Expanding
@@ -82,135 +109,48 @@ Item {
             }
         }
 
+        Item {
+            width: parent.width
+            implicitHeight: 30
 
-//        // Cores
-//        Item {
-//            id: cores
+            RowLayout {
+                id: sliderLayout
 
-//            width: parent.width
-//            implicitHeight: 30
+                width: parent.width
+                height: parent.height
+                spacing: 15
 
-//            RowLayout {
-//                id: coresLayout
+                // Thumbnail size
+                Slider {
+                    id: thumbSizeSlider
 
-//                width: parent.width
-//                height: parent.height
-//                spacing: 10
+                    implicitWidth: parent.width/3
+                    Layout.minimumWidth: 10
+                    Layout.maximumWidth: parent.width/2
 
-//                Text {
-//                    id: coresLabel
+                    minimumValue: 90
+                    maximumValue: 200
+                    value: main.thumbSize
 
-//                    height: parent.height
-//                    verticalAlignment: Text.AlignVCenter
-//                    text: "Cores"
-//                    font.pointSize: 12
-//                    color: "white"
-//                }
+                    onValueChanged: {
+                        main.thumbSize = value
+                    }
 
-//                SpinBox {
-//                    id: coresSpinBox
+                }
 
-//                    minimumValue: 0
-//                    maximumValue: 30
-//                    value: 10
-//                    Layout.minimumWidth: 40
-//                    Layout.maximumWidth: 60
-//                    Layout.horizontalSizePolicy: Layout.Expanding
+                Text {
+                    id: thumbSizeSliderLabel
 
-//                    TooltipArea {
-//                        id: coresSpinBoxTooltip
-//                        anchors.fill: parent
-//                        text: coresLabel.text
-//                    }
-
-
-//                }
-
-//                Slider {
-//                    id: coresSlider
-
-//                    minimumValue: 0
-//                    maximumValue: 30
-//                    value: 10
-//                    Layout.minimumWidth: 100
-//                    Layout.maximumWidth: 200
-//                    Layout.horizontalSizePolicy: Layout.Expanding
+                    Layout.horizontalSizePolicy: Layout.Expanding
+                    text: "Thumbnail size"
+                    color: main.textColor
+                    font.pointSize: 11
+                }
+            }
+        }
 
 
-//                    TooltipArea {
-//                        id: coresSliderTooltip
-//                        anchors.fill: parent
-//                        text: coresLabel.text
-//                    }
-//                }
 
-//                Rectangle
-//                {
-//                    Layout.minimumWidth: 0
-//                    Layout.horizontalSizePolicy: Layout.Expanding
-//                    height: 30
-
-//                    color: "transparent"
-//                }
-//            }
-//        }
-
-//        // Quality
-//        Item {
-//            id: quality
-
-//            width: parent.width
-//            implicitHeight: 30
-
-
-//            RowLayout {
-//                id: qualityLayout
-
-//                width: parent.width
-//                height: parent.height
-//                spacing: 10
-
-//                Text {
-//                    id: qualityLabel
-
-//                    height: parent.height
-//                    verticalAlignment: Text.AlignVCenter
-//                    text: "Quality"
-//                    font.pointSize: 12
-//                    color: "white"
-//                }
-
-//                ListModel {
-//                    id: qualityChoices
-//                    ListElement { text: "Low" }
-//                    ListElement { text: "Medium" }
-//                    ListElement { text: "High" }
-//                }
-
-
-//                ComboBox {
-//                    id: qualityComboBox
-
-//                    model:qualityChoices
-
-//                }
-
-//                TooltipArea {
-//                    id: qualityComboBoxTooltip
-//                    anchors.fill: qualityComboBox
-//                    text: qualityLabel.text
-//                }
-
-//                Rectangle
-//                {
-//                    Layout.horizontalSizePolicy: Layout.Expanding
-//                    implicitHeight: 30
-
-//                    color: "transparent"
-//                }
-//            }
-
-//        }
 
         Rectangle
         {

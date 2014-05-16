@@ -7,6 +7,8 @@ Item {
     Component {
         id: cameraDelegate
 
+
+
         CameraItem {
             thumb: model.modelData.imagePath
             name: model.modelData.name
@@ -15,24 +17,66 @@ Item {
             selectionState: model.modelData.state
         }
 
-//        CameraItem {
-//            thumb: model.image    //image
-//            name: model.cameraName  //cameraName
-//        }
+        //        CameraItem {
+        //            thumb: model.image    //image
+        //            name: model.cameraName  //cameraName
+        //        }
     }
 
-//    CameraModel {
-//        id: listModel
-//    }
+    //    CameraModel {
+    //        id: listModel
+    //    }
+
+    RowLayout {
+
+        width: parent.width
+        height: parent.height
+
+        spacing: 5
 
 
-    ListView {
-        id: cameraListView
+        Item {
+            height: parent.height
+            Layout.horizontalSizePolicy: Layout.Expanding
 
-        anchors.fill: parent
-        model: _project.cameraModel
-        //model: listModel
-        delegate: cameraDelegate
+            ListView {
+                id: cameraListView
 
+                width: parent.width
+                height: parent.height
+
+                anchors.fill: parent
+                model: _project.cameraModel
+                //model: listModel
+                delegate: cameraDelegate
+                clip: true
+            }
+        }
+
+        ScrollBar {
+            id: scrollBar
+            height: parent.height
+            implicitWidth: 15
+
+            orientation: 0
+            minimumValue: 0
+            maximumValue: cameraListView.height + 300
+            value: cameraListView.contentY
+
+//            MouseArea {
+//                anchors.fill: parent
+//                hoverEnabled: true
+
+//                onEntered: {
+//                    console.log(scrollBar.movingHorizontally);
+//                }
+//            }
+
+//            onValueChanged: cameraListView.contentY = value
+
+
+        }
     }
+
+
 }

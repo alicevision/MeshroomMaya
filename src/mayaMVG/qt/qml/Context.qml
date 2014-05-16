@@ -8,26 +8,18 @@ Item {
     height: 120
 
 
-    RowLayout
+    ColumnLayout
     {
-        id: row
+        id: col
         width: parent.width
         height: parent.height
-
-        ContextBar
-        {
-            id: contextBar
-
-            implicitWidth: 30
-            height: parent.height
-        }
 
         Params
         {
             id: params
 
-            Layout.horizontalSizePolicy: Layout.Expanding
-            height: parent.height
+            Layout.verticalSizePolicy: Layout.Expanding
+            width: parent.width
             visible: contextBar.settingsVisibility
         }
     }

@@ -45,6 +45,23 @@ const QList<QObject*>& MVGProjectWrapper::cameraModel() const
 	return _cameraList;
 }
 
+const QString MVGProjectWrapper::logText() const
+{
+	return _logText;
+}
+
+void MVGProjectWrapper::setLogText(const QString text)
+{
+	_logText = text;
+	emit logTextChanged();
+}
+
+void MVGProjectWrapper::appendLogText(const QString text)
+{
+	_logText.append(text + "\n");
+	emit logTextChanged();
+}
+
 const bool MVGProjectWrapper::connectFace() const
 {
 	return MVGBuildFaceManipulator::_connectFace;
@@ -88,6 +105,7 @@ void MVGProjectWrapper::onBrowseDirectoryButtonClicked()
 }
 
 void MVGProjectWrapper::onSelectContextButtonClicked() {
+	appendLogText("SelectContextButton clicked");
 	LOG_INFO("SelectContextButton clicked");
 	MVGMayaUtil::activeSelectionContext();
 
@@ -118,7 +136,11 @@ void MVGProjectWrapper::loadProject(QString projectDirectoryPath)
 {	
 	_project->setProjectDirectory(projectDirectoryPath.toStdString());
 	if(!_project->load())
-		LOG_ERROR("An error occured when loading project.")
+	{
+		LOG_ERROR("An error occured when loading project.");
+		appendLogText(QString("An error occured when loading project."));
+	}
+		
 
 	emit projectDirectoryChanged();
 

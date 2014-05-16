@@ -18,6 +18,8 @@ class MVGProjectWrapper : public QObject, public Singleton<MVGProjectWrapper> {
 		Q_PROPERTY(QList<QObject*> cameraModel READ cameraModel NOTIFY cameraModelChanged);
 		Q_PROPERTY(bool connectFace READ connectFace NOTIFY connectFaceChanged);
 		Q_PROPERTY(bool computeLastPoint READ computeLastPoint NOTIFY computeLastPointChanged);
+		
+		Q_PROPERTY(QString logText READ logText NOTIFY logTextChanged);
 
 		MAKE_SINGLETON_WITHCONSTRUCTORS(MVGProjectWrapper)
 
@@ -33,6 +35,10 @@ class MVGProjectWrapper : public QObject, public Singleton<MVGProjectWrapper> {
 		Q_INVOKABLE const bool computeLastPoint() const;
 		Q_INVOKABLE QObject* getCameraAtIndex(int index) const;
 		Q_INVOKABLE void setProjectDirectory(const QString& directory);
+		
+		Q_INVOKABLE const QString logText() const;
+		void setLogText(const QString);
+		void appendLogText(const QString);
 
 		// Functions exposed to QML
 		Q_INVOKABLE void onBrowseDirectoryButtonClicked();
@@ -57,10 +63,13 @@ class MVGProjectWrapper : public QObject, public Singleton<MVGProjectWrapper> {
 		void cameraModelChanged();
 		void connectFaceChanged();
 		void computeLastPointChanged();
+		void logTextChanged();
 
 	private:
 		QList<QObject*>	_cameraList;
 		MVGProject*	_project;
+		
+		QString		_logText;
 
 };
 
