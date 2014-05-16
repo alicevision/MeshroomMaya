@@ -67,13 +67,13 @@ Rectangle {
         spacing: 5
 
         // Thumbnail
-        CustomImage {
+        CustomImage2 {
             id: thumbnail
             implicitWidth: main.thumbSize
             height: littleHeight
 
             anchors.top: parent.top
-            borderWidth: 3
+            //borderWidth: 3
             leftChecked:  cameraItem.leftChecked
             rightChecked: cameraItem.rightChecked
         }

@@ -8,9 +8,8 @@ Item {
     width: main.thumbSize
     height: main.thumbSize
 
-    property int borderWidth: 2
-    property color leftBorderColor: "blue"
-    property color rightBorderColor: "yellow"
+    property color leftBorderColor: "grey"
+    property color rightBorderColor: "grey"
     property alias source: image.source
     property bool leftChecked: false
     property bool rightChecked: false
@@ -18,6 +17,18 @@ Item {
     property color selectedColor: "#fec04c"
     property color hoverColor: "white"
     property color normalColor: "transparent"
+
+
+    Image {
+        id: image
+
+        sourceSize.width: parent.width
+        sourceSize.height: parent.height
+
+        source: "img/Folder.png"
+
+    }
+
 
     Rectangle {
         id: leftRectangle
@@ -27,6 +38,7 @@ Item {
         height: parent.height
         color: leftBorderColor
         state: leftStateGroup.state
+        opacity: 0.5
 
         StateGroup {
             id: leftStateGroup
@@ -70,6 +82,7 @@ Item {
         height: parent.height
         color: rightBorderColor
         state: rightStateGroup.state
+        opacity: 0.5
 
         StateGroup {
             id: rightStateGroup
@@ -105,16 +118,4 @@ Item {
 
     }
 
-    Image {
-        id: image
-
-        x: leftRectangle.x + borderWidth
-        y: leftRectangle.y + borderWidth
-
-        sourceSize.width: parent.width - borderWidth*2;
-        sourceSize.height: parent.height - borderWidth*2;
-
-        source: "img/Folder.png"
-
-    }
 }
