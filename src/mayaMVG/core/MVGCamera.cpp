@@ -24,6 +24,7 @@ MString MVGCamera::_ID = "cameraId";
 MString MVGCamera::_PINHOLE = "pinholeProjectionMatrix";
 MString MVGCamera::_ITEMS = "visibleItems";
 MString MVGCamera::_DEFERRED = "deferredLoading";
+MString MVGCamera::_POINTS = "world points";
 
 MVGCamera::MVGCamera(const std::string& name)
 	: MVGNodeWrapper(name)
@@ -37,7 +38,7 @@ MVGCamera::MVGCamera(const MDagPath& dagPath)
 
 MVGCamera::MVGCamera(const int& id)
 	: MVGNodeWrapper()
-{
+{	
 	MStatus status;
 	MDagPath path;
 	MItDependencyNodes it(MFn::kCamera);
@@ -78,6 +79,9 @@ bool MVGCamera::isValid() const
 	fn.findPlug(_ITEMS, false, &status);
 	if(!status)
 		return false;
+	fn.findPlug(_POINTS, false, &status);
+	if(!status)
+		return false;
 	return true;
 }
 
@@ -109,8 +113,15 @@ MVGCamera MVGCamera::create(const std::string& name)
 	dagModifier.addAttribute(path.node(), pinholeAttr);
 	MObject itemsAttr = tAttr.create(_ITEMS, "itm", MFnData::kIntArray);
 	dagModifier.addAttribute(path.node(), itemsAttr);
+	
+	
+	MObject wpointsAttr = tAttr.create(_POINTS, "pts", MFnData::kPointArray);
+	dagModifier.addAttribute(path.node(), wpointsAttr);
 	dagModifier.doIt();
-
+	
+	std::vector<MPoint> points;
+	camera.setPoints(points);
+	
 	// create, reparent & connect image plane
 	MObject imagePlane = dagModifier.createNode("imagePlane", transform, &status);
 	dagModifier.doIt();
@@ -291,3 +302,81 @@ void MVGCamera::setVisibleItems(const std::vector<MVGPointCloudItem>& items) con
 	MVGMayaUtil::setIntArrayAttribute(_dagpath.node(), _ITEMS, intArray);
 }
 
+std::vector<MPoint> MVGCamera::getPoints() const
+{
+	std::vector<MPoint> points;
+	MPointArray pointArray;
+	MVGMayaUtil::getPointArrayAttribute(_dagpath.node(), _POINTS, pointArray);
+	
+	for(size_t i = 0; i < pointArray.length(); ++i)
+	{
+		points.push_back(pointArray[i]);
+	}
+	
+	return points;
+}
+
+void MVGCamera::setPoints(std::vector<MPoint> points) const
+{
+	MPointArray pointArray;
+	pointArray.setLength(points.size());
+	for(size_t i = 0; i < points.size(); ++i)
+	{
+		pointArray.set(points[i], i);
+	}
+	
+	MVGMayaUtil::setPointArrayAttribute(_dagpath.node(), _POINTS, pointArray);
+}
+
+void MVGCamera::addPoint(MPoint& point) const
+{
+	MPointArray pointArray;
+	MVGMayaUtil::getPointArrayAttribute(_dagpath.node(), _POINTS, pointArray);
+	
+	pointArray.append(point);
+	MVGMayaUtil::setPointArrayAttribute(_dagpath.node(), _POINTS, pointArray);
+}
+
+void MVGCamera::clearPoints() const
+{
+	MPointArray pointArray;
+	pointArray.clear();
+	MVGMayaUtil::setPointArrayAttribute(_dagpath.node(), _POINTS, pointArray);
+}
+
+MPoint MVGCamera::getPointAtIndex(int i) const
+{
+	MPoint point;
+	MVGMayaUtil::getPointInArrayAttribute(_dagpath.node(), _POINTS, point, i);
+	
+	return point;
+}
+
+void MVGCamera::setPointAtIndex(int i, MPoint point) const
+{
+	MPointArray pointArray;
+	MVGMayaUtil::getPointArrayAttribute(_dagpath.node(), _POINTS, pointArray);
+	
+	pointArray.set(point, i);
+	
+	MVGMayaUtil::setPointArrayAttribute(_dagpath.node(), _POINTS, pointArray);
+}
+
+int MVGCamera::getPointsCount() const 
+{
+
+	int size;
+	MVGMayaUtil::getPointArrayAttributeSize(_dagpath.node(), _POINTS, size);
+	
+	return size;
+}
+
+bool MVGCamera::isShapeFinished() const
+{
+	return _isShapeFinished;
+}
+
+void MVGCamera::setIsShapeFinished(bool finished)
+{
+	_isShapeFinished = finished;
+}

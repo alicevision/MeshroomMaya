@@ -39,6 +39,17 @@ class MVGCamera : public MVGNodeWrapper {
 		void setPinholeCamera(const openMVG::PinholeCamera&) const;
 		std::vector<MVGPointCloudItem> visibleItems() const;
 		void setVisibleItems(const std::vector<MVGPointCloudItem>& item) const;
+		
+		std::vector<MPoint> getPoints() const;
+		void setPoints(std::vector<MPoint> points) const;
+		void addPoint(MPoint& point) const;
+		void clearPoints() const;
+		MPoint getPointAtIndex(int i) const;
+		void setPointAtIndex(int i, MPoint point) const;
+		int getPointsCount() const;	
+		
+		bool isShapeFinished() const;
+		void setIsShapeFinished(bool finished);
 
 	private:
 		// dynamic attributes
@@ -46,6 +57,9 @@ class MVGCamera : public MVGNodeWrapper {
 		static MString _PINHOLE;
 		static MString _ITEMS;
 		static MString _DEFERRED;
+		static MString _POINTS;
+		
+		bool	_isShapeFinished;
 };
 
 } // mayaMVG

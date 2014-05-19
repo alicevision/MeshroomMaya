@@ -8,8 +8,11 @@
 #include <maya/MDagPath.h>
 #include <maya/MFnCamera.h>
 
-using namespace mayaMVG;
+#include "mayaMVG/core/MVGLog.h"
+#include "mayaMVG/maya/context/MVGBuildFaceManipulator.h"
 
+
+namespace mayaMVG {
 
 namespace {
 	MStatus getCameraPathFromQbject(const QObject* obj, MDagPath& path) {
@@ -36,11 +39,16 @@ bool MVGMayaViewportKeyEventFilter::eventFilter(QObject * obj, QEvent * e)
 {
   // TODO
   // Key Press "F" to fit image plane
-	if ((e->type() == QEvent::KeyPress)) {
+
+	// Remove X11 defines, to avoid conflict with Qt.
+	#undef KeyPress	
+	if( e->type() == QEvent::KeyPress )
+	{
 		QKeyEvent * keyevent = static_cast<QKeyEvent *>(e);
 		if (keyevent->isAutoRepeat()) {
 			return true;
 		}
+		MVGCamera camera(MVGBuildFaceManipulator::_lastCameraPath);
 		switch (keyevent->key()) {
 			case Qt::Key_A:
 			case Qt::Key_B:
@@ -49,6 +57,10 @@ bool MVGMayaViewportKeyEventFilter::eventFilter(QObject * obj, QEvent * e)
 			case Qt::Key_Shift:
 			case Qt::Key_Meta:
 				return true;
+			case Qt::Key_Escape:				
+				camera.setIsShapeFinished(false);
+				camera.clearPoints();
+				break;
 			default:
 				break;
 		}
@@ -74,7 +86,7 @@ bool MVGMayaViewportMouseEventFilter::eventFilter(QObject * obj, QEvent * e)
   QMouseEvent * mouseevent = static_cast<QMouseEvent *>(e);
   
   // TODO: Key Press "F" to fit image plane
-  
+
   // Init pan and zoom
   if (e->type() == QEvent::MouseButtonPress)
   {
@@ -155,4 +167,6 @@ bool MVGMayaViewportMouseEventFilter::eventFilter(QObject * obj, QEvent * e)
     }
   }
   return QObject::eventFilter(obj, e);
+}
+
 }

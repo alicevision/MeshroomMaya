@@ -7,14 +7,15 @@
 class MObject;
 class MIntArray;
 class MDoubleArray;
+class MPointArray;
+class MPoint;
 class MDagPath;
 class M3dView;
 class QWidget;
 
 namespace mayaMVG {
 
-class MVGMenu;
-class MVGCamera;
+	class MVGCamera;
 
 struct MVGMayaUtil {
 	// window
@@ -52,6 +53,10 @@ struct MVGMayaUtil {
 	static MStatus setIntAttribute(const MObject&, const MString&, const int&, bool=false);
 	static MStatus getDoubleArrayAttribute(const MObject&, const MString&, MDoubleArray&, bool=false);
 	static MStatus setDoubleArrayAttribute(const MObject&, const MString&, const MDoubleArray&, bool=false);
+	static MStatus getPointArrayAttribute(const MObject&, const MString&, MPointArray&, bool=false);
+	static MStatus setPointArrayAttribute(const MObject&, const MString&, const MPointArray&, bool=false);
+	static MStatus getPointInArrayAttribute(const MObject&, const MString&, MPoint&, int, bool=false);
+	static MStatus getPointArrayAttributeSize(const MObject&, const MString&, int&, bool=false);
 	static MStatus findConnectedNodes(const MObject&, const MString&, std::vector<MObject>&);
 	// nodes
 	static MStatus getObjectByName(const MString&, MObject&);

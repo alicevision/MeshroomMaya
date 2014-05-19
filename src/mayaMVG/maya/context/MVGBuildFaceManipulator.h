@@ -30,21 +30,32 @@ class MVGBuildFaceManipulator: public MPxManipulatorNode
 		virtual void preDrawUI(const M3dView&);
 		virtual void drawUI(MHWRender::MUIDrawManager&,	const MHWRender::MFrameContext&) const;
 
-		MVGCamera getMVGCamera();
+		MVGCamera getMVGCamera() const;
 		MVGCamera getMVGCamera(M3dView&);
 		
 		void createFace3d(M3dView& view, std::vector<MPoint> facePoints);
 		
 
+		std::vector<MPoint> getCameraPoints() const;
+		void setCameraPoints(std::vector<MPoint> points) const;
+		void addPointToCamera(MPoint& point) const;
+		void clearCameraPoints() const;
+		MPoint getCameraPointAtIndex(int i) const;
+		void setCameraPointAtIndex(int i, MPoint point) const;
+		int getCameraPointsCount() const;
+		
+		bool isShapeFinished() const;
+		void setIsShapeFinished(bool finished) const;
+
 	public:
 		static MTypeId			_id;
-		std::vector<MPoint>		_wpoints;
 		MPoint					_mousePoint;
 		MPoint					_lastPoint;
-		MDagPath				_lastCameraPath;
+		static MDagPath			_lastCameraPath;
 		bool					_drawEnabled;
 		static bool				_connectFace;
 		static bool				_computeLastPoint;
+		bool					_doIntersectExistingPoint;
 };
 
-} // mayaMVG
+}

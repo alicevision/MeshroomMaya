@@ -13,8 +13,10 @@
 #include <maya/MDataHandle.h>
 #include <maya/MFnIntArrayData.h>
 #include <maya/MFnDoubleArrayData.h>
+#include <maya/MFnPointArrayData.h>
 #include <maya/MPlugArray.h>
 #include <maya/MCommonSystemUtils.h>
+#include <maya/MPointArray.h>
 
 using namespace mayaMVG;
 
@@ -298,6 +300,91 @@ MStatus MVGMayaUtil::setDoubleArrayAttribute(const MObject& object, const MStrin
 	CHECK_RETURN_STATUS(status);
 	MFnDoubleArrayData fnData;
 	MObject obj = fnData.create(doubleArray, &status);
+	CHECK_RETURN_STATUS(status);
+	status = plug.setValue(obj);
+	return status;
+}
+
+MStatus MVGMayaUtil::getPointArrayAttribute(const MObject& object, const MString& param, MPointArray& pointArray, bool networked)
+{
+	MStatus status;
+	MFnDependencyNode fn(object, &status);
+	CHECK_RETURN_STATUS(status);
+	MPlug plug(fn.findPlug(param, networked, &status));
+	CHECK_RETURN_STATUS(status);
+	pointArray.clear();
+		
+	if (plug.isArray()) {
+		for(size_t i = 0; i < plug.numElements(); ++i) {
+			MPlug plugElmt = plug[i];
+			pointArray.append(MPoint(plugElmt.child(0).asDouble(), plugElmt.child(1).asDouble()));
+		}
+	} else {
+		MDataHandle dataHandle = plug.asMDataHandle(MDGContext::fsNormal, &status);
+		CHECK_RETURN_STATUS(status);
+		MFnPointArrayData arrayData(dataHandle.data(), &status);
+		CHECK_RETURN_STATUS(status);
+		status = arrayData.copyTo(pointArray);
+	}
+	return status;
+}
+
+MStatus MVGMayaUtil::getPointArrayAttributeSize(const MObject& object, const MString& param, int& size, bool networked)
+{
+	MStatus status;
+	MFnDependencyNode fn(object, &status);
+	CHECK_RETURN_STATUS(status);
+	MPlug plug(fn.findPlug(param, networked, &status));
+	CHECK_RETURN_STATUS(status);
+	
+	if (plug.isArray()) {
+		size = plug.numElements();
+	}
+	else
+	{		
+		MDataHandle dataHandle = plug.asMDataHandle(MDGContext::fsNormal, &status);
+		CHECK_RETURN_STATUS(status);
+		MFnPointArrayData arrayData(dataHandle.data(), &status);
+		CHECK_RETURN_STATUS(status);
+		
+		size = arrayData.length();
+	}
+
+	
+	return status;
+}
+
+MStatus MVGMayaUtil::getPointInArrayAttribute(const MObject& object, const MString& param, MPoint& point, int index, bool networked)
+{
+	MStatus status;
+	MFnDependencyNode fn(object, &status);
+	CHECK_RETURN_STATUS(status);
+	MPlug plug(fn.findPlug(param, networked, &status));
+	CHECK_RETURN_STATUS(status);
+
+	if (plug.isArray()) {
+		
+		point = MPoint(plug[index].child(0).asDouble(), plug[index].child(1).asDouble());
+
+	} else {
+		MDataHandle dataHandle = plug.asMDataHandle(MDGContext::fsNormal, &status);
+		CHECK_RETURN_STATUS(status);
+		MFnPointArrayData arrayData(dataHandle.data(), &status);
+		CHECK_RETURN_STATUS(status);
+		point = arrayData.array()[index];
+	}
+	return status;
+}
+
+MStatus MVGMayaUtil::setPointArrayAttribute(const MObject& object, const MString& param, const MPointArray& pointArray, bool networked)
+{
+	MStatus status;
+	MFnDependencyNode fn(object, &status);
+	CHECK_RETURN_STATUS(status);
+	MPlug plug(fn.findPlug(param, networked, &status));
+	CHECK_RETURN_STATUS(status);
+	MFnPointArrayData fnData;
+	MObject obj = fnData.create(pointArray, &status);
 	CHECK_RETURN_STATUS(status);
 	status = plug.setValue(obj);
 	return status;

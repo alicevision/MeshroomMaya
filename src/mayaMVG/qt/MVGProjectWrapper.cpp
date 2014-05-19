@@ -130,6 +130,11 @@ void MVGProjectWrapper::onComputeLastPointCheckBoxClicked(bool checked)
 void MVGProjectWrapper::onConnectFaceCheckBoxClicked(bool checked)
 {
 	MVGBuildFaceManipulator::_connectFace = checked;
+	if(!checked)
+	{
+		MVGCamera camera(MVGBuildFaceManipulator::_lastCameraPath);
+		camera.clearPoints();
+	}
 }
 
 void MVGProjectWrapper::loadProject(QString projectDirectoryPath)
