@@ -48,7 +48,7 @@ Rectangle {
                 when: (!cameraItem.infoVisibility)
                 PropertyChanges { target: cameraItem; height: littleHeight }
                 PropertyChanges { target: pathItem; implicitHeight: 0 }
-                PropertyChanges { target: infoItem; implicitHeight: 0 }
+                //PropertyChanges { target: infoItem; implicitHeight: 0 }
             },
             State {
                 name: "OPEN"
@@ -152,25 +152,25 @@ Rectangle {
                     }
                 }
 
-                // Infos
-                Item {
-                    id: infoItem
-                    width: parent.width
-                    implicitHeight: 20
+//                // Infos
+//                Item {
+//                    id: infoItem
+//                    width: parent.width
+//                    implicitHeight: 20
 
 
-                    Text {
-                        id: cameraInfo
+//                    Text {
+//                        id: cameraInfo
 
-                        height: 20
-                        text: _project.getCameraAtIndex(index).sourceSize.width + "x" + _project.getCameraAtIndex(index).sourceSize.height
-                        width: parent.width
-                        anchors.left: parent.left
-                        font.pointSize: 10
-                        color: main.textColor
-                        visible: infoVisibility
-                    }
-                }
+//                        height: 20
+//                        text: _project.getCameraAtIndex(index).sourceSize.width + "x" + _project.getCameraAtIndex(index).sourceSize.height
+//                        width: parent.width
+//                        anchors.left: parent.left
+//                        font.pointSize: 10
+//                        color: main.textColor
+//                        visible: infoVisibility
+//                    }
+//                }
 
                 // Progress bar
                 ProgressBar {

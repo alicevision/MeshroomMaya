@@ -6,6 +6,7 @@
 #include "mayaMVG/core/MVGMesh.h"
 #include "mayaMVG/core/MVGProject.h"
 #include <maya/MFnCamera.h>
+#include <maya/MFnMesh.h>
 
 #include <vector>
 
@@ -135,17 +136,18 @@ void MVGBuildFaceManipulator::draw(M3dView & view, const MDagPath & path,
 					glVertex2f(x - 50, y + 50);
 				glEnd();
 			}
+			
+			MDagPath cameraPath;
+			view.getCamera(cameraPath);
 
-			if(!getCameraPoints().empty()) 
+			if(cameraPath == _lastCameraPath)
 			{
-				glColor4f(1.f, 0.f, 0.f, 0.6f);
-				MDagPath cameraPath;
-				view.getCamera(cameraPath);
-				if(cameraPath == _lastCameraPath)
+				if(!getCameraPoints().empty())
 				{
 					short x;
 					short y;
-						
+					glColor4f(1.f, 0.f, 0.f, 0.6f);
+
 					if(getCameraPointsCount() > 2)
 					{
 						glBegin(GL_POLYGON);
@@ -275,38 +277,7 @@ MStatus MVGBuildFaceManipulator::doMove(M3dView& view, bool& refresh)
 	MVector wdir;
 	short mousex, mousey;
 	mousePosition(mousex, mousey);
-	view.viewToWorld(mousex, mousey, _mousePoint, wdir);
-	
-	// Check for existing points
-	MVGMesh mesh(MVGProject::_MESH);
-	if(!mesh.isValid()) {
-		mesh = MVGMesh::create(MVGProject::_MESH);
-		LOG_INFO("New OpenMVG Mesh.")
-	}
-	
-	// Get mesh points (World Coords)
-	MPointArray meshPoints;
-	mesh.getPoints(meshPoints);
-		
-	
-	// Check intersection in 2D ?
-	_doIntersectExistingPoint = false;
-	for(int i = 0; i < meshPoints.length(); ++i)
-	{
-		short x, y;
-		view.worldToView(meshPoints[i], x, y);
-		
-		if(mousex <= x + 1.0e-10 // kMFnMeshPointTolerance
-			&& mousex >= x - 1.0e-10
-			&& mousey <= y + 1.0e-10
-			&& mousey >= y - 1.0e-10)
-		{
-			_doIntersectExistingPoint = true;
-			LOG_INFO("INTERSECTION");
-			break;
-		}
-	}
-	
+	view.viewToWorld(mousex, mousey, _mousePoint, wdir);	
 
 	return MPxManipulatorNode::doMove(view, refresh);
 }

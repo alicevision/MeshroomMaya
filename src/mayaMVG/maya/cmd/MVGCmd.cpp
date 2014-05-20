@@ -36,7 +36,7 @@ namespace {
 		QList<QString> selectedCameras;
 		for ( size_t i = 0; i < list.length(); i++) {
 			list.getDagPath(i, path, component);
-			path.extendToShape();
+			path.extendToShape();			
 			if(path.isValid() && (path.apiType() == MFn::kCamera)) {
 				MFnDependencyNode fn(path.transform());
 				selectedCameras.push_back(fn.name().asChar());
@@ -97,8 +97,8 @@ MStatus MVGCmd::doIt(const MArgList& args) {
 	}
 
 	// create MVG menu
-	MVGMainWidget* menuQML = new MVGMainWidget(menuLayout);
-	MQtUtil::addWidgetToMayaLayout(menuQML->view(), menuLayout);
+	MVGMainWidget* mainWidget = new MVGMainWidget(menuLayout);
+	MQtUtil::addWidgetToMayaLayout(mainWidget->view(), menuLayout);
 			
 	// create maya MVGContext
 	status = MVGMayaUtil::createMVGContext();
@@ -131,7 +131,7 @@ MStatus MVGCmd::doIt(const MArgList& args) {
 
 	// maya callbacks
 	MCallbackIdArray callbackIDs;
-	callbackIDs.append(MEventMessage::addEventCallback("SelectionChanged", selectionChangedCB, menuQML->view()));
+	callbackIDs.append(MEventMessage::addEventCallback("SelectionChanged", selectionChangedCB, mainWidget->view()));
 
 	// install a window event filter on 'mayaWindow'
 	// needed to remove all maya callbacks and all Qt event filters 

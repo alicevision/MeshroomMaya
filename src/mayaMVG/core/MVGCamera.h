@@ -41,11 +41,11 @@ class MVGCamera : public MVGNodeWrapper {
 		void setVisibleItems(const std::vector<MVGPointCloudItem>& item) const;
 		
 		std::vector<MPoint> getPoints() const;
-		void setPoints(std::vector<MPoint> points) const;
-		void addPoint(MPoint& point) const;
+		void setPoints(const std::vector<MPoint>& points) const;
+		void addPoint(const MPoint& point) const;
 		void clearPoints() const;
 		MPoint getPointAtIndex(int i) const;
-		void setPointAtIndex(int i, MPoint point) const;
+		void setPointAtIndex(int i, const MPoint& point) const;
 		int getPointsCount() const;	
 		
 		bool isShapeFinished() const;
