@@ -8,6 +8,8 @@
 #include <maya/MPointArray.h>
 #include <maya/MIntArray.h>
 
+#include <maya/MItMeshEdge.h>
+
 using namespace mayaMVG;
 
 MVGMesh::MVGMesh(const std::string& name)
@@ -72,4 +74,21 @@ void MVGMesh::addPolygon(const MVGFace3D& face3d)
 	pointArray.append(face3d._p[3]);
 	fnMesh.addPolygon(pointArray, true, kMFnMeshPointTolerance, MObject::kNullObj, &status);
 	CHECK(status);
+}
+
+void MVGMesh::getPoints(MPointArray& pointArray)
+{
+	MStatus status;
+	MFnMesh fnMesh(_dagpath.node(), &status);
+	
+	
+	fnMesh.getPoints(pointArray, MSpace::kPostTransform);
+}
+
+bool MVGMesh::intersect(MPoint& point, MVector& dir, MPointArray&points)
+{
+	MStatus status;
+	MFnMesh fnMesh(_dagpath.node(), &status);
+	
+	return fnMesh.intersect(point, dir, points);
 }

@@ -34,12 +34,12 @@ void MVGContext::toolOffCleanup()
 		leftViewport->installEventFilter(m_eventFilter);
 	if(rightViewport)
 		rightViewport->installEventFilter(m_eventFilter);
-	MPxContext::toolOffCleanup();
+	MPxSelectionContext::toolOffCleanup();
 }
 
 MStatus MVGContext::doPress(MEvent & event)
 {
-	return MPxContext::doPress(event);
+	return MPxSelectionContext::doPress(event);
 }
 
 MStatus MVGContext::doDrag(MEvent & event)
@@ -49,7 +49,7 @@ MStatus MVGContext::doDrag(MEvent & event)
 
 MStatus MVGContext::doRelease(MEvent & event)
 {
-	return MPxContext::doRelease(event);
+	return MPxSelectionContext::doRelease(event);
 }
 
 void MVGContext::getClassName(MString & name) const

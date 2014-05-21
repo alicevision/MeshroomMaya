@@ -3,6 +3,7 @@
 #include "mayaMVG/core/MVGCamera.h"
 #include <maya/MPxManipulatorNode.h>
 #include <maya/MDagPath.h>
+#include <maya/MPointArray.h>
 #include <vector>
 
 class M3dView;
@@ -56,6 +57,8 @@ class MVGBuildFaceManipulator: public MPxManipulatorNode
 		static bool				_connectFace;
 		static bool				_computeLastPoint;
 		bool					_doIntersectExistingPoint;
+		bool					_doIntersectExistingEdge;
+		MPointArray				_intersectingEdgePoints;
 };
 
 }

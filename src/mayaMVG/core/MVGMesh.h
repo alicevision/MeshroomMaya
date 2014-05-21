@@ -2,6 +2,8 @@
 
 #include "mayaMVG/core/MVGNodeWrapper.h"
 
+#include <maya/MPointArray.h>
+
 namespace mayaMVG {
 
 class MVGFace3D;
@@ -21,6 +23,8 @@ class MVGMesh : public MVGNodeWrapper  {
 
 	public:
 		void addPolygon(const MVGFace3D& face3d);
+		void getPoints(MPointArray& pointArray);
+		bool intersect(MPoint& point, MVector& dir, MPointArray&points);
 
 };
 

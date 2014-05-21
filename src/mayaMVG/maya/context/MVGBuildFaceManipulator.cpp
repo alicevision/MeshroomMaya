@@ -7,10 +7,13 @@
 #include "mayaMVG/core/MVGProject.h"
 #include <maya/MFnCamera.h>
 #include <maya/MFnMesh.h>
-
+#include <maya/MItMeshEdge.h>
+#include <maya/MSelectionList.h>
 #include <vector>
 
 namespace mayaMVG {
+	
+#define EDGE_TOLERANCE 1.0e-6
 
 MTypeId MVGBuildFaceManipulator::_id(0x99999); // FIXME /!\ 
 
@@ -20,10 +23,14 @@ MDagPath MVGBuildFaceManipulator::_lastCameraPath = MDagPath();
 
 namespace {
 	double crossProduct2d(MVector& A, MVector& B) {
-		return A[0]*B[1] - A[1]*B[0];
+		return A.x*B.y - A.y*B.x;
+	}
+	
+	double dotProduct2d(MVector& A, MVector& B) {
+		return A.x*B.x - A.y*B.y;
 	}
 
-	bool segmentIntersection(MPoint A, MPoint B, MVector AD,  MVector BC)
+	bool edgesIntersection(MPoint A, MPoint B, MVector AD,  MVector BC)
 	{		
 		// r x s = 0
 		double cross = crossProduct2d(AD, BC);
@@ -46,11 +53,42 @@ namespace {
 
 		return false;
 	}
+	
+	// Points must be in 2D
+	bool arePointsAligned2d(MPoint P, MPoint A, MPoint B) 
+	{
+		MVector AB = B - A;
+		MVector AP = P - A;
+		
+		double cross = crossProduct2d(AB, AP);
+		
+		// Cross not null
+		if(cross > EDGE_TOLERANCE
+			|| cross < -EDGE_TOLERANCE) 
+		{
+			return false;
+		}
+				
+		return true;
+
+	}
+	
+	void drawDisk(int x, int y, int r, int segments)
+	{
+		glBegin(GL_TRIANGLE_FAN );
+			glVertex2f(x, y);
+			for( int n = 0; n <= segments; ++n ) {
+				float const t = 2*M_PI*(float)n/(float)segments;
+				glVertex2f(x + sin(t)*r, y + cos(t)*r);
+			}
+		glEnd();
+	}
 }
 
 MVGBuildFaceManipulator::MVGBuildFaceManipulator()
 {
 	_doIntersectExistingPoint = false;
+	_doIntersectExistingEdge = false;
 }
 
 MVGBuildFaceManipulator::~MVGBuildFaceManipulator()
@@ -121,19 +159,27 @@ void MVGBuildFaceManipulator::draw(M3dView & view, const MDagPath & path,
 			           (GLfloat)(mousey + (sin(-M_PI / 4.0f) * (radius + 10.0f))));
 			glEnd();
 			
-			// 
+			// Intersection with point
 			if(_doIntersectExistingPoint)
 			{
 				short x;
 				short y;								
 				view.worldToView(_mousePoint, x, y);
 				
-				glColor4f(0.f, 0.f, 1.f, 0.6f);
-				glBegin(GL_POLYGON);
-					glVertex2f(x + 50, y + 50);
-					glVertex2f(x + 50, y - 50);
-					glVertex2f(x - 50, y - 50);
-					glVertex2f(x - 50, y + 50);
+				glColor4f(0.f, 1.f, 0.f, 0.6f);
+				drawDisk(x, y, 10, 10);
+			}
+			
+			// Intersection with edge
+			if(_doIntersectExistingEdge)
+			{
+				short x, y;
+				glColor4f(0.f, 1.f, 0.f, 0.6f);
+				glBegin(GL_LINES);
+					view.worldToView(_intersectingEdgePoints[0], x, y);
+					glVertex2f(x, y);
+					view.worldToView(_intersectingEdgePoints[1], x, y);
+					glVertex2f(x, y);
 				glEnd();
 			}
 			
@@ -277,7 +323,70 @@ MStatus MVGBuildFaceManipulator::doMove(M3dView& view, bool& refresh)
 	MVector wdir;
 	short mousex, mousey;
 	mousePosition(mousex, mousey);
-	view.viewToWorld(mousex, mousey, _mousePoint, wdir);	
+	view.viewToWorld(mousex, mousey, _mousePoint, wdir);
+
+	// Check for existing points
+	MVGMesh mesh(MVGProject::_MESH);
+	if(!mesh.isValid()) {
+		mesh = MVGMesh::create(MVGProject::_MESH);
+		LOG_INFO("New OpenMVG Mesh.")
+	}
+	
+	// Get mesh points (World Coords)
+	MPointArray meshPoints;
+	mesh.getPoints(meshPoints);
+		
+	if(meshPoints.length() > 0)
+	{
+		
+		// Check intersection in 2D ?
+		// Mouse intersects existing point
+		_doIntersectExistingPoint = false;
+		for(int i = 0; i < meshPoints.length(); ++i)
+		{
+			short x, y;
+			view.worldToView(meshPoints[i], x, y);
+
+			if(mousex <= x + kMFnMeshPointTolerance
+				&& mousex >= x - kMFnMeshPointTolerance
+				&& mousey <= y + kMFnMeshPointTolerance
+				&& mousey >= y - kMFnMeshPointTolerance)
+			{
+				_doIntersectExistingPoint = true;
+				break;
+			}
+		}
+		
+		// Edge intersection
+		MPointArray points;
+		short x0, y0, x1, y1;
+		_doIntersectExistingEdge = false;
+		if(mesh.intersect(_mousePoint, wdir, points))
+		{
+			MItMeshEdge edgeIt(mesh.dagPath());
+			while(!edgeIt.isDone())
+			{
+				view.worldToView(edgeIt.point(0), x0, y0);
+				view.worldToView(edgeIt.point(1), x1, y1);
+				
+				MVector wdir;
+				MPoint A;
+				view.viewToWorld(x0, y0, A, wdir);
+				MPoint B;
+				view.viewToWorld(x1, y1, B, wdir);
+				
+				if(arePointsAligned2d(_mousePoint, A, B))
+				{
+					_doIntersectExistingEdge = true;
+					_intersectingEdgePoints.clear();
+					_intersectingEdgePoints.append(A);
+					_intersectingEdgePoints.append(B);
+					break;
+				}
+				edgeIt.next();
+			}
+		}
+	}
 
 	return MPxManipulatorNode::doMove(view, refresh);
 }
@@ -317,7 +426,7 @@ void MVGBuildFaceManipulator::createFace3d(M3dView& view, std::vector<MPoint> fa
 	MVector AD = getCameraPointAtIndex(3) - getCameraPointAtIndex(0);
 	MVector BC = getCameraPointAtIndex(2) - getCameraPointAtIndex(1);
 			
-	if(segmentIntersection(getCameraPointAtIndex(0), getCameraPointAtIndex(1), AD, BC))
+	if(edgesIntersection(getCameraPointAtIndex(0), getCameraPointAtIndex(1), AD, BC))
 	{
 		std::vector<MPoint>	tmp(getCameraPoints());
 		setCameraPointAtIndex(3, tmp[2]);
