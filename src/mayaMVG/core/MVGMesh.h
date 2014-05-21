@@ -24,6 +24,7 @@ class MVGMesh : public MVGNodeWrapper  {
 	public:
 		void addPolygon(const MVGFace3D& face3d);
 		void getPoints(MPointArray& pointArray);
+		int getVerticesCount() const;
 		bool intersect(MPoint& point, MVector& dir, MPointArray&points);
 
 };

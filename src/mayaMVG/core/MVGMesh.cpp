@@ -81,8 +81,19 @@ void MVGMesh::getPoints(MPointArray& pointArray)
 	MStatus status;
 	MFnMesh fnMesh(_dagpath.node(), &status);
 	
-	
 	fnMesh.getPoints(pointArray, MSpace::kPostTransform);
+	CHECK(status);
+}
+
+int MVGMesh::getVerticesCount() const
+{
+	MStatus status;
+	MFnMesh fnMesh(_dagpath.node(), &status);
+	
+	int count = fnMesh.numVertices(&status);
+	CHECK(status);
+	
+	return count;
 }
 
 bool MVGMesh::intersect(MPoint& point, MVector& dir, MPointArray&points)
@@ -90,5 +101,7 @@ bool MVGMesh::intersect(MPoint& point, MVector& dir, MPointArray&points)
 	MStatus status;
 	MFnMesh fnMesh(_dagpath.node(), &status);
 	
-	return fnMesh.intersect(point, dir, points);
+	bool intersect = fnMesh.intersect(point, dir, points, status);
+	CHECK(status);
+	return intersect;
 }

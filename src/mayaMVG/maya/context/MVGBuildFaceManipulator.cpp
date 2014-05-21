@@ -450,7 +450,19 @@ void MVGBuildFaceManipulator::createFace3d(M3dView& view, std::vector<MPoint> fa
 	
 	if(MVGGeometryUtil::projectFace2D(face3D, pointCloud, view, camera, face2D))
 	{
-		mesh.addPolygon(face3D);
+		if(_connectFace 
+			&& mesh.getVerticesCount() > 0 
+			&& !isShapeFinished())
+		{		
+			MPointArray pointArray;		
+			mesh.getPoints(pointArray);
+			face3D._p[0] = pointArray[pointArray.length() - 1];
+			face3D._p[1] = pointArray[pointArray.length() - 2];			
+			mesh.addPolygon(face3D);
+		}
+		else {
+			mesh.addPolygon(face3D);
+		}
 	}
 }
 
