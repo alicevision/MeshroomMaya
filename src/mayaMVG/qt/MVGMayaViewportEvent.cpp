@@ -8,8 +8,10 @@
 #include <maya/MDagPath.h>
 #include <maya/MFnCamera.h>
 
+#include "mayaMVG/qt/MVGProjectWrapper.h"
 #include "mayaMVG/core/MVGLog.h"
 #include "mayaMVG/maya/context/MVGBuildFaceManipulator.h"
+
 
 
 namespace mayaMVG {
@@ -57,7 +59,12 @@ bool MVGMayaViewportKeyEventFilter::eventFilter(QObject * obj, QEvent * e)
 			case Qt::Key_Shift:
 			case Qt::Key_Meta:
 				return true;
-			case Qt::Key_Escape:				
+			case Qt::Key_Escape:
+				for(int i = 0; i < MVGProjectWrapper::instance().cameraModel().size(); ++i)
+				{
+					MVGCameraWrapper* camera;
+					dynamic_cast<MVGCameraWrapper*>(MVGProjectWrapper::instance().cameraModel().at(i))->camera().clearPoints();
+				}	
 				MVGBuildFaceManipulator::_isNewShape = true;
 				camera.clearPoints();
 				break;
