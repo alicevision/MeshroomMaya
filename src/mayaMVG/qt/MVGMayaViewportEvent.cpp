@@ -58,7 +58,7 @@ bool MVGMayaViewportKeyEventFilter::eventFilter(QObject * obj, QEvent * e)
 			case Qt::Key_Meta:
 				return true;
 			case Qt::Key_Escape:				
-				camera.setIsShapeFinished(false);
+				MVGBuildFaceManipulator::_isNewShape = true;
 				camera.clearPoints();
 				break;
 			default:

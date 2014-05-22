@@ -17,8 +17,7 @@
 #include <maya/MItDependencyNodes.h>
 #include <maya/MPointArray.h>
 
-
-using namespace mayaMVG;
+namespace mayaMVG {
 
 // dynamic attributes
 MString MVGCamera::_ID = "cameraId";
@@ -130,7 +129,7 @@ MVGCamera MVGCamera::create(const std::string& name)
 	status = dagModifier.connect(fnImage.findPlug("message"), fnCamera.findPlug("imagePlane"));
 	CHECK(status)
 	dagModifier.doIt();
-
+	
 	return camera;
 }
 
@@ -371,13 +370,4 @@ int MVGCamera::getPointsCount() const
 	
 	return size;
 }
-
-bool MVGCamera::isShapeFinished() const
-{
-	return _isShapeFinished;
-}
-
-void MVGCamera::setIsShapeFinished(bool finished)
-{
-	_isShapeFinished = finished;
 }

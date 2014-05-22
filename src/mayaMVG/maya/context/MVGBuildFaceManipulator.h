@@ -45,9 +45,6 @@ class MVGBuildFaceManipulator: public MPxManipulatorNode
 		void setCameraPointAtIndex(int i, MPoint point) const;
 		int getCameraPointsCount() const;
 		
-		bool isShapeFinished() const;
-		void setIsShapeFinished(bool finished) const;
-
 	public:
 		static MTypeId			_id;
 		MPoint					_mousePoint;
@@ -56,6 +53,7 @@ class MVGBuildFaceManipulator: public MPxManipulatorNode
 		bool					_drawEnabled;
 		static bool				_connectFace;
 		static bool				_computeLastPoint;
+		static bool				_isNewShape;
 		bool					_doIntersectExistingPoint;
 		bool					_doIntersectExistingEdge;
 		MPointArray				_intersectingEdgePoints;

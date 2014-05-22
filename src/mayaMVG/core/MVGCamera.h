@@ -46,11 +46,8 @@ class MVGCamera : public MVGNodeWrapper {
 		void clearPoints() const;
 		MPoint getPointAtIndex(int i) const;
 		void setPointAtIndex(int i, const MPoint& point) const;
-		int getPointsCount() const;	
+		int getPointsCount() const;
 		
-		bool isShapeFinished() const;
-		void setIsShapeFinished(bool finished);
-
 	private:
 		// dynamic attributes
 		static MString _ID;
@@ -58,8 +55,6 @@ class MVGCamera : public MVGNodeWrapper {
 		static MString _ITEMS;
 		static MString _DEFERRED;
 		static MString _POINTS;
-		
-		bool	_isShapeFinished;
 };
 
 } // mayaMVG
