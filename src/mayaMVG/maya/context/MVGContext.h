@@ -1,14 +1,14 @@
 #pragma once
 
 #include <vector>
-#include <maya/MPxSelectionContext.h>
+#include <maya/MPxContext.h>
 
 namespace mayaMVG {
 
 // forward declaration
 class MVGContextEventFilter;
 
-class MVGContext: public MPxSelectionContext {
+class MVGContext: public MPxContext {
 
     public:
         MVGContext();
