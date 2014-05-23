@@ -50,7 +50,7 @@ bool MVGMayaViewportKeyEventFilter::eventFilter(QObject * obj, QEvent * e)
 		if (keyevent->isAutoRepeat()) {
 			return true;
 		}
-		MVGCamera camera(MVGBuildFaceManipulator::_lastCameraPath);
+		MVGCamera& camera = MVGBuildFaceManipulator::_camera;
 		switch (keyevent->key()) {
 			case Qt::Key_A:
 			case Qt::Key_B:
@@ -63,7 +63,10 @@ bool MVGMayaViewportKeyEventFilter::eventFilter(QObject * obj, QEvent * e)
 				for(int i = 0; i < MVGProjectWrapper::instance().cameraModel().size(); ++i)
 				{
 					MVGCameraWrapper* camera;
-					dynamic_cast<MVGCameraWrapper*>(MVGProjectWrapper::instance().cameraModel().at(i))->camera().clearPoints();
+
+					camera = dynamic_cast<MVGCameraWrapper*>(MVGProjectWrapper::instance().cameraModel().at(i));
+					if(camera)
+						camera->camera().clearPoints();
 				}	
 				MVGBuildFaceManipulator::_isNewShape = true;
 				camera.clearPoints();

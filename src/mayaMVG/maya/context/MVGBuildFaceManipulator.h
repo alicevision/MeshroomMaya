@@ -34,22 +34,14 @@ class MVGBuildFaceManipulator: public MPxManipulatorNode
 		MVGCamera getMVGCamera() const;
 		MVGCamera getMVGCamera(M3dView&);
 		
-		void createFace3d(M3dView& view, std::vector<MPoint> facePoints);
-		
-
-		std::vector<MPoint> getCameraPoints() const;
-		void setCameraPoints(std::vector<MPoint> points) const;
-		void addPointToCamera(MPoint& point) const;
-		void clearCameraPoints() const;
-		MPoint getCameraPointAtIndex(int i) const;
-		void setCameraPointAtIndex(int i, MPoint point) const;
-		int getCameraPointsCount() const;
-		
+		void createFace3d(M3dView& view, std::vector<MPoint> facePoints, MVGCamera& camera);
+				
 	public:
 		static MTypeId			_id;
 		MPoint					_mousePoint;
 		MPoint					_lastPoint;
 		static MDagPath			_lastCameraPath;
+		static MVGCamera		_camera;
 		bool					_drawEnabled;
 		static bool				_connectFace;
 		static bool				_computeLastPoint;

@@ -304,10 +304,11 @@ void MVGCamera::setVisibleItems(const std::vector<MVGPointCloudItem>& items) con
 
 std::vector<MPoint> MVGCamera::getPoints() const
 {
-	std::vector<MPoint> points;
 	MPointArray pointArray;
 	MVGMayaUtil::getPointArrayAttribute(_dagpath.node(), _POINTS, pointArray);
 	
+	std::vector<MPoint> points;
+	points.reserve(pointArray.length());
 	for(size_t i = 0; i < pointArray.length(); ++i)
 	{
 		points.push_back(pointArray[i]);

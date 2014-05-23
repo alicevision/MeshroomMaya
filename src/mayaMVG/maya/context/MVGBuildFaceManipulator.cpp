@@ -22,6 +22,7 @@ bool MVGBuildFaceManipulator::_computeLastPoint(true);
 bool MVGBuildFaceManipulator::_isNewShape(true);
 
 MDagPath MVGBuildFaceManipulator::_lastCameraPath = MDagPath();
+MVGCamera MVGBuildFaceManipulator::_camera = MVGCamera(_lastCameraPath);
 
 namespace {
 	double crossProduct2d(MVector& A, MVector& B) {
@@ -189,37 +190,58 @@ void MVGBuildFaceManipulator::draw(M3dView & view, const MDagPath & path,
 			view.getCamera(cameraPath);
 
 			if(cameraPath == _lastCameraPath)
-			{
-				short x, y;
-				// Preview
-				if(MVGBuildFaceManipulator::_computeLastPoint && !_isNewShape)
+			{				
+				// Preview of quad
+				if(MVGBuildFaceManipulator::_computeLastPoint)
 				{
+					short x, y;
+					glColor4f(1.f, 1.f, 1.f, 0.6f);
+					// Use mesh points
+					if(!_isNewShape)
+					{				
+						MPoint lastMeshPoint;
+						MPoint lastMeshPoint2;
+						MVector wdir;
+
+						MVGMesh mesh(MVGProject::_MESH);
+
+						MPointArray meshPoints;
+						mesh.getPoints(meshPoints);
+
+						if(meshPoints.length() > 0) {
+
+							// Project last mesh points
+							view.worldToView(meshPoints[meshPoints.length() - 2], x, y);
+							view.viewToWorld(x, y, lastMeshPoint, wdir);
+							view.worldToView(meshPoints[meshPoints.length() - 1], x, y);
+							view.viewToWorld(x, y, lastMeshPoint2, wdir);
+
+							MVector height = lastMeshPoint2 -lastMeshPoint;
+							_lastPoint = _mousePoint + height;
+
+							glBegin(GL_POLYGON);
+								view.worldToView(lastMeshPoint2, x, y);
+								glVertex2f(x, y);
+								view.worldToView(lastMeshPoint, x, y);
+								glVertex2f(x, y);
+								view.worldToView(_mousePoint, x, y);
+								glVertex2f(x, y);
+								view.worldToView(_lastPoint, x, y);
+								glVertex2f(x, y);
+							glEnd();
+						}
+					}
 					
-					MPoint lastMeshPoint;
-					MPoint lastMeshPoint2;
-					MVector wdir;
-
-					MVGMesh mesh(MVGProject::_MESH);
-
-					MPointArray meshPoints;
-					mesh.getPoints(meshPoints);
-
-					if(meshPoints.length() > 0) {
-
-						// Project last mesh points
-						view.worldToView(meshPoints[meshPoints.length() - 2], x, y);
-						view.viewToWorld(x, y, lastMeshPoint, wdir);
-						view.worldToView(meshPoints[meshPoints.length() - 1], x, y);
-						view.viewToWorld(x, y, lastMeshPoint2, wdir);
-
-						MVector height = lastMeshPoint2 -lastMeshPoint;
+					// Use camera points
+					else if(_camera.getPointsCount() > 1)
+					{
+						MVector height = _camera.getPointAtIndex(0) - _camera.getPointAtIndex(1);
 						_lastPoint = _mousePoint + height;
 
-						glColor4f(1.f, 1.f, 1.f, 0.6f);
 						glBegin(GL_POLYGON);
-							view.worldToView(lastMeshPoint2, x, y);
+							view.worldToView(_camera.getPointAtIndex(0), x, y);
 							glVertex2f(x, y);
-							view.worldToView(lastMeshPoint, x, y);
+							view.worldToView(_camera.getPointAtIndex(1), x, y);
 							glVertex2f(x, y);
 							view.worldToView(_mousePoint, x, y);
 							glVertex2f(x, y);
@@ -228,59 +250,38 @@ void MVGBuildFaceManipulator::draw(M3dView & view, const MDagPath & path,
 						glEnd();
 					}
 				}
-				else if(MVGBuildFaceManipulator::_computeLastPoint
-					&& !getCameraPoints().empty() 
-					&& getCameraPointsCount() > 1)
-				{
-					// Preview of quad
-						if(MVGBuildFaceManipulator::_computeLastPoint)
-						{										
-							MVector height = getCameraPointAtIndex(0) -getCameraPointAtIndex(1);
-							_lastPoint = _mousePoint + height;
-
-							glColor4f(1.f, 1.f, 1.f, 0.6f);
-							glBegin(GL_POLYGON);
-								view.worldToView(getCameraPointAtIndex(0), x, y);
-								glVertex2f(x, y);
-								view.worldToView(getCameraPointAtIndex(1), x, y);
-								glVertex2f(x, y);
-								view.worldToView(_mousePoint, x, y);
-								glVertex2f(x, y);
-								view.worldToView(_lastPoint, x, y);
-								glVertex2f(x, y);
-							glEnd();
-						}
-				}
 				
 				// Draw lines and poly
-				if(!getCameraPoints().empty())
+				if(!_camera.getPointsCount() > 0)
 				{
 					short x;
 					short y;
 					glColor4f(1.f, 0.f, 0.f, 0.6f);
 
-					if(getCameraPointsCount() > 2)
+					// Poly
+					if(_camera.getPointsCount() > 2)
 					{
 						glBegin(GL_POLYGON);
-						for(size_t i = 0; i < getCameraPointsCount(); ++i){
-							view.worldToView(getCameraPointAtIndex(i), x, y);
+						for(size_t i = 0; i < _camera.getPointsCount(); ++i){
+							view.worldToView(_camera.getPointAtIndex(i), x, y);
 							glVertex2f(x, y);
 						}
 						glEnd();
-					}			
-					else if(getCameraPointsCount() > 1)
+					}
+					// Line
+					else if(_camera.getPointsCount() > 1)
 					{
 						glBegin(GL_LINES);
-						view.worldToView(getCameraPointAtIndex(0), x, y);
+						view.worldToView(_camera.getPointAtIndex(0), x, y);
 						glVertex2f(x, y);
-						view.worldToView(getCameraPointAtIndex(1), x, y);
+						view.worldToView(_camera.getPointAtIndex(1), x, y);
 						glVertex2f(x, y);
 						glEnd();	
 						
 						glPointSize(4.f);
 						glBegin(GL_POINTS);
-						for(size_t i = 0; i < getCameraPointsCount(); ++i){
-							view.worldToView(getCameraPointAtIndex(i), x, y);
+						for(size_t i = 0; i < _camera.getPointsCount(); ++i){
+							view.worldToView(_camera.getPointAtIndex(i), x, y);
 							glVertex2f(x, y);
 						}
 						glEnd();					
@@ -301,12 +302,12 @@ void MVGBuildFaceManipulator::draw(M3dView & view, const MDagPath & path,
 }
 
 MStatus MVGBuildFaceManipulator::doPress(M3dView& view)
-{		
+{			
 	if(!_isNewShape 
 		&& (_computeLastPoint
-		|| (_connectFace && getCameraPointsCount() < 3)))
+			|| (_connectFace && _camera.getPointsCount() < 3)))
 	{
-		clearCameraPoints();
+		_camera.clearPoints();
 		MVGMesh mesh(MVGProject::_MESH);
 		
 		MPointArray meshPoints;
@@ -321,10 +322,10 @@ MStatus MVGBuildFaceManipulator::doPress(M3dView& view)
 			// Project last mesh points
 			view.worldToView(meshPoints[meshPoints.length() - 1], x, y);
 			view.viewToWorld(x, y, lastMeshPoint, wdir);
-			addPointToCamera(lastMeshPoint);
+			_camera.addPoint(lastMeshPoint);
 			view.worldToView(meshPoints[meshPoints.length() - 2], x, y);
 			view.viewToWorld(x, y, lastMeshPoint2, wdir);
-			addPointToCamera(lastMeshPoint2);
+			_camera.addPoint(lastMeshPoint2);
 			
 		}
 	}
@@ -335,36 +336,34 @@ MStatus MVGBuildFaceManipulator::doPress(M3dView& view)
 	short mousex, mousey;
 	mousePosition(mousex, mousey);
 	view.viewToWorld(mousex, mousey, wpos, wdir);
-	addPointToCamera(wpos);
-	
-	LOG_INFO("Point n° : " << getCameraPointsCount());
-		
+	_camera.addPoint(wpos);
+			
 	// Find fourth point
 	if(MVGBuildFaceManipulator::_computeLastPoint 
-		&& (getCameraPointsCount() > 2))
+		&& (_camera.getPointsCount() > 2))
 	{		
-		addPointToCamera(_lastPoint);
+		_camera.addPoint(_lastPoint);
 	}
 			
 	// Create face3D
-	if(getCameraPointsCount() > 3)
+	if(_camera.getPointsCount() > 3)
 	{
-		createFace3d(view, getCameraPoints());
+		createFace3d(view, _camera.getPoints(), _camera);
 		
 		// Keep the last two points to connect the next face
 		if(MVGBuildFaceManipulator::_connectFace)
 		{
-			std::vector<MPoint> tmp(getCameraPoints());
-			clearCameraPoints();
-			addPointToCamera(tmp[3]);
-			addPointToCamera(tmp[2]);
+			std::vector<MPoint> tmp(_camera.getPoints());
+			_camera.clearPoints();
+			_camera.addPoint(tmp[3]);
+			_camera.addPoint(tmp[2]);
 			
 			_isNewShape = false;
 		}
 		else
 		{
 			_isNewShape = true;
-			clearCameraPoints();
+			_camera.clearPoints();
 		}	
 	}
 	
@@ -381,10 +380,12 @@ MStatus MVGBuildFaceManipulator::doMove(M3dView& view, bool& refresh)
 	MDagPath cameraPath;
 	view.getCamera(cameraPath);
 
-	// View changed : clear all points & register the new camera path
-//	if((_lastCameraPath.length() > 0) && !(cameraPath == _lastCameraPath))
-//		clearCameraPoints();
-	_lastCameraPath = cameraPath;
+	if(!(cameraPath == _lastCameraPath))
+	{
+		_lastCameraPath = cameraPath;
+		_camera = getMVGCamera();
+	}
+	
 	refresh = true;
 	
 	// Update mousePoint
@@ -406,9 +407,7 @@ MStatus MVGBuildFaceManipulator::doMove(M3dView& view, bool& refresh)
 		
 	if(meshPoints.length() > 0)
 	{
-		
-		// Check intersection in 2D ?
-		// Mouse intersects existing point
+		// Point intersection
 		_doIntersectExistingPoint = false;
 		for(int i = 0; i < meshPoints.length(); ++i)
 		{
@@ -470,8 +469,8 @@ void MVGBuildFaceManipulator::drawUI(MHWRender::MUIDrawManager& drawManager, con
 		return;
 	drawManager.beginDrawable();
 	drawManager.setColor(MColor(1.0, 0.0, 0.0, 0.6));
-	for(size_t i = 1; i < getCameraPointsCount(); ++i)
-		drawManager.line2d(getCameraPointAtIndex(i-1), getCameraPointAtIndex(i));
+	for(size_t i = 1; i < _camera.getPointsCount(); ++i)
+		drawManager.line2d(_camera.getPointAtIndex(i-1), _camera.getPointAtIndex(i));
 	drawManager.endDrawable();
 }
 
@@ -488,21 +487,21 @@ MVGCamera MVGBuildFaceManipulator::getMVGCamera(M3dView& view)
 	return MVGCamera(cameraPath.partialPathName().asChar());
 }
 
-void MVGBuildFaceManipulator::createFace3d(M3dView& view, std::vector<MPoint> facePoints)
+void MVGBuildFaceManipulator::createFace3d(M3dView& view, std::vector<MPoint> facePoints, MVGCamera& camera)
 {
 	// Check points order	
-	MVector AD = getCameraPointAtIndex(3) - getCameraPointAtIndex(0);
-	MVector BC = getCameraPointAtIndex(2) - getCameraPointAtIndex(1);
+	MVector AD = camera.getPointAtIndex(3) - camera.getPointAtIndex(0);
+	MVector BC = camera.getPointAtIndex(2) - camera.getPointAtIndex(1);
 			
-	if(edgesIntersection(getCameraPointAtIndex(0), getCameraPointAtIndex(1), AD, BC))
+	if(edgesIntersection(camera.getPointAtIndex(0), camera.getPointAtIndex(1), AD, BC))
 	{
-		std::vector<MPoint>	tmp(getCameraPoints());
-		setCameraPointAtIndex(3, tmp[2]);
-		setCameraPointAtIndex(2, tmp[3]);
+		std::vector<MPoint>	tmp(camera.getPoints());
+		camera.setPointAtIndex(3, tmp[2]);
+		camera.setPointAtIndex(2, tmp[3]);
 	}
 	
 	MVGFace3D face3D;
-	MVGFace2D face2D(getCameraPoints());
+	MVGFace2D face2D(camera.getPoints());
 		
 	MVGMesh mesh(MVGProject::_MESH);
 	if(!mesh.isValid()) {
@@ -514,7 +513,6 @@ void MVGBuildFaceManipulator::createFace3d(M3dView& view, std::vector<MPoint> fa
 		pointCloud = MVGPointCloud::create(MVGProject::_CLOUD);
 		LOG_INFO("New OpenMVG Point Cloud.")
 	}
-	MVGCamera camera = getMVGCamera();
 	
 	if(MVGGeometryUtil::projectFace2D(face3D, pointCloud, view, camera, face2D))
 	{
@@ -522,7 +520,6 @@ void MVGBuildFaceManipulator::createFace3d(M3dView& view, std::vector<MPoint> fa
 			&& mesh.getVerticesCount() > 0 
 			&& !_isNewShape)
 		{	
-			LOG_INFO("Continue");
 			MPointArray pointArray;		
 			mesh.getPoints(pointArray);
 			
@@ -533,46 +530,9 @@ void MVGBuildFaceManipulator::createFace3d(M3dView& view, std::vector<MPoint> fa
 			mesh.addPolygon(face3D);
 		}
 		else {
-			LOG_INFO("First");
 			mesh.addPolygon(face3D);
 		}
 	}
 }
-
-std::vector<MPoint> MVGBuildFaceManipulator::getCameraPoints() const
-{
-	return getMVGCamera().getPoints();
-}
-
-void MVGBuildFaceManipulator::setCameraPoints(std::vector<MPoint> points) const
-{
-	getMVGCamera().setPoints(points);
-}
-
-void MVGBuildFaceManipulator::addPointToCamera(MPoint& point) const
-{
-	getMVGCamera().addPoint(point);
-}
-
-void MVGBuildFaceManipulator::clearCameraPoints() const
-{
-	getMVGCamera().clearPoints();
-}
-
-MPoint MVGBuildFaceManipulator::getCameraPointAtIndex(int i) const
-{
-	return getMVGCamera().getPointAtIndex(i);
-}
-
-void MVGBuildFaceManipulator::setCameraPointAtIndex(int i, MPoint point) const
-{
-	getMVGCamera().setPointAtIndex(i, point);
-}
-
-int MVGBuildFaceManipulator::getCameraPointsCount() const
-{
-	return getMVGCamera().getPointsCount();
-}
-
 }
 
