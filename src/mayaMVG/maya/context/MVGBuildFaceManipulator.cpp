@@ -58,22 +58,36 @@ namespace {
 	}
 	
 	// Points must be in 2D
-	bool arePointsAligned2d(MPoint P, MPoint A, MPoint B) 
+	bool arePointsAligned2d(MPoint& P, MPoint& A, MPoint& B) 
 	{
 		MVector AB = B - A;
 		MVector AP = P - A;
 		
 		double cross = crossProduct2d(AB, AP);
 		
-		// Cross not null
 		if(cross > EDGE_TOLERANCE
 			|| cross < -EDGE_TOLERANCE) 
 		{
 			return false;
 		}
-				
+		
 		return true;
+	}
+	
+	bool isPointOnEdge(MPoint& P, MPoint& A, MPoint& B)
+	{
+		MVector PA = A - P;
+		MVector PB = B - P;
+		// Points aligned
+		if(!arePointsAligned2d(P, A, B))
+			return false;
+		
+		double scalar = dotProduct2d(PA, PB);
+		
+		if(scalar > kMFnMeshTolerance)
+			return false;
 
+		return true;
 	}
 	
 	void drawDisk(int x, int y, int r, int segments)
@@ -425,34 +439,47 @@ MStatus MVGBuildFaceManipulator::doMove(M3dView& view, bool& refresh)
 		}
 		
 		// Edge intersection
-		MPointArray points;
-		short x0, y0, x1, y1;
-		_doIntersectExistingEdge = false;
-		if(mesh.intersect(_mousePoint, wdir, points))
-		{
-			MItMeshEdge edgeIt(mesh.dagPath());
-			while(!edgeIt.isDone())
-			{
-				view.worldToView(edgeIt.point(0), x0, y0);
-				view.worldToView(edgeIt.point(1), x1, y1);
-				
-				MVector wdir;
-				MPoint A;
-				view.viewToWorld(x0, y0, A, wdir);
-				MPoint B;
-				view.viewToWorld(x1, y1, B, wdir);
-				
-				if(arePointsAligned2d(_mousePoint, A, B))
-				{
-					_doIntersectExistingEdge = true;
-					_intersectingEdgePoints.clear();
-					_intersectingEdgePoints.append(A);
-					_intersectingEdgePoints.append(B);
-					break;
-				}
-				edgeIt.next();
-			}
-		}
+//		MPointArray points;
+//		short x0, y0, x1, y1;
+//		_doIntersectExistingEdge = false;
+//		if(mesh.intersect(_mousePoint, wdir, points))
+//		{
+//			
+//			MItMeshEdge edgeIt(mesh.dagPath());
+//			double minLenght = -1;
+//			double lenght;
+//			MPointArray edgePoints;
+//			while(!edgeIt.isDone())
+//			{
+//				view.worldToView(edgeIt.point(0), x0, y0);
+//				view.worldToView(edgeIt.point(1), x1, y1);
+//				
+//				MVector wdir;
+//				MPoint A;
+//				view.viewToWorld(x0, y0, A, wdir);
+//				MPoint B;
+//				view.viewToWorld(x1, y1, B, wdir);
+//				
+//				if(isPointOnEdge(_mousePoint, A, B))
+//				{
+//					_doIntersectExistingEdge = true;
+//
+//					lenght = A.distanceTo(B);
+//					if(minLenght < 0)
+//					{
+//						minLenght = lenght;
+//						edgePoints.clear();
+//						edgePoints.append(A);
+//						edgePoints.append(B);				
+//					}
+//				}
+//				edgeIt.next();
+//			}
+//			if(_doIntersectExistingEdge)
+//			{
+//				_intersectingEdgePoints = edgePoints;
+//			}
+//		}
 	}
 
 	return MPxManipulatorNode::doMove(view, refresh);
