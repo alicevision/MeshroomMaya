@@ -125,6 +125,10 @@ void MVGProjectWrapper::onMoveContextButtonClicked()
 void MVGProjectWrapper::onComputeLastPointCheckBoxClicked(bool checked)
 {
 	MVGBuildFaceManipulator::_computeLastPoint = checked;
+	if(!checked)
+	{
+		MVGMayaUtil::deletePreviewShape();
+	}
 }
 
 void MVGProjectWrapper::onConnectFaceCheckBoxClicked(bool checked)
@@ -133,7 +137,10 @@ void MVGProjectWrapper::onConnectFaceCheckBoxClicked(bool checked)
 	if(!checked)
 	{
 		MVGCamera camera(MVGBuildFaceManipulator::_lastCameraPath);
-		camera.clearPoints();
+		camera.clearClickedPoints();
+		MVGBuildFaceManipulator::_buildPoints.clear();
+		MVGBuildFaceManipulator::_isNewShape = true;
+		MVGMayaUtil::deletePreviewShape();
 	}
 }
 

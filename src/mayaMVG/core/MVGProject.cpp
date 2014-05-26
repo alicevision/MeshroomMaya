@@ -10,6 +10,7 @@ using namespace mayaMVG;
 
 std::string MVGProject::_CLOUD = "mvgPointCloud";
 std::string MVGProject::_MESH = "mvgMesh";
+std::string MVGProject::_PREVIEW_MESH = "previewMesh";
 
 MVGProject::MVGProject()
 {

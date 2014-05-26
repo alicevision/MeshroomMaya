@@ -453,3 +453,15 @@ MString MVGMayaUtil::getModulePath()
 	MGlobal::executeCommand("getModulePath -moduleName \"mayaMVG\";", result);
 	return result;
 }
+
+MStatus MVGMayaUtil::deletePreviewShape()
+{
+	MStatus status;
+	MGlobal::executePythonCommand(
+		"import maya.cmds as cmds\n"
+		"cmds.delete('previewMesh')\n");
+	
+	
+	return status;
+}
+

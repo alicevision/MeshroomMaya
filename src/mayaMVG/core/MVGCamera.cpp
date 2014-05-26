@@ -120,7 +120,7 @@ MVGCamera MVGCamera::create(const std::string& name)
 	dagModifier.doIt();
 	
 	std::vector<MPoint> points;
-	camera.setPoints(points);
+	camera.setClickedPoints(points);
 	
 	// create, reparent & connect image plane
 	MObject imagePlane = dagModifier.createNode("imagePlane", transform, &status);
@@ -302,7 +302,7 @@ void MVGCamera::setVisibleItems(const std::vector<MVGPointCloudItem>& items) con
 	MVGMayaUtil::setIntArrayAttribute(_dagpath.node(), _ITEMS, intArray);
 }
 
-std::vector<MPoint> MVGCamera::getPoints() const
+std::vector<MPoint> MVGCamera::getClickedPoints() const
 {
 	MPointArray pointArray;
 	MVGMayaUtil::getPointArrayAttribute(_dagpath.node(), _POINTS, pointArray);
@@ -317,7 +317,7 @@ std::vector<MPoint> MVGCamera::getPoints() const
 	return points;
 }
 
-void MVGCamera::setPoints(const std::vector<MPoint>& points) const
+void MVGCamera::setClickedPoints(const std::vector<MPoint>& points) const
 {
 	MPointArray pointArray;
 	pointArray.setLength(points.size());
@@ -329,7 +329,7 @@ void MVGCamera::setPoints(const std::vector<MPoint>& points) const
 	MVGMayaUtil::setPointArrayAttribute(_dagpath.node(), _POINTS, pointArray);
 }
 
-void MVGCamera::addPoint(const MPoint& point) const
+void MVGCamera::addClickedPoint(const MPoint& point) const
 {
 	MPointArray pointArray;
 	MVGMayaUtil::getPointArrayAttribute(_dagpath.node(), _POINTS, pointArray);
@@ -338,14 +338,14 @@ void MVGCamera::addPoint(const MPoint& point) const
 	MVGMayaUtil::setPointArrayAttribute(_dagpath.node(), _POINTS, pointArray);
 }
 
-void MVGCamera::clearPoints() const
+void MVGCamera::clearClickedPoints() const
 {
 	MPointArray pointArray;
 	pointArray.clear();
 	MVGMayaUtil::setPointArrayAttribute(_dagpath.node(), _POINTS, pointArray);
 }
 
-MPoint MVGCamera::getPointAtIndex(int i) const
+MPoint MVGCamera::geClickedtPointAtIndex(int i) const
 {
 	MPoint point;
 	MVGMayaUtil::getPointInArrayAttribute(_dagpath.node(), _POINTS, point, i);
@@ -353,7 +353,7 @@ MPoint MVGCamera::getPointAtIndex(int i) const
 	return point;
 }
 
-void MVGCamera::setPointAtIndex(int i, const MPoint& point) const
+void MVGCamera::seClickedtPointAtIndex(int i, const MPoint& point) const
 {
 	MPointArray pointArray;
 	MVGMayaUtil::getPointArrayAttribute(_dagpath.node(), _POINTS, pointArray);
@@ -363,7 +363,7 @@ void MVGCamera::setPointAtIndex(int i, const MPoint& point) const
 	MVGMayaUtil::setPointArrayAttribute(_dagpath.node(), _POINTS, pointArray);
 }
 
-int MVGCamera::getPointsCount() const 
+int MVGCamera::getClickedPointsCount() const 
 {
 
 	int size;

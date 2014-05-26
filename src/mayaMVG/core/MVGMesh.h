@@ -22,10 +22,11 @@ class MVGMesh : public MVGNodeWrapper  {
 		static MVGMesh create(const std::string& name);
 
 	public:
-		void addPolygon(const MVGFace3D& face3d);
-		void getPoints(MPointArray& pointArray);
+		void addPolygon(const MVGFace3D& face3d) const;
+		void deleteFace(const int index) const;
+		void getPoints(MPointArray& pointArray) const;
 		int getVerticesCount() const;
-		bool intersect(MPoint& point, MVector& dir, MPointArray&points);
+		bool intersect(MPoint& point, MVector& dir, MPointArray&points) const;
 
 };
 

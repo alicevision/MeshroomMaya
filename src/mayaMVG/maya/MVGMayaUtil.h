@@ -67,6 +67,8 @@ struct MVGMayaUtil {
 	
 	// filedialog
 	static MStatus openFileDialog(MString& directory);
+	// shapes
+	static MStatus deletePreviewShape();
 };
 
 } // mayaMVG

@@ -39,6 +39,7 @@ class MVGProject {
 		// openMVG node names
 		static std::string _CLOUD;
 		static std::string _MESH;
+		static std::string _PREVIEW_MESH;
 
 };
 

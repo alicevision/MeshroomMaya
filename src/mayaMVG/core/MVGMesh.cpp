@@ -63,7 +63,7 @@ MVGMesh MVGMesh::create(const std::string& name)
 	return mesh;
 }
 
-void MVGMesh::addPolygon(const MVGFace3D& face3d)
+void MVGMesh::addPolygon(const MVGFace3D& face3d) const
 {
 	MStatus status;
 	MFnMesh fnMesh(_dagpath.node(), &status);
@@ -76,7 +76,15 @@ void MVGMesh::addPolygon(const MVGFace3D& face3d)
 	CHECK(status);
 }
 
-void MVGMesh::getPoints(MPointArray& pointArray)
+void MVGMesh::deleteFace(const int index) const
+{
+	MStatus status;
+	MFnMesh fnMesh(_dagpath.node(), &status);
+	
+	status = fnMesh.deleteFace(index);
+}
+
+void MVGMesh::getPoints(MPointArray& pointArray) const
 {
 	MStatus status;
 	MFnMesh fnMesh(_dagpath.node(), &status);
@@ -96,7 +104,7 @@ int MVGMesh::getVerticesCount() const
 	return count;
 }
 
-bool MVGMesh::intersect(MPoint& point, MVector& dir, MPointArray&points)
+bool MVGMesh::intersect(MPoint& point, MVector& dir, MPointArray&points) const
 {
 	MStatus status;
 	MFnMesh fnMesh(_dagpath.node(), &status);

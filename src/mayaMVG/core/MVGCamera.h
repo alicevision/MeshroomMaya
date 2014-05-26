@@ -40,13 +40,13 @@ class MVGCamera : public MVGNodeWrapper {
 		std::vector<MVGPointCloudItem> visibleItems() const;
 		void setVisibleItems(const std::vector<MVGPointCloudItem>& item) const;
 		
-		std::vector<MPoint> getPoints() const;
-		void setPoints(const std::vector<MPoint>& points) const;
-		void addPoint(const MPoint& point) const;
-		void clearPoints() const;
-		MPoint getPointAtIndex(int i) const;
-		void setPointAtIndex(int i, const MPoint& point) const;
-		int getPointsCount() const;
+		std::vector<MPoint> getClickedPoints() const;
+		void setClickedPoints(const std::vector<MPoint>& points) const;
+		void addClickedPoint(const MPoint& point) const;
+		void clearClickedPoints() const;
+		MPoint geClickedtPointAtIndex(int i) const;
+		void seClickedtPointAtIndex(int i, const MPoint& point) const;
+		int getClickedPointsCount() const;
 		
 	private:
 		// dynamic attributes
