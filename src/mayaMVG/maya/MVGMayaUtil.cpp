@@ -26,7 +26,7 @@ MStatus MVGMayaUtil::openFileDialog(MString& directory)
 	MGlobal::executePythonCommand(
 		"import maya.cmds as cmds\n"
 		"def openFileDialog():\n"
-		"	directory = cmds.fileDialog2(caption=\"Choose projectdirectory\", fileMode=3)\n"
+		"	directory = cmds.fileDialog2(caption=\"Choose projectdirectory\", fileMode=3, okCaption=\"Load\")\n"
 		"	return directory[0].encode('ascii')\n");
 	
 	status = MGlobal::executePythonCommand("openFileDialog()", directory);
