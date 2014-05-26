@@ -148,12 +148,9 @@ void MVGBuildFaceManipulator::draw(M3dView & view, const MDagPath & path,
 	// drawing part
 	glPushAttrib(GL_ALL_ATTRIB_BITS);
 	{
-		// glEnable(GL_DEPTH_TEST);
-		glDepthFunc(GL_LEQUAL);
 		glEnable(GL_BLEND);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-		glDepthMask(0);
-		
+
 		// draw in screen space
 		glMatrixMode(GL_PROJECTION);
 		glPushMatrix();
@@ -265,7 +262,6 @@ void MVGBuildFaceManipulator::draw(M3dView & view, const MDagPath & path,
 		glPopMatrix();
 		
 		glDisable(GL_BLEND);
-		glDepthMask(1);
 	}
 	glPopAttrib();
 	view.endGL();
