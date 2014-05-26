@@ -1,12 +1,14 @@
 #include "mayaMVG/core/MVGMesh.h"
 #include "mayaMVG/core/MVGLog.h"
 #include "mayaMVG/core/MVGGeometryUtil.h"
+#include "mayaMVG/core/MVGProject.h"
 #include "mayaMVG/maya/MVGMayaUtil.h"
 #include <maya/MFnMesh.h>
 #include <maya/MFnSet.h>
 #include <maya/MSelectionList.h>
 #include <maya/MPointArray.h>
 #include <maya/MIntArray.h>
+#include <maya/MDagModifier.h>
 
 #include <maya/MItMeshEdge.h>
 
@@ -38,18 +40,20 @@ MVGMesh MVGMesh::create(const std::string& name)
 	MStatus status;
 	MFnMesh fnMesh;
 
+	// get project root node
+	MVGProject project(MVGProject::_PROJECT);
+	MObject rootObj = project.dagPath().node();
+
 	// create empty mesh
 	MPointArray vertexArray;
 	MIntArray polygonCounts, polygonConnects;
-	MObject transform = fnMesh.create(0, 0, vertexArray, polygonCounts, polygonConnects, MObject::kNullObj, &status);
+	MObject transform = fnMesh.create(0, 0, vertexArray, polygonCounts, 
+					polygonConnects, MObject::kNullObj, &status);
 	
 	// register dag path
 	MDagPath path;
 	MDagPath::getAPathTo(transform, path);
 	path.extendToShape();
-
-	MVGMesh mesh(path);
-	mesh.setName(name);
 
 	// connect to initialShadingGroup
 	MObject sgObj;
@@ -60,6 +64,14 @@ MVGMesh MVGMesh::create(const std::string& name)
  	status = fnSet.addMember(path);
 	CHECK(status)
 
+	// reparent under root node
+	MDagModifier dagModifier;
+	dagModifier.reparentNode(transform, rootObj);
+	dagModifier.doIt();
+
+	// rename and return
+	MVGMesh mesh(path);
+	mesh.setName(name);
 	return mesh;
 }
 

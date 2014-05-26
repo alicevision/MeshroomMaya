@@ -71,9 +71,8 @@ class MVGProjectWrapper : public QObject, public Singleton<MVGProjectWrapper> {
 
 	private:
 		QList<QObject*>	_cameraList;
-		MVGProject*	_project;
-		
-		QString		_logText;
+		MVGProject _project;
+		QString _logText;
 
 };
 

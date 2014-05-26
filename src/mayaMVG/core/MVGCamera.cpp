@@ -92,8 +92,12 @@ MVGCamera MVGCamera::create(const std::string& name)
 	MFnCamera fnCamera;
 	MDagPath path, imgpath;
 
+	// get project root node
+	MVGProject project(MVGProject::_PROJECT);
+	MObject rootObj = project.dagPath().node();
+
 	// create maya camera
-	MObject transform = fnCamera.create(&status);
+	MObject transform = fnCamera.create(rootObj, &status);
 	CHECK(status)
 
 	MDagPath::getAPathTo(transform, path);

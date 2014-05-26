@@ -2,6 +2,7 @@
 #include "mayaMVG/core/MVGCamera.h"
 #include "mayaMVG/core/MVGLog.h"
 #include "mayaMVG/maya/MVGMayaUtil.h"
+#include "mayaMVG/core/MVGProject.h"
 #include <maya/MFnParticleSystem.h>
 #include <maya/MVectorArray.h>
 #include <maya/MPointArray.h>
@@ -41,19 +42,25 @@ MVGPointCloud MVGPointCloud::create(const std::string& name)
 {
 	MStatus status;
 	MFnParticleSystem fnParticle;
-	MObject transform = fnParticle.create(&status);
 
-	// register dag path
+	// get project root node
+	MVGProject project(MVGProject::_PROJECT);
+	MObject rootObj = project.dagPath().node();
+
+	// create maya particle system node
 	MDagPath path;
-	MDagPath::getAPathTo(transform, path);
-	path.extendToShape();
+	MObject particleSystem = fnParticle.create(&status);
+	MDagPath::getAPathTo(particleSystem, path);
 
+	// add dynamic attributes & reparent under root node
 	MDagModifier dagModifier;
 	MFnTypedAttribute tAttr;
 	MObject rgbAttr = tAttr.create(_RGBPP, "rgb", MFnData::kVectorArray);
 	dagModifier.addAttribute(path.node(), rgbAttr);
+	dagModifier.reparentNode(path.transform(), rootObj);
 	dagModifier.doIt();
 
+	// rename and return
 	MVGPointCloud cloud(path);
 	cloud.setName(name);
 	return cloud;

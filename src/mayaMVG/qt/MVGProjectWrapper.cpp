@@ -12,32 +12,35 @@ using namespace mayaMVG;
 
 MVGProjectWrapper::MVGProjectWrapper()
 {
-	_project = new MVGProject();
+	_project = MVGProject(MVGProject::_PROJECT);
+	if(!_project.isValid()) {
+		_project = MVGProject::create(MVGProject::_PROJECT);
+		LOG_INFO("New OpenMVG Project.")
+	}
 }
 
 MVGProjectWrapper::~MVGProjectWrapper()
 {
-	delete _project;
 }
 
 const QString MVGProjectWrapper::moduleDirectory() const
 {
-	return QString(_project->moduleDirectory().c_str());
+	return QString(_project.moduleDirectory().c_str());
 }
 
 const QString MVGProjectWrapper::projectDirectory() const
 {
-	return QString(_project->projectDirectory().c_str());
+	return QString(_project.projectDirectory().c_str());
 }
 
 const QString MVGProjectWrapper::cameraDirectory() const
 {
-	return QString(_project->cameraDirectory().c_str());
+	return QString(_project.cameraDirectory().c_str());
 }
 
 const QString MVGProjectWrapper::imageDirectory() const
 {
-	return QString(_project->imageDirectory().c_str());
+	return QString(_project.imageDirectory().c_str());
 }
 
 const QString MVGProjectWrapper::pointCloudFile() const
@@ -84,7 +87,7 @@ QObject* MVGProjectWrapper::getCameraAtIndex(int index) const
 
 void MVGProjectWrapper::setProjectDirectory(const QString& directory)
 {
-	_project->setProjectDirectory(directory.toStdString());
+	_project.setProjectDirectory(directory.toStdString());
 	emit projectDirectoryChanged();
 }
 
@@ -151,8 +154,8 @@ void MVGProjectWrapper::onConnectFaceCheckBoxClicked(bool checked)
 
 void MVGProjectWrapper::loadProject(QString projectDirectoryPath)
 {	
-	_project->setProjectDirectory(projectDirectoryPath.toStdString());
-	if(!_project->load())
+	_project.setProjectDirectory(projectDirectoryPath.toStdString());
+	if(!_project.load())
 	{
 		LOG_ERROR("An error occured when loading project.");
 		appendLogText(QString("An error occured when loading project."));
@@ -162,7 +165,7 @@ void MVGProjectWrapper::loadProject(QString projectDirectoryPath)
 	emit projectDirectoryChanged();
 
 	// Populate menu
-	const std::vector<MVGCamera>& cameraList = _project->cameras();
+	const std::vector<MVGCamera>& cameraList = _project.cameras();
 	std::vector<MVGCamera>::const_iterator it = cameraList.begin();
 
 	for(; it != cameraList.end(); ++it) {
@@ -195,10 +198,10 @@ void MVGProjectWrapper::selectItems(const QList<QString>& cameraNames)
 
 void MVGProjectWrapper::setLeftView(MVGCameraWrapper& camera) const
 {
-	_project->setLeftView(camera.camera());
+	_project.setLeftView(camera.camera());
 }
 
 void MVGProjectWrapper::setRightView(MVGCameraWrapper& camera) const
 {
-	_project->setRightView(camera.camera());
+	_project.setRightView(camera.camera());
 }
