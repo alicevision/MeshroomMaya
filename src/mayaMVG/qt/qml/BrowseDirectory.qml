@@ -4,8 +4,6 @@ import QtDesktop 0.1
 
 Item {
     id: browseDirectory
-    width: 200
-    height: 30
 
     RowLayout
     {
@@ -29,12 +27,13 @@ Item {
                 anchors.fill: parent
                 focus: false
                 color: "black"
-                 text: _project.projectDirectory
+                text: _project.projectDirectory
                 //verticalAlignment: Text.AlignVCenter
                 selectionColor: "grey"
                 selectedTextColor: "white"
                 selectByMouse: true
                 font.pointSize: 13
+
 
                 onAccepted: _project.loadProject(text)
             }

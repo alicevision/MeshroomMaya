@@ -1,12 +1,12 @@
 import QtQuick 1.1
 import QtDesktop 0.1
 
+
 Item {
     id: cameraList
 
     Component {
         id: cameraDelegate
-
 
 
         CameraItem {
@@ -15,68 +15,133 @@ Item {
             leftChecked: model.modelData.isLeftChecked
             rightChecked: model.modelData.isRightChecked
             selectionState: model.modelData.state
+
+            width: parent.width
+            height: littleHeight
         }
 
-        //        CameraItem {
-        //            thumb: model.image    //image
-        //            name: model.cameraName  //cameraName
-        //        }
+//        CameraItem {
+//            id: cameraItem
+//            thumb: model.image    //image
+//            name: model.cameraName  //cameraName
+//            width: parent.width
+//            //height: 40
+//        }
     }
 
-    //    CameraModel {
-    //        id: listModel
-    //    }
+//    CameraModel {
+//        id: listModel
+//    }
 
-    RowLayout {
+    Item {
+        id: loaderItem
 
+        Loader {
+            id: loader
+
+        }
+    }
+
+
+    ScrollArea {
+        id: scroll
         width: parent.width
         height: parent.height
-
-        spacing: 5
-
-
+//        color: "grey"
+/*
         Item {
-            height: parent.height
-            Layout.horizontalSizePolicy: Layout.Expanding
-
+            id: toto
+            width: scroll.viewportWidth
+            height: cameraListView.height
+*/
             ListView {
                 id: cameraListView
 
-                width: parent.width
-                height: parent.height
+                currentIndex: -1
+                boundsBehavior: Flickable.StopAtBounds
+                flickableDirection: Flickable.VerticalFlick
+                interactive: false
 
-                anchors.fill: parent
-                model: _project.cameraModel
-                //model: listModel
+                width: scroll.viewportWidth
+                height: (3*main.thumbSize/4 + spacing) * count
+                model:  _project.cameraModel
                 delegate: cameraDelegate
-                clip: true
+                clip: false
             }
         }
+    //}
+}
 
-        ScrollBar {
-            id: scrollBar
-            height: parent.height
-            implicitWidth: 15
 
-            orientation: 0
-            minimumValue: 0
-            maximumValue: cameraListView.height + 300
-            value: cameraListView.contentY
+//import QtQuick 1.1
+//import QtDesktop 0.1
 
-//            MouseArea {
-//                anchors.fill: parent
-//                hoverEnabled: true
 
-//                onEntered: {
-//                    console.log(scrollBar.movingHorizontally);
+//Item {
+//    id: cameraList
+
+//    Component {
+//        id: cameraDelegate
+
+//        CameraItem {
+
+//            property int littleHeight: 3*main.thumbSize/4
+//            property int bigHeight: littleHeight + 50
+//            property bool infoVisibility: false
+
+//            width: cameraList.width
+//            height: littleHeight
+
+//            thumb: model.modelData.imagePath
+//            name: model.modelData.name
+//            leftChecked: model.modelData.isLeftChecked
+//            rightChecked: model.modelData.isRightChecked
+//            selectionState: model.modelData.state
+//        }
+
+////        CameraItem {
+////            id: cameraItem
+////            thumb: model.image    //image
+////            name: model.cameraName  //cameraName
+////            width: parent.width
+////            //height: 40
+////        }
+//    }
+
+////    CameraModel {
+////        id: listModel
+////    }
+
+//    ScrollArea {
+//        id: scroll
+//        width: parent.width
+//        height: parent.height
+
+///*
+//        Item {
+//            id: toto
+//            width: scroll.viewportWidth
+//            height: cameraListView.height
+//*/
+//            ListView {
+//                id: cameraListView
+
+//                currentIndex: -1
+//                boundsBehavior: Flickable.StopAtBounds
+//                flickableDirection: Flickable.VerticalFlick
+//                interactive: false
+
+//                width: cameraList.width
+//                height: (3*main.thumbSize/4 + spacing) * count //TO DO
+//                model:  _project.cameraModel
+//                delegate: cameraDelegate
+//                clip: false
+
+//                Component.onCompleted: {
+//                    width = scroll.viewportWidth
+//                    height = contentHeight
 //                }
 //            }
-
-//            onValueChanged: cameraListView.contentY = value
-
-
-        }
-    }
-
-
-}
+//        }
+//    //}
+//}

@@ -3,10 +3,8 @@ import QtDesktop 0.1
 
 Item {
     id: contextBar
-    width: 150
-    height: 30
 
-    property bool settingsVisibility : true
+    property bool settingsVisibility : false
 
     RowLayout
     {
@@ -80,6 +78,24 @@ Item {
 
         }
 
+        // Load project button
+        ToolButton {
+            id: folderButton
+
+            implicitWidth: 30
+            height: 30
+            iconSource: "img/Folder.png"
+            tooltip: "Load project folder"
+
+            MouseArea {
+                id: folderButtonMouseArea
+                anchors.fill: parent
+
+                onClicked: _project.onBrowseDirectoryButtonClicked()
+            }
+        }
+
+        // Settings button
         ToolButton {
             id: settingsButton
 

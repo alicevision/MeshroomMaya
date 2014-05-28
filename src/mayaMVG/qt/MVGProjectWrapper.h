@@ -15,11 +15,13 @@ class MVGProjectWrapper : public QObject, public Singleton<MVGProjectWrapper> {
 		Q_PROPERTY(QString projectDirectory READ projectDirectory NOTIFY projectDirectoryChanged);
 		Q_PROPERTY(QString cameraDirectory READ cameraDirectory NOTIFY cameraDirectoryChanged);
 		Q_PROPERTY(QString imageDirectory READ imageDirectory NOTIFY imageDirectoryChanged);
+		Q_PROPERTY(QString pointCloudFile READ pointCloudFile NOTIFY pointCloudFileChanged);
 		Q_PROPERTY(QList<QObject*> cameraModel READ cameraModel NOTIFY cameraModelChanged);
+		
 		Q_PROPERTY(bool connectFace READ connectFace NOTIFY connectFaceChanged);
 		Q_PROPERTY(bool computeLastPoint READ computeLastPoint NOTIFY computeLastPointChanged);
 		
-		Q_PROPERTY(QString logText READ logText NOTIFY logTextChanged);
+		Q_PROPERTY(QString logText READ logText WRITE setLogText NOTIFY logTextChanged);
 
 		MAKE_SINGLETON_WITHCONSTRUCTORS(MVGProjectWrapper)
 
@@ -30,6 +32,7 @@ class MVGProjectWrapper : public QObject, public Singleton<MVGProjectWrapper> {
 		Q_INVOKABLE const QString projectDirectory() const;
 		Q_INVOKABLE const QString cameraDirectory() const;
 		Q_INVOKABLE const QString imageDirectory() const;
+		Q_INVOKABLE const QString pointCloudFile() const;
 		Q_INVOKABLE const QList<QObject*>& cameraModel() const;
 		Q_INVOKABLE const bool connectFace() const;
 		Q_INVOKABLE const bool computeLastPoint() const;
@@ -37,7 +40,7 @@ class MVGProjectWrapper : public QObject, public Singleton<MVGProjectWrapper> {
 		Q_INVOKABLE void setProjectDirectory(const QString& directory);
 		
 		Q_INVOKABLE const QString logText() const;
-		void setLogText(const QString);
+		Q_INVOKABLE void setLogText(const QString);
 		void appendLogText(const QString);
 
 		// Functions exposed to QML
@@ -60,6 +63,7 @@ class MVGProjectWrapper : public QObject, public Singleton<MVGProjectWrapper> {
 		void projectDirectoryChanged();
 		void cameraDirectoryChanged();
 		void imageDirectoryChanged();
+		void pointCloudFileChanged();
 		void cameraModelChanged();
 		void connectFaceChanged();
 		void computeLastPointChanged();

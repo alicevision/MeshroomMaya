@@ -11,19 +11,6 @@ Rectangle {
     property int thumbSize: 90
 
 
-    // MouseArea
-    MouseArea {
-        id: mainMouseArea
-
-        hoverEnabled: true
-        anchors.bottom: parent.bottom
-        height: 50
-        width: parent.width
-
-        onEntered: logArea.visible = true
-        onExited: logArea.visible = false
-    }
-
     ColumnLayout
     {
         id: mainLayout
@@ -41,60 +28,42 @@ Rectangle {
             implicitHeight: 30
         }
 
-
         // ContextSettings
         Params
         {
             id: params
 
-            anchors.top: contextBar.bottom
             width: parent.width
-            //height:130
-            implicitHeight: 130
+
+            property int height_standard: 130
+            implicitHeight: visible ? height_standard : 0
+            Layout.maximumHeight: visible ? height_standard : 0
             visible: contextBar.settingsVisibility
         }
 
+        PointCloudItem {
+            id: pointCloud
 
-        // Camera list
+            width: parent.width
+            //height: 120
+            implicitHeight: 120
+        }
         CameraList {
             id: cameraList
 
-            implicitHeight: parent.height
             width: parent.width
-
-            anchors.top: params.bottom
-           //height: parent.height - contextBar.height - params.height
             Layout.verticalSizePolicy: Layout.Expanding
-
         }
 
     } // ColumnLayout
 
-    // Timer for log area
-    Timer {
-        id: timer
-        interval: 5000
-        running: false
-        repeat: false
-
-        onTriggered: logArea.visible = true
-
-        triggeredOnStart: true
-
-        onRunningChanged: {
-            if(!running)
-                logArea.visible = false
-        }
-
-    }
-
     // Log
-    TextArea {
+    TextBox {
         id: logArea
         readOnly: true
         width: parent.width - 20
-
-        opacity: 0.7
+        height: 120
+        visible: false
 
         anchors {
             bottom: parent.bottom
@@ -106,10 +75,6 @@ Rectangle {
         }
 
         text: _project.logText
-        onTextChanged: timer.restart();
-        color: "#fec04c"
-
-
     }
 
 

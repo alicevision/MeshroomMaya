@@ -5,9 +5,6 @@ import QtDesktop 0.1
 Item {
     id: customImage
 
-    width: main.thumbSize
-    height: main.thumbSize
-
     property color leftBorderColor: "grey"
     property color rightBorderColor: "grey"
     property alias source: image.source
@@ -17,7 +14,6 @@ Item {
     property color selectedColor: "#fec04c"
     property color hoverColor: "white"
     property color normalColor: "transparent"
-
 
     Image {
         id: image

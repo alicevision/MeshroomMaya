@@ -5,9 +5,6 @@ import QtDesktop 0.1
 Item {
     id: customImage
 
-    width: main.thumbSize
-    height: main.thumbSize
-
     property int borderWidth: 2
     property color leftBorderColor: "blue"
     property color rightBorderColor: "yellow"

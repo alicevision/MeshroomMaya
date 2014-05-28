@@ -4,10 +4,6 @@ import QtDesktop 0.1
 Item {
     id: context
 
-    width: 500
-    height: 120
-
-
     ColumnLayout
     {
         id: col

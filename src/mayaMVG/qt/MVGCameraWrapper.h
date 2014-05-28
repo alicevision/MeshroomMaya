@@ -17,6 +17,7 @@ class MVGCameraWrapper : public QObject
 		Q_PROPERTY(bool isRightChecked READ isRightChecked WRITE setRightChecked NOTIFY isRightCheckedChanged)
 		
 		Q_PROPERTY(QSize sourceSize READ sourceSize CONSTANT)
+		Q_PROPERTY(qint64 sourceWeight READ sourceWeight CONSTANT)
 	public:
 		MVGCameraWrapper(const MVGCamera& camera);
 		~MVGCameraWrapper();
@@ -33,6 +34,7 @@ class MVGCameraWrapper : public QObject
 		Q_INVOKABLE void setRightChecked(const bool state);
 		
 		Q_INVOKABLE const QSize sourceSize() const;
+		Q_INVOKABLE const qint64 sourceWeight() const;
 		Q_INVOKABLE void onLeftButtonClicked();
 		Q_INVOKABLE void onRightButtonClicked();
 

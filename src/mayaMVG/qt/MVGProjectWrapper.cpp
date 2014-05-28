@@ -40,6 +40,11 @@ const QString MVGProjectWrapper::imageDirectory() const
 	return QString(_project->imageDirectory().c_str());
 }
 
+const QString MVGProjectWrapper::pointCloudFile() const
+{
+	return QString(_project->pointCloudFile().c_str());
+}
+
 const QList<QObject*>& MVGProjectWrapper::cameraModel() const
 {
 	return _cameraList;

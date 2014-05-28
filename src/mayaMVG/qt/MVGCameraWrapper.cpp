@@ -66,12 +66,16 @@ void  MVGCameraWrapper::setRightChecked(const bool state)
 
 const QSize MVGCameraWrapper::sourceSize() const
 {
-	//QVector<int> result(2);
 	QImage image(imagePath());
-//	result.append(image.width());
-//	result.append(image.height());
 	
-	return QSize(image.width(), image.height());
+	return image.size();
+	//QSize(image.width(), image.height());
+}
+
+const qint64 MVGCameraWrapper::sourceWeight() const
+{
+	QFileInfo info(imagePath());
+	return info.size();
 }
 
 void MVGCameraWrapper::onLeftButtonClicked() 
@@ -87,9 +91,6 @@ void MVGCameraWrapper::onLeftButtonClicked()
 	
 	// Update left view
 	MVGProjectWrapper::instance().setLeftView(*this);
-//	camera().select();
-//	camera().loadImagePlane();
-//	MVGMayaUtil::setMVGLeftCamera(camera());
 }
 
 void MVGCameraWrapper::onRightButtonClicked()
@@ -105,10 +106,5 @@ void MVGCameraWrapper::onRightButtonClicked()
 	
 	// Update right view
 	MVGProjectWrapper::instance().setRightView(*this);
-//	camera().select();
-//	camera().loadImagePlane();
-//	MVGMayaUtil::setMVGRightCamera(camera());
-//}
-
 }
 }

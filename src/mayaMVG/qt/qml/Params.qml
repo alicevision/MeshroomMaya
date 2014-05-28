@@ -4,30 +4,6 @@ import QtDesktop 0.1
 Item {
     id: settings
 
-    width: parent.width
-    height: 100
-
-    visible: true
-    state: heightStateGroup.state
-
-    StateGroup {
-        id: heightStateGroup
-
-        states: [
-            State {
-                name: "OPENED"
-                when: (visible)
-                PropertyChanges {target: settings; height:130}
-            },
-            State {
-                name: "CLOSED"
-                when: (!visible)
-                PropertyChanges {target: settings; height:0}
-            }
-
-        ]
-    }
-
     ColumnLayout {
         width: parent.width
         height: parent.height
@@ -57,7 +33,6 @@ Item {
 
                 CheckBox {
                     id: computeLastPointCheckBox
-//                    checked: true
                     implicitWidth: 20
 
                     checked: _project.computeLastPoint
@@ -73,6 +48,13 @@ Item {
                     horizontalAlignment: Text.AlignLeft
                     Layout.horizontalSizePolicy: Layout.Expanding
                 }
+
+            }
+
+            TooltipArea {
+                id: computeLastPointTooltip
+                anchors.fill: parent
+                text: "Compute last point checkbox"
             }
         }
 
@@ -91,7 +73,6 @@ Item {
 
                 CheckBox {
                     id: connectFaceCheckBox
-//                    checked: true
                     implicitWidth: 20
                     checked: _project.connectFace
                     onClicked: _project.onConnectFaceCheckBoxClicked(checked)
@@ -106,6 +87,12 @@ Item {
                     horizontalAlignment: Text.AlignLeft
                     Layout.horizontalSizePolicy: Layout.Expanding
                 }
+            }
+
+            TooltipArea {
+                id: connectFaceTooltip
+                anchors.fill: parent
+                text: "Connect face checkbox"
             }
         }
 
@@ -146,6 +133,12 @@ Item {
                     color: main.textColor
                     font.pointSize: 11
                 }
+            }
+
+            TooltipArea {
+                id: thumbSizeTooltip
+                anchors.fill: parent
+                text: "Thumbnail size slider"
             }
         }
 
