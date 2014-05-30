@@ -18,8 +18,11 @@ MStatus initializePlugin(MObject obj) {
 	status = plugin.registerContextCommand(MVGContextCmd::name, &MVGContextCmd::creator);
 
 	// nodes
+	// MVGCreateManipulator
 	status = plugin.registerNode("MVGBuildFaceManipulator", MVGBuildFaceManipulator::_id, &MVGBuildFaceManipulator::creator
 								, &MVGBuildFaceManipulator::initialize, MPxNode::kManipulatorNode);
+//	status = plugin.registerNode("MVGMoveManipulator", MVGBuildFaceManipulator::_id, &MVGBuildFaceManipulator::creator
+//								, &MVGBuildFaceManipulator::initialize, MPxNode::kManipulatorNode);
 
 	status = plugin.registerUI("mayaMVGCreateUI", "mayaMVGDeleteUI");
 

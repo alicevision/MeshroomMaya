@@ -1,8 +1,12 @@
 import QtQuick 1.1
 import QtDesktop 0.1
 
-Item {
+GroupBox {
     id: settings
+
+    flat: false
+    title: "Settings"
+    anchors.margins: 2
 
     ColumnLayout {
         width: parent.width

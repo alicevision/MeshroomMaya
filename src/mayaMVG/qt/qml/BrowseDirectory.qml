@@ -21,19 +21,15 @@ Item {
             color: "grey"
             radius: 2
 
-            TextInput{
+            TextInput {
                 id: directoryTextEdit
 
                 anchors.fill: parent
                 focus: false
                 color: "black"
                 text: _project.projectDirectory
-                //verticalAlignment: Text.AlignVCenter
-                selectionColor: "grey"
-                selectedTextColor: "white"
                 selectByMouse: true
                 font.pointSize: 13
-
 
                 onAccepted: _project.loadProject(text)
             }

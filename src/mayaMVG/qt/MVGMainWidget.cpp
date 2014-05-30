@@ -19,12 +19,12 @@ MVGMainWidget::MVGMainWidget(QWidget * parent)
 	_view->engine()->addPluginPath(importDirectory);
 	_view->engine()->addImportPath(importDirectory);
 
+	// Expose Project to QML
+	_view->rootContext()->setContextProperty("_project", &project);
+
 	// Qml source
 	_view->setSource(QUrl::fromLocalFile(sourceDirectory));
 	_view->setResizeMode(QDeclarativeView::SizeRootObjectToView);
-
-	// Expose Project to QML
-	_view->rootContext()->setContextProperty("_project", &project);
 
 	// Instant coding
 	QmlInstantCoding* qic = new QmlInstantCoding(_view, true);

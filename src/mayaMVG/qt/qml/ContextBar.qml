@@ -8,10 +8,10 @@ Item {
 
     RowLayout
     {
+        id: topLayout
         width: parent.width
         height: parent.height
         spacing: 0
-
 
         Item {
             implicitWidth: 3*parent.height

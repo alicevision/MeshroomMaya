@@ -4,27 +4,22 @@ import QtDesktop 0.1
 Rectangle {
     id: main
     color: "transparent"
-    width: 458
-    height: 397
 
     property string textColor: "white"
     property int thumbSize: 90
 
-
     ColumnLayout
     {
         id: mainLayout
-
-        width: parent.width
+        anchors.horizontalCenter: parent.horizontalCenter
+        width: parent.width - 10
         height: parent.height
 
         // ContextBar
         ContextBar
         {
             id: contextBar
-
             width: parent.width
-            //height: 30
             implicitHeight: 30
         }
 
@@ -32,7 +27,6 @@ Rectangle {
         Params
         {
             id: params
-
             width: parent.width
 
             property int height_standard: 130
@@ -45,9 +39,9 @@ Rectangle {
             id: pointCloud
 
             width: parent.width
-            //height: 120
             implicitHeight: 120
         }
+
         CameraList {
             id: cameraList
 

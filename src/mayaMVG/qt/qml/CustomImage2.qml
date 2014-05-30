@@ -2,12 +2,12 @@ import QtQuick 1.1
 import QtDesktop 0.1
 
 
-Item {
+Rectangle {
     id: customImage
 
     property color leftBorderColor: "grey"
     property color rightBorderColor: "grey"
-    property alias source: image.source
+    property string source: "img/Folder.png"
     property bool leftChecked: false
     property bool rightChecked: false
 
@@ -17,19 +17,16 @@ Item {
 
     Image {
         id: image
+        anchors.fill: parent
 
-        sourceSize.width: parent.width
-        sourceSize.height: parent.height
-
-        source: "img/Folder.png"
-
+        sourceSize.width: 400
+        source: customImage.source
+        asynchronous: true
     }
-
 
     Rectangle {
         id: leftRectangle
 
-        anchors.left: parent.left
         width: parent.width/2
         height: parent.height
         color: leftBorderColor
