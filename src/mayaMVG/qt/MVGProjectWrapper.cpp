@@ -143,7 +143,7 @@ void MVGProjectWrapper::onConnectFaceCheckBoxClicked(bool checked)
 	{
 		MVGCamera camera(MVGBuildFaceManipulator::_lastCameraPath);
 		camera.clearClickedPoints();
-		MVGBuildFaceManipulator::_buildPoints.clear();
+		MVGBuildFaceManipulator::_display2DPoints_world.clear();
 		MVGBuildFaceManipulator::_isNewShape = true;
 		MVGMayaUtil::deletePreviewShape();
 	}

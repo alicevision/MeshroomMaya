@@ -1,6 +1,7 @@
 #pragma once
 
 #include "mayaMVG/core/MVGCamera.h"
+#include "mayaMVG/core/MVGGeometryUtil.h"
 #include <maya/MPxManipulatorNode.h>
 #include <maya/MDagPath.h>
 #include <maya/MPointArray.h>
@@ -35,15 +36,19 @@ class MVGBuildFaceManipulator: public MPxManipulatorNode
 		MVGCamera getMVGCamera(M3dView&);
 		
 		void createFace3d(M3dView& view);
-		void previewFace3d(M3dView& view, std::vector<MPoint>& pointArray);
+		void previewFace3d(M3dView& view, std::vector<MPoint>& pointArray, MVGFace3D& previewPoints3d);
 				
 	public:
 		static MTypeId _id;
 		MPoint _mousePoint;
 		MPoint _lastPoint;
-		static std::vector<MPoint> _buildPoints;
+		/// 2D points for display (clicked points + others for display)
+		/// Warning: converted in 3D world space to be independant from scale and offset.
+		///          It's just a shortcut to rely on maya functions (viewToWorld)
+		static std::vector<MPoint> _display2DPoints_world;
+		MVGFace3D	_preview3DFace;  //< 3D points (4 points to describe the face)
 		static MDagPath _lastCameraPath;
-		static MVGCamera _camera;
+		static MVGCamera _camera;  // TODO: remove static
 		bool _drawEnabled;
 		static bool _connectFace;
 		static bool _computeLastPoint;

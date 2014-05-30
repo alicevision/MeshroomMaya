@@ -67,8 +67,8 @@ bool MVGMayaViewportKeyEventFilter::eventFilter(QObject * obj, QEvent * e)
 					camera = dynamic_cast<MVGCameraWrapper*>(MVGProjectWrapper::instance().cameraModel().at(i));
 					if(camera)
 						camera->camera().clearClickedPoints();
-				}	
-				MVGBuildFaceManipulator::_buildPoints.clear();
+				}
+				MVGBuildFaceManipulator::_display2DPoints_world.clear();
 				MVGMayaUtil::deletePreviewShape();
 				MVGBuildFaceManipulator::_isNewShape = true;
 				camera.clearClickedPoints();

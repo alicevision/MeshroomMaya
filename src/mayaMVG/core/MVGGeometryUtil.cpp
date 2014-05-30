@@ -73,12 +73,13 @@ MPoint MVGGeometryUtil::viewToWorld(M3dView& view, const MPoint& screen)
 	return wpoint;
 }
 
-bool MVGGeometryUtil::projectFace2D(MVGFace3D& face3D, MVGPointCloud& pointCloud, M3dView& view, MVGCamera& camera, MVGFace2D& face2D)
+bool MVGGeometryUtil::projectFace2D(MVGFace3D& face3D, M3dView& view, MVGCamera& camera, MVGFace2D& face2D, bool compute)
 {
 	// TODO 
 	// use visible points
 	// std::vector<MVGPointCloudItem> items = pointCloud.getItems();
 	std::vector<MVGPointCloudItem> items = camera.visibleItems();
+	//LOG_INFO("projectFace2D: " << items.size() << " point cloud items.");
 	if(items.size() < 3) {
 		LOG_ERROR("Need more than " << items.size() << " point cloud items. Abort.");
 		return false;
@@ -113,19 +114,42 @@ bool MVGGeometryUtil::projectFace2D(MVGFace3D& face3D, MVGPointCloud& pointCloud
 
 	PlaneKernel kernel(selectedItemsMat);
 	PlaneKernel::Model model;
-	double threshold = std::numeric_limits<double>::infinity();
-	openMVG::robust::LeastMedianOfSquares(kernel, &model, &threshold);
+	double outlierThreshold = std::numeric_limits<double>::infinity();
+	double dBestMedian = openMVG::robust::LeastMedianOfSquares(kernel, &model, &outlierThreshold);
 
+	//LOG_INFO("projectFace2D, outlierThreshold: " << outlierThreshold << ", dBestMedian: " << dBestMedian);
+	
 	// retrieve Face3D vertices from this model
 	MPoint P;
 	MPoint cameraCenter = AS_MPOINT(camera.pinholeCamera()._C);
 	std::vector<MPoint> face3DPoints;
-	for(size_t i = 0; i < facePoints.size()-1; ++i) // remove extra point
-	{
-		MPoint worldPoint = viewToWorld(view, facePoints[i]);
-		plane_line_intersect(model, cameraCenter, worldPoint, P);
+
+	
+	if(compute) {	
+		// Three first points are retrieved from the selection points
+		for(size_t i = 0; i < facePoints.size()-2; ++i) // remove extra point
+		{
+			MPoint worldPoint = viewToWorld(view, facePoints[i]);
+			plane_line_intersect(model, cameraCenter, worldPoint, P);
+			face3DPoints.push_back(P);
+		}
+		// Compute last point to keep 3D lenghts
+		MVector height;
+		height = face3DPoints[0]- face3DPoints[1];
+		MPoint lastWorldPoint = face3DPoints[2] + height;
+		plane_line_intersect(model, cameraCenter, lastWorldPoint, P);
 		face3DPoints.push_back(P);
 	}
+	else
+	{
+		for(size_t i = 0; i < facePoints.size()-1; ++i) // remove extra point
+		{
+			MPoint worldPoint = viewToWorld(view, facePoints[i]);
+			plane_line_intersect(model, cameraCenter, worldPoint, P);
+			face3DPoints.push_back(P);
+		}
+	}
+	
 
 	face3D = MVGFace3D(face3DPoints);
 	return true;
