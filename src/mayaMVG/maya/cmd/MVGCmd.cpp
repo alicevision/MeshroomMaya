@@ -36,8 +36,9 @@ namespace {
 		QList<QString> selectedCameras;
 		for ( size_t i = 0; i < list.length(); i++) {
 			list.getDagPath(i, path, component);
-			path.extendToShape();			
-			if(path.isValid() && (path.apiType() == MFn::kCamera)) {
+			path.extendToShape();
+			if(path.isValid() 
+				&& ((path.child(0).apiType() == MFn::kCamera) || (path.apiType() == MFn::kCamera))) {
 				MFnDependencyNode fn(path.transform());
 				selectedCameras.push_back(fn.name().asChar());
 			}

@@ -37,6 +37,8 @@ class MVGCameraWrapper : public QObject
 		Q_INVOKABLE const qint64 sourceWeight() const;
 		Q_INVOKABLE void onLeftButtonClicked();
 		Q_INVOKABLE void onRightButtonClicked();
+		
+		Q_INVOKABLE void select() const;
 
 	signals:
 		void stateChanged();

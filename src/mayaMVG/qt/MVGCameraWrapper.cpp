@@ -107,4 +107,8 @@ void MVGCameraWrapper::onRightButtonClicked()
 	// Update right view
 	MVGProjectWrapper::instance().setRightView(*this);
 }
+
+void MVGCameraWrapper::select() const{
+	_camera.select();
+}
 }

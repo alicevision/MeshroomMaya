@@ -188,6 +188,10 @@ Rectangle {
                 id: cameraItemMouseArea
 
                 anchors.fill: parent
+
+                onClicked: {
+                    project.getCameraAtIndex(index).select();
+                }
                 onDoubleClicked: {
                     loader.sourceComponent = extraInformation
                     cameraItem.infoVisibility = (cameraItem.infoVisibility ? false : true)
