@@ -9,8 +9,7 @@ GroupBox {
     anchors.margins: 2
 
     ColumnLayout {
-        width: parent.width
-        height: parent.height
+        anchors.fill: parent
         spacing: 0
 
         // Directory
@@ -29,8 +28,7 @@ GroupBox {
             RowLayout {
                 id: sliderLayout
 
-                width: parent.width
-                height: parent.height
+                anchors.fill: parent
                 spacing: 15
 
                 // Thumbnail size

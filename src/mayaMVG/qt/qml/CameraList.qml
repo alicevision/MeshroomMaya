@@ -48,6 +48,8 @@ Item {
         width: parent.width
         height: parent.height
 
+        horizontalScrollBar.visible: false
+
         ListView {
             id: cameraListView
 
@@ -56,8 +58,10 @@ Item {
             flickableDirection: Flickable.VerticalFlick
             interactive: false
 
+            contentHeight: 50  // Arbitrary but only to enable the computation of the real children's size
+
             width: scroll.viewportWidth // QML bug: don't use parent with ScrollArea
-            height: (3*main.thumbSize/4 + spacing) * count
+            height: childrenRect.height
             model:  _project.cameraModel
             delegate: cameraDelegate
             clip: false

@@ -1,19 +1,16 @@
 import QtQuick 1.1
 import QtDesktop 0.1
 
-
 Item
 {
     id: textBox
 
-    property alias text: textEdit.text
-    property alias textColor: textEdit.color
-    property alias readOnly: textEdit.readOnly
+    property string text: ""
+    property color textColor: "black"
+    property bool readOnly: true
 
     RowLayout {
-        width: parent.width
-        height: parent.height
-
+        anchors.fill: parent
         spacing: 0
 
         Item {
@@ -23,23 +20,23 @@ Item
             ScrollArea {
                 id: scrollArea
 
-                width: parent.width
-                height: parent.height
+                anchors.fill: parent
                 color: "#fec04c"
                 opacity: 0.7
 
                 contentHeight: textEdit.height
 
                 Item {
-                    width: parent.width
-                    height: parent.height
+                    anchors.fill: parent
 
                     TextEdit {
                         id: textEdit
 
                         width: parent.width
                         selectByMouse: true
-                        readOnly: true
+                        readOnly: textBox.readOnly
+                        text: textBox.text
+                        color: textBox.textColor
 
                         onTextChanged: textBox.visible = true;
                     }
@@ -53,40 +50,47 @@ Item
             }
         }
 
-        ButtonColumn {
-            id: logAreaControls
-
-            width: 20
+        Item
+        {
+            implicitWidth: 20
             height: parent.height
-            exclusive: false
 
-
-            ToolButton {
-                id: closeButton
+            ButtonColumn {
+                id: logAreaControls
 
                 width: parent.width
-                height: parent.width
-                iconSource: "img/cross.png"
-                iconSize: 12
-                tooltip: "Close log area"
-                checked: true
+                height: parent.height
+                exclusive: false
 
-                onClicked: textBox.visible = false;
-            }
+                ToolButton {
+                    id: closeButton
 
-            ToolButton {
-                id: clearButton
+                    width: parent.width
+                    height: parent.width
+                    iconSource: "img/cross.png"
+                    iconSize: 12
+                    tooltip: "Close log area"
+                    checked: true
 
-                width: parent.width
-                height: parent.width
-                iconSource: "img/clear.png"
-                iconSize: 15
-                checked: true
-                tooltip: "Clear log area"
+                    onClicked: textBox.visible = false;
+                }
 
-                onClicked: _project.setLogText(" ");
+                ToolButton {
+                    id: clearButton
+
+                    width: parent.width
+                    height: parent.width
+                    iconSource: "img/clear.png"
+                    iconSize: 15
+                    checked: true
+                    tooltip: "Clear log area"
+
+                    onClicked: _project.setLogText(" ");
+                }
             }
         }
+
+
     }
 }
 
