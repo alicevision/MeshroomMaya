@@ -59,7 +59,8 @@ class MVGBuildFaceManipulator: public MPxManipulatorNode
 		
 		MPoint	_mousePointOnPressEdge;
 		MPoint	_mousePointOnDragEdge;
-		bool	_onConstruction;
+		bool	_onEdgeExtension;
+		MDagPath	_cameraPathClickedPoints;
 };
 
 }

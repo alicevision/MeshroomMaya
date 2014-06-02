@@ -108,7 +108,8 @@ MVGBuildFaceManipulator::MVGBuildFaceManipulator()
 {
 	_doIntersectExistingPoint = false;
 	_doIntersectExistingEdge = false;
-	_onConstruction = false;
+	_onEdgeExtension = false;
+	_cameraPathClickedPoints = MDagPath();
 }
 
 MVGBuildFaceManipulator::~MVGBuildFaceManipulator()
@@ -212,7 +213,9 @@ void MVGBuildFaceManipulator::draw(M3dView & view, const MDagPath & path,
 					short y;
 					glColor4f(1.f, 0.f, 0.f, 0.6f);
 
-					if(!_onConstruction && _display2DPoints_world.size() < 3)
+					if(!_onEdgeExtension 
+						&& _display2DPoints_world.size() < 3 
+						&& (_cameraPathClickedPoints == _lastCameraPath))
 					{
 						// Lines
 						if(_display2DPoints_world.size() > 1)
@@ -272,11 +275,17 @@ MStatus MVGBuildFaceManipulator::doPress(M3dView& view)
 		_clickedEdgePoints3D.clear();
 		_clickedEdgePoints3D.append(_intersectingEdgePoints3D[0]);
 		_clickedEdgePoints3D.append(_intersectingEdgePoints3D[1]);
-		_onConstruction = true;
+		_onEdgeExtension = true;
 	}
 	
-	if(!_onConstruction)
+	if(!_onEdgeExtension)
 	{
+		if(!(_cameraPathClickedPoints == _lastCameraPath))
+		{
+			_display2DPoints_world.clear();
+			_cameraPathClickedPoints = _lastCameraPath;
+		}
+
 		// Add a new point		
 		view.viewToWorld(mousex, mousey, wpos, wdir);	
 		//_camera.addClickedPoint(wpos);
@@ -298,11 +307,11 @@ MStatus MVGBuildFaceManipulator::doPress(M3dView& view)
 
 MStatus MVGBuildFaceManipulator::doRelease(M3dView& view)
 {
-	if(_onConstruction)
+	if(_onEdgeExtension)
 	{
 		addFace3d(_preview3DFace);
 		MVGMayaUtil::deletePreviewShape();
-		_onConstruction = false;
+		_onEdgeExtension = false;
 	}
 	
 	return MPxManipulatorNode::doRelease(view);
@@ -317,16 +326,19 @@ MStatus MVGBuildFaceManipulator::doMove(M3dView& view, bool& refresh)
 	{
 		_lastCameraPath = cameraPath;
 		_camera = getMVGCamera();
-		if(!_onConstruction && !_display2DPoints_world.empty())
+		
+	}
+	
+	if(!_onEdgeExtension && !_display2DPoints_world.empty() && !(cameraPath == _cameraPathClickedPoints))
+	{
+		LOG_WARNING("Change of view while creating a face : if you click a point, it will erase previous points. ");
+		if(_display2DPoints_world.size() > 2)
 		{
-			LOG_WARNING("Change of view while creating face. Click new points to create face");
-			if(_display2DPoints_world.size() > 2)
+			MVGMesh mesh(MVGProject::_PREVIEW_MESH);
+			if(mesh.isValid())
 				MVGMayaUtil::deletePreviewShape();
 		}
 			
-		_display2DPoints_world.clear();
-		
-		
 	}
 	
 	refresh = true;
@@ -345,7 +357,8 @@ MStatus MVGBuildFaceManipulator::doMove(M3dView& view, bool& refresh)
 	}
 		
 	// Preview
-	if(_display2DPoints_world.size() > 2)
+	if(_display2DPoints_world.size() > 2
+		&& (_lastCameraPath == _cameraPathClickedPoints))
 	{		
 		std::vector<MPoint> previewPoints2d;
 			
@@ -437,7 +450,7 @@ MStatus MVGBuildFaceManipulator::doDrag(M3dView& view)
 	mousePosition(mousex, mousey);
 	view.viewToWorld(mousex, mousey, _mousePoint, wdir);
 	
-	if(_onConstruction)
+	if(_onEdgeExtension)
 	{
 		view.viewToWorld(mousex, mousey, _mousePointOnDragEdge, wdir);	
 		
@@ -520,7 +533,7 @@ void MVGBuildFaceManipulator::previewFace3d(MVGFace3D& face3d)
 		LOG_INFO("New Preview Mesh.");
 	}
 	
-	if(_onConstruction )
+	if(_onEdgeExtension )
 		{				
 			MVGMesh mesh(MVGProject::_MESH);
 			if(!mesh.isValid()) {
