@@ -17,10 +17,7 @@ class MVGProjectWrapper : public QObject, public Singleton<MVGProjectWrapper> {
 		Q_PROPERTY(QString imageDirectory READ imageDirectory NOTIFY imageDirectoryChanged);
 		Q_PROPERTY(QString pointCloudFile READ pointCloudFile NOTIFY pointCloudFileChanged);
 		Q_PROPERTY(QList<QObject*> cameraModel READ cameraModel NOTIFY cameraModelChanged);
-		
-		Q_PROPERTY(bool connectFace READ connectFace NOTIFY connectFaceChanged);
-		Q_PROPERTY(bool computeLastPoint READ computeLastPoint NOTIFY computeLastPointChanged);
-		
+				
 		Q_PROPERTY(QString logText READ logText WRITE setLogText NOTIFY logTextChanged);
 
 		MAKE_SINGLETON_WITHCONSTRUCTORS(MVGProjectWrapper)
@@ -34,8 +31,6 @@ class MVGProjectWrapper : public QObject, public Singleton<MVGProjectWrapper> {
 		Q_INVOKABLE const QString imageDirectory() const;
 		Q_INVOKABLE const QString pointCloudFile() const;
 		Q_INVOKABLE const QList<QObject*>& cameraModel() const;
-		Q_INVOKABLE const bool connectFace() const;
-		Q_INVOKABLE const bool computeLastPoint() const;
 		Q_INVOKABLE QObject* getCameraAtIndex(int index) const;
 		Q_INVOKABLE void setProjectDirectory(const QString& directory);
 		
@@ -47,9 +42,7 @@ class MVGProjectWrapper : public QObject, public Singleton<MVGProjectWrapper> {
 		Q_INVOKABLE void onBrowseDirectoryButtonClicked();
 		Q_INVOKABLE void onSelectContextButtonClicked();
 		Q_INVOKABLE void onPlaceContextButtonClicked();
-		Q_INVOKABLE void onMoveContextButtonClicked();	
-		Q_INVOKABLE void onComputeLastPointCheckBoxClicked(bool checked);	
-		Q_INVOKABLE void onConnectFaceCheckBoxClicked(bool checked);	
+		Q_INVOKABLE void onMoveContextButtonClicked();		
 		Q_INVOKABLE void loadProject(QString projectDirectoryPath);
 		void selectItems(const QList<QString>& cameraNames);
 		
@@ -65,8 +58,6 @@ class MVGProjectWrapper : public QObject, public Singleton<MVGProjectWrapper> {
 		void imageDirectoryChanged();
 		void pointCloudFileChanged();
 		void cameraModelChanged();
-		void connectFaceChanged();
-		void computeLastPointChanged();
 		void logTextChanged();
 
 	private:

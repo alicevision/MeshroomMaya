@@ -50,7 +50,6 @@ bool MVGMayaViewportKeyEventFilter::eventFilter(QObject * obj, QEvent * e)
 		if (keyevent->isAutoRepeat()) {
 			return true;
 		}
-		MVGCamera& camera = MVGBuildFaceManipulator::_camera;
 		switch (keyevent->key()) {
 			case Qt::Key_A:
 			case Qt::Key_B:
@@ -60,18 +59,16 @@ bool MVGMayaViewportKeyEventFilter::eventFilter(QObject * obj, QEvent * e)
 			case Qt::Key_Meta:
 				return true;
 			case Qt::Key_Escape:
-				for(int i = 0; i < MVGProjectWrapper::instance().cameraModel().size(); ++i)
-				{
-					MVGCameraWrapper* camera;
-
-					camera = dynamic_cast<MVGCameraWrapper*>(MVGProjectWrapper::instance().cameraModel().at(i));
-					if(camera)
-						camera->camera().clearClickedPoints();
-				}
+//				for(int i = 0; i < MVGProjectWrapper::instance().cameraModel().size(); ++i)
+//				{
+//					MVGCameraWrapper* camera;
+//
+//					camera = dynamic_cast<MVGCameraWrapper*>(MVGProjectWrapper::instance().cameraModel().at(i));
+//					if(camera)
+//						camera->camera().clearClickedPoints();
+//				}
 				MVGBuildFaceManipulator::_display2DPoints_world.clear();
 				MVGMayaUtil::deletePreviewShape();
-				MVGBuildFaceManipulator::_isNewShape = true;
-				camera.clearClickedPoints();
 				
 				break;
 			default:

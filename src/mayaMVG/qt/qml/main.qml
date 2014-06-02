@@ -29,7 +29,7 @@ Rectangle {
             id: params
             width: parent.width
 
-            property int height_standard: 130
+            property int height_standard: 80
             implicitHeight: visible ? height_standard : 0
             Layout.maximumHeight: visible ? height_standard : 0
             visible: contextBar.settingsVisibility
