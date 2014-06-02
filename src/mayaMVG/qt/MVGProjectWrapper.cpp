@@ -67,16 +67,6 @@ void MVGProjectWrapper::appendLogText(const QString text)
 	emit logTextChanged();
 }
 
-const bool MVGProjectWrapper::connectFace() const
-{
-	return MVGBuildFaceManipulator::_connectFace;
-}
-
-const bool MVGProjectWrapper::computeLastPoint() const
-{
-	return MVGBuildFaceManipulator::_computeLastPoint;
-}
-
 QObject* MVGProjectWrapper::getCameraAtIndex(int index) const
 {
 	return _cameraList.at(index);
@@ -125,28 +115,6 @@ void MVGProjectWrapper::onPlaceContextButtonClicked()
 void MVGProjectWrapper::onMoveContextButtonClicked()
 {
 	LOG_INFO("MoveContextButton clicked");
-}
-
-void MVGProjectWrapper::onComputeLastPointCheckBoxClicked(bool checked)
-{
-	MVGBuildFaceManipulator::_computeLastPoint = checked;
-	if(!checked)
-	{
-		MVGMayaUtil::deletePreviewShape();
-	}
-}
-
-void MVGProjectWrapper::onConnectFaceCheckBoxClicked(bool checked)
-{
-	MVGBuildFaceManipulator::_connectFace = checked;
-	if(!checked)
-	{
-		MVGCamera camera(MVGBuildFaceManipulator::_lastCameraPath);
-		camera.clearClickedPoints();
-		MVGBuildFaceManipulator::_display2DPoints_world.clear();
-		MVGBuildFaceManipulator::_isNewShape = true;
-		MVGMayaUtil::deletePreviewShape();
-	}
 }
 
 void MVGProjectWrapper::loadProject(QString projectDirectoryPath)

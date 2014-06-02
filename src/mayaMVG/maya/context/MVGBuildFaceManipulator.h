@@ -27,21 +27,23 @@ class MVGBuildFaceManipulator: public MPxManipulatorNode
 		virtual MStatus doPress(M3dView &view);
 		virtual MStatus doRelease(M3dView &view);
 		virtual MStatus doMove(M3dView &view, bool& refresh);
-
+		virtual MStatus doDrag(M3dView& view);
+		
 		// viewport 2.0 manipulator draw overrides
 		virtual void preDrawUI(const M3dView&);
 		virtual void drawUI(MHWRender::MUIDrawManager&,	const MHWRender::MFrameContext&) const;
 
 		MVGCamera getMVGCamera() const;
 		MVGCamera getMVGCamera(M3dView&);
-		
-		void createFace3d(M3dView& view);
-		void previewFace3d(M3dView& view, std::vector<MPoint>& pointArray, MVGFace3D& previewPoints3d);
+				
+		bool computeFace3d(M3dView& view, std::vector<MPoint>& pointArray, MVGFace3D& face3D, bool computeLastPoint = false);
+		void previewFace3d(MVGFace3D& face3d);
+		void addFace3d(MVGFace3D& face3d);
 				
 	public:
 		static MTypeId _id;
 		MPoint _mousePoint;
-		MPoint _lastPoint;
+//		MPoint _lastPoint;
 		/// 2D points for display (clicked points + others for display)
 		/// Warning: converted in 3D world space to be independant from scale and offset.
 		///          It's just a shortcut to rely on maya functions (viewToWorld)
@@ -50,12 +52,14 @@ class MVGBuildFaceManipulator: public MPxManipulatorNode
 		static MDagPath _lastCameraPath;
 		static MVGCamera _camera;  // TODO: remove static
 		bool _drawEnabled;
-		static bool _connectFace;
-		static bool _computeLastPoint;
-		static bool _isNewShape;
 		bool _doIntersectExistingPoint;
 		bool _doIntersectExistingEdge;
-		MPointArray _intersectingEdgePoints;
+		MPointArray _intersectingEdgePoints3D;
+		MPointArray _clickedEdgePoints3D;
+		
+		MPoint	_mousePointOnPressEdge;
+		MPoint	_mousePointOnDragEdge;
+		bool	_onConstruction;
 };
 
 }
