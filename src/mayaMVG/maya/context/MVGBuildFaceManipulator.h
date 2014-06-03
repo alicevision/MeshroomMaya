@@ -11,7 +11,11 @@ class M3dView;
 
 namespace mayaMVG {
 	
-
+enum MVGMode {
+	PLACE,
+	MOVE
+};
+	
 class MVGBuildFaceManipulator: public MPxManipulatorNode
 {
 	public:
@@ -55,6 +59,7 @@ class MVGBuildFaceManipulator: public MPxManipulatorNode
 		bool _drawEnabled;
 		bool _doIntersectExistingPoint;
 		bool _doIntersectExistingEdge;
+		int	_intersectedEdgeId;
 		MPointArray _intersectingEdgePoints3D;
 		MPointArray _clickedEdgePoints3D;
 		
@@ -63,6 +68,7 @@ class MVGBuildFaceManipulator: public MPxManipulatorNode
 		int	_pressedPointId;
 		bool	_onEdgeExtension;
 		MDagPath	_cameraPathClickedPoints;
+		static MVGMode	_mode;
 		
 };
 
