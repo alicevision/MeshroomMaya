@@ -10,6 +10,7 @@
 class M3dView;
 
 namespace mayaMVG {
+	
 
 class MVGBuildFaceManipulator: public MPxManipulatorNode
 {
@@ -59,8 +60,10 @@ class MVGBuildFaceManipulator: public MPxManipulatorNode
 		
 		MPoint	_mousePointOnPressEdge;
 		MPoint	_mousePointOnDragEdge;
+		int	_pressedPointId;
 		bool	_onEdgeExtension;
 		MDagPath	_cameraPathClickedPoints;
+		
 };
 
 }

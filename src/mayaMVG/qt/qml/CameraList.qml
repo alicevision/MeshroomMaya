@@ -17,7 +17,7 @@ Item {
             selectionState: model.modelData.state
 
             project: _project
-            width: parent.width
+            width: cameraList.width    //scroll.viewportWidth
             height: littleHeight
         }
 

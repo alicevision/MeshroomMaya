@@ -154,3 +154,23 @@ bool MVGGeometryUtil::projectFace2D(MVGFace3D& face3D, M3dView& view, MVGCamera&
 	face3D = MVGFace3D(face3DPoints);
 	return true;
 }
+
+bool MVGGeometryUtil::projectMovedPoint(MVGFace3D& face3D, MPoint& movedPoint, MPoint& mousePoint, M3dView& view, MVGCamera& camera)
+{
+	// Plane estimation with old face points
+	openMVG::Mat facePointsMat(3, 4);
+	for (size_t i = 0; i <4; ++i)
+		facePointsMat.col(i) = AS_VEC3(face3D._p[i]);
+
+	PlaneKernel kernel(facePointsMat);
+	PlaneKernel::Model model;
+	double outlierThreshold = std::numeric_limits<double>::infinity();
+	openMVG::robust::LeastMedianOfSquares(kernel, &model, &outlierThreshold);
+	
+	// Project mouse on plane
+	MPoint P;
+	MPoint cameraCenter = AS_MPOINT(camera.pinholeCamera()._C);
+	std::vector<MPoint> face3DPoints;
+
+	plane_line_intersect(model, cameraCenter, mousePoint, movedPoint);
+}

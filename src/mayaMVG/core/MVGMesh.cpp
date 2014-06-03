@@ -10,7 +10,9 @@
 #include <maya/MIntArray.h>
 #include <maya/MDagModifier.h>
 
+#include <maya/MItMeshPolygon.h>
 #include <maya/MItMeshEdge.h>
+#include <maya/MItMeshVertex.h>
 
 using namespace mayaMVG;
 
@@ -125,3 +127,53 @@ bool MVGMesh::intersect(MPoint& point, MVector& dir, MPointArray&points) const
 	CHECK(status);
 	return intersect;
 }
+
+int MVGMesh::getNumConnectedFacesToVertex(int vertexId)
+{
+	MStatus status;
+	MItMeshVertex verticesIter(_dagpath, MObject::kNullObj, &status);
+	int prev;
+	status = verticesIter.setIndex(vertexId, prev);
+	int faceCount;
+	status = verticesIter.numConnectedFaces(faceCount);
+	
+	CHECK(status);
+	return faceCount;
+}
+
+MIntArray MVGMesh::getConnectedFacesToVertex(int vertexId)
+{
+	MIntArray connectedFacesId;
+	MStatus status;
+	MItMeshVertex verticesIter(_dagpath, MObject::kNullObj, &status);
+	int prev;
+	status = verticesIter.setIndex(vertexId, prev);
+	
+	status = verticesIter.getConnectedFaces(connectedFacesId);
+	
+	CHECK(status);
+	return connectedFacesId;
+}
+
+MIntArray MVGMesh::getFaceVertices(int faceId)
+{
+	MStatus status;
+	MItMeshPolygon faceIter(_dagpath.node());
+	int prev;
+	status = faceIter.setIndex(faceId, prev);
+
+	MIntArray vertices;
+	status = faceIter.getVertices(vertices);
+	
+	CHECK(status);
+	return vertices;
+}
+
+void MVGMesh::setPoint(int vertexId, MPoint& point)
+{
+	MStatus status;
+	MFnMesh fnMesh(_dagpath.node(), &status);
+	fnMesh.setPoint(vertexId, point, MSpace::kPostTransform);
+	CHECK(status);
+}
+			

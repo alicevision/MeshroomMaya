@@ -3,6 +3,7 @@
 #include "mayaMVG/core/MVGNodeWrapper.h"
 
 #include <maya/MPointArray.h>
+#include <maya/MIntArray.h>
 
 namespace mayaMVG {
 
@@ -27,7 +28,10 @@ class MVGMesh : public MVGNodeWrapper  {
 		void getPoints(MPointArray& pointArray) const;
 		int getVerticesCount() const;
 		bool intersect(MPoint& point, MVector& dir, MPointArray&points) const;
-
+		int getNumConnectedFacesToVertex(int vertexId);
+		MIntArray getConnectedFacesToVertex(int vertexId);
+		MIntArray getFaceVertices(int faceId);
+		void setPoint(int vertexId, MPoint& point);
 };
 
 } // mayaMVG

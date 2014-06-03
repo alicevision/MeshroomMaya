@@ -6,7 +6,9 @@
 #include "mayaMVG/core/MVGProject.h"
 #include <maya/MFnCamera.h>
 #include <maya/MFnMesh.h>
+#include <maya/MItMeshPolygon.h>
 #include <maya/MItMeshEdge.h>
+#include <maya/MItMeshVertex.h>
 #include <maya/MSelectionList.h>
 #include <vector>
 
@@ -110,6 +112,7 @@ MVGBuildFaceManipulator::MVGBuildFaceManipulator()
 	_doIntersectExistingEdge = false;
 	_onEdgeExtension = false;
 	_cameraPathClickedPoints = MDagPath();
+	_pressedPointId = -1;
 }
 
 MVGBuildFaceManipulator::~MVGBuildFaceManipulator()
@@ -164,7 +167,32 @@ void MVGBuildFaceManipulator::draw(M3dView & view, const MDagPath & path,
 			glMatrixMode(GL_MODELVIEW);
 			glLoadIdentity();
 			glColor4f(1.f, 0.f, 0.f, 0.6f);
+				// Intersection with point
+				if(_doIntersectExistingPoint)
+				{
+					short x;
+					short y;								
 
+					glColor4f(0.f, 1.f, 0.f, 0.6f);
+					glPointSize(4.f);
+					glBegin(GL_POINTS);
+					view.worldToView(_mousePoint, x, y);
+						glVertex2f(x, y);
+					glEnd();	
+				}
+
+				// Intersection with edge
+				else if(_doIntersectExistingEdge)
+				{
+					short x, y;
+					glColor4f(0.f, 1.f, 0.f, 0.6f);
+					glBegin(GL_LINES);
+						view.worldToView(_intersectingEdgePoints3D[0], x, y);
+						glVertex2f(x, y);
+						view.worldToView(_intersectingEdgePoints3D[1], x, y);
+						glVertex2f(x, y);
+					glEnd();
+				}
 			// draw GL cursor
 			glBegin(GL_LINES);
 			glVertex2f((GLfloat)(mousex + (cos(M_PI / 4.0f) * (radius + 10.0f))),
@@ -177,34 +205,10 @@ void MVGBuildFaceManipulator::draw(M3dView & view, const MDagPath & path,
 			           (GLfloat)(mousey + (sin(-M_PI / 4.0f) * (radius + 10.0f))));
 			glEnd();
 			
-			// Intersection with point
-			if(_doIntersectExistingPoint)
-			{
-				short x;
-				short y;								
-				view.worldToView(_mousePoint, x, y);
-				
-				glColor4f(0.f, 1.f, 0.f, 0.6f);
-				drawDisk(x, y, 10, 10);
-			}
-			
-			// Intersection with edge
-			if(_doIntersectExistingEdge)
-			{
-				short x, y;
-				glColor4f(0.f, 1.f, 0.f, 0.6f);
-				glBegin(GL_LINES);
-					view.worldToView(_intersectingEdgePoints3D[0], x, y);
-					glVertex2f(x, y);
-					view.worldToView(_intersectingEdgePoints3D[1], x, y);
-					glVertex2f(x, y);
-				glEnd();
-			}
-			
 			MDagPath cameraPath;
 			view.getCamera(cameraPath);
 
-			if(cameraPath == _lastCameraPath)
+			if(!_doIntersectExistingEdge && !_doIntersectExistingPoint ) //(cameraPath == _lastCameraPath)
 			{												
 				// Draw lines and poly
 				if(!_display2DPoints_world.empty())
@@ -269,7 +273,8 @@ MStatus MVGBuildFaceManipulator::doPress(M3dView& view)
 	mousePosition(mousex, mousey);
 		
 	// Construction by edge : store pressedPoint
-	if(_doIntersectExistingEdge)
+	if(_doIntersectExistingEdge 
+		&& !_doIntersectExistingPoint)
 	{
 		view.viewToWorld(mousex, mousey, _mousePointOnPressEdge, wdir);	
 		_clickedEdgePoints3D.clear();
@@ -278,7 +283,9 @@ MStatus MVGBuildFaceManipulator::doPress(M3dView& view)
 		_onEdgeExtension = true;
 	}
 	
-	if(!_onEdgeExtension)
+	if(!_onEdgeExtension
+		&& !_doIntersectExistingPoint
+		&& !_doIntersectExistingEdge)
 	{
 		if(!(_cameraPathClickedPoints == _lastCameraPath))
 		{
@@ -306,7 +313,7 @@ MStatus MVGBuildFaceManipulator::doPress(M3dView& view)
 }
 
 MStatus MVGBuildFaceManipulator::doRelease(M3dView& view)
-{
+{	
 	if(_onEdgeExtension)
 	{
 		addFace3d(_preview3DFace);
@@ -319,6 +326,13 @@ MStatus MVGBuildFaceManipulator::doRelease(M3dView& view)
 
 MStatus MVGBuildFaceManipulator::doMove(M3dView& view, bool& refresh)
 {
+	// Update mousePoint
+	MVector wdir;
+	short mousex, mousey;
+	mousePosition(mousex, mousey);
+	view.viewToWorld(mousex, mousey, _mousePoint, wdir);
+	
+	// Update camera & cameraPath
 	MDagPath cameraPath;
 	view.getCamera(cameraPath);
 
@@ -329,6 +343,7 @@ MStatus MVGBuildFaceManipulator::doMove(M3dView& view, bool& refresh)
 		
 	}
 	
+	// Warning if change of view
 	if(!_onEdgeExtension && !_display2DPoints_world.empty() && !(cameraPath == _cameraPathClickedPoints))
 	{
 		LOG_WARNING("Change of view while creating a face : if you click a point, it will erase previous points. ");
@@ -342,20 +357,7 @@ MStatus MVGBuildFaceManipulator::doMove(M3dView& view, bool& refresh)
 	}
 	
 	refresh = true;
-	
-	// Update mousePoint
-	MVector wdir;
-	short mousex, mousey;
-	mousePosition(mousex, mousey);
-	view.viewToWorld(mousex, mousey, _mousePoint, wdir);
-
-	// Check for existing points
-	MVGMesh mesh(MVGProject::_MESH);
-	if(!mesh.isValid()) {
-		mesh = MVGMesh::create(MVGProject::_MESH);
-		LOG_INFO("New OpenMVG Mesh.")
-	}
-		
+			
 	// Preview
 	if(_display2DPoints_world.size() > 2
 		&& (_lastCameraPath == _cameraPathClickedPoints))
@@ -373,9 +375,14 @@ MStatus MVGBuildFaceManipulator::doMove(M3dView& view, bool& refresh)
 	}
 	
 	// Intersections
+	MVGMesh mesh(MVGProject::_MESH);
+	if(!mesh.isValid()) {
+		mesh = MVGMesh::create(MVGProject::_MESH);
+		LOG_INFO("New OpenMVG Mesh.")
+	}
 	MPointArray meshPoints;
 	mesh.getPoints(meshPoints);
-		
+
 	if(meshPoints.length() > 0)
 	{
 		// Point intersection
@@ -391,17 +398,18 @@ MStatus MVGBuildFaceManipulator::doMove(M3dView& view, bool& refresh)
 				&& mousey >= y - kMFnMeshPointTolerance)
 			{
 				_doIntersectExistingPoint = true;
+				_pressedPointId = i;
 				break;
 			}
 		}
-		
+
 		// Edge intersection
 		MPointArray points;
 		short x0, y0, x1, y1;
 		_doIntersectExistingEdge = false;
 		if(mesh.intersect(_mousePoint, wdir, points))
 		{
-			
+
 			MItMeshEdge edgeIt(mesh.dagPath());
 			double minLenght = -1;
 			double lenght;
@@ -410,13 +418,13 @@ MStatus MVGBuildFaceManipulator::doMove(M3dView& view, bool& refresh)
 			{
 				view.worldToView(edgeIt.point(0), x0, y0);
 				view.worldToView(edgeIt.point(1), x1, y1);
-				
+
 				MVector wdir;
 				MPoint A;
 				view.viewToWorld(x0, y0, A, wdir);
 				MPoint B;
 				view.viewToWorld(x1, y1, B, wdir);
-								
+
 				if(isPointOnEdge(_mousePoint, A, B))
 				{
 					_doIntersectExistingEdge = true;
@@ -428,6 +436,7 @@ MStatus MVGBuildFaceManipulator::doMove(M3dView& view, bool& refresh)
 						edgePoints.clear();
 						edgePoints.append(edgeIt.point(0));
 						edgePoints.append(edgeIt.point(1));	
+						//_intersectedEdgeId = edgeIt.index();
 					}
 				}
 				edgeIt.next();
@@ -437,7 +446,7 @@ MStatus MVGBuildFaceManipulator::doMove(M3dView& view, bool& refresh)
 				_intersectingEdgePoints3D = edgePoints;
 			}
 		}
-	}
+	}	
 	
 	return MPxManipulatorNode::doMove(view, refresh);
 }
@@ -449,6 +458,43 @@ MStatus MVGBuildFaceManipulator::doDrag(M3dView& view)
 	short mousex, mousey;
 	mousePosition(mousex, mousey);
 	view.viewToWorld(mousex, mousey, _mousePoint, wdir);
+	
+	if(_doIntersectExistingPoint)
+	{
+		MVGMesh mesh(MVGProject::_MESH);
+		if(!mesh.isValid()) {
+			mesh = MVGMesh::create(MVGProject::_MESH);
+			LOG_INFO("New OpenMVG Mesh.")
+		}
+	
+		int faceCount = mesh.getNumConnectedFacesToVertex(_pressedPointId);
+		
+		// Point connected to one face
+		if(faceCount == 1)
+		{
+			// Retrieve face
+			MIntArray connectedFacesId = mesh.getConnectedFacesToVertex(_pressedPointId);
+			MIntArray vertices = mesh.getFaceVertices(connectedFacesId[0]);			
+			
+	
+			MPointArray meshPoints;
+			mesh.getPoints(meshPoints);
+			
+			MVGFace3D meshFace;
+			for(int i = 0; i < 4; ++i)
+			{
+				meshFace._p[i] = meshPoints[vertices[i]];
+			}
+			
+			MPoint movedPoint;
+			
+			MVGGeometryUtil::projectMovedPoint(meshFace, movedPoint, _mousePoint, view, _camera);
+			
+			mesh.setPoint(_pressedPointId, movedPoint);
+
+		}
+	}
+	
 	
 	if(_onEdgeExtension)
 	{
