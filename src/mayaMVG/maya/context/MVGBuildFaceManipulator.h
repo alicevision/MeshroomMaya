@@ -44,6 +44,8 @@ class MVGBuildFaceManipulator: public MPxManipulatorNode
 		bool computeFace3d(M3dView& view, std::vector<MPoint>& pointArray, MVGFace3D& face3D, bool computeLastPoint = false);
 		void previewFace3d(MVGFace3D& face3d);
 		void addFace3d(MVGFace3D& face3d);
+		
+		void drawPreviewFace(M3dView& view);
 				
 	public:
 		static MTypeId _id;
