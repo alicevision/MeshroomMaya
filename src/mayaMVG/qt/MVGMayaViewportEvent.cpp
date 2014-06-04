@@ -59,13 +59,10 @@ bool MVGMayaViewportKeyEventFilter::eventFilter(QObject * obj, QEvent * e)
 			case Qt::Key_Alt:
 			case Qt::Key_Control:	
 				(modifiers & Qt::ShiftModifier) ? MVGBuildFaceManipulator::_mode = MOVE_RECOMPUTE : MVGBuildFaceManipulator::_mode = MOVE_IN_PLANE;
-				
-				LOG_INFO("Mode : " << MVGBuildFaceManipulator::_mode);
 				break;
 			case Qt::Key_Shift:
 				(modifiers & Qt::ControlModifier) ? MVGBuildFaceManipulator::_mode = MOVE_RECOMPUTE : MVGBuildFaceManipulator::_mode = PLACE;
-				
-				LOG_INFO("Mode : " << MVGBuildFaceManipulator::_mode);
+				break;
 			case Qt::Key_Meta:
 				return true;
 			case Qt::Key_Escape:

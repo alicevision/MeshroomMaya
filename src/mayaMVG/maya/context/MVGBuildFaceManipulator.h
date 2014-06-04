@@ -47,6 +47,7 @@ class MVGBuildFaceManipulator: public MPxManipulatorNode
 		void addFace3d(MVGFace3D& face3d);
 		
 		void drawPreviewFace(M3dView& view);
+		void updateDrawColor();
 				
 	public:
 		static MTypeId _id;
@@ -60,18 +61,22 @@ class MVGBuildFaceManipulator: public MPxManipulatorNode
 		static MDagPath _lastCameraPath;
 		static MVGCamera _camera;  // TODO: remove static
 		bool _drawEnabled;
+		
+		static MVGMode	_mode;
+		bool	_drag;
+		std::vector<GLfloat> _drawColor;
+		
 		bool _doIntersectExistingPoint;
 		bool _doIntersectExistingEdge;
 		int	_intersectedEdgeId;
 		MPointArray _intersectingEdgePoints3D;
-		MPointArray _clickedEdgePoints3D;
-		
+		MPointArray _clickedEdgePoints3D;	
 		MPoint	_mousePointOnPressEdge;
 		MPoint	_mousePointOnDragEdge;
 		int	_pressedPointId;
 		bool	_onEdgeExtension;
 		MDagPath	_cameraPathClickedPoints;
-		static MVGMode	_mode;
+		
 		
 };
 

@@ -114,6 +114,9 @@ MVGBuildFaceManipulator::MVGBuildFaceManipulator()
 	_onEdgeExtension = false;
 	_cameraPathClickedPoints = MDagPath();
 	_pressedPointId = -1;
+	const GLfloat color[] = {1.f, 0.f, 0.f, 0.6f};
+	_drawColor = std::vector<GLfloat>(color, color + sizeof(color)/ sizeof(GLfloat));	
+	_drag = false;
 }
 
 MVGBuildFaceManipulator::~MVGBuildFaceManipulator()
@@ -167,23 +170,8 @@ void MVGBuildFaceManipulator::draw(M3dView & view, const MDagPath & path,
 			glOrtho(0, view.portWidth(), 0, view.portHeight(), -1, 1);
 			glMatrixMode(GL_MODELVIEW);
 			glLoadIdentity();
-				
-			switch(_mode)
-			{
-				case MOVE_IN_PLANE:
-					glColor4f(0.f, 1.f, 0.f, 0.6f);
-					break;
-				case MOVE_RECOMPUTE:
-					glColor4f(0.5f, 0.3f, 0.9f, 0.6f);
-					break;
-				case PLACE:
-					glColor4f(0.9f, 0.9f, 0.1f, 0.6f);
-					break;
-				default:
-					glColor4f(1.f, 0.f, 0.f, 0.6f);
-					break;
-			}
 			
+			glColor4f(_drawColor[0], _drawColor[1], _drawColor[2], _drawColor[3]);
 			// draw GL cursor
 			glBegin(GL_LINES);
 			glVertex2f((GLfloat)(mousex + (cos(M_PI / 4.0f) * (radius + 10.0f))),
@@ -196,35 +184,40 @@ void MVGBuildFaceManipulator::draw(M3dView & view, const MDagPath & path,
 			           (GLfloat)(mousey + (sin(-M_PI / 4.0f) * (radius + 10.0f))));
 			glEnd();
 			
-//			MDagPath cameraPath;
-//			view.getCamera(cameraPath);
-					
-			// Intersection with point
-			if(_doIntersectExistingPoint)
-			{
-				short x;
-				short y;								
+			MDagPath cameraPath;
+			view.getCamera(cameraPath);
 				
-				glPointSize(4.f);
-				glBegin(GL_POINTS);
-				view.worldToView(_mousePoint, x, y);
-					glVertex2f(x, y);
-				glEnd();	
-			}
-
-			// Intersection with edge
-			else if(_doIntersectExistingEdge)
+			if(!_drag)
 			{
-				short x, y;
-				glBegin(GL_LINES);
-					view.worldToView(_intersectingEdgePoints3D[0], x, y);
-					glVertex2f(x, y);
-					view.worldToView(_intersectingEdgePoints3D[1], x, y);
-					glVertex2f(x, y);
-				glEnd();
-			}
+					// Intersection with point
+				if(_doIntersectExistingPoint)
+				{
+					short x;
+					short y;								
 
-			else
+					glPointSize(4.f);
+					glBegin(GL_POINTS);
+					view.worldToView(_mousePoint, x, y);
+						glVertex2f(x, y);
+					glEnd();	
+				}
+
+				// Intersection with edge
+				else if(_doIntersectExistingEdge)
+				{
+					short x, y;
+					glBegin(GL_LINES);
+						view.worldToView(_intersectingEdgePoints3D[0], x, y);
+						glVertex2f(x, y);
+						view.worldToView(_intersectingEdgePoints3D[1], x, y);
+						glVertex2f(x, y);
+					glEnd();
+				}
+			}
+			
+
+			if(!_doIntersectExistingPoint
+				&& !_doIntersectExistingEdge)
 			{												
 				// Draw lines and poly
 				if(!_display2DPoints_world.empty())
@@ -350,12 +343,14 @@ MStatus MVGBuildFaceManipulator::doRelease(M3dView& view)
 
 MStatus MVGBuildFaceManipulator::doMove(M3dView& view, bool& refresh)
 {
+	_drag = false;
+	
 	// Update mousePoint
 	MVector wdir;
 	short mousex, mousey;
 	mousePosition(mousex, mousey);
 	view.viewToWorld(mousex, mousey, _mousePoint, wdir);
-	
+		
 	// Update camera & cameraPath
 	MDagPath cameraPath;
 	view.getCamera(cameraPath);
@@ -366,6 +361,10 @@ MStatus MVGBuildFaceManipulator::doMove(M3dView& view, bool& refresh)
 		_camera = getMVGCamera();
 		
 	}
+	
+	// Reset draw color
+	const GLfloat color[] = {1.f, 0.f, 0.f, 0.6f};
+	_drawColor = std::vector<GLfloat>(color, color + sizeof(color)/ sizeof(GLfloat));
 	
 	// Warning if change of view
 	if(!_onEdgeExtension && !_display2DPoints_world.empty() && !(cameraPath == _cameraPathClickedPoints))
@@ -456,14 +455,18 @@ MStatus MVGBuildFaceManipulator::doMove(M3dView& view, bool& refresh)
 			{
 				_intersectingEdgePoints3D = edgePoints;
 			}
-		}
+		}		
 	}	
+	
+	updateDrawColor();
 	
 	return MPxManipulatorNode::doMove(view, refresh);
 }
 
 MStatus MVGBuildFaceManipulator::doDrag(M3dView& view)
 {
+	_drag = true;
+	
 	// Update mousePoint
 	MVector wdir;
 	short mousex, mousey;
@@ -478,10 +481,9 @@ MStatus MVGBuildFaceManipulator::doDrag(M3dView& view)
 			LOG_INFO("New OpenMVG Mesh.")
 		}
 	
-		int faceCount = mesh.getNumConnectedFacesToVertex(_pressedPointId);
-		
-		
-		if(faceCount == 1) 
+		MIntArray connectedFacesId = mesh.getConnectedFacesToVertex(_pressedPointId);
+	
+		if(connectedFacesId.length() == 1) 
 		{
 			// Retrieve face
 			MIntArray connectedFacesId = mesh.getConnectedFacesToVertex(_pressedPointId);
@@ -586,18 +588,24 @@ MStatus MVGBuildFaceManipulator::doDrag(M3dView& view)
 			MIntArray connectedFacesId;
 			int faceCount = mesh.getConnectedFacesToEdge(connectedFacesId, _intersectedEdgeId);
 			
-			// Edge connected to one face : keep face plane
 			if(faceCount == 1)
 			{
 				// Get face points
 				MIntArray vertices = mesh.getFaceVertices(connectedFacesId[0]);	
 				MPointArray meshPoints;
 				mesh.getPoints(meshPoints);
+						
+			
+				// If edge vertices are connected to another face, we stop
+				MIntArray edgeVertices = mesh.getEdgeVertices(_intersectedEdgeId);
+				for(int i = 0; i < edgeVertices.length(); ++i)
+				{
+					if(mesh.getNumConnectedFacesToVertex(edgeVertices[i]) > 1)
+						return MPxManipulatorNode::doDrag(view);
+				}
 				
 				// Get fixed vertices
-				MIntArray edgeVertices = mesh.getEdgeVertices(_intersectedEdgeId);
 				MIntArray fixedVertices;
-
 				for(int i = 0; i < vertices.length(); ++i)
 				{
 					int found = false;
@@ -611,6 +619,7 @@ MStatus MVGBuildFaceManipulator::doDrag(M3dView& view)
 						fixedVertices.append(vertices[i]);
 				}
 					
+				// Edge connected to one face : keep face plane
 				if(_mode == MOVE_IN_PLANE)
 				{
 					// Get face points in 3D
@@ -674,7 +683,7 @@ MStatus MVGBuildFaceManipulator::doDrag(M3dView& view)
 					previewPoints2d.push_back(P4);
 
 					// Only set the new points to keep a connected face
-					if(computeFace3d(view, previewPoints2d, _preview3DFace, false))
+					if(computeFace3d(view, previewPoints2d, _preview3DFace, false)) // We have to keep the 3D lenght of the moved edge
 					{
 						mesh.setPoint(edgeVertices[1], _preview3DFace._p[2]);
 						mesh.setPoint(edgeVertices[0], _preview3DFace._p[3]);
@@ -793,5 +802,96 @@ void MVGBuildFaceManipulator::drawPreviewFace(M3dView& view)
 			previewFace3d(_preview3DFace);
 	}
 }
+
+void MVGBuildFaceManipulator::updateDrawColor()
+{
+	MVGMesh mesh(MVGProject::_MESH);
+	if(!mesh.isValid()) {
+		mesh = MVGMesh::create(MVGProject::_MESH);
+		LOG_INFO("New OpenMVG Mesh.")
+	}
+	
+	// POINTS
+	if(_doIntersectExistingPoint)
+	{
+		int faceCount = mesh.getNumConnectedFacesToVertex(_pressedPointId);
+		
+		if(faceCount == 1)
+		{	
+			if(_mode == MOVE_IN_PLANE)
+			{
+				const GLfloat color[] = {0.f, 1.f, 0.f, 0.6f};
+				_drawColor = std::vector<GLfloat>(color, color + sizeof(color)/ sizeof(GLfloat));
+			}
+			else if(_mode == MOVE_RECOMPUTE)
+			{
+				MIntArray connectedFacesId = mesh.getConnectedFacesToVertex(_pressedPointId);
+				// Face not connected to other face
+				MIntArray vertices = mesh.getFaceVertices(connectedFacesId[0]);	
+				for(int i = 0; i < vertices.length(); ++i)
+				{
+					if(mesh.getNumConnectedFacesToVertex(vertices[i]) > 1)
+						break;
+
+					const GLfloat color[] = {0.5f, 0.3f, 0.9f, 0.6f};
+					_drawColor = std::vector<GLfloat>(color, color + sizeof(color)/ sizeof(GLfloat));
+				}
+			}	
+		}
+	}
+
+	// EDGES
+	else if(_doIntersectExistingEdge)
+	{
+		MIntArray connectedFacesId;
+		int faceCount = mesh.getConnectedFacesToEdge(connectedFacesId, _intersectedEdgeId);
+
+		if(_mode == PLACE)
+		{
+			const GLfloat color[] = {0.9f, 0.9f, 0.1f, 0.6f};
+			_drawColor = std::vector<GLfloat>(color, color + sizeof(color)/ sizeof(GLfloat));
+		}
+		else if(faceCount == 1)
+		{
+			if(_mode == MOVE_IN_PLANE)
+			{
+				// If edge vertices are connected to another face, we stop
+				MIntArray edgeVertices = mesh.getEdgeVertices(_intersectedEdgeId);
+				for(int i = 0; i < edgeVertices.length(); ++i)
+				{
+					if(mesh.getNumConnectedFacesToVertex(edgeVertices[i]) > 1)
+					{
+						const GLfloat color[] = {1.f, 0.f, 0.f, 0.6f};
+						_drawColor = std::vector<GLfloat>(color, color + sizeof(color)/ sizeof(GLfloat));
+						break;
+					}
+					
+					const GLfloat color[] = {0.f, 1.f, 0.f, 0.6f};
+					_drawColor = std::vector<GLfloat>(color, color + sizeof(color)/ sizeof(GLfloat));
+				}
+				
+			}
+			else if(_mode == MOVE_RECOMPUTE)
+			{
+				// Face not connected to other face
+				MIntArray vertices = mesh.getFaceVertices(connectedFacesId[0]);	
+				for(int i = 0; i < vertices.length(); ++i)
+				{
+					if(mesh.getNumConnectedFacesToVertex(vertices[i]) > 1)
+					{				
+						const GLfloat color[] = {1.f, 0.f, 0.f, 0.6f};
+						_drawColor = std::vector<GLfloat>(color, color + sizeof(color)/ sizeof(GLfloat));
+						break;
+					}
+						
+					const GLfloat color[] = {0.5f, 0.3f, 0.9f, 0.6f};
+					_drawColor = std::vector<GLfloat>(color, color + sizeof(color)/ sizeof(GLfloat));
+				}
+			}	
+		}
+	}
+		
+}
+
 }	// namespace mayaMVG 
 
