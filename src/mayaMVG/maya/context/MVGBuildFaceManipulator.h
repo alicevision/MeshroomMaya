@@ -13,7 +13,8 @@ namespace mayaMVG {
 	
 enum MVGMode {
 	PLACE,
-	MOVE
+	MOVE_IN_PLANE,
+	MOVE_RECOMPUTE
 };
 	
 class MVGBuildFaceManipulator: public MPxManipulatorNode

@@ -50,19 +50,29 @@ bool MVGMayaViewportKeyEventFilter::eventFilter(QObject * obj, QEvent * e)
 		if (keyevent->isAutoRepeat()) {
 			return true;
 		}
+		
+		Qt::KeyboardModifiers modifiers = QApplication::keyboardModifiers();
+		MVGMesh previewMesh(MVGProject::_PREVIEW_MESH);
 		switch (keyevent->key()) {
 			case Qt::Key_A:
 			case Qt::Key_B:
 			case Qt::Key_Alt:
 			case Qt::Key_Control:	
-				MVGBuildFaceManipulator::_mode = MOVE;
+				(modifiers & Qt::ShiftModifier) ? MVGBuildFaceManipulator::_mode = MOVE_RECOMPUTE : MVGBuildFaceManipulator::_mode = MOVE_IN_PLANE;
+				
+				LOG_INFO("Mode : " << MVGBuildFaceManipulator::_mode);
 				break;
 			case Qt::Key_Shift:
+				(modifiers & Qt::ControlModifier) ? MVGBuildFaceManipulator::_mode = MOVE_RECOMPUTE : MVGBuildFaceManipulator::_mode = PLACE;
+				
+				LOG_INFO("Mode : " << MVGBuildFaceManipulator::_mode);
 			case Qt::Key_Meta:
 				return true;
 			case Qt::Key_Escape:
 				MVGBuildFaceManipulator::_display2DPoints_world.clear();
-				MVGMayaUtil::deletePreviewShape();
+				
+				if(previewMesh.isValid())
+					MVGMayaUtil::deletePreviewShape();
 				
 				break;
 			default:
@@ -86,6 +96,8 @@ bool MVGMayaViewportKeyEventFilter::eventFilter(QObject * obj, QEvent * e)
 				MVGBuildFaceManipulator::_mode = PLACE;
 				break;
 			case Qt::Key_Shift:
+				MVGBuildFaceManipulator::_mode = PLACE;
+				break;
 			case Qt::Key_Meta:
 				return true;
 			case Qt::Key_Escape:			
