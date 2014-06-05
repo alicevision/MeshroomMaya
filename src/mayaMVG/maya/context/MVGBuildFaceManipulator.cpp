@@ -573,7 +573,8 @@ MStatus MVGBuildFaceManipulator::doDrag(M3dView& view)
 			previewPoints2d.push_back(P3);
 			previewPoints2d.push_back(P4);
 
-			if(computeFace3d(view, previewPoints2d, _preview3DFace, true))
+			// Preview keeping 3D length
+			if(computeFace3d(view, previewPoints2d, _preview3DFace, true, _clickedEdgePoints3D[1] - _clickedEdgePoints3D[0]))
 				previewFace3d(_preview3DFace);
 		}
 	
@@ -629,7 +630,7 @@ MStatus MVGBuildFaceManipulator::doDrag(M3dView& view)
 						meshFace._p[i] = meshPoints[vertices[i]];
 					}
 
-					// Compute plane
+					// Compute plane with old face points
 					short x, y;
 					MPoint wpos;
 					MVector wdir;
@@ -637,33 +638,27 @@ MStatus MVGBuildFaceManipulator::doDrag(M3dView& view)
 					PlaneKernel::Model model;
 					MVGGeometryUtil::computePlane(meshFace, model);
 
-					// Project points
+					// Project new points on plane
 					view.worldToView(_clickedEdgePoints3D[1], x, y);
 					view.viewToWorld(x, y, wpos, wdir);
 					MPoint P3 = _mousePointOnDragEdge + (wpos - _mousePointOnPressEdge);
 					MVGGeometryUtil::projectPointOnPlane(P3, model, _camera, movedPoint);
 					mesh.setPoint(edgeVertices[1], movedPoint);
-
-					view.worldToView(_clickedEdgePoints3D[0], x, y);
-					view.viewToWorld(x, y, wpos, wdir);
-					MPoint P4 = _mousePointOnDragEdge + (wpos - _mousePointOnPressEdge);
-					MVGGeometryUtil::projectPointOnPlane(P4, model, _camera, movedPoint);		
+					
+					// Keep 3D length
+					MVector height = _clickedEdgePoints3D[0] - _clickedEdgePoints3D[1];
+					MPoint lastPoint = movedPoint + height;
+					MVGGeometryUtil::projectPointOnPlane(lastPoint, model, _camera, movedPoint);
 					mesh.setPoint(edgeVertices[0], movedPoint);
 
 				}
 				else if(_mode == MOVE_RECOMPUTE)
 				{	
-					// If face is connected to another face, we stop
-					for(int i = 0; i < vertices.length(); ++i)
-					{
-						if(mesh.getNumConnectedFacesToVertex(vertices[i]) > 1)
-							return MPxManipulatorNode::doDrag(view);
-					}
-
 					std::vector<MPoint> previewPoints2d;
 					short x, y;
 					MPoint wpos;
 					MVector wdir;
+					
 					// First : fixed points
 					view.worldToView(meshPoints[fixedVertices[0]], x, y);
 					view.viewToWorld(x, y, wpos, wdir);
@@ -683,7 +678,7 @@ MStatus MVGBuildFaceManipulator::doDrag(M3dView& view)
 					previewPoints2d.push_back(P4);
 
 					// Only set the new points to keep a connected face
-					if(computeFace3d(view, previewPoints2d, _preview3DFace, false)) // We have to keep the 3D lenght of the moved edge
+					if(computeFace3d(view, previewPoints2d, _preview3DFace, true, _clickedEdgePoints3D[0] - _clickedEdgePoints3D[1]))
 					{
 						mesh.setPoint(edgeVertices[1], _preview3DFace._p[2]);
 						mesh.setPoint(edgeVertices[0], _preview3DFace._p[3]);
@@ -725,7 +720,7 @@ MVGCamera MVGBuildFaceManipulator::getMVGCamera(M3dView& view)
 	return MVGCamera(cameraPath.partialPathName().asChar());
 }
 
-bool MVGBuildFaceManipulator::computeFace3d(M3dView& view, std::vector<MPoint>& pointArray, MVGFace3D& face3D, bool computeLastPoint)
+bool MVGBuildFaceManipulator::computeFace3d(M3dView& view, std::vector<MPoint>& pointArray, MVGFace3D& face3D, bool computeLastPoint, MVector height)
 {
 	// Check points order	
 //	MVector AD = pointArray[3] - pointArray[0];
@@ -740,7 +735,7 @@ bool MVGBuildFaceManipulator::computeFace3d(M3dView& view, std::vector<MPoint>& 
 	
 	MVGFace2D face2D(pointArray);
 	
-	return MVGGeometryUtil::projectFace2D(face3D, view, _camera, face2D, computeLastPoint);
+	return MVGGeometryUtil::projectFace2D(face3D, view, _camera, face2D, computeLastPoint, height);
 	
 }
 void MVGBuildFaceManipulator::previewFace3d(MVGFace3D& face3d)
@@ -848,46 +843,37 @@ void MVGBuildFaceManipulator::updateDrawColor()
 
 		if(_mode == PLACE)
 		{
+			// Yellow
 			const GLfloat color[] = {0.9f, 0.9f, 0.1f, 0.6f};
 			_drawColor = std::vector<GLfloat>(color, color + sizeof(color)/ sizeof(GLfloat));
 		}
 		else if(faceCount == 1)
 		{
-			if(_mode == MOVE_IN_PLANE)
+			// If edge vertices are connected to another face, we stop
+			MIntArray edgeVertices = mesh.getEdgeVertices(_intersectedEdgeId);
+			for(int i = 0; i < edgeVertices.length(); ++i)
 			{
-				// If edge vertices are connected to another face, we stop
-				MIntArray edgeVertices = mesh.getEdgeVertices(_intersectedEdgeId);
-				for(int i = 0; i < edgeVertices.length(); ++i)
+				if(mesh.getNumConnectedFacesToVertex(edgeVertices[i]) > 1)
 				{
-					if(mesh.getNumConnectedFacesToVertex(edgeVertices[i]) > 1)
-					{
-						const GLfloat color[] = {1.f, 0.f, 0.f, 0.6f};
-						_drawColor = std::vector<GLfloat>(color, color + sizeof(color)/ sizeof(GLfloat));
-						break;
-					}
-					
+					// Red
+					const GLfloat color[] = {1.f, 0.f, 0.f, 0.6f};
+					_drawColor = std::vector<GLfloat>(color, color + sizeof(color)/ sizeof(GLfloat));
+					break;
+				}
+
+				if(_mode == MOVE_IN_PLANE)
+				{
+					// Green
 					const GLfloat color[] = {0.f, 1.f, 0.f, 0.6f};
 					_drawColor = std::vector<GLfloat>(color, color + sizeof(color)/ sizeof(GLfloat));
 				}
-				
-			}
-			else if(_mode == MOVE_RECOMPUTE)
-			{
-				// Face not connected to other face
-				MIntArray vertices = mesh.getFaceVertices(connectedFacesId[0]);	
-				for(int i = 0; i < vertices.length(); ++i)
+				else if(MOVE_RECOMPUTE)
 				{
-					if(mesh.getNumConnectedFacesToVertex(vertices[i]) > 1)
-					{				
-						const GLfloat color[] = {1.f, 0.f, 0.f, 0.6f};
-						_drawColor = std::vector<GLfloat>(color, color + sizeof(color)/ sizeof(GLfloat));
-						break;
-					}
-						
+					// Purple
 					const GLfloat color[] = {0.5f, 0.3f, 0.9f, 0.6f};
 					_drawColor = std::vector<GLfloat>(color, color + sizeof(color)/ sizeof(GLfloat));
 				}
-			}	
+			}
 		}
 	}
 		

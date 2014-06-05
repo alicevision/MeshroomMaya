@@ -73,7 +73,7 @@ MPoint MVGGeometryUtil::viewToWorld(M3dView& view, const MPoint& screen)
 	return wpoint;
 }
 
-bool MVGGeometryUtil::projectFace2D(MVGFace3D& face3D, M3dView& view, MVGCamera& camera, MVGFace2D& face2D, bool compute)
+bool MVGGeometryUtil::projectFace2D(MVGFace3D& face3D, M3dView& view, MVGCamera& camera, MVGFace2D& face2D, bool compute, MVector height)
 {
 	// TODO 
 	// use visible points
@@ -134,8 +134,10 @@ bool MVGGeometryUtil::projectFace2D(MVGFace3D& face3D, M3dView& view, MVGCamera&
 			face3DPoints.push_back(P);
 		}
 		// Compute last point to keep 3D lenghts
-		MVector height;
-		height = face3DPoints[0]- face3DPoints[1];
+		if(height.length() == 0)
+		{
+			height = face3DPoints[0]- face3DPoints[1];
+		}			
 		MPoint lastWorldPoint = face3DPoints[2] + height;
 		plane_line_intersect(model, cameraCenter, lastWorldPoint, P);
 		face3DPoints.push_back(P);
