@@ -104,7 +104,10 @@ void MVGProject::setProjectDirectory(const std::string& directory) const
 
 std::string MVGProject::cameraFile() const
 {
-	return stlplus::create_filespec(projectDirectory(), "views.txt");
+	return stlplus::folder_append_separator(projectDirectory())
+					+ stlplus::folder_append_separator("outIncremental")
+					+ stlplus::folder_append_separator("SfM_output")
+					+ "views.txt";
 }
 
 std::string MVGProject::cameraBinary(const std::string& bin) const
@@ -114,7 +117,10 @@ std::string MVGProject::cameraBinary(const std::string& bin) const
 
 std::string MVGProject::cameraDirectory() const
 {
-	return stlplus::create_filespec(projectDirectory(), "cameras");
+	return stlplus::folder_append_separator(projectDirectory())
+					+ stlplus::folder_append_separator("outIncremental")
+					+ stlplus::folder_append_separator("SfM_output")
+					+ stlplus::folder_append_separator("cameras");
 }
 
 std::string MVGProject::imageFile(const std::string& img) const
@@ -124,19 +130,17 @@ std::string MVGProject::imageFile(const std::string& img) const
 
 std::string MVGProject::imageDirectory() const
 {
-	return stlplus::create_filespec(projectDirectory(), "images");
+	return stlplus::folder_append_separator(projectDirectory())
+					+ stlplus::folder_append_separator("outIncremental")
+					+ stlplus::folder_append_separator("SfM_output")
+					+ stlplus::folder_append_separator("images");
 }
 
 std::string MVGProject::pointCloudFile() const
 {
-	// return stlplus::create_filespec(
-	// 		stlplus::create_filespec(
-	// 			stlplus::create_filespec(
-	// 				stlplus::create_filespec(
-	// 					stlplus::create_filespec(
-	// 						projectDirectory(), ".."), "PMVS"), "models"), "pmvs_optionMiMode"), "new.ply");
-	return stlplus::create_filespec(
-		stlplus::create_filespec(projectDirectory(), "clouds"), "calib.ply");
+	return stlplus::folder_append_separator(projectDirectory())
+					+ stlplus::folder_append_separator("outIncremental")
+					+ "FinalColorized.ply";
 }
 
 std::vector<MVGCamera> MVGProject::cameras() const
