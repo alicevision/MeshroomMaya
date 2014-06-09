@@ -42,7 +42,7 @@ include_directories(
 #
 # Plugin name
 #
-set(project_BIN	${PROJECT_NAME}-${PLUGIN_VERSION_MAJOR}.${PLUGIN_VERSION_MINOR})
+set(project_BIN	${PROJECT_NAME})
 
 #
 # Plugin sources
