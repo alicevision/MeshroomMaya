@@ -10,15 +10,25 @@
 class M3dView;
 
 namespace mayaMVG {
-	
-enum MVGMode {
-	PLACE,
-	MOVE_IN_PLANE,
-	MOVE_RECOMPUTE
-};
-	
+
+
 class MVGBuildFaceManipulator: public MPxManipulatorNode
 {
+	public:
+		enum EMode {
+			eModeCreate,
+			eModeMoveInPlane,
+			eModeMoveRecompute
+		};
+
+		enum EEditAction
+		{
+			eEditActionNone,
+			eEditActionMovePoint,
+			eEditActionMoveEdge,
+			eEditActionExtendEdge
+		};
+		
 	public:
 		MVGBuildFaceManipulator();
 		virtual ~MVGBuildFaceManipulator();
@@ -41,41 +51,70 @@ class MVGBuildFaceManipulator: public MPxManipulatorNode
 
 		MVGCamera getMVGCamera() const;
 		MVGCamera getMVGCamera(M3dView&);
-				
-		bool computeFace3d(M3dView& view, std::vector<MPoint>& pointArray, MVGFace3D& face3D, bool computeLastPoint = false, MVector height = MVector(0, 0, 0));
-		void previewFace3d(MVGFace3D& face3d);
-		void addFace3d(MVGFace3D& face3d);
+	
+	private:
+		void updateCamera(M3dView& view);
+		void updateMouse(M3dView& view);
 		
-		void drawPreviewFace(M3dView& view);
-		void updateDrawColor();
-				
+		bool intersectPoint(M3dView& view, MPoint& point);
+		bool intersectEdge(M3dView& view, MPoint& point);
+		
+		void update2DFacePreview(M3dView& view);
+		bool update3DFacePreview(M3dView& view, MVGFace3D& face3D);
+		bool computeFace3d(M3dView& view, std::vector<MPoint>& pointArray, MVGFace3D& face3D, bool computeLastPoint = false, MVector height = MVector(0, 0, 0));
+		void addFace3d(MVGFace3D& face3d);
+		void updateDrawColor(M3dView& view);
+		
+
 	public:
 		static MTypeId _id;
-		MPoint _mousePoint;
-//		MPoint _lastPoint;
+		static MDagPath _lastCameraPath; // TODO: to remove, use _camera
+		static MVGCamera _camera;  // TODO: remove static
+		MDagPath	_cameraPathClickedPoints;
+		bool _drawEnabled;
+		
+		///@brief Mouse information
+		///@{
+		MPoint _mousePoint; // TODO: to remove ?
+		MPoint	_mousePointOnPressEdge;
+		MPoint	_mousePointOnDragEdge;
+		///@}
+		
+		///@brief Mode & action
+		///@{
+		static EMode	_mode;
+		EEditAction _editAction;
+		///@}
+		
+		///@brief Display & Preview
+		///@{
 		/// 2D points for display (clicked points + others for display)
 		/// Warning: converted in 3D world space to be independant from scale and offset.
 		///          It's just a shortcut to rely on maya functions (viewToWorld)
 		static std::vector<MPoint> _display2DPoints_world;
 		MVGFace3D	_preview3DFace;  //< 3D points (4 points to describe the face)
-		static MDagPath _lastCameraPath;
-		static MVGCamera _camera;  // TODO: remove static
-		bool _drawEnabled;
-		
-		static MVGMode	_mode;
-		bool	_drag;
+		MVGFace3D	_preview2DFace;  //< 2D points (4 points to describe the face)
 		std::vector<GLfloat> _drawColor;
+		///@}
 		
-		bool _doIntersectExistingPoint;
-		bool _doIntersectExistingEdge;
+		///@brief Intersections
+		///@{
+		int	_pressedPointId;
 		int	_intersectedEdgeId;
 		MPointArray _intersectingEdgePoints3D;
 		MPointArray _clickedEdgePoints3D;	
-		MPoint	_mousePointOnPressEdge;
-		MPoint	_mousePointOnDragEdge;
-		int	_pressedPointId;
-		bool	_onEdgeExtension;
-		MDagPath	_cameraPathClickedPoints;
+		MVector	_edgeHeight3D;
+		float	_edgeRatio3D;
+		///@}
+		
+		///@brief Status when moving point/
+		///@{
+		MIntArray _connectedFacesId;
+		bool _edgeConnected;
+		bool _faceConnected;
+		///@}
+		
+		
 		
 		
 };

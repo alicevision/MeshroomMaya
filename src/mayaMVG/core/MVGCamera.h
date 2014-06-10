@@ -49,6 +49,7 @@ class MVGCamera : public MVGNodeWrapper {
 		int getClickedPointsCount() const;
 		
 	private:
+		// MfnCamera _mfnCamera; TODO
 		// dynamic attributes
 		static MString _ID;
 		static MString _PINHOLE;
