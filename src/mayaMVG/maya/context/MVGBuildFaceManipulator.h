@@ -104,7 +104,8 @@ class MVGBuildFaceManipulator: public MPxManipulatorNode
 		MPointArray _intersectingEdgePoints3D;
 		MPointArray _clickedEdgePoints3D;	
 		MVector	_edgeHeight3D;
-		float	_edgeRatio3D;
+		MVector	_edgeHeight2D;
+		float	_edgeRatio;
 		///@}
 		
 		///@brief Status when moving point/
