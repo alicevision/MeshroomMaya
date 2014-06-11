@@ -288,13 +288,19 @@ std::vector<MVGPointCloudItem> MVGCamera::visibleItems() const
 
 	MIntArray intArray;
 	MVGMayaUtil::getIntArrayAttribute(_dagpath.node(), _ITEMS, intArray);
-	for(size_t i = 0; i < intArray.length(); ++i) {
-		int index = intArray[i];
-		if(index < allItems.size()){
-			items.push_back(allItems[index]);
+	if(intArray.length() > 0)
+	{
+		for(size_t i = 0; i < intArray.length(); ++i) {
+			int index = intArray[i];
+			if(index < allItems.size()){
+				items.push_back(allItems[index]);
+			}
 		}
+		return items;
 	}
-	return items;
+	
+	LOG_WARNING("No visibility information in pointCloud.");
+	return allItems;
 }
 
 void MVGCamera::setVisibleItems(const std::vector<MVGPointCloudItem>& items) const
