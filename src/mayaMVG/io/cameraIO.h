@@ -68,7 +68,7 @@ bool readCamera(std::string filePath, std::string imageDir, std::string cameraDi
 		MVGCamera camera(cameraName);
 		if(!camera.isValid()) {
 			camera = MVGCamera::create(cameraName);
-			LOG_INFO("New OpenMVG camera:" << cameraName)
+			//LOG_INFO("New OpenMVG camera:" << cameraName)
 		}
 		setPinholeFromBinary(camera, stlplus::create_filespec(cameraDir, binaryName));
 		camera.setImagePlane(stlplus::create_filespec(imageDir, imageName));

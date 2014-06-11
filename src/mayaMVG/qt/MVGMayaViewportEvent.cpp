@@ -44,7 +44,42 @@ bool MVGMayaViewportKeyEventFilter::eventFilter(QObject * obj, QEvent * e)
 
 	// Remove X11 defines, to avoid conflict with Qt.
 	#undef KeyPress	
-	if( e->type() == QEvent::KeyPress )
+	if(e->type() == QEvent::KeyPress)
+	{
+		QKeyEvent * keyevent = static_cast<QKeyEvent *>(e);
+		if (keyevent->isAutoRepeat()) {
+			return true;
+		}
+		
+		Qt::KeyboardModifiers modifiers = QApplication::keyboardModifiers();
+		MVGMesh previewMesh(MVGProject::_PREVIEW_MESH);
+		switch (keyevent->key()) {
+			case Qt::Key_A:
+			case Qt::Key_B:
+			case Qt::Key_Alt:
+			case Qt::Key_Control:	
+				(modifiers & Qt::ShiftModifier) ? MVGBuildFaceManipulator::_mode = MVGBuildFaceManipulator::eModeMoveRecompute : MVGBuildFaceManipulator::_mode = MVGBuildFaceManipulator::eModeMoveInPlane;
+				break;
+			case Qt::Key_Shift:
+				(modifiers & Qt::ControlModifier) ? MVGBuildFaceManipulator::_mode = MVGBuildFaceManipulator::eModeMoveRecompute : MVGBuildFaceManipulator::_mode = MVGBuildFaceManipulator::eModeCreate;
+				break;
+			case Qt::Key_Meta:
+				return true;
+			case Qt::Key_Escape:
+				MVGBuildFaceManipulator::_display2DPoints_world.clear();
+				
+				if(previewMesh.isValid())
+					MVGMayaUtil::deletePreviewShape();
+				
+				break;
+			default:
+				break;
+		}
+	}
+	
+	// Remove X11 defines, to avoid conflict with Qt.
+	#undef KeyRelease	
+	if(e->type() == QEvent::KeyRelease)
 	{
 		QKeyEvent * keyevent = static_cast<QKeyEvent *>(e);
 		if (keyevent->isAutoRepeat()) {
@@ -55,22 +90,14 @@ bool MVGMayaViewportKeyEventFilter::eventFilter(QObject * obj, QEvent * e)
 			case Qt::Key_B:
 			case Qt::Key_Alt:
 			case Qt::Key_Control:
+				MVGBuildFaceManipulator::_mode = MVGBuildFaceManipulator::eModeCreate;
+				break;
 			case Qt::Key_Shift:
+				MVGBuildFaceManipulator::_mode = MVGBuildFaceManipulator::eModeCreate;
+				break;
 			case Qt::Key_Meta:
 				return true;
-			case Qt::Key_Escape:
-//				for(int i = 0; i < MVGProjectWrapper::instance().cameraModel().size(); ++i)
-//				{
-//					MVGCameraWrapper* camera;
-//
-//					camera = dynamic_cast<MVGCameraWrapper*>(MVGProjectWrapper::instance().cameraModel().at(i));
-//					if(camera)
-//						camera->camera().clearClickedPoints();
-//				}
-				MVGBuildFaceManipulator::_display2DPoints_world.clear();
-				MVGMayaUtil::deletePreviewShape();
-				
-				break;
+			case Qt::Key_Escape:			
 			default:
 				break;
 		}

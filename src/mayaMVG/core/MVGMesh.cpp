@@ -141,6 +141,19 @@ int MVGMesh::getNumConnectedFacesToVertex(int vertexId)
 	return faceCount;
 }
 
+int MVGMesh::getNumConnectedFacesToEdge(int edgeId)
+{
+	MStatus status;
+	MItMeshEdge edgeIter(_dagpath, MObject::kNullObj, &status);
+	int prev;
+	status = edgeIter.setIndex(edgeId, prev);
+	int faceCount;
+	status = edgeIter.numConnectedFaces(faceCount);
+	
+	CHECK(status);
+	return faceCount;
+}
+
 MIntArray MVGMesh::getConnectedFacesToVertex(int vertexId)
 {
 	MIntArray connectedFacesId;
@@ -155,6 +168,21 @@ MIntArray MVGMesh::getConnectedFacesToVertex(int vertexId)
 	return connectedFacesId;
 }
 
+int MVGMesh::getConnectedFacesToEdge(MIntArray& facesId, int edgeId)
+{
+	MStatus status;
+	MItMeshEdge edgeIter(_dagpath, MObject::kNullObj, &status);
+	int prev;
+	status = edgeIter.setIndex(edgeId, prev);
+	
+	int faceCount;
+	faceCount = edgeIter.getConnectedFaces(facesId, &status);
+	
+	CHECK(status);
+	return faceCount;
+}
+
+
 MIntArray MVGMesh::getFaceVertices(int faceId)
 {
 	MStatus status;
@@ -167,6 +195,21 @@ MIntArray MVGMesh::getFaceVertices(int faceId)
 	
 	CHECK(status);
 	return vertices;
+}
+
+MIntArray MVGMesh::getEdgeVertices(int edgeId)
+{
+	MStatus status;
+	MFnMesh fnMesh(_dagpath.node(), &status);
+	
+	int2 edgeVertices;
+	status = fnMesh.getEdgeVertices(edgeId, edgeVertices);
+	CHECK(status);
+	
+	MIntArray edgeVerticesArray;
+	edgeVerticesArray.append(edgeVertices[0]);
+	edgeVerticesArray.append(edgeVertices[1]);
+	return edgeVerticesArray;
 }
 
 void MVGMesh::setPoint(int vertexId, MPoint& point)

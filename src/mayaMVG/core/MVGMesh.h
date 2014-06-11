@@ -29,8 +29,11 @@ class MVGMesh : public MVGNodeWrapper  {
 		int getVerticesCount() const;
 		bool intersect(MPoint& point, MVector& dir, MPointArray&points) const;
 		int getNumConnectedFacesToVertex(int vertexId);
+		int getNumConnectedFacesToEdge(int edgeId);
 		MIntArray getConnectedFacesToVertex(int vertexId);
+		int getConnectedFacesToEdge(MIntArray& facesId, int edgeId);
 		MIntArray getFaceVertices(int faceId);
+		MIntArray getEdgeVertices(int edgeId);
 		void setPoint(int vertexId, MPoint& point);
 };
 

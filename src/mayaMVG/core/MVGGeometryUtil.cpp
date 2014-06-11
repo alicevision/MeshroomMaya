@@ -73,7 +73,7 @@ MPoint MVGGeometryUtil::viewToWorld(M3dView& view, const MPoint& screen)
 	return wpoint;
 }
 
-bool MVGGeometryUtil::projectFace2D(MVGFace3D& face3D, M3dView& view, MVGCamera& camera, MVGFace2D& face2D, bool compute)
+bool MVGGeometryUtil::projectFace2D(MVGFace3D& face3D, M3dView& view, MVGCamera& camera, MVGFace2D& face2D, bool compute, MVector height)
 {
 	// TODO 
 	// use visible points
@@ -134,8 +134,10 @@ bool MVGGeometryUtil::projectFace2D(MVGFace3D& face3D, M3dView& view, MVGCamera&
 			face3DPoints.push_back(P);
 		}
 		// Compute last point to keep 3D lenghts
-		MVector height;
-		height = face3DPoints[0]- face3DPoints[1];
+		if(height.length() == 0)
+		{
+			height = face3DPoints[0]- face3DPoints[1];
+		}			
 		MPoint lastWorldPoint = face3DPoints[2] + height;
 		plane_line_intersect(model, cameraCenter, lastWorldPoint, P);
 		face3DPoints.push_back(P);
@@ -155,22 +157,20 @@ bool MVGGeometryUtil::projectFace2D(MVGFace3D& face3D, M3dView& view, MVGCamera&
 	return true;
 }
 
-bool MVGGeometryUtil::projectMovedPoint(MVGFace3D& face3D, MPoint& movedPoint, MPoint& mousePoint, M3dView& view, MVGCamera& camera)
+void MVGGeometryUtil::computePlane(MVGFace3D& face3D, PlaneKernel::Model& model)
 {
-	// Plane estimation with old face points
 	openMVG::Mat facePointsMat(3, 4);
 	for (size_t i = 0; i <4; ++i)
 		facePointsMat.col(i) = AS_VEC3(face3D._p[i]);
 
 	PlaneKernel kernel(facePointsMat);
-	PlaneKernel::Model model;
 	double outlierThreshold = std::numeric_limits<double>::infinity();
 	openMVG::robust::LeastMedianOfSquares(kernel, &model, &outlierThreshold);
-	
-	// Project mouse on plane
-	MPoint P;
-	MPoint cameraCenter = AS_MPOINT(camera.pinholeCamera()._C);
-	std::vector<MPoint> face3DPoints;
+}
 
-	plane_line_intersect(model, cameraCenter, mousePoint, movedPoint);
+void MVGGeometryUtil::projectPointOnPlane(MPoint& point, PlaneKernel::Model& model, MVGCamera& camera,  MPoint& projectedPoint)
+{
+	MPoint cameraCenter = AS_MPOINT(camera.pinholeCamera()._C);
+
+	plane_line_intersect(model, cameraCenter, point, projectedPoint);
 }

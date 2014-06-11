@@ -99,8 +99,9 @@ class MVGCamera;
 struct MVGGeometryUtil {
 	static MPoint worldToView(M3dView&, const MPoint&);
 	static MPoint viewToWorld(M3dView&, const MPoint&);
-	static bool projectFace2D(MVGFace3D&, M3dView&, MVGCamera&, MVGFace2D&, bool compute = false);
-	static bool projectMovedPoint(MVGFace3D&, MPoint& movedPoint, MPoint& mousePoint, M3dView&, MVGCamera&);
+	static bool projectFace2D(MVGFace3D&, M3dView&, MVGCamera&, MVGFace2D&, bool compute = false, MVector height = MVector(0, 0, 0));
+	static void computePlane(MVGFace3D& face3D, PlaneKernel::Model& model);
+	static void projectPointOnPlane(MPoint& point, PlaneKernel::Model& model, MVGCamera&,  MPoint& projectedPoint);
 };
 
 
