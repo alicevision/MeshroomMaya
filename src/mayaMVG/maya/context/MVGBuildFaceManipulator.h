@@ -63,7 +63,6 @@ class MVGBuildFaceManipulator: public MPxManipulatorNode
 		bool update3DFacePreview(M3dView& view, MVGFace3D& face3D);
 		bool computeFace3d(M3dView& view, std::vector<MPoint>& pointArray, MVGFace3D& face3D, bool computeLastPoint = false, MVector height = MVector(0, 0, 0));
 		void addFace3d(MVGFace3D& face3d);
-		void updateDrawColor(M3dView& view);
 		
 
 	public:

@@ -191,7 +191,7 @@ void MVGBuildFaceManipulator::draw(M3dView & view, const MDagPath & path,
 			glMatrixMode(GL_MODELVIEW);
 			glLoadIdentity();
 			
-			glColor4f(_drawColor[0], _drawColor[1], _drawColor[2], _drawColor[3]);
+			glColor4f(1.f, 0.f, 0.f, 0.6f);
 			// draw GL cursor
 			glBegin(GL_LINES);
 			glVertex2f((GLfloat)(mousex + (cos(M_PI / 4.0f) * (radius + 10.0f))),
@@ -213,19 +213,44 @@ void MVGBuildFaceManipulator::draw(M3dView & view, const MDagPath & path,
 					// Intersection with point
 					if(intersectPoint(view, _mousePoint))
 					{
-						updateDrawColor(view);
-						short x, y;				
-						glPointSize(4.f);
-						glBegin(GL_POINTS);
-						view.worldToView(_mousePoint, x, y);
-							glVertex2f(x, y);
-						glEnd();	
+						if(_connectedFacesId.length() == 1)
+						{	
+							// Green
+							if(_mode == eModeMoveInPlane)
+								glColor4f(0.f, 1.f, 0.f, 0.6f);
+								
+							// Purple
+							else if(_mode == eModeMoveRecompute && !_faceConnected)
+								glColor4f(0.5f, 0.3f, 0.9f, 0.6f);
+	
+							short x, y;				
+							glPointSize(4.f);
+							glBegin(GL_POINTS);
+							view.worldToView(_mousePoint, x, y);
+								glVertex2f(x, y);
+							glEnd();	
+						}						
 					}
 
 					// Intersection with edge
 					else if(intersectEdge(view, _mousePoint))
 					{
-						updateDrawColor(view);
+						// Yellow
+						if(_mode == eModeCreate)
+							glColor4f(0.9f, 0.9f, 0.1f, 0.6f);
+
+						else if(_connectedFacesId.length() == 1
+							&& !_edgeConnected)
+						{
+							// Green
+							if(_mode == eModeMoveInPlane)
+								glColor4f(0.f, 1.f, 0.f, 0.6f);
+							// Purple
+							else if(eModeMoveRecompute)
+								glColor4f(0.5f, 0.3f, 0.9f, 0.6f);
+
+						}
+
 						short x, y;
 						glBegin(GL_LINES);
 							view.worldToView(_intersectingEdgePoints3D[0], x, y);
@@ -354,14 +379,12 @@ void MVGBuildFaceManipulator::draw(M3dView & view, const MDagPath & path,
 
 MStatus MVGBuildFaceManipulator::doPress(M3dView& view)
 {
-	//LOG_INFO("### PRESS ###");
 	updateMouse(view);
 	updateCamera(view);
 	
 	// Define action
 	if(intersectPoint(view, _mousePoint))
 	{
-		//LOG_INFO("Intersect point");
 		switch(_mode)
 		{
 			case eModeCreate:
@@ -379,7 +402,6 @@ MStatus MVGBuildFaceManipulator::doPress(M3dView& view)
 	}
 	else if(intersectEdge(view, _mousePoint))
 	{
-		//LOG_INFO("Intersect edge");
 		switch(_mode)
 		{
 			case eModeCreate:
@@ -405,7 +427,6 @@ MStatus MVGBuildFaceManipulator::doPress(M3dView& view)
 	}
 	else
 	{
-		//LOG_INFO("No intersection");
 		_editAction = eEditActionNone;
 	}
 	
@@ -709,7 +730,6 @@ bool MVGBuildFaceManipulator::update3DFacePreview(M3dView& view, MVGFace3D& face
 			break;
 		case eEditActionMovePoint:
 			{
-				//LOG_INFO("eEditActionMovePoint");
 				MVGMesh mesh(MVGProject::_MESH);
 				if(!mesh.isValid()) {
 					mesh = MVGMesh::create(MVGProject::_MESH);
@@ -723,7 +743,6 @@ bool MVGBuildFaceManipulator::update3DFacePreview(M3dView& view, MVGFace3D& face
 				{
 					case eModeMoveInPlane:
 						{
-							//LOG_INFO("eModeMoveInPlane");
 							MVGFace3D meshFace;
 							for(int i = 0; i < 4; ++i)
 							{
@@ -740,7 +759,6 @@ bool MVGBuildFaceManipulator::update3DFacePreview(M3dView& view, MVGFace3D& face
 						break;
 					case eModeMoveRecompute:
 						{
-							//LOG_INFO("eModeMoveRecompute");
 							// Fill previewPoints2d with face points and dragMousePoint (in w2D)
 							std::vector<MPoint> previewPoints2d;
 							short x, y;
@@ -822,58 +840,6 @@ void MVGBuildFaceManipulator::addFace3d(MVGFace3D& face3d)
 
 }
 
-void MVGBuildFaceManipulator::updateDrawColor(M3dView& view)
-{	
-	const GLfloat color[] = {1.f, 0.f, 0.f, 0.6f};
-	_drawColor = std::vector<GLfloat>(color, color + sizeof(color)/ sizeof(GLfloat));
-	
-	// POINTS
-	if(intersectPoint(view, _mousePoint))
-	{		
-		if(_connectedFacesId.length() == 1)
-		{	
-			if(_mode == eModeMoveInPlane)
-			{
-				const GLfloat color[] = {0.f, 1.f, 0.f, 0.6f};
-				_drawColor = std::vector<GLfloat>(color, color + sizeof(color)/ sizeof(GLfloat));
-			}
-			else if(_mode == eModeMoveRecompute
-				&& !_faceConnected)
-			{
-				const GLfloat color[] = {0.5f, 0.3f, 0.9f, 0.6f};
-				_drawColor = std::vector<GLfloat>(color, color + sizeof(color)/ sizeof(GLfloat));
-			}
-		}
-	}
-
-	// EDGES
-	else if(intersectEdge(view, _mousePoint))
-	{
-		if(_mode == eModeCreate)
-		{
-			// Yellow
-			const GLfloat color[] = {0.9f, 0.9f, 0.1f, 0.6f};
-			_drawColor = std::vector<GLfloat>(color, color + sizeof(color)/ sizeof(GLfloat));
-		}
-		else if(_connectedFacesId.length() == 1
-			&& !_edgeConnected)
-		{
-			if(_mode == eModeMoveInPlane)
-			{
-				// Green
-				const GLfloat color[] = {0.f, 1.f, 0.f, 0.6f};
-				_drawColor = std::vector<GLfloat>(color, color + sizeof(color)/ sizeof(GLfloat));
-			}
-			else if(eModeMoveRecompute)
-			{
-				// Purple
-				const GLfloat color[] = {0.5f, 0.3f, 0.9f, 0.6f};
-				_drawColor = std::vector<GLfloat>(color, color + sizeof(color)/ sizeof(GLfloat));
-			}
-		}
-	}	
-}
-
 bool MVGBuildFaceManipulator::intersectPoint(M3dView& view, MPoint& point)
 {		
 	_faceConnected = false;
@@ -897,13 +863,10 @@ bool MVGBuildFaceManipulator::intersectPoint(M3dView& view, MPoint& point)
 		short x, y;
 		view.worldToView(meshPoints[i], x, y);
 
-//		LOG_INFO("kMFnMeshTolerance = " << kMFnMeshTolerance);
-//		LOG_INFO("Zoom = " << fnCamera.zoom());
-//		LOG_INFO("Tolérance = " << kMFnMeshTolerance * fnCamera.zoom() * 2);
-		if(pointX <= x + kMFnMeshTolerance * fnCamera.zoom() * 2
-			&& pointX >= x - kMFnMeshTolerance * fnCamera.zoom() * 2
-			&& pointY <= y + kMFnMeshTolerance * fnCamera.zoom() * 2
-			&& pointY >= y - kMFnMeshTolerance * fnCamera.zoom() * 2)
+		if(pointX <= x + kMFnMeshTolerance * fnCamera.zoom() * 10
+			&& pointX >= x - kMFnMeshTolerance * fnCamera.zoom() * 10
+			&& pointY <= y + kMFnMeshTolerance * fnCamera.zoom() * 10
+			&& pointY >= y - kMFnMeshTolerance * fnCamera.zoom() * 10)
 		{
 			_pressedPointId = i;
 			_connectedFacesId = mesh.getConnectedFacesToVertex(_pressedPointId);
