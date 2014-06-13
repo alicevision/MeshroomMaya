@@ -140,7 +140,10 @@ std::string MVGProject::pointCloudFile() const
 {
 	return stlplus::folder_append_separator(projectDirectory())
 					+ stlplus::folder_append_separator("outIncremental")
-					+ "FinalColorized.ply";
+					+ stlplus::folder_append_separator("SfM_output")
+					+ stlplus::folder_append_separator("clouds")
+					+ "calib.ply";
+					//+ "FinalColorized.ply";
 }
 
 std::vector<MVGCamera> MVGProject::cameras() const

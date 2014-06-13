@@ -6,6 +6,7 @@
 #include <openMVG/robust_estimation/robust_estimator_LMeds.hpp>
 #include <maya/MPointArray.h>
 #include <maya/MVectorArray.h>
+#include <maya/MFnCamera.h>
 #include <vector>
 
 using namespace mayaMVG;
@@ -73,6 +74,51 @@ MPoint MVGGeometryUtil::viewToWorld(M3dView& view, const MPoint& screen)
 	return wpoint;
 }
 
+void MVGGeometryUtil::viewToCamera(M3dView& view, MVGCamera& camera, short x, short y, MPoint& point)
+{
+	MFnCamera fnCamera(camera.dagPath().node()); 
+	
+
+	// / viewportWidth
+	point.x = ((float)x / view.portWidth()) - 0.5;
+	point.y = ((float)y / view.portWidth()) - 0.5 - 0.5 * ((view.portHeight() / (float)view.portWidth()) - 1.0 );
+	point.z = 0.f;
+
+	// Zoom
+	point =  point * fnCamera.horizontalFilmAperture() * fnCamera.zoom();
+
+	// Pan
+	point.x += fnCamera.horizontalPan();
+	point.y += fnCamera.verticalPan();
+}
+
+void MVGGeometryUtil::worldToCamera(M3dView& view, MVGCamera& camera, MPoint& worldPoint, MPoint& point)
+{
+	short x, y;
+	view.worldToView(worldPoint, x, y);
+	viewToCamera(view, camera,  x, y, point);
+}
+
+void MVGGeometryUtil::cameraToView(M3dView& view, MVGCamera& camera, MPoint& point, short& x, short& y)
+{
+	MFnCamera fnCamera(camera.dagPath().node()); 
+	
+	float newX = point.x;
+	float newY = point.y;
+	
+	// Pan
+	newX -= fnCamera.horizontalPan();
+	newY -= fnCamera.verticalPan();
+	
+	// Zoom
+	newX /= (fnCamera.horizontalFilmAperture() * fnCamera.zoom());
+	newY /= (fnCamera.horizontalFilmAperture() * fnCamera.zoom());
+	
+	// Center
+	x = (newX + 0.5) * view.portWidth();
+	y = (newY + 0.5 + 0.5 * (view.portHeight() / (float)view.portWidth() - 1.0)) * view.portWidth();		
+}
+
 bool MVGGeometryUtil::projectFace2D(MVGFace3D& face3D, M3dView& view, MVGCamera& camera, MVGFace2D& face2D, bool compute, MVector height)
 {
 	// TODO 
@@ -84,15 +130,22 @@ bool MVGGeometryUtil::projectFace2D(MVGFace3D& face3D, M3dView& view, MVGCamera&
 		LOG_ERROR("Need more than " << items.size() << " point cloud items. Abort.");
 		return false;
 	}
-
+	
 	std::vector<MVGPointCloudItem>::const_iterator it = items.begin();
 	std::vector<MPoint> facePoints;
-	facePoints.push_back(worldToView(view, face2D._p[0]));
-	facePoints.push_back(worldToView(view, face2D._p[1]));
-	facePoints.push_back(worldToView(view, face2D._p[2]));
-	facePoints.push_back(worldToView(view, face2D._p[3]));
-	facePoints.push_back(worldToView(view, face2D._p[0])); // add extra point
-
+	
+	short x, y;
+	cameraToView(view, camera, face2D._p[0], x, y);
+	facePoints.push_back(MPoint(x, y));
+	cameraToView(view, camera, face2D._p[1], x, y);
+	facePoints.push_back(MPoint(x, y));
+	cameraToView(view, camera, face2D._p[2], x, y);
+	facePoints.push_back(MPoint(x, y));
+	cameraToView(view, camera, face2D._p[3], x, y);
+	facePoints.push_back(MPoint(x, y));
+	cameraToView(view, camera, face2D._p[0], x, y);
+	facePoints.push_back(MPoint(x, y));
+	
 	std::vector<MVGPointCloudItem> selectedItems;
 	int windingNumber = 0;
 	for(; it != items.end(); ++it){
@@ -123,13 +176,13 @@ bool MVGGeometryUtil::projectFace2D(MVGFace3D& face3D, M3dView& view, MVGCamera&
 	MPoint P;
 	MPoint cameraCenter = AS_MPOINT(camera.pinholeCamera()._C);
 	std::vector<MPoint> face3DPoints;
-
+	MPoint worldPoint;
 	
 	if(compute) {	
 		// Three first points are retrieved from the selection points
 		for(size_t i = 0; i < facePoints.size()-2; ++i) // remove extra point
 		{
-			MPoint worldPoint = viewToWorld(view, facePoints[i]);
+			worldPoint = viewToWorld(view, facePoints[i]);
 			plane_line_intersect(model, cameraCenter, worldPoint, P);
 			face3DPoints.push_back(P);
 		}
@@ -138,15 +191,17 @@ bool MVGGeometryUtil::projectFace2D(MVGFace3D& face3D, M3dView& view, MVGCamera&
 		{
 			height = face3DPoints[0]- face3DPoints[1];
 		}			
-		MPoint lastWorldPoint = face3DPoints[2] + height;
-		plane_line_intersect(model, cameraCenter, lastWorldPoint, P);
+		MPoint lastPoint3D = face3DPoints[2] + height; // TODO : warning
+		MPoint viewPoint = worldToView(view, lastPoint3D);
+		worldPoint = viewToWorld(view, viewPoint);
+		plane_line_intersect(model, cameraCenter, worldPoint, P);
 		face3DPoints.push_back(P);
 	}
 	else
 	{
 		for(size_t i = 0; i < facePoints.size()-1; ++i) // remove extra point
 		{
-			MPoint worldPoint = viewToWorld(view, facePoints[i]);
+			worldPoint = viewToWorld(view, facePoints[i]);
 			plane_line_intersect(model, cameraCenter, worldPoint, P);
 			face3DPoints.push_back(P);
 		}
@@ -168,9 +223,14 @@ void MVGGeometryUtil::computePlane(MVGFace3D& face3D, PlaneKernel::Model& model)
 	openMVG::robust::LeastMedianOfSquares(kernel, &model, &outlierThreshold);
 }
 
-void MVGGeometryUtil::projectPointOnPlane(MPoint& point, PlaneKernel::Model& model, MVGCamera& camera,  MPoint& projectedPoint)
+void MVGGeometryUtil::projectPointOnPlane(MPoint& point, M3dView& view, PlaneKernel::Model& model, MVGCamera& camera,  MPoint& projectedPoint)
 {
 	MPoint cameraCenter = AS_MPOINT(camera.pinholeCamera()._C);
+	
+	short x, y;
+	MVector dir;
+	cameraToView(view, camera, point, x, y);
+	view.viewToWorld(x, y, point, dir);
 
 	plane_line_intersect(model, cameraCenter, point, projectedPoint);
 }
