@@ -114,9 +114,9 @@ void MVGGeometryUtil::cameraToView(M3dView& view, MVGCamera& camera, MPoint& poi
 	newX /= (fnCamera.horizontalFilmAperture() * fnCamera.zoom());
 	newY /= (fnCamera.horizontalFilmAperture() * fnCamera.zoom());
 	
-	// Center
-	x = (newX + 0.5) * view.portWidth();
-	y = (newY + 0.5 + 0.5 * (view.portHeight() / (float)view.portWidth() - 1.0)) * view.portWidth();		
+	// Center	
+	x = round((newX + 0.5) * view.portWidth());
+	y = round((newY + 0.5 + 0.5 * (view.portHeight() / (float)view.portWidth() - 1.0)) * view.portWidth());	
 }
 
 bool MVGGeometryUtil::projectFace2D(MVGFace3D& face3D, M3dView& view, MVGCamera& camera, MVGFace2D& face2D, bool compute, MVector height)
