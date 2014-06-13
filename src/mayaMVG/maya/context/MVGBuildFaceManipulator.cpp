@@ -903,10 +903,10 @@ bool MVGBuildFaceManipulator::intersectPoint(M3dView& view, MPoint& point)
 		view.worldToView(meshPoints[i], x, y);
 
 		// Tolerance en pixels ... 
-		if(pointX <= x + 1 + fnCamera.zoom() * 10
-			&& pointX >= x - 1 - fnCamera.zoom() * 10
-			&& pointY <= y + 1 + fnCamera.zoom() * 10
-			&& pointY >= y - 1 - fnCamera.zoom() * 10)
+		if(pointX <= x + 1 + fnCamera.zoom() * 3
+			&& pointX >= x - 1 - fnCamera.zoom() * 3
+			&& pointY <= y + 1 + fnCamera.zoom() * 3
+			&& pointY >= y - 1 - fnCamera.zoom() * 3)
 		{
 			_pressedPointId = i;
 			_connectedFacesId = mesh.getConnectedFacesToVertex(_pressedPointId);
