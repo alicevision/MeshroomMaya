@@ -518,30 +518,50 @@ MStatus MVGBuildFaceManipulator::doPress(M3dView& view)
 
 MStatus MVGBuildFaceManipulator::doRelease(M3dView& view)
 {
-	
-	if(_editAction == eEditActionExtendEdge)
+	switch(_editAction)
 	{
-		addFace3d(_preview3DFace);
-	}
-	if(_editAction == eEditActionMovePoint || _editAction == eEditActionMoveEdge)
-	{
-		MVGMesh mesh(MVGProject::_MESH);
-		if(!mesh.isValid()) {
-			mesh = MVGMesh::create(MVGProject::_MESH);
-			LOG_INFO("New OpenMVG Mesh.")
-		}
-		
-		MPointArray meshPoints;
-		mesh.getPoints(meshPoints);
+		case eEditActionExtendEdge:
+			addFace3d(_preview3DFace);
+			break;
+		case eEditActionMoveEdge:
+			{
+				MVGMesh mesh(MVGProject::_MESH);
+				if(!mesh.isValid()) {
+					mesh = MVGMesh::create(MVGProject::_MESH);
+					LOG_INFO("New OpenMVG Mesh.")
+				}
 
-		MIntArray verticesId = mesh.getFaceVertices(_connectedFacesId[0]);	
-		
-		for(int i = 0; i < verticesId.length(); ++i)
-		{
-			mesh.setPoint(verticesId[i], _preview3DFace._p[i]);
-		}
+				MPointArray meshPoints;
+				mesh.getPoints(meshPoints);
+
+				MIntArray edgeVerticesId = mesh.getEdgeVertices(_intersectedEdgeId);
+				mesh.setPoint(edgeVerticesId[1], _preview3DFace._p[2]);
+				mesh.setPoint(edgeVerticesId[0], _preview3DFace._p[3]);
+			}
+			break;
+		case eEditActionMovePoint: 
+			{		
+				MVGMesh mesh(MVGProject::_MESH);
+				if(!mesh.isValid()) {
+					mesh = MVGMesh::create(MVGProject::_MESH);
+					LOG_INFO("New OpenMVG Mesh.")
+				}
+
+				MPointArray meshPoints;
+				mesh.getPoints(meshPoints);
+
+				MIntArray verticesId = mesh.getFaceVertices(_connectedFacesId[0]);	
+
+				for(int i = 0; i < verticesId.length(); ++i)
+				{
+					mesh.setPoint(verticesId[i], _preview3DFace._p[i]);
+				}
+			}
+			break;
+		case eEditActionNone:
+			break;
 	}
-		
+
 	_editAction = eEditActionNone;
 	updateCamera(view);
 	
@@ -700,6 +720,15 @@ bool MVGBuildFaceManipulator::update3DFacePreview(M3dView& view, MVGFace3D& face
 					if(!found)
 						fixedVerticesId.append(verticesId[i]);
 				}
+				
+				// Switch order if necessary
+				if(fixedVerticesId[0] == verticesId[0]
+					&& fixedVerticesId[1] == verticesId[verticesId.length() - 1])
+				{
+					MIntArray tmp = fixedVerticesId;
+					fixedVerticesId[0] = tmp[1];
+					fixedVerticesId[1] = tmp[0];
+				}
 				switch(_mode)
 				{
 					case eModeMoveInPlane:
@@ -716,8 +745,8 @@ bool MVGBuildFaceManipulator::update3DFacePreview(M3dView& view, MVGFace3D& face
 							PlaneKernel::Model model;
 							MVGGeometryUtil::computePlane(meshFace, model);
 
-							_preview3DFace._p[0] = meshPoints[fixedVerticesId[0]];
-							_preview3DFace._p[1] = meshPoints[fixedVerticesId[1]];
+							_preview3DFace._p[0] = meshPoints[fixedVerticesId[1]];
+							_preview3DFace._p[1] = meshPoints[fixedVerticesId[0]];
 							
 							// Project new points on plane					
 							MPoint P3 = _mousePointOnDragEdge + _edgeRatio * _edgeHeight2D;
@@ -730,18 +759,7 @@ bool MVGBuildFaceManipulator::update3DFacePreview(M3dView& view, MVGFace3D& face
 							MVGGeometryUtil::worldToCamera(view, _camera, lastPoint3D, lastPoint2D);
 							MVGGeometryUtil::projectPointOnPlane(lastPoint2D, view, model, _camera, movedPoint);
 							_preview3DFace._p[3] = movedPoint;
-							
-							// Check points order	
-							MVector AD =  _preview3DFace._p[3] -  _preview3DFace._p[0];
-							MVector BC =  _preview3DFace._p[2] -  _preview3DFace._p[1];
-
-							if(edgesIntersection(_preview3DFace._p[0],_preview3DFace._p[1], AD, BC))
-							{
-								MVGFace3D tmp = _preview3DFace;
-								_preview3DFace._p[3] = tmp._p[2];
-								_preview3DFace._p[2] = tmp._p[3];
-							}
-							
+														
 						}
 						break;
 					case eModeMoveRecompute:
@@ -962,7 +980,7 @@ bool MVGBuildFaceManipulator::intersectEdge(M3dView& view, MPoint& point)
 			MPoint A, B;
 			MVGGeometryUtil::viewToCamera(view, _camera, x0, y0, A);
 			MVGGeometryUtil::viewToCamera(view, _camera, x1, y1, B);
-
+			
 			if(isPointOnEdge(_mousePoint, A, B, kMFnMeshTolerance * fnCamera.zoom() * 10))
 			{
 				check = true;
