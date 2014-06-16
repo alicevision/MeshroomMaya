@@ -58,10 +58,19 @@ bool MVGMayaViewportKeyEventFilter::eventFilter(QObject * obj, QEvent * e)
 			case Qt::Key_B:
 			case Qt::Key_Alt:
 			case Qt::Key_Control:	
-				(modifiers & Qt::ShiftModifier) ? MVGBuildFaceManipulator::_mode = MVGBuildFaceManipulator::eModeMoveRecompute : MVGBuildFaceManipulator::_mode = MVGBuildFaceManipulator::eModeMoveInPlane;
+				(modifiers & Qt::ShiftModifier) ? MVGBuildFaceManipulator::_mode = MVGBuildFaceManipulator::eModeMoveRecompute : MVGBuildFaceManipulator::_mode = MVGBuildFaceManipulator::eModeMoveInPlane;		
 				break;
 			case Qt::Key_Shift:
-				(modifiers & Qt::ControlModifier) ? MVGBuildFaceManipulator::_mode = MVGBuildFaceManipulator::eModeMoveRecompute : MVGBuildFaceManipulator::_mode = MVGBuildFaceManipulator::eModeCreate;
+				if(modifiers & Qt::ControlModifier)
+				{
+					MVGBuildFaceManipulator::_mode = MVGBuildFaceManipulator::eModeMoveRecompute;
+					
+				}
+				else
+				{
+					MVGBuildFaceManipulator::_mode = MVGBuildFaceManipulator::eModeCreate;
+					MVGBuildFaceManipulator::_editAction = MVGBuildFaceManipulator::eEditActionNone;
+				}
 				break;
 			case Qt::Key_Meta:
 				return true;
@@ -91,9 +100,11 @@ bool MVGMayaViewportKeyEventFilter::eventFilter(QObject * obj, QEvent * e)
 			case Qt::Key_Alt:
 			case Qt::Key_Control:
 				MVGBuildFaceManipulator::_mode = MVGBuildFaceManipulator::eModeCreate;
+				MVGBuildFaceManipulator::_editAction = MVGBuildFaceManipulator::eEditActionNone;			
 				break;
 			case Qt::Key_Shift:
 				MVGBuildFaceManipulator::_mode = MVGBuildFaceManipulator::eModeCreate;
+				MVGBuildFaceManipulator::_editAction = MVGBuildFaceManipulator::eEditActionNone;
 				break;
 			case Qt::Key_Meta:
 				return true;

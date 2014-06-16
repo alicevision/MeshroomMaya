@@ -60,7 +60,7 @@ class MVGBuildFaceManipulator: public MPxManipulatorNode
 		bool intersectEdge(M3dView& view, MPoint& point);
 		
 		void update2DFacePreview(M3dView& view);
-		bool update3DFacePreview(M3dView& view, MVGFace3D& face3D);
+		bool update3DFacePreview(M3dView& view);
 		bool computeFace3d(M3dView& view, std::vector<MPoint>& pointArray, MVGFace3D& face3D, bool computeLastPoint = false, MVector height = MVector(0, 0, 0));
 		void addFace3d(MVGFace3D& face3d);
 		
@@ -82,7 +82,7 @@ class MVGBuildFaceManipulator: public MPxManipulatorNode
 		///@brief Mode & action
 		///@{
 		static EMode	_mode;
-		EEditAction _editAction;
+		static EEditAction _editAction;
 		///@}
 		
 		///@brief Display & Preview

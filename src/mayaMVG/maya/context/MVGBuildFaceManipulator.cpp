@@ -22,6 +22,7 @@ MDagPath MVGBuildFaceManipulator::_lastCameraPath = MDagPath();
 MVGCamera MVGBuildFaceManipulator::_camera = MVGCamera(_lastCameraPath);
 std::vector<MPoint> MVGBuildFaceManipulator::_display2DPoints_world = std::vector<MPoint>();
 MVGBuildFaceManipulator::EMode	MVGBuildFaceManipulator::_mode = eModeCreate;
+MVGBuildFaceManipulator::EEditAction  MVGBuildFaceManipulator::_editAction = eEditActionNone;
 
 namespace {
 	double crossProduct2d(MVector& A, MVector& B) {
@@ -511,7 +512,10 @@ MStatus MVGBuildFaceManipulator::doPress(M3dView& view)
 		}
 	}
 	
+	// Preview
+	_mousePointOnDragEdge = _mousePoint;
 	update2DFacePreview(view);
+	update3DFacePreview(view);
 
 	return MPxManipulatorNode::doPress(view);
 }
@@ -593,7 +597,7 @@ MStatus MVGBuildFaceManipulator::doDrag(M3dView& view)
 	updateCamera(view);
 	
 	_mousePointOnDragEdge = _mousePoint;
-	update3DFacePreview(view, _preview3DFace);
+	update3DFacePreview(view);
 	
 	return MPxManipulatorNode::doDrag(view);
 }
@@ -663,7 +667,7 @@ void MVGBuildFaceManipulator::update2DFacePreview(M3dView& view)
 	}
 }
 
-bool MVGBuildFaceManipulator::update3DFacePreview(M3dView& view, MVGFace3D& face3D)
+bool MVGBuildFaceManipulator::update3DFacePreview(M3dView& view)
 {
 	bool check = false;
 	std::vector<MPoint> previewPoints2d;
@@ -682,9 +686,16 @@ bool MVGBuildFaceManipulator::update3DFacePreview(M3dView& view, MVGFace3D& face
 				MPoint P4 = _mousePointOnDragEdge + _edgeRatio*_edgeHeight2D;
 				previewPoints2d.push_back(P3);
 				previewPoints2d.push_back(P4);
-
+				
 				// Preview keeping 3D length
 				check = computeFace3d(view, previewPoints2d, _preview3DFace, true, _edgeHeight3D);
+				
+				if(!check)
+				{
+					// Fill _preview3DFace in computeFace3d() failed
+					_preview3DFace._p[2] = _clickedEdgePoints3D[1];
+					_preview3DFace._p[3] = _clickedEdgePoints3D[0];
+				}
 
 				// Keep the old first 2 points to have a connected face
 				_preview3DFace._p[0] = _clickedEdgePoints3D[1];
