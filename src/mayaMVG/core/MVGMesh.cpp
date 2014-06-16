@@ -216,7 +216,7 @@ void MVGMesh::setPoint(int vertexId, MPoint& point)
 {
 	MStatus status;
 	MFnMesh fnMesh(_dagpath.node(), &status);
-	fnMesh.setPoint(vertexId, point, MSpace::kPostTransform);
+	fnMesh.setPoint(vertexId, point);
 	CHECK(status);
 }
 			

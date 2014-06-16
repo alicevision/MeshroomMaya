@@ -22,6 +22,7 @@ MDagPath MVGBuildFaceManipulator::_lastCameraPath = MDagPath();
 MVGCamera MVGBuildFaceManipulator::_camera = MVGCamera(_lastCameraPath);
 std::vector<MPoint> MVGBuildFaceManipulator::_display2DPoints_world = std::vector<MPoint>();
 MVGBuildFaceManipulator::EMode	MVGBuildFaceManipulator::_mode = eModeCreate;
+MVGBuildFaceManipulator::EEditAction  MVGBuildFaceManipulator::_editAction = eEditActionNone;
 
 namespace {
 	double crossProduct2d(MVector& A, MVector& B) {
@@ -219,14 +220,14 @@ void MVGBuildFaceManipulator::draw(M3dView & view, const MDagPath & path,
 							if(_mode == eModeMoveInPlane)
 								glColor4f(0.f, 1.f, 0.f, 0.6f);
 								
-							// Purple
+							// Cyan
 							else if(_mode == eModeMoveRecompute && !_faceConnected)
-								glColor4f(0.5f, 0.3f, 0.9f, 0.6f);
+								glColor4f(0.f, 1.f, 1.f, 0.6f);	//glColor4f(0.8f, 0.1f, 1.f, 0.6f);
 	
 							short x, y;				
 							glPointSize(4.f);
 							glBegin(GL_POINTS);
-							view.worldToView(_mousePoint, x, y);
+							MVGGeometryUtil::cameraToView(view, _camera, _mousePoint, x, y);
 								glVertex2f(x, y);
 							glEnd();	
 						}						
@@ -247,7 +248,7 @@ void MVGBuildFaceManipulator::draw(M3dView & view, const MDagPath & path,
 								glColor4f(0.f, 1.f, 0.f, 0.6f);
 							// Purple
 							else if(eModeMoveRecompute)
-								glColor4f(0.5f, 0.3f, 0.9f, 0.6f);
+								glColor4f(0.f, 1.f, 1.f, 0.6f);	
 
 						}
 
@@ -274,16 +275,16 @@ void MVGBuildFaceManipulator::draw(M3dView & view, const MDagPath & path,
 							if(_display2DPoints_world.size() > 1)
 							{
 								glBegin(GL_LINES);
-								view.worldToView(_display2DPoints_world[0], x, y);
+								MVGGeometryUtil::cameraToView(view, _camera, _display2DPoints_world[0], x, y);
 								glVertex2f(x, y);
-								view.worldToView(_display2DPoints_world[1], x, y);
+								MVGGeometryUtil::cameraToView(view, _camera, _display2DPoints_world[1], x, y);
 								glVertex2f(x, y);
 								glEnd();	
 
 								glPointSize(4.f);
 								glBegin(GL_POINTS);
 								for(size_t i = 0; i < _display2DPoints_world.size(); ++i){
-									view.worldToView(_display2DPoints_world[i], x, y);
+									MVGGeometryUtil::cameraToView(view, _camera, _display2DPoints_world[i], x, y);
 									glVertex2f(x, y);
 								}
 								glEnd();					
@@ -292,9 +293,9 @@ void MVGBuildFaceManipulator::draw(M3dView & view, const MDagPath & path,
 							if(_display2DPoints_world.size() > 0)
 							{
 								glBegin(GL_LINES);
-								view.worldToView(_display2DPoints_world[_display2DPoints_world.size() - 1], x, y);
+								MVGGeometryUtil::cameraToView(view, _camera, _display2DPoints_world[_display2DPoints_world.size() - 1], x, y);
 								glVertex2f(x, y);
-								view.worldToView(_mousePoint, x, y);
+								MVGGeometryUtil::cameraToView(view, _camera, _mousePoint, x, y);
 								glVertex2f(x, y);
 								glEnd();	
 
@@ -310,33 +311,53 @@ void MVGBuildFaceManipulator::draw(M3dView & view, const MDagPath & path,
 						glColor4f(0.f, 0.f, 1.f, 0.6f);
 						glLineWidth(1.5f);
 						glBegin(GL_LINE_LOOP);
-							view.worldToView(_preview2DFace._p[0], x, y);
+							MVGGeometryUtil::cameraToView(view, _camera, _preview2DFace._p[0], x, y);
 							glVertex2f(x, y);
-							view.worldToView(_preview2DFace._p[1], x, y);
+							MVGGeometryUtil::cameraToView(view, _camera, _preview2DFace._p[1], x, y);
 							glVertex2f(x, y);
-							view.worldToView(_preview2DFace._p[2], x, y);
+							MVGGeometryUtil::cameraToView(view, _camera, _preview2DFace._p[2], x, y);
 							glVertex2f(x, y);
-							view.worldToView(_preview2DFace._p[3], x, y);
+							MVGGeometryUtil::cameraToView(view, _camera, _preview2DFace._p[3], x, y);
 							glVertex2f(x, y);
 						glEnd();
 
 						glColor4f(1.f, 1.f, 1.f, 0.6f);
 						glBegin(GL_POLYGON);
-							view.worldToView(_preview2DFace._p[0], x, y);
+							MVGGeometryUtil::cameraToView(view, _camera, _preview2DFace._p[0], x, y);
 							glVertex2f(x, y);
-							view.worldToView(_preview2DFace._p[1], x, y);
+							MVGGeometryUtil::cameraToView(view, _camera, _preview2DFace._p[1], x, y);
 							glVertex2f(x, y);
-							view.worldToView(_preview2DFace._p[2], x, y);
+							MVGGeometryUtil::cameraToView(view, _camera, _preview2DFace._p[2], x, y);
 							glVertex2f(x, y);
-							view.worldToView(_preview2DFace._p[3], x, y);
+							MVGGeometryUtil::cameraToView(view, _camera, _preview2DFace._p[3], x, y);
 							glVertex2f(x, y);
 						glEnd();
 					}
 					break;
 				case eEditActionExtendEdge:
-					// Preview
+				case eEditActionMovePoint:
+				case eEditActionMoveEdge:	
 					short x, y;
-					glColor4f(0.f, 0.f, 1.f, 0.6f);
+					
+					// Lines preview
+					// Stripple lines
+					switch(_mode)
+					{
+						case eModeMoveInPlane:
+							glEnable(GL_LINE_STIPPLE);
+							glColor4f(0.f, 1.f, 0.f, 0.6f);
+							glLineStipple(1.f, 0x5555);
+							break;
+						case eModeMoveRecompute:
+							glEnable(GL_LINE_STIPPLE);
+							glColor4f(0.f, 1.f, 1.f, 0.6f);	
+							glLineStipple(1.f, 0x5555);
+							break;
+						case eModeCreate:
+							glColor4f(0.f, 0.f, 1.f, 0.6f);
+							break;
+					}
+					
 					glLineWidth(1.5f);
 					glBegin(GL_LINE_LOOP);
 						view.worldToView(_preview3DFace._p[0], x, y);
@@ -348,22 +369,25 @@ void MVGBuildFaceManipulator::draw(M3dView & view, const MDagPath & path,
 						view.worldToView(_preview3DFace._p[3], x, y);
 						glVertex2f(x, y);
 					glEnd();
-
-					glColor4f(1.f, 1.f, 1.f, 0.6f);
-					glBegin(GL_POLYGON);
-						view.worldToView(_preview3DFace._p[0], x, y);
-						glVertex2f(x, y);
-						view.worldToView(_preview3DFace._p[1], x, y);
-						glVertex2f(x, y);
-						view.worldToView(_preview3DFace._p[2], x, y);
-						glVertex2f(x, y);
-						view.worldToView(_preview3DFace._p[3], x, y);
-						glVertex2f(x, y);
-					glEnd();
+					
+					
+					// Poly preview
+					if(_editAction == eEditActionExtendEdge)
+					{
+						glColor4f(1.f, 1.f, 1.f, 0.6f);
+						glBegin(GL_POLYGON);
+							view.worldToView(_preview3DFace._p[0], x, y);
+							glVertex2f(x, y);
+							view.worldToView(_preview3DFace._p[1], x, y);
+							glVertex2f(x, y);
+							view.worldToView(_preview3DFace._p[2], x, y);
+							glVertex2f(x, y);
+							view.worldToView(_preview3DFace._p[3], x, y);
+							glVertex2f(x, y);
+						glEnd();
+					}
+			
 					break;
-				case eEditActionMoveEdge:
-				case eEditActionMovePoint:
-					break;		
 			}
 									
 			glPopMatrix();
@@ -381,7 +405,7 @@ MStatus MVGBuildFaceManipulator::doPress(M3dView& view)
 {
 	updateMouse(view);
 	updateCamera(view);
-	
+			
 	// Define action
 	if(intersectPoint(view, _mousePoint))
 	{
@@ -436,13 +460,9 @@ MStatus MVGBuildFaceManipulator::doPress(M3dView& view)
 		case eEditActionMoveEdge:
 			{
 				// Compute height and edge ratio
-				short x, y;
 				MPoint intersectingEdgePoints2D_0, intersectingEdgePoints2D_1;
-				MVector wdir;
-				view.worldToView(_intersectingEdgePoints3D[0], x, y);
-				view.viewToWorld(x, y, intersectingEdgePoints2D_0, wdir);
-				view.worldToView(_intersectingEdgePoints3D[1], x, y);
-				view.viewToWorld(x, y, intersectingEdgePoints2D_1, wdir);
+				MVGGeometryUtil::worldToCamera(view, _camera, _intersectingEdgePoints3D[0], intersectingEdgePoints2D_0);
+				MVGGeometryUtil::worldToCamera(view, _camera, _intersectingEdgePoints3D[1], intersectingEdgePoints2D_1);
 								
 				MVector ratioVector2D = intersectingEdgePoints2D_1 - _mousePoint;
 				_edgeHeight2D = intersectingEdgePoints2D_1 - intersectingEdgePoints2D_0;
@@ -492,19 +512,60 @@ MStatus MVGBuildFaceManipulator::doPress(M3dView& view)
 		}
 	}
 	
+	// Preview
+	_mousePointOnDragEdge = _mousePoint;
 	update2DFacePreview(view);
+	update3DFacePreview(view);
 
 	return MPxManipulatorNode::doPress(view);
 }
 
 MStatus MVGBuildFaceManipulator::doRelease(M3dView& view)
 {
-	
-	if(_editAction == eEditActionExtendEdge)
+	switch(_editAction)
 	{
-		addFace3d(_preview3DFace);
+		case eEditActionExtendEdge:
+			addFace3d(_preview3DFace);
+			break;
+		case eEditActionMoveEdge:
+			{
+				MVGMesh mesh(MVGProject::_MESH);
+				if(!mesh.isValid()) {
+					mesh = MVGMesh::create(MVGProject::_MESH);
+					LOG_INFO("New OpenMVG Mesh.")
+				}
+
+				MPointArray meshPoints;
+				mesh.getPoints(meshPoints);
+
+				MIntArray edgeVerticesId = mesh.getEdgeVertices(_intersectedEdgeId);
+				mesh.setPoint(edgeVerticesId[1], _preview3DFace._p[2]);
+				mesh.setPoint(edgeVerticesId[0], _preview3DFace._p[3]);
+			}
+			break;
+		case eEditActionMovePoint: 
+			{		
+				MVGMesh mesh(MVGProject::_MESH);
+				if(!mesh.isValid()) {
+					mesh = MVGMesh::create(MVGProject::_MESH);
+					LOG_INFO("New OpenMVG Mesh.")
+				}
+
+				MPointArray meshPoints;
+				mesh.getPoints(meshPoints);
+
+				MIntArray verticesId = mesh.getFaceVertices(_connectedFacesId[0]);	
+
+				for(int i = 0; i < verticesId.length(); ++i)
+				{
+					mesh.setPoint(verticesId[i], _preview3DFace._p[i]);
+				}
+			}
+			break;
+		case eEditActionNone:
+			break;
 	}
-		
+
 	_editAction = eEditActionNone;
 	updateCamera(view);
 	
@@ -536,7 +597,7 @@ MStatus MVGBuildFaceManipulator::doDrag(M3dView& view)
 	updateCamera(view);
 	
 	_mousePointOnDragEdge = _mousePoint;
-	update3DFacePreview(view, _preview3DFace);
+	update3DFacePreview(view);
 	
 	return MPxManipulatorNode::doDrag(view);
 }
@@ -567,6 +628,7 @@ MVGCamera MVGBuildFaceManipulator::getMVGCamera(M3dView& view)
 	MDagPath cameraPath;
 	view.getCamera(cameraPath);
 	// cameraPath.pop();
+	
 	return MVGCamera(cameraPath.partialPathName().asChar());
 }
 
@@ -586,10 +648,9 @@ void MVGBuildFaceManipulator::updateCamera(M3dView& view)
 void MVGBuildFaceManipulator::updateMouse(M3dView& view)
 {
 	//MPoint mousePoint;
-	MVector wdir;
 	short mousex, mousey;
 	mousePosition(mousex, mousey);
-	view.viewToWorld(mousex, mousey, _mousePoint, wdir);
+	MVGGeometryUtil::viewToCamera(view, _camera, mousex, mousey, _mousePoint);
 	//return mousePoint;
 }
 
@@ -606,7 +667,7 @@ void MVGBuildFaceManipulator::update2DFacePreview(M3dView& view)
 	}
 }
 
-bool MVGBuildFaceManipulator::update3DFacePreview(M3dView& view, MVGFace3D& face3D)
+bool MVGBuildFaceManipulator::update3DFacePreview(M3dView& view)
 {
 	bool check = false;
 	std::vector<MPoint> previewPoints2d;
@@ -615,22 +676,26 @@ bool MVGBuildFaceManipulator::update3DFacePreview(M3dView& view, MVGFace3D& face
 	{
 		case eEditActionExtendEdge:
 			{	
-				short x, y;
 				MPoint point;
-				MVector wdir;
-				view.worldToView(_clickedEdgePoints3D[1], x, y);
-				view.viewToWorld(x, y, point, wdir);
+
+				MVGGeometryUtil::worldToCamera(view, _camera, _clickedEdgePoints3D[1], point);
 				previewPoints2d.push_back(point);
-				view.worldToView(_clickedEdgePoints3D[0], x, y);
-				view.viewToWorld(x, y, point, wdir);
+				MVGGeometryUtil::worldToCamera(view, _camera, _clickedEdgePoints3D[0], point);
 				previewPoints2d.push_back(point);			
 				MPoint P3 = _mousePointOnDragEdge - (1 -_edgeRatio) * _edgeHeight2D;
 				MPoint P4 = _mousePointOnDragEdge + _edgeRatio*_edgeHeight2D;
 				previewPoints2d.push_back(P3);
 				previewPoints2d.push_back(P4);
-
+				
 				// Preview keeping 3D length
 				check = computeFace3d(view, previewPoints2d, _preview3DFace, true, _edgeHeight3D);
+				
+				if(!check)
+				{
+					// Fill _preview3DFace in computeFace3d() failed
+					_preview3DFace._p[2] = _clickedEdgePoints3D[1];
+					_preview3DFace._p[3] = _clickedEdgePoints3D[0];
+				}
 
 				// Keep the old first 2 points to have a connected face
 				_preview3DFace._p[0] = _clickedEdgePoints3D[1];
@@ -648,23 +713,32 @@ bool MVGBuildFaceManipulator::update3DFacePreview(M3dView& view, MVGFace3D& face
 					LOG_INFO("New OpenMVG Mesh.")
 				}
 
-				MIntArray vertices = mesh.getFaceVertices(_connectedFacesId[0]);	
+				MIntArray verticesId = mesh.getFaceVertices(_connectedFacesId[0]);	
 				MPointArray meshPoints;
 				mesh.getPoints(meshPoints);
 				
-				MIntArray edgeVertices = mesh.getEdgeVertices(_intersectedEdgeId);
-				MIntArray fixedVertices;
-				for(int i = 0; i < vertices.length(); ++i)
+				MIntArray edgeVerticesId = mesh.getEdgeVertices(_intersectedEdgeId);
+				MIntArray fixedVerticesId;
+				for(int i = 0; i < verticesId.length(); ++i)
 				{
 					int found = false;
-					for(int j = 0; j < edgeVertices.length(); ++j)
+					for(int j = 0; j < edgeVerticesId.length(); ++j)
 					{
-						if(vertices[i] == edgeVertices[j])
+						if(verticesId[i] == edgeVerticesId[j])
 							found = true;
 					}
 
 					if(!found)
-						fixedVertices.append(vertices[i]);
+						fixedVerticesId.append(verticesId[i]);
+				}
+				
+				// Switch order if necessary
+				if(fixedVerticesId[0] == verticesId[0]
+					&& fixedVerticesId[1] == verticesId[verticesId.length() - 1])
+				{
+					MIntArray tmp = fixedVerticesId;
+					fixedVerticesId[0] = tmp[1];
+					fixedVerticesId[1] = tmp[0];
 				}
 				switch(_mode)
 				{
@@ -674,42 +748,41 @@ bool MVGBuildFaceManipulator::update3DFacePreview(M3dView& view, MVGFace3D& face
 							MVGFace3D meshFace;
 							for(int i = 0; i < 4; ++i)
 							{
-								meshFace._p[i] = meshPoints[vertices[i]];
+								meshFace._p[i] = meshPoints[verticesId[i]];
 							}
 
 							// Compute plane with old face points
-							short x, y;
-							MPoint wpos;
-							MVector wdir;
 							MPoint movedPoint;
 							PlaneKernel::Model model;
 							MVGGeometryUtil::computePlane(meshFace, model);
 
+							_preview3DFace._p[0] = meshPoints[fixedVerticesId[1]];
+							_preview3DFace._p[1] = meshPoints[fixedVerticesId[0]];
+							
 							// Project new points on plane					
 							MPoint P3 = _mousePointOnDragEdge + _edgeRatio * _edgeHeight2D;
-							MVGGeometryUtil::projectPointOnPlane(P3, model, _camera, movedPoint);
-							mesh.setPoint(edgeVertices[1], movedPoint);
-
+							MVGGeometryUtil::projectPointOnPlane(P3, view, model, _camera, movedPoint);
+							_preview3DFace._p[2] = movedPoint;
+							
 							// Keep 3D length
-							MPoint lastPoint = movedPoint - _edgeHeight3D;
-							MVGGeometryUtil::projectPointOnPlane(lastPoint, model, _camera, movedPoint);
-							mesh.setPoint(edgeVertices[0], movedPoint);
+							MPoint lastPoint3D = movedPoint - _edgeHeight3D;
+							MPoint lastPoint2D;
+							MVGGeometryUtil::worldToCamera(view, _camera, lastPoint3D, lastPoint2D);
+							MVGGeometryUtil::projectPointOnPlane(lastPoint2D, view, model, _camera, movedPoint);
+							_preview3DFace._p[3] = movedPoint;
+														
 						}
 						break;
 					case eModeMoveRecompute:
 						{
 							std::vector<MPoint> previewPoints2d;
-							short x, y;
-							MPoint wpos;
-							MVector wdir;
+							MPoint point;
 							
 							// First : fixed points
-							view.worldToView(meshPoints[fixedVertices[0]], x, y);
-							view.viewToWorld(x, y, wpos, wdir);
-							previewPoints2d.push_back(wpos);
-							view.worldToView(meshPoints[fixedVertices[1]], x, y);
-							view.viewToWorld(x, y, wpos, wdir);
-							previewPoints2d.push_back(wpos);
+							MVGGeometryUtil::worldToCamera(view, _camera, meshPoints[fixedVerticesId[1]], point);
+							previewPoints2d.push_back(point);
+							MVGGeometryUtil::worldToCamera(view, _camera, meshPoints[fixedVerticesId[0]], point);
+							previewPoints2d.push_back(point);
 		
 							// Then : mousePoints computed with egdeHeight and ratio							
 							MPoint P3 = _mousePointOnDragEdge + _edgeRatio * _edgeHeight2D;
@@ -718,11 +791,19 @@ bool MVGBuildFaceManipulator::update3DFacePreview(M3dView& view, MVGFace3D& face
 							previewPoints2d.push_back(P4);
 		
 							// Only set the new points to keep a connected face
-							if(computeFace3d(view, previewPoints2d, _preview3DFace, true, -_edgeHeight3D))
+							computeFace3d(view, previewPoints2d, _preview3DFace, true, -_edgeHeight3D);
+							
+							// Check points order	
+							MVector AD =  _preview3DFace._p[3] -  _preview3DFace._p[0];
+							MVector BC =  _preview3DFace._p[2] -  _preview3DFace._p[1];
+
+							if(edgesIntersection(_preview3DFace._p[0],_preview3DFace._p[1], AD, BC))
 							{
-								mesh.setPoint(edgeVertices[1], _preview3DFace._p[2]);
-								mesh.setPoint(edgeVertices[0], _preview3DFace._p[3]);
+								MVGFace3D tmp = _preview3DFace;
+								_preview3DFace._p[3] = tmp._p[2];
+								_preview3DFace._p[2] = tmp._p[3];
 							}
+	
 						}
 						break;
 				}
@@ -738,7 +819,7 @@ bool MVGBuildFaceManipulator::update3DFacePreview(M3dView& view, MVGFace3D& face
 				MPointArray meshPoints;
 				mesh.getPoints(meshPoints);
 
-				MIntArray vertices = mesh.getFaceVertices(_connectedFacesId[0]);	
+				MIntArray verticesId = mesh.getFaceVertices(_connectedFacesId[0]);	
 				switch(_mode)
 				{
 					case eModeMoveInPlane:
@@ -746,46 +827,44 @@ bool MVGBuildFaceManipulator::update3DFacePreview(M3dView& view, MVGFace3D& face
 							MVGFace3D meshFace;
 							for(int i = 0; i < 4; ++i)
 							{
-								meshFace._p[i] = meshPoints[vertices[i]];
+								meshFace._p[i] = meshPoints[verticesId[i]];
 							}
 
 							MPoint movedPoint;
 							PlaneKernel::Model model;
 							MVGGeometryUtil::computePlane(meshFace, model);
-							MVGGeometryUtil::projectPointOnPlane(_mousePoint, model, _camera, movedPoint);
+							MVGGeometryUtil::projectPointOnPlane(_mousePoint, view, model, _camera, movedPoint);
 
-							mesh.setPoint(_pressedPointId, movedPoint);
+							for(int i = 0; i < 4; ++i)
+							{
+								if(_pressedPointId == verticesId[i])
+									_preview3DFace._p[i] = movedPoint;
+								else
+									_preview3DFace._p[i] = meshFace._p[i];
+							}						
 						}
 						break;
 					case eModeMoveRecompute:
 						{
 							// Fill previewPoints2d with face points and dragMousePoint (in w2D)
 							std::vector<MPoint> previewPoints2d;
-							short x, y;
 							MPoint wpos;
-							MVector wdir;
-							for(int i = 0; i < vertices.length(); ++i)
+							for(int i = 0; i < verticesId.length(); ++i)
 							{
-								if(_pressedPointId == vertices[i])
+								if(_pressedPointId == verticesId[i])
+								{
 									previewPoints2d.push_back(_mousePoint);
+								}
+									
 								else
 								{
-									view.worldToView(meshPoints[vertices[i]], x, y);
-									view.viewToWorld(x, y, wpos, wdir);
+									MVGGeometryUtil::worldToCamera(view, _camera, meshPoints[verticesId[i]], wpos);
 									previewPoints2d.push_back(wpos);
 								}
-
 							}
 
-							// Compute face
-							MVGFace3D face3D;
-							if(computeFace3d(view, previewPoints2d, face3D, false))
-							{				
-								for(int i = 0; i < vertices.length(); ++i)
-								{
-									mesh.setPoint(vertices[i], previewPoints2d[i]);
-								}
-							}
+							// Compute face						
+							computeFace3d(view, previewPoints2d, _preview3DFace, false);
 						}
 						break;
 				}
@@ -793,7 +872,7 @@ bool MVGBuildFaceManipulator::update3DFacePreview(M3dView& view, MVGFace3D& face
 			break;
 		case eEditActionNone:
 			break;
-	}
+		}
 		
 	return false;
 }
@@ -812,17 +891,6 @@ bool MVGBuildFaceManipulator::computeFace3d(
 	M3dView& view, std::vector<MPoint>& pointArray,
 	MVGFace3D& outFace3D, bool computeLastPoint, MVector height)
 {
-	// Check points order	
-//	MVector AD = pointArray[3] - pointArray[0];
-//	MVector BC = pointArray[2] - pointArray[1];
-//			
-//	if(edgesIntersection(pointArray[0],pointArray[1], AD, BC))
-//	{
-//		std::vector<MPoint>	tmp(pointArray);
-//		pointArray[3] = tmp[2];
-//		pointArray[2] = tmp[3];
-//	}
-	
 	MVGFace2D face2D(pointArray);
 	
 	return MVGGeometryUtil::projectFace2D(outFace3D, view, _camera, face2D, computeLastPoint, height);
@@ -855,7 +923,7 @@ bool MVGBuildFaceManipulator::intersectPoint(M3dView& view, MPoint& point)
 		return false;
 	
 	short pointX, pointY;
-	view.worldToView(point, pointX, pointY);
+	MVGGeometryUtil::cameraToView(view, _camera, point, pointX, pointY);
 	
 	MFnCamera fnCamera(_camera.dagPath().node());
 	for(int i = 0; i < meshPoints.length(); ++i)
@@ -863,10 +931,11 @@ bool MVGBuildFaceManipulator::intersectPoint(M3dView& view, MPoint& point)
 		short x, y;
 		view.worldToView(meshPoints[i], x, y);
 
-		if(pointX <= x + kMFnMeshTolerance * fnCamera.zoom() * 10
-			&& pointX >= x - kMFnMeshTolerance * fnCamera.zoom() * 10
-			&& pointY <= y + kMFnMeshTolerance * fnCamera.zoom() * 10
-			&& pointY >= y - kMFnMeshTolerance * fnCamera.zoom() * 10)
+		// Tolerance en pixels ... 
+		if(pointX <= x + 1 + fnCamera.zoom() * 3
+			&& pointX >= x - 1 - fnCamera.zoom() * 3
+			&& pointY <= y + 1 + fnCamera.zoom() * 3
+			&& pointY >= y - 1 - fnCamera.zoom() * 3)
 		{
 			_pressedPointId = i;
 			_connectedFacesId = mesh.getConnectedFacesToVertex(_pressedPointId);
@@ -913,20 +982,17 @@ bool MVGBuildFaceManipulator::intersectEdge(M3dView& view, MPoint& point)
 		double lenght;
 		MPointArray edgePoints;
 
+		MFnCamera fnCamera(_camera.dagPath().node());
 		while(!edgeIt.isDone())
 		{
 			view.worldToView(edgeIt.point(0), x0, y0);
 			view.worldToView(edgeIt.point(1), x1, y1);
 
-			MVector wdir;
-			MPoint A;
-			view.viewToWorld(x0, y0, A, wdir);
-			MPoint B;
-			view.viewToWorld(x1, y1, B, wdir);
-
-			MFnCamera fnCamera(_camera.dagPath().node());
+			MPoint A, B;
+			MVGGeometryUtil::viewToCamera(view, _camera, x0, y0, A);
+			MVGGeometryUtil::viewToCamera(view, _camera, x1, y1, B);
 			
-			if(isPointOnEdge(_mousePoint, A, B, kMFnMeshTolerance * fnCamera.zoom() * 0.1))
+			if(isPointOnEdge(_mousePoint, A, B, kMFnMeshTolerance * fnCamera.zoom() * 10))
 			{
 				check = true;
 				lenght = A.distanceTo(B);

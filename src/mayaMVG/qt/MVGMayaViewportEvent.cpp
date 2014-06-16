@@ -58,10 +58,19 @@ bool MVGMayaViewportKeyEventFilter::eventFilter(QObject * obj, QEvent * e)
 			case Qt::Key_B:
 			case Qt::Key_Alt:
 			case Qt::Key_Control:	
-				(modifiers & Qt::ShiftModifier) ? MVGBuildFaceManipulator::_mode = MVGBuildFaceManipulator::eModeMoveRecompute : MVGBuildFaceManipulator::_mode = MVGBuildFaceManipulator::eModeMoveInPlane;
+				(modifiers & Qt::ShiftModifier) ? MVGBuildFaceManipulator::_mode = MVGBuildFaceManipulator::eModeMoveRecompute : MVGBuildFaceManipulator::_mode = MVGBuildFaceManipulator::eModeMoveInPlane;		
 				break;
 			case Qt::Key_Shift:
-				(modifiers & Qt::ControlModifier) ? MVGBuildFaceManipulator::_mode = MVGBuildFaceManipulator::eModeMoveRecompute : MVGBuildFaceManipulator::_mode = MVGBuildFaceManipulator::eModeCreate;
+				if(modifiers & Qt::ControlModifier)
+				{
+					MVGBuildFaceManipulator::_mode = MVGBuildFaceManipulator::eModeMoveRecompute;
+					
+				}
+				else
+				{
+					MVGBuildFaceManipulator::_mode = MVGBuildFaceManipulator::eModeCreate;
+					MVGBuildFaceManipulator::_editAction = MVGBuildFaceManipulator::eEditActionNone;
+				}
 				break;
 			case Qt::Key_Meta:
 				return true;
@@ -91,9 +100,11 @@ bool MVGMayaViewportKeyEventFilter::eventFilter(QObject * obj, QEvent * e)
 			case Qt::Key_Alt:
 			case Qt::Key_Control:
 				MVGBuildFaceManipulator::_mode = MVGBuildFaceManipulator::eModeCreate;
+				MVGBuildFaceManipulator::_editAction = MVGBuildFaceManipulator::eEditActionNone;			
 				break;
 			case Qt::Key_Shift:
 				MVGBuildFaceManipulator::_mode = MVGBuildFaceManipulator::eModeCreate;
+				MVGBuildFaceManipulator::_editAction = MVGBuildFaceManipulator::eEditActionNone;
 				break;
 			case Qt::Key_Meta:
 				return true;
@@ -118,8 +129,6 @@ MVGMayaViewportMouseEventFilter::MVGMayaViewportMouseEventFilter(QObject* parent
 bool MVGMayaViewportMouseEventFilter::eventFilter(QObject * obj, QEvent * e)
 {  
   // Image is fitted on width.
-  // In maya, width is not 1 but math.sqrt(2).
-  const double unit_maya = 1.4142135623730951;
   QMouseEvent * mouseevent = static_cast<QMouseEvent *>(e);
   
   // TODO: Key Press "F" to fit image plane
@@ -159,7 +168,7 @@ bool MVGMayaViewportMouseEventFilter::eventFilter(QObject * obj, QEvent * e)
       // compute mouse offset
       QPointF offset_screen = m_clickPos - mouseevent->pos();
       const double viewport_width = widget->width();
-      QPointF offset = (offset_screen / viewport_width) * unit_maya * camera.zoom();
+      QPointF offset = (offset_screen / viewport_width) * camera.horizontalFilmAperture() * camera.zoom();
       
       camera.setHorizontalPan(m_cameraHPan + offset.x());
       camera.setVerticalPan(m_cameraVPan - offset.y());
@@ -195,7 +204,7 @@ bool MVGMayaViewportMouseEventFilter::eventFilter(QObject * obj, QEvent * e)
       // compute mouse offset
       QPointF center_ratio(0.5, 0.5 * viewport_height / viewport_width);
       QPointF mouse_ratio_center = (center_ratio - (mouseevent->posF() / viewport_width));
-      QPointF mouse_maya_center = mouse_ratio_center * unit_maya * previousZoom;
+      QPointF mouse_maya_center = mouse_ratio_center * camera.horizontalFilmAperture() * previousZoom;
       QPointF mouseAfterZoom_maya_center = mouse_maya_center * scaleRatio;
       QPointF offset = mouse_maya_center - mouseAfterZoom_maya_center;
 
