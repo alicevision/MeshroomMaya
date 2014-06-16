@@ -29,10 +29,7 @@ bool readPointCloud(std::string filePath)
 	std::sort(cameraList.begin(), cameraList.end()); // sort by camera id
 	
 	// items per camera tmp list
-	std::vector<std::vector<MVGPointCloudItem> > itemsPerCam;
-	itemsPerCam.reserve(cameraList.size());
-	for(size_t i=0; i<cameraList.size(); ++i)
-		itemsPerCam.push_back(std::vector<MVGPointCloudItem>());
+	std::vector<std::vector<MVGPointCloudItem> > itemsPerCam(cameraList.size());
 
 	// parse ply file
 	std::vector<MVGPointCloudItem> items;

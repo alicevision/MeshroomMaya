@@ -117,14 +117,9 @@ MVGCamera MVGCamera::create(const std::string& name)
 	dagModifier.addAttribute(path.node(), pinholeAttr);
 	MObject itemsAttr = tAttr.create(_ITEMS, "itm", MFnData::kIntArray);
 	dagModifier.addAttribute(path.node(), itemsAttr);
-	
-	
 	MObject wpointsAttr = tAttr.create(_POINTS, "pts", MFnData::kPointArray);
 	dagModifier.addAttribute(path.node(), wpointsAttr);
 	dagModifier.doIt();
-	
-	std::vector<MPoint> points;
-	camera.setClickedPoints(points);
 	
 	// create, reparent & connect image plane
 	MObject imagePlane = dagModifier.createNode("imagePlane", transform, &status);
