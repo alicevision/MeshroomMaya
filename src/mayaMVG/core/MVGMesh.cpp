@@ -86,7 +86,7 @@ void MVGMesh::addPolygon(const MVGFace3D& face3d) const
 	pointArray.append(face3d._p[1]);
 	pointArray.append(face3d._p[2]);
 	pointArray.append(face3d._p[3]);
-	fnMesh.addPolygon(pointArray, true, kMFnMeshPointTolerance, MObject::kNullObj, &status);
+	fnMesh.addPolygon(pointArray, true, 0.01, MObject::kNullObj, &status);
 	CHECK(status);
 }
 
