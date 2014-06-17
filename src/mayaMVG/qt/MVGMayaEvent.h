@@ -10,7 +10,7 @@ namespace mayaMVG {
 class MVGWindowEventFilter: public QObject {
 
 	public:
-		MVGWindowEventFilter(const MCallbackIdArray& ids, MVGMayaViewportMouseEventFilter* m, MVGMayaViewportKeyEventFilter* k, QObject* parent);
+		MVGWindowEventFilter(const MCallbackIdArray& ids, MVGMayaViewportMouseEventFilter* m, QObject* parent);
 
 	protected:
 		bool eventFilter(QObject *obj, QEvent *e);
@@ -18,7 +18,6 @@ class MVGWindowEventFilter: public QObject {
 	private:
 		MCallbackIdArray m_ids;
 		MVGMayaViewportMouseEventFilter* m_mouseFilter;
-		MVGMayaViewportKeyEventFilter* m_keyFilter;
 };
 
 

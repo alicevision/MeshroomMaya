@@ -1,3 +1,8 @@
+#include "mayaMVG/maya/context/MVGManipulatorKeyEventFilter.h"
+#include <QtGui/QApplication>  // warning: include before maya
+#include <QtGui/QWidget>
+#include <QtGui/QKeyEvent>
+
 #include "mayaMVG/maya/context/MVGBuildFaceManipulator.h"
 #include "mayaMVG/maya/MVGMayaUtil.h"
 #include "mayaMVG/core/MVGLog.h"
@@ -13,16 +18,13 @@
 #include <vector>
 
 namespace mayaMVG {
-	
+
 #define EDGE_TOLERANCE 1.0e-5
 
 MTypeId MVGBuildFaceManipulator::_id(0x99999); // FIXME /!\ 
 
 MDagPath MVGBuildFaceManipulator::_lastCameraPath = MDagPath();
 MVGCamera MVGBuildFaceManipulator::_camera = MVGCamera(_lastCameraPath);
-std::vector<MPoint> MVGBuildFaceManipulator::_display2DPoints_world = std::vector<MPoint>();
-MVGBuildFaceManipulator::EMode	MVGBuildFaceManipulator::_mode = eModeCreate;
-MVGBuildFaceManipulator::EEditAction  MVGBuildFaceManipulator::_editAction = eEditActionNone;
 
 namespace {
 	double crossProduct2d(MVector& A, MVector& B) {
@@ -81,22 +83,7 @@ namespace {
 		MVector AP = P - A;
 		MVector BP = P - B;
 		MVector BA = A - B;
-		
-		// R
-//		double r = dotProduct2d(PA, AB) / (AB.length() * AB.length());
-//		LOG_INFO("=============");
-//		LOG_INFO("P = " << P);
-//		LOG_INFO("A = " << A);
-//		LOG_INFO("B = " << B);
-//		LOG_INFO("tolerance = " << tolerance);
-//		LOG_INFO("AB.length = " << AB.length());
-//		LOG_INFO("r = " << r);
-//		LOG_INFO("=============");
-		
-//		if(r < -tolerance 
-//			|| r > 1 + tolerance)
-//			return false;
-		
+				
 		// Dot signs				
 		int sign1, sign2;
 		
@@ -132,15 +119,20 @@ namespace {
 }
 
 MVGBuildFaceManipulator::MVGBuildFaceManipulator()
-{
+: _keyEvent(NULL)
+{	
+	QWidget* mayaWindow = MVGMayaUtil::getMVGWindow();
+	_keyEvent = new MVGManipulatorKeyEventFilter(mayaWindow, this);
+	
+	_mode = eModeCreate;
+	_editAction = eEditActionNone;
 	_cameraPathClickedPoints = MDagPath();
 	_pressedPointId = -1;
-	const GLfloat color[] = {1.f, 0.f, 0.f, 0.6f};
-	_drawColor = std::vector<GLfloat>(color, color + sizeof(color)/ sizeof(GLfloat));	
 }
 
 MVGBuildFaceManipulator::~MVGBuildFaceManipulator()
 {
+	delete _keyEvent;
 }
 
 void * MVGBuildFaceManipulator::creator()
@@ -171,6 +163,8 @@ void MVGBuildFaceManipulator::draw(M3dView & view, const MDagPath & path,
 	GLdouble radius = 3.0;
 
 	view.beginGL();
+	
+	// 3D Drawing
 	
 	// needed to enable doPress, doRelease
 	MGLuint glPickableItem;
@@ -253,6 +247,7 @@ void MVGBuildFaceManipulator::draw(M3dView & view, const MDagPath & path,
 						}
 
 						short x, y;
+						glLineWidth(1.5f);
 						glBegin(GL_LINES);
 							view.worldToView(_intersectingEdgePoints3D[0], x, y);
 							glVertex2f(x, y);
@@ -403,125 +398,138 @@ void MVGBuildFaceManipulator::draw(M3dView & view, const MDagPath & path,
 
 MStatus MVGBuildFaceManipulator::doPress(M3dView& view)
 {
-	updateMouse(view);
-	updateCamera(view);
-			
-	// Define action
-	if(intersectPoint(view, _mousePoint))
-	{
-		switch(_mode)
-		{
-			case eModeCreate:
-				break;
-			case eModeMoveInPlane:
-				if(_connectedFacesId.length() == 1)
-					_editAction = eEditActionMovePoint;
-				break;
-			case eModeMoveRecompute:
-				if(_connectedFacesId.length() == 1
-					&& !_faceConnected)
-					_editAction = eEditActionMovePoint;
-				break;				
-		}
-	}
-	else if(intersectEdge(view, _mousePoint))
-	{
-		switch(_mode)
-		{
-			case eModeCreate:
-				_editAction = eEditActionExtendEdge;
-				break;
-			case eModeMoveInPlane:
-				// Check edge status
-				if(_connectedFacesId.length() == 1
-					&& !_edgeConnected)
-				{
-					_editAction = eEditActionMoveEdge;
-				}
-				break;
-			case eModeMoveRecompute:
-				// Check edge status
-				if(_connectedFacesId.length() == 1
-					&& !_edgeConnected)
-				{
-					_editAction = eEditActionMoveEdge;
-				}
-				break;
-		}
-	}
-	else
-	{
-		_editAction = eEditActionNone;
-	}
-	
-	switch(_editAction)
-	{
-		case eEditActionExtendEdge:
-		case eEditActionMoveEdge:
-			{
-				// Compute height and edge ratio
-				MPoint intersectingEdgePoints2D_0, intersectingEdgePoints2D_1;
-				MVGGeometryUtil::worldToCamera(view, _camera, _intersectingEdgePoints3D[0], intersectingEdgePoints2D_0);
-				MVGGeometryUtil::worldToCamera(view, _camera, _intersectingEdgePoints3D[1], intersectingEdgePoints2D_1);
-								
-				MVector ratioVector2D = intersectingEdgePoints2D_1 - _mousePoint;
-				_edgeHeight2D = intersectingEdgePoints2D_1 - intersectingEdgePoints2D_0;
-				_edgeRatio = ratioVector2D.length() / _edgeHeight2D.length();
-				
-				_edgeHeight3D = _intersectingEdgePoints3D[1] - _intersectingEdgePoints3D[0];
+	Qt::MouseButtons mouseButtons = QApplication::mouseButtons();
 
-				if( _editAction == eEditActionExtendEdge )
-				{
-					_mousePointOnPressEdge = _mousePoint;
-					_clickedEdgePoints3D.clear();
-					_clickedEdgePoints3D.append(_intersectingEdgePoints3D[0]);
-					_clickedEdgePoints3D.append(_intersectingEdgePoints3D[1]);
-				}
+	// Left Button
+	if(mouseButtons & Qt::LeftButton)
+	{
+		updateMouse(view);
+		updateCamera(view);
+		
+		// Define action
+		if(intersectPoint(view, _mousePoint))
+		{
+			switch(_mode)
+			{
+				case eModeCreate:
+					break;
+				case eModeMoveInPlane:
+					if(_connectedFacesId.length() == 1)
+						_editAction = eEditActionMovePoint;
+					break;
+				case eModeMoveRecompute:
+					if(_connectedFacesId.length() == 1
+						&& !_faceConnected)
+						_editAction = eEditActionMovePoint;
+					break;				
 			}
-			break;
-		case eEditActionMovePoint:
-			break;
-		case eEditActionNone:
+		}
+		else if(intersectEdge(view, _mousePoint))
 		{
-			if(!(_cameraPathClickedPoints == _lastCameraPath))
+			switch(_mode)
 			{
-				_display2DPoints_world.clear();
-				_cameraPathClickedPoints = _lastCameraPath;
+				case eModeCreate:
+					_editAction = eEditActionExtendEdge;
+					break;
+				case eModeMoveInPlane:
+					// Check edge status
+					if(_connectedFacesId.length() == 1
+						&& !_edgeConnected)
+					{
+						_editAction = eEditActionMoveEdge;
+					}
+					break;
+				case eModeMoveRecompute:
+					// Check edge status
+					if(_connectedFacesId.length() == 1
+						&& !_edgeConnected)
+					{
+						_editAction = eEditActionMoveEdge;
+					}
+					break;
 			}
+		}
+		else
+		{
+			_editAction = eEditActionNone;
+		}
 
-			// Add a new point		
-			_display2DPoints_world.push_back(_mousePoint);
-
-			// Create face3D		
-			if(_display2DPoints_world.size() > 3)
-			{
-				MVGFace3D face3D;
-				std::vector<MPoint> pointArray;
-				for(int i = 0; i < 4; ++i)
+		switch(_editAction)
+		{
+			case eEditActionExtendEdge:
+			case eEditActionMoveEdge:
 				{
-					pointArray.push_back(_preview2DFace._p[i]);
+					// Compute height and edge ratio
+					MPoint intersectingEdgePoints2D_0, intersectingEdgePoints2D_1;
+					MVGGeometryUtil::worldToCamera(view, _camera, _intersectingEdgePoints3D[0], intersectingEdgePoints2D_0);
+					MVGGeometryUtil::worldToCamera(view, _camera, _intersectingEdgePoints3D[1], intersectingEdgePoints2D_1);
+
+					MVector ratioVector2D = intersectingEdgePoints2D_1 - _mousePoint;
+					_edgeHeight2D = intersectingEdgePoints2D_1 - intersectingEdgePoints2D_0;
+					_edgeRatio = ratioVector2D.length() / _edgeHeight2D.length();
+
+					_edgeHeight3D = _intersectingEdgePoints3D[1] - _intersectingEdgePoints3D[0];
+
+					if( _editAction == eEditActionExtendEdge )
+					{
+						_mousePointOnPressEdge = _mousePoint;
+						_clickedEdgePoints3D.clear();
+						_clickedEdgePoints3D.append(_intersectingEdgePoints3D[0]);
+						_clickedEdgePoints3D.append(_intersectingEdgePoints3D[1]);
+					}
 				}
-				if(computeFace3d(view, pointArray, face3D))
+				break;
+			case eEditActionMovePoint:
+				break;
+			case eEditActionNone:
+			{
+				if(!(_cameraPathClickedPoints == _lastCameraPath))
 				{
-					addFace3d(face3D);
 					_display2DPoints_world.clear();
-				}	
+					_cameraPathClickedPoints = _lastCameraPath;
+				}
+
+				// Add a new point		
+				_display2DPoints_world.push_back(_mousePoint);
+
+				// Create face3D		
+				if(_display2DPoints_world.size() > 3)
+				{
+					MVGFace3D face3D;
+					std::vector<MPoint> pointArray;
+					for(int i = 0; i < 4; ++i)
+					{
+						pointArray.push_back(_preview2DFace._p[i]);
+					}
+					if(computeFace3d(view, pointArray, face3D))
+					{
+						addFace3d(face3D);
+						_display2DPoints_world.clear();
+					}	
+				}
+
+				break;
 			}
-			
-			break;
 		}
+
+		// Preview
+		_mousePointOnDragEdge = _mousePoint;
+		update2DFacePreview(view);
+		update3DFacePreview(view);
 	}
 	
-	// Preview
-	_mousePointOnDragEdge = _mousePoint;
-	update2DFacePreview(view);
-	update3DFacePreview(view);
+	// Right button not detected in doPress
+//	else if(mouseButtons & Qt::RightButton)
+//	{		
+//		_display2DPoints_world.clear();			
+//		_editAction = eEditActionNone;	
+//	}
 
 	return MPxManipulatorNode::doPress(view);
 }
 
 MStatus MVGBuildFaceManipulator::doRelease(M3dView& view)
-{
+{	
 	switch(_editAction)
 	{
 		case eEditActionExtendEdge:
@@ -908,6 +916,94 @@ void MVGBuildFaceManipulator::addFace3d(MVGFace3D& face3d)
 
 }
 
+bool MVGBuildFaceManipulator::eventFilter(QObject *obj, QEvent *e)
+{
+	MStatus status;
+	M3dView view = M3dView::active3dView(&status);
+	CHECK(status);
+		
+	// TODO
+	// Key Press "F" to fit image plane
+
+	// Remove X11 defines, to avoid conflict with Qt.
+	#undef KeyPress	
+	if(e->type() == QEvent::KeyPress)
+	{
+		QKeyEvent * keyevent = static_cast<QKeyEvent *>(e);
+		if (keyevent->isAutoRepeat()) {
+			return true;
+		}
+
+		switch (keyevent->key()) {
+//			case Qt::Key_A:
+//			case Qt::Key_B:
+//			case Qt::Key_Alt:
+			// Mode MoveInPlane
+			case Qt::Key_Control:	
+				if(_editAction == eEditActionNone)
+					_mode = eModeMoveInPlane;
+				view.refresh(true, true);
+				break;
+			// Mode MoveRecompute
+			case Qt::Key_Shift:
+				if(_editAction == eEditActionNone)
+					_mode = eModeMoveRecompute;
+				view.refresh(true, true);
+				break;
+			case Qt::Key_Meta:
+				return true;
+			case Qt::Key_Escape:
+				_display2DPoints_world.clear();			
+				_editAction = eEditActionNone;	
+				view.refresh(true, true);
+				break;
+			default:
+				break;
+		}
+	}
+	
+	// Remove X11 defines, to avoid conflict with Qt.
+	#undef KeyRelease	
+	if(e->type() == QEvent::KeyRelease)
+	{
+		Qt::KeyboardModifiers modifiers = QApplication::keyboardModifiers();
+		QKeyEvent * keyevent = static_cast<QKeyEvent *>(e);
+		if (keyevent->isAutoRepeat()) {
+			return true;
+		}
+		switch (keyevent->key()) {
+//			case Qt::Key_A:
+//			case Qt::Key_B:
+//			case Qt::Key_Alt:
+			case Qt::Key_Control:
+				if(!(modifiers && Qt::Key_Shift))
+				{
+					_mode = eModeCreate;
+					_editAction = eEditActionNone;
+				}		
+				else
+					_mode = eModeMoveRecompute;
+				view.refresh(true, true);
+				break;
+			case Qt::Key_Shift:
+				if(!(modifiers && Qt::Key_Control))
+				{
+					_mode = eModeCreate;
+					_editAction = eEditActionNone;
+				}
+				else
+					_mode = eModeMoveInPlane;
+				view.refresh(true, true);
+				break;
+			case Qt::Key_Meta:
+				return true;
+			case Qt::Key_Escape:			
+			default:
+				break;
+		}
+	}
+	return false;
+}
 bool MVGBuildFaceManipulator::intersectPoint(M3dView& view, MPoint& point)
 {		
 	_faceConnected = false;

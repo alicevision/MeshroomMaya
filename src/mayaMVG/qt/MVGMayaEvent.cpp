@@ -11,11 +11,10 @@ using namespace mayaMVG;
 //
 // MVGWindowEventFilter
 //
-MVGWindowEventFilter::MVGWindowEventFilter(const MCallbackIdArray& ids, MVGMayaViewportMouseEventFilter* mouseFilter, MVGMayaViewportKeyEventFilter* keyFilter, QObject* parent)
+MVGWindowEventFilter::MVGWindowEventFilter(const MCallbackIdArray& ids, MVGMayaViewportMouseEventFilter* mouseFilter, QObject* parent)
 : QObject(parent)
 , m_ids(ids)
 , m_mouseFilter(mouseFilter)
-, m_keyFilter(keyFilter)
 {
 }
 
@@ -27,8 +26,6 @@ bool MVGWindowEventFilter::eventFilter(QObject * obj, QEvent * e)
 		for (int i = 0; i < children.size(); ++i) {
 			if(m_mouseFilter && children[i]->property("mvg_mouseFiltered").type()!=QVariant::Invalid)
 				children[i]->removeEventFilter(m_mouseFilter);
-			if(m_keyFilter && children[i]->property("mvg_keyFiltered").type()!=QVariant::Invalid)
-				children[i]->removeEventFilter(m_keyFilter);
 		}
 		// remove maya callbacks
 		if(m_ids.length()>0)

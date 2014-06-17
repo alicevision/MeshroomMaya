@@ -122,13 +122,6 @@ MStatus MVGCmd::doIt(const MArgList& args) {
 	rightViewport->installEventFilter(mouseEventFilter);
 	rightViewport->setProperty("mvg_panel", "right");
 	rightViewport->setProperty("mvg_mouseFiltered", true);
-	
-	// Install key event filter on maya viewports
-	MVGMayaViewportKeyEventFilter* keyEventFilter = new MVGMayaViewportKeyEventFilter(mayaWindow);
-	mayaWindow->installEventFilter(keyEventFilter);
-	mayaWindow->setProperty("mvg_keyFiltered", true);
-	mayaWindow->installEventFilter(keyEventFilter);
-	mayaWindow->setProperty("mvg_keyFiltered", true);
 
 	// maya callbacks
 	MCallbackIdArray callbackIDs;
@@ -136,7 +129,7 @@ MStatus MVGCmd::doIt(const MArgList& args) {
 
 	// install a window event filter on 'mayaWindow'
 	// needed to remove all maya callbacks and all Qt event filters 
-	MVGWindowEventFilter * windowEventFilter = new MVGWindowEventFilter(callbackIDs, mouseEventFilter, keyEventFilter, mayaWindow);
+	MVGWindowEventFilter * windowEventFilter = new MVGWindowEventFilter(callbackIDs, mouseEventFilter, mayaWindow);
 	mayaWindow->installEventFilter(windowEventFilter);
 	
 	// -p

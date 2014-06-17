@@ -57,7 +57,6 @@ void MVGContext::getClassName(MString & name) const
 	name.set("mayaMVGTool");
 }
 
-// static
 void MVGContext::updateManipulators(void * data)
 {
 	// delete all manipulators

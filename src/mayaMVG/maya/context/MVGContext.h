@@ -21,8 +21,8 @@ class MVGContext: public MPxContext {
         virtual void getClassName(MString & name) const;
 
     public:
-        static void updateManipulators(void* clientData);
-
+        void updateManipulators(void* clientData);
+		
     private:
         MVGContextEventFilter* m_eventFilter;
         

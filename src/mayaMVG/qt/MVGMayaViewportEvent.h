@@ -7,14 +7,6 @@ namespace mayaMVG {
 
 class MVGContext;
 
-class MVGMayaViewportKeyEventFilter: public QObject {
-	
-	public:
-		MVGMayaViewportKeyEventFilter(QObject* parent);
-	
-	protected:
-		bool eventFilter(QObject *obj, QEvent *e);
-};
 
 
 class MVGMayaViewportMouseEventFilter: public QObject {

@@ -8,8 +8,11 @@
 #include <vector>
 
 class M3dView;
+class QEvent;
+class QObject;
 
 namespace mayaMVG {
+class MVGManipulatorKeyEventFilter;
 
 
 class MVGBuildFaceManipulator: public MPxManipulatorNode
@@ -64,8 +67,13 @@ class MVGBuildFaceManipulator: public MPxManipulatorNode
 		bool computeFace3d(M3dView& view, std::vector<MPoint>& pointArray, MVGFace3D& face3D, bool computeLastPoint = false, MVector height = MVector(0, 0, 0));
 		void addFace3d(MVGFace3D& face3d);
 		
+//	public:
+		bool eventFilter(QObject *obj, QEvent *e);
 
 	public:
+		friend class MVGManipulatorKeyEventFilter;
+		MVGManipulatorKeyEventFilter* _keyEvent;
+		
 		static MTypeId _id;
 		static MDagPath _lastCameraPath; // TODO: to remove, use _camera
 		static MVGCamera _camera;  // TODO: remove static
@@ -81,8 +89,8 @@ class MVGBuildFaceManipulator: public MPxManipulatorNode
 		
 		///@brief Mode & action
 		///@{
-		static EMode	_mode;
-		static EEditAction _editAction;
+		EMode	_mode;
+		EEditAction _editAction;
 		///@}
 		
 		///@brief Display & Preview
@@ -90,10 +98,9 @@ class MVGBuildFaceManipulator: public MPxManipulatorNode
 		/// 2D points for display (clicked points + others for display)
 		/// Warning: converted in 3D world space to be independant from scale and offset.
 		///          It's just a shortcut to rely on maya functions (viewToWorld)
-		static std::vector<MPoint> _display2DPoints_world;
+		std::vector<MPoint> _display2DPoints_world;
 		MVGFace3D	_preview3DFace;  //< 3D points (4 points to describe the face)
 		MVGFace3D	_preview2DFace;  //< 2D points (4 points to describe the face)
-		std::vector<GLfloat> _drawColor;
 		///@}
 		
 		///@brief Intersections
