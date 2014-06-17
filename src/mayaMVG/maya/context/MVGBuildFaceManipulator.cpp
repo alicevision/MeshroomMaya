@@ -499,6 +499,9 @@ MStatus MVGBuildFaceManipulator::doPress(M3dView& view)
 				break;
 			case eEditActionNone:
 			{
+				if(_mode != eModeCreate)
+					break;
+						
 				if(!(_cameraPathClickedPoints == _lastCameraPath))
 				{
 					_display2DPoints_world.clear();
