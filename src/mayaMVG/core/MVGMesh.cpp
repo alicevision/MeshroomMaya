@@ -44,7 +44,7 @@ MVGMesh MVGMesh::create(const std::string& name)
 
 	// get project root node
 	MVGProject project(MVGProject::_PROJECT);
-	MObject rootObj = project.dagPath().node();
+	MObject rootObj = project.dagPath().child(2); // meshes transform
 
 	// create empty mesh
 	MPointArray vertexArray;

@@ -45,19 +45,19 @@ MVGPointCloud MVGPointCloud::create(const std::string& name)
 
 	// get project root node
 	MVGProject project(MVGProject::_PROJECT);
-	MObject rootObj = project.dagPath().node();
+	MObject parent = project.dagPath().child(1); // clouds transform
 
 	// create maya particle system node
 	MDagPath path;
 	MObject particleSystem = fnParticle.create(&status);
 	MDagPath::getAPathTo(particleSystem, path);
 
-	// add dynamic attributes & reparent under root node
+	// add dynamic attributes & reparent
 	MDagModifier dagModifier;
 	MFnTypedAttribute tAttr;
 	MObject rgbAttr = tAttr.create(_RGBPP, "rgb", MFnData::kVectorArray);
 	dagModifier.addAttribute(path.node(), rgbAttr);
-	dagModifier.reparentNode(path.transform(), rootObj);
+	dagModifier.reparentNode(path.transform(), parent);
 	dagModifier.doIt();
 
 	// rename and return

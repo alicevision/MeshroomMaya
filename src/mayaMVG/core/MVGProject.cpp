@@ -42,8 +42,20 @@ MVGProject MVGProject::create(const std::string& name)
 	MStatus status;
 	MFnTransform fn;
 	MDagPath path;
+	
+	// root node
 	MObject transform = fn.create(MObject::kNullObj, &status);
+	// root/cameras
+	fn.create(transform, &status);
+	fn.setName("cameras");
+	// root/clouds
+	fn.create(transform, &status);
+	fn.setName("clouds");
+	// root/meshes
+	fn.create(transform, &status);
+	fn.setName("meshes");
 	CHECK(status)
+
 	MDagPath::getAPathTo(transform, path);
 	MVGProject project(path);
 	project.setName(name);
