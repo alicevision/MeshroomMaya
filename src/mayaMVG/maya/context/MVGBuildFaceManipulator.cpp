@@ -116,6 +116,17 @@ namespace {
 			}
 		glEnd();
 	}
+	
+	void drawCircle(int x, int y, int r, int segments)
+	{
+		glLineWidth(1.5f);
+		glBegin(GL_LINE_LOOP);
+			for( int n = 0; n <= segments; ++n ) {
+				float const t = 2*M_PI*(float)n/(float)segments;
+				glVertex2f(x + sin(t)*r, y + cos(t)*r);
+			}
+		glEnd();
+	}
 }
 
 MVGBuildFaceManipulator::MVGBuildFaceManipulator()
@@ -268,6 +279,7 @@ void MVGBuildFaceManipulator::draw(M3dView & view, const MDagPath & path,
 							glColor4f(0.f, 1.f, 1.f, 0.6f);	//glColor4f(0.8f, 0.1f, 1.f, 0.6f);
 
 						short x, y;				
+						drawCircle(mousex, mousey, 13, 20);
 						glPointSize(4.f);
 						glBegin(GL_POINTS);
 						MVGGeometryUtil::cameraToView(view, _camera, _mousePoint, x, y);
