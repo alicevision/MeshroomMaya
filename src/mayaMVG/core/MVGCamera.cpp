@@ -307,6 +307,42 @@ void MVGCamera::setVisibleItems(const std::vector<MVGPointCloudItem>& items) con
 	MVGMayaUtil::setIntArrayAttribute(_dagpath.node(), _ITEMS, intArray);
 }
 
+double MVGCamera::getZoom() const
+{
+	MFnCamera fnCamera(dagPath());
+	return fnCamera.zoom();
+}
+
+void MVGCamera::setZoom(const double zoom) const
+{
+	MFnCamera fnCamera(dagPath());
+	fnCamera.setZoom(zoom);
+}
+
+double MVGCamera::getHorizontalPan() const
+{
+	MFnCamera fnCamera(dagPath());
+	return fnCamera.horizontalPan();
+}
+
+void MVGCamera::setHorizontalPan(const double pan) const
+{
+	MFnCamera fnCamera(dagPath());
+	fnCamera.setHorizontalPan(pan);
+}
+
+double MVGCamera::getVerticalPan() const
+{
+	MFnCamera fnCamera(dagPath());
+	return fnCamera.verticalPan();
+}
+
+void MVGCamera::setVerticalPan(const double pan) const
+{
+	MFnCamera fnCamera(dagPath());
+	fnCamera.setVerticalPan(pan);
+}
+
 std::vector<MPoint> MVGCamera::getClickedPoints() const
 {
 	MPointArray pointArray;

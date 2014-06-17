@@ -40,6 +40,13 @@ class MVGCamera : public MVGNodeWrapper {
 		std::vector<MVGPointCloudItem> visibleItems() const;
 		void setVisibleItems(const std::vector<MVGPointCloudItem>& item) const;
 		
+		double getZoom() const;
+		void setZoom(const double zoom) const;
+		double getHorizontalPan() const;
+		void setHorizontalPan(const double pan) const;
+		double getVerticalPan() const;
+		void setVerticalPan(const double pan) const;
+		
 		std::vector<MPoint> getClickedPoints() const;
 		void setClickedPoints(const std::vector<MPoint>& points) const;
 		void addClickedPoint(const MPoint& point) const;

@@ -938,6 +938,11 @@ bool MVGBuildFaceManipulator::eventFilter(QObject *obj, QEvent *e)
 //			case Qt::Key_A:
 //			case Qt::Key_B:
 //			case Qt::Key_Alt:
+			case Qt::Key_F:
+				_camera.setZoom(1);
+				_camera.setHorizontalPan(0);
+				_camera.setVerticalPan(0);
+				break;
 			// Mode MoveInPlane
 			case Qt::Key_Control:	
 				if(_editAction == eEditActionNone)
@@ -1021,17 +1026,16 @@ bool MVGBuildFaceManipulator::intersectPoint(M3dView& view, MPoint& point)
 	short pointX, pointY;
 	MVGGeometryUtil::cameraToView(view, _camera, point, pointX, pointY);
 	
-	MFnCamera fnCamera(_camera.dagPath().node());
 	for(int i = 0; i < meshPoints.length(); ++i)
 	{
 		short x, y;
 		view.worldToView(meshPoints[i], x, y);
 
 		// Tolerance en pixels ... 
-		if(pointX <= x + 1 + fnCamera.zoom() * 3
-			&& pointX >= x - 1 - fnCamera.zoom() * 3
-			&& pointY <= y + 1 + fnCamera.zoom() * 3
-			&& pointY >= y - 1 - fnCamera.zoom() * 3)
+		if(pointX <= x + 1 + _camera.getZoom() * 3
+			&& pointX >= x - 1 - _camera.getZoom() * 3
+			&& pointY <= y + 1 + _camera.getZoom() * 3
+			&& pointY >= y - 1 - _camera.getZoom() * 3)
 		{
 			_pressedPointId = i;
 			_connectedFacesId = mesh.getConnectedFacesToVertex(_pressedPointId);
@@ -1088,7 +1092,7 @@ bool MVGBuildFaceManipulator::intersectEdge(M3dView& view, MPoint& point)
 			MVGGeometryUtil::viewToCamera(view, _camera, x0, y0, A);
 			MVGGeometryUtil::viewToCamera(view, _camera, x1, y1, B);
 			
-			if(isPointOnEdge(_mousePoint, A, B, kMFnMeshTolerance * fnCamera.zoom() * 10))
+			if(isPointOnEdge(_mousePoint, A, B, kMFnMeshTolerance * _camera.getZoom() * 10))
 			{
 				check = true;
 				lenght = A.distanceTo(B);
