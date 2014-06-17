@@ -692,11 +692,38 @@ bool MVGBuildFaceManipulator::update3DFacePreview(M3dView& view)
 				// Preview keeping 3D length
 				check = computeFace3d(view, previewPoints2d, _preview3DFace, true, _edgeHeight3D);
 				
+				// If compute failed, use the plan of the extended fae
 				if(!check)
 				{
-					// Fill _preview3DFace in computeFace3d() failed
-					_preview3DFace._p[2] = _clickedEdgePoints3D[1];
-					_preview3DFace._p[3] = _clickedEdgePoints3D[0];
+					MVGMesh mesh(MVGProject::_MESH);
+					if(!mesh.isValid()) {
+						mesh = MVGMesh::create(MVGProject::_MESH);
+						LOG_INFO("New OpenMVG Mesh.")
+					}
+					
+					MPointArray meshPoints;
+					mesh.getPoints(meshPoints);
+					
+					// Get points of the first connected face		
+					MIntArray verticesId = mesh.getFaceVertices(_connectedFacesId[0]);
+					MVGFace3D meshFace;
+					for(int i = 0; i < 4; ++i)
+					{
+						meshFace._p[i] = meshPoints[verticesId[i]];
+					}
+
+					// Compute plane with old face points
+					MPoint movedPoint;
+					PlaneKernel::Model model;
+					MVGGeometryUtil::computePlane(meshFace, model);
+
+					// Project new points on plane					
+					MVGGeometryUtil::projectPointOnPlane(P3, view, model, _camera, movedPoint);
+					_preview3DFace._p[2] = movedPoint;
+
+					// Keep 3D length
+					MVGGeometryUtil::projectPointOnPlane(P4, view, model, _camera, movedPoint);
+					_preview3DFace._p[3] = movedPoint;
 				}
 
 				// Keep the old first 2 points to have a connected face
