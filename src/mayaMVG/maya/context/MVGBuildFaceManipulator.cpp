@@ -153,10 +153,6 @@ void MVGBuildFaceManipulator::postConstructor()
 void MVGBuildFaceManipulator::draw(M3dView & view, const MDagPath & path,
                                M3dView::DisplayStyle style, M3dView::DisplayStatus dispStatus)
 {
-	_drawEnabled = MVGMayaUtil::isMVGView(view);
-	if(!_drawEnabled)
-		return;
-
 	short mousex, mousey;
 	mousePosition(mousex, mousey);
 	updateMouse(view);
@@ -164,7 +160,64 @@ void MVGBuildFaceManipulator::draw(M3dView & view, const MDagPath & path,
 
 	view.beginGL();
 	
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	
 	// 3D Drawing
+	switch(_editAction)
+	{
+		case eEditActionNone:
+			break;
+		case eEditActionExtendEdge:
+		case eEditActionMovePoint:
+		case eEditActionMoveEdge:	
+			// Lines preview
+			switch(_mode)
+			{
+				case eModeMoveInPlane:
+					glEnable(GL_LINE_STIPPLE);
+					glColor4f(0.f, 1.f, 0.f, 0.6f);
+					glLineStipple(1.f, 0x5555);
+					break;
+				case eModeMoveRecompute:
+					glEnable(GL_LINE_STIPPLE);
+					glColor4f(0.f, 1.f, 1.f, 0.6f);	
+					glLineStipple(1.f, 0x5555);
+					break;
+				case eModeCreate:
+					glColor4f(0.f, 0.f, 1.f, 0.6f);
+					break;
+			}
+
+			glLineWidth(1.5f);
+			glBegin(GL_LINE_LOOP);
+				glVertex3f(_preview3DFace._p[0].x, _preview3DFace._p[0].y, _preview3DFace._p[0].z);
+				glVertex3f(_preview3DFace._p[1].x, _preview3DFace._p[1].y, _preview3DFace._p[1].z);
+				glVertex3f(_preview3DFace._p[2].x, _preview3DFace._p[2].y, _preview3DFace._p[2].z);
+				glVertex3f(_preview3DFace._p[3].x, _preview3DFace._p[3].y, _preview3DFace._p[3].z);
+			glEnd();
+			glLineWidth(1.f);
+			glDisable(GL_LINE_STIPPLE);
+
+			// Poly preview
+			if(_editAction == eEditActionExtendEdge)
+			{
+				glColor4f(1.f, 1.f, 1.f, 0.6f);
+				glBegin(GL_POLYGON);
+					glVertex3f(_preview3DFace._p[0].x, _preview3DFace._p[0].y, _preview3DFace._p[0].z);
+					glVertex3f(_preview3DFace._p[1].x, _preview3DFace._p[1].y, _preview3DFace._p[1].z);
+					glVertex3f(_preview3DFace._p[2].x, _preview3DFace._p[2].y, _preview3DFace._p[2].z);
+					glVertex3f(_preview3DFace._p[3].x, _preview3DFace._p[3].y, _preview3DFace._p[3].z);
+				glEnd();
+			}
+
+			break;
+	}
+	
+	// Draw only in current view
+	_drawEnabled = MVGMayaUtil::isActiveView(view);
+	if(!_drawEnabled)
+		return;
 	
 	// needed to enable doPress, doRelease
 	MGLuint glPickableItem;
@@ -174,9 +227,6 @@ void MVGBuildFaceManipulator::draw(M3dView & view, const MDagPath & path,
 	// drawing part
 	glPushAttrib(GL_ALL_ATTRIB_BITS);
 	{
-		glEnable(GL_BLEND);
-		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
 		// draw in screen space
 		glMatrixMode(GL_PROJECTION);
 		glPushMatrix();
@@ -202,187 +252,131 @@ void MVGBuildFaceManipulator::draw(M3dView & view, const MDagPath & path,
 			MDagPath cameraPath;
 			view.getCamera(cameraPath);
 			
-			switch(_editAction)
+			if(_editAction == eEditActionNone)
 			{
-				case eEditActionNone:
-					// Intersection with point
-					if(intersectPoint(view, _mousePoint))
-					{
-						if(_connectedFacesId.length() == 1)
-						{	
-							// Green
-							if(_mode == eModeMoveInPlane)
-								glColor4f(0.f, 1.f, 0.f, 0.6f);
-								
-							// Cyan
-							else if(_mode == eModeMoveRecompute && !_faceConnected)
-								glColor4f(0.f, 1.f, 1.f, 0.6f);	//glColor4f(0.8f, 0.1f, 1.f, 0.6f);
-	
-							short x, y;				
-							glPointSize(4.f);
-							glBegin(GL_POINTS);
-							MVGGeometryUtil::cameraToView(view, _camera, _mousePoint, x, y);
-								glVertex2f(x, y);
-							glEnd();	
-						}						
-					}
-
-					// Intersection with edge
-					else if(intersectEdge(view, _mousePoint))
-					{
-						// Yellow
-						if(_mode == eModeCreate)
-							glColor4f(0.9f, 0.9f, 0.1f, 0.6f);
-
-						else if(_connectedFacesId.length() == 1
-							&& !_edgeConnected)
-						{
-							// Green
-							if(_mode == eModeMoveInPlane)
-								glColor4f(0.f, 1.f, 0.f, 0.6f);
-							// Purple
-							else if(eModeMoveRecompute)
-								glColor4f(0.f, 1.f, 1.f, 0.6f);	
-
-						}
-
-						short x, y;
-						glLineWidth(1.5f);
-						glBegin(GL_LINES);
-							view.worldToView(_intersectingEdgePoints3D[0], x, y);
-							glVertex2f(x, y);
-							view.worldToView(_intersectingEdgePoints3D[1], x, y);
-							glVertex2f(x, y);
-						glEnd();
-					}
-					
-					// Draw lines and poly : if face creation
-					if(!_display2DPoints_world.empty())
-					{
-						short x;
-						short y;
-						glColor4f(1.f, 0.f, 0.f, 0.6f);
-
-						if(_display2DPoints_world.size() < 3 
-							&& (_cameraPathClickedPoints == _lastCameraPath))
-						{
-							// Lines
-							if(_display2DPoints_world.size() > 1)
-							{
-								glBegin(GL_LINES);
-								MVGGeometryUtil::cameraToView(view, _camera, _display2DPoints_world[0], x, y);
-								glVertex2f(x, y);
-								MVGGeometryUtil::cameraToView(view, _camera, _display2DPoints_world[1], x, y);
-								glVertex2f(x, y);
-								glEnd();	
-
-								glPointSize(4.f);
-								glBegin(GL_POINTS);
-								for(size_t i = 0; i < _display2DPoints_world.size(); ++i){
-									MVGGeometryUtil::cameraToView(view, _camera, _display2DPoints_world[i], x, y);
-									glVertex2f(x, y);
-								}
-								glEnd();					
-							}	
-
-							if(_display2DPoints_world.size() > 0)
-							{
-								glBegin(GL_LINES);
-								MVGGeometryUtil::cameraToView(view, _camera, _display2DPoints_world[_display2DPoints_world.size() - 1], x, y);
-								glVertex2f(x, y);
-								MVGGeometryUtil::cameraToView(view, _camera, _mousePoint, x, y);
-								glVertex2f(x, y);
-								glEnd();	
-
-							}		
-						}
-					}
-					
-					// Preview 2D
-					if((_display2DPoints_world.size() > 2
-						&& _lastCameraPath == _cameraPathClickedPoints))
-					{
-						short x, y;
-						glColor4f(0.f, 0.f, 1.f, 0.6f);
-						glLineWidth(1.5f);
-						glBegin(GL_LINE_LOOP);
-							MVGGeometryUtil::cameraToView(view, _camera, _preview2DFace._p[0], x, y);
-							glVertex2f(x, y);
-							MVGGeometryUtil::cameraToView(view, _camera, _preview2DFace._p[1], x, y);
-							glVertex2f(x, y);
-							MVGGeometryUtil::cameraToView(view, _camera, _preview2DFace._p[2], x, y);
-							glVertex2f(x, y);
-							MVGGeometryUtil::cameraToView(view, _camera, _preview2DFace._p[3], x, y);
-							glVertex2f(x, y);
-						glEnd();
-
-						glColor4f(1.f, 1.f, 1.f, 0.6f);
-						glBegin(GL_POLYGON);
-							MVGGeometryUtil::cameraToView(view, _camera, _preview2DFace._p[0], x, y);
-							glVertex2f(x, y);
-							MVGGeometryUtil::cameraToView(view, _camera, _preview2DFace._p[1], x, y);
-							glVertex2f(x, y);
-							MVGGeometryUtil::cameraToView(view, _camera, _preview2DFace._p[2], x, y);
-							glVertex2f(x, y);
-							MVGGeometryUtil::cameraToView(view, _camera, _preview2DFace._p[3], x, y);
-							glVertex2f(x, y);
-						glEnd();
-					}
-					break;
-				case eEditActionExtendEdge:
-				case eEditActionMovePoint:
-				case eEditActionMoveEdge:	
-					short x, y;
-					
-					// Lines preview
-					// Stripple lines
-					switch(_mode)
-					{
-						case eModeMoveInPlane:
-							glEnable(GL_LINE_STIPPLE);
+				// Intersection with point
+				if(intersectPoint(view, _mousePoint))
+				{
+					if(_connectedFacesId.length() == 1)
+					{	
+						// Green
+						if(_mode == eModeMoveInPlane)
 							glColor4f(0.f, 1.f, 0.f, 0.6f);
-							glLineStipple(1.f, 0x5555);
-							break;
-						case eModeMoveRecompute:
-							glEnable(GL_LINE_STIPPLE);
+
+						// Cyan
+						else if(_mode == eModeMoveRecompute && !_faceConnected)
+							glColor4f(0.f, 1.f, 1.f, 0.6f);	//glColor4f(0.8f, 0.1f, 1.f, 0.6f);
+
+						short x, y;				
+						glPointSize(4.f);
+						glBegin(GL_POINTS);
+						MVGGeometryUtil::cameraToView(view, _camera, _mousePoint, x, y);
+							glVertex2f(x, y);
+						glEnd();	
+					}						
+				}
+
+				// Intersection with edge
+				else if(intersectEdge(view, _mousePoint))
+				{
+					// Yellow
+					if(_mode == eModeCreate)
+						glColor4f(0.9f, 0.9f, 0.1f, 0.6f);
+
+					else if(_connectedFacesId.length() == 1
+						&& !_edgeConnected)
+					{
+						// Green
+						if(_mode == eModeMoveInPlane)
+							glColor4f(0.f, 1.f, 0.f, 0.6f);
+						// Purple
+						else if(eModeMoveRecompute)
 							glColor4f(0.f, 1.f, 1.f, 0.6f);	
-							glLineStipple(1.f, 0x5555);
-							break;
-						case eModeCreate:
-							glColor4f(0.f, 0.f, 1.f, 0.6f);
-							break;
+
 					}
-					
+
+					short x, y;
 					glLineWidth(1.5f);
-					glBegin(GL_LINE_LOOP);
-						view.worldToView(_preview3DFace._p[0], x, y);
+					glBegin(GL_LINES);
+						view.worldToView(_intersectingEdgePoints3D[0], x, y);
 						glVertex2f(x, y);
-						view.worldToView(_preview3DFace._p[1], x, y);
-						glVertex2f(x, y);
-						view.worldToView(_preview3DFace._p[2], x, y);
-						glVertex2f(x, y);
-						view.worldToView(_preview3DFace._p[3], x, y);
+						view.worldToView(_intersectingEdgePoints3D[1], x, y);
 						glVertex2f(x, y);
 					glEnd();
-					
-					
-					// Poly preview
-					if(_editAction == eEditActionExtendEdge)
+				}
+
+				// Draw lines and poly : if face creation
+				if(!_display2DPoints_world.empty())
+				{
+					short x;
+					short y;
+					glColor4f(1.f, 0.f, 0.f, 0.6f);
+
+					if(_display2DPoints_world.size() < 3 
+						&& (_cameraPathClickedPoints == _lastCameraPath))
 					{
-						glColor4f(1.f, 1.f, 1.f, 0.6f);
-						glBegin(GL_POLYGON);
-							view.worldToView(_preview3DFace._p[0], x, y);
+						// Lines
+						if(_display2DPoints_world.size() > 1)
+						{
+							glBegin(GL_LINES);
+							MVGGeometryUtil::cameraToView(view, _camera, _display2DPoints_world[0], x, y);
 							glVertex2f(x, y);
-							view.worldToView(_preview3DFace._p[1], x, y);
+							MVGGeometryUtil::cameraToView(view, _camera, _display2DPoints_world[1], x, y);
 							glVertex2f(x, y);
-							view.worldToView(_preview3DFace._p[2], x, y);
+							glEnd();	
+
+							glPointSize(4.f);
+							glBegin(GL_POINTS);
+							for(size_t i = 0; i < _display2DPoints_world.size(); ++i){
+								MVGGeometryUtil::cameraToView(view, _camera, _display2DPoints_world[i], x, y);
+								glVertex2f(x, y);
+							}
+							glEnd();					
+						}	
+
+						if(_display2DPoints_world.size() > 0)
+						{
+							glBegin(GL_LINES);
+							MVGGeometryUtil::cameraToView(view, _camera, _display2DPoints_world[_display2DPoints_world.size() - 1], x, y);
 							glVertex2f(x, y);
-							view.worldToView(_preview3DFace._p[3], x, y);
+							MVGGeometryUtil::cameraToView(view, _camera, _mousePoint, x, y);
 							glVertex2f(x, y);
-						glEnd();
+							glEnd();	
+
+						}		
 					}
-			
-					break;
+				}
+
+				// Preview 2D
+				if((_display2DPoints_world.size() > 2
+					&& _lastCameraPath == _cameraPathClickedPoints))
+				{
+					short x, y;
+					glColor4f(0.f, 0.f, 1.f, 0.6f);
+					glLineWidth(1.5f);
+					glBegin(GL_LINE_LOOP);
+						MVGGeometryUtil::cameraToView(view, _camera, _preview2DFace._p[0], x, y);
+						glVertex2f(x, y);
+						MVGGeometryUtil::cameraToView(view, _camera, _preview2DFace._p[1], x, y);
+						glVertex2f(x, y);
+						MVGGeometryUtil::cameraToView(view, _camera, _preview2DFace._p[2], x, y);
+						glVertex2f(x, y);
+						MVGGeometryUtil::cameraToView(view, _camera, _preview2DFace._p[3], x, y);
+						glVertex2f(x, y);
+					glEnd();
+
+					glColor4f(1.f, 1.f, 1.f, 0.6f);
+					glBegin(GL_POLYGON);
+						MVGGeometryUtil::cameraToView(view, _camera, _preview2DFace._p[0], x, y);
+						glVertex2f(x, y);
+						MVGGeometryUtil::cameraToView(view, _camera, _preview2DFace._p[1], x, y);
+						glVertex2f(x, y);
+						MVGGeometryUtil::cameraToView(view, _camera, _preview2DFace._p[2], x, y);
+						glVertex2f(x, y);
+						MVGGeometryUtil::cameraToView(view, _camera, _preview2DFace._p[3], x, y);
+						glVertex2f(x, y);
+					glEnd();
+				}
 			}
 									
 			glPopMatrix();
