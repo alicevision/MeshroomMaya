@@ -94,10 +94,10 @@ MVGCamera MVGCamera::create(const std::string& name)
 
 	// get project root node
 	MVGProject project(MVGProject::_PROJECT);
-	MObject rootObj = project.dagPath().node();
+	MObject parent = project.dagPath().child(0); // cameras transform
 
 	// create maya camera
-	MObject transform = fnCamera.create(rootObj, &status);
+	MObject transform = fnCamera.create(parent, &status);
 	CHECK(status)
 
 	MDagPath::getAPathTo(transform, path);
@@ -117,14 +117,9 @@ MVGCamera MVGCamera::create(const std::string& name)
 	dagModifier.addAttribute(path.node(), pinholeAttr);
 	MObject itemsAttr = tAttr.create(_ITEMS, "itm", MFnData::kIntArray);
 	dagModifier.addAttribute(path.node(), itemsAttr);
-	
-	
 	MObject wpointsAttr = tAttr.create(_POINTS, "pts", MFnData::kPointArray);
 	dagModifier.addAttribute(path.node(), wpointsAttr);
 	dagModifier.doIt();
-	
-	std::vector<MPoint> points;
-	camera.setClickedPoints(points);
 	
 	// create, reparent & connect image plane
 	MObject imagePlane = dagModifier.createNode("imagePlane", transform, &status);
