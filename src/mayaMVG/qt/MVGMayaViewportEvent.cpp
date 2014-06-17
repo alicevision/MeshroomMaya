@@ -43,9 +43,8 @@ bool MVGMayaViewportMouseEventFilter::eventFilter(QObject * obj, QEvent * e)
 	// Init pan and zoom
 	if (e->type() == QEvent::MouseButtonPress)
 	{
-		// Camera Pan (Alt + Mid button)
-		Qt::KeyboardModifiers modifiers = QApplication::keyboardModifiers();
-		if((modifiers & Qt::AltModifier) && (mouseevent->button() & Qt::MidButton))
+		// Camera Pan (Mid button)
+		if((mouseevent->button() & Qt::MidButton))
 		{
 		  MDagPath cameraPath;
 		  if(getCameraPathFromQbject(obj, cameraPath))

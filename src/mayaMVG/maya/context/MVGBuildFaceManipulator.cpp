@@ -1,5 +1,6 @@
 #include "mayaMVG/maya/context/MVGManipulatorKeyEventFilter.h"
 #include <QtGui/QApplication>  // warning: include before maya
+#include <QtGui/QCursor>
 #include <QtGui/QWidget>
 #include <QtGui/QKeyEvent>
 
@@ -127,6 +128,17 @@ namespace {
 			}
 		glEnd();
 	}
+	
+	void setCursor(QCursor cursor)
+	{
+		QWidget* leftViewport = MVGMayaUtil::getMVGLeftViewportLayout();
+		if(leftViewport)
+			leftViewport->setCursor(cursor);
+		QWidget* rightViewport = MVGMayaUtil::getMVGRightViewportLayout();
+		if(rightViewport)
+			rightViewport->setCursor(cursor);
+	}
+
 }
 
 MVGBuildFaceManipulator::MVGBuildFaceManipulator()
@@ -135,7 +147,7 @@ MVGBuildFaceManipulator::MVGBuildFaceManipulator()
 	QWidget* mayaWindow = MVGMayaUtil::getMVGWindow();
 	_keyEvent = new MVGManipulatorKeyEventFilter(mayaWindow, this);
 	
-	_mode = eModeCreate;
+	setMode(eModeCreate);
 	_editAction = eEditActionNone;
 	_cameraPathClickedPoints = MDagPath();
 	_pressedPointId = -1;
@@ -175,54 +187,47 @@ void MVGBuildFaceManipulator::draw(M3dView & view, const MDagPath & path,
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	
 	// 3D Drawing
-	switch(_editAction)
+	if(_editAction != eEditActionNone)
 	{
-		case eEditActionNone:
-			break;
-		case eEditActionExtendEdge:
-		case eEditActionMovePoint:
-		case eEditActionMoveEdge:	
-			// Lines preview
-			switch(_mode)
-			{
-				case eModeMoveInPlane:
-					glEnable(GL_LINE_STIPPLE);
-					glColor4f(0.f, 1.f, 0.f, 0.6f);
-					glLineStipple(1.f, 0x5555);
-					break;
-				case eModeMoveRecompute:
-					glEnable(GL_LINE_STIPPLE);
-					glColor4f(0.f, 1.f, 1.f, 0.6f);	
-					glLineStipple(1.f, 0x5555);
-					break;
-				case eModeCreate:
-					glColor4f(0.f, 0.f, 1.f, 0.6f);
-					break;
-			}
+		// Lines preview
+		switch(_mode)
+		{
+			case eModeMoveInPlane:
+				glEnable(GL_LINE_STIPPLE);
+				glColor4f(0.f, 1.f, 0.f, 0.8f);
+				glLineStipple(1.f, 0x5555);
+				break;
+			case eModeMoveRecompute:
+				glEnable(GL_LINE_STIPPLE);
+				glColor4f(0.f, 1.f, 1.f, 0.8f);	
+				glLineStipple(1.f, 0x5555);
+				break;
+			case eModeCreate:
+				glColor4f(0.f, 0.f, 1.f, 0.8f);
+				break;
+		}
 
-			glLineWidth(1.5f);
-			glBegin(GL_LINE_LOOP);
+		glLineWidth(1.5f);
+		glBegin(GL_LINE_LOOP);
+			glVertex3f(_preview3DFace._p[0].x, _preview3DFace._p[0].y, _preview3DFace._p[0].z);
+			glVertex3f(_preview3DFace._p[1].x, _preview3DFace._p[1].y, _preview3DFace._p[1].z);
+			glVertex3f(_preview3DFace._p[2].x, _preview3DFace._p[2].y, _preview3DFace._p[2].z);
+			glVertex3f(_preview3DFace._p[3].x, _preview3DFace._p[3].y, _preview3DFace._p[3].z);
+		glEnd();
+		glLineWidth(1.f);
+		glDisable(GL_LINE_STIPPLE);
+
+		// Poly preview
+		if(_editAction == eEditActionExtendEdge)
+		{
+			glColor4f(1.f, 1.f, 1.f, 0.6f);
+			glBegin(GL_POLYGON);
 				glVertex3f(_preview3DFace._p[0].x, _preview3DFace._p[0].y, _preview3DFace._p[0].z);
 				glVertex3f(_preview3DFace._p[1].x, _preview3DFace._p[1].y, _preview3DFace._p[1].z);
 				glVertex3f(_preview3DFace._p[2].x, _preview3DFace._p[2].y, _preview3DFace._p[2].z);
 				glVertex3f(_preview3DFace._p[3].x, _preview3DFace._p[3].y, _preview3DFace._p[3].z);
 			glEnd();
-			glLineWidth(1.f);
-			glDisable(GL_LINE_STIPPLE);
-
-			// Poly preview
-			if(_editAction == eEditActionExtendEdge)
-			{
-				glColor4f(1.f, 1.f, 1.f, 0.6f);
-				glBegin(GL_POLYGON);
-					glVertex3f(_preview3DFace._p[0].x, _preview3DFace._p[0].y, _preview3DFace._p[0].z);
-					glVertex3f(_preview3DFace._p[1].x, _preview3DFace._p[1].y, _preview3DFace._p[1].z);
-					glVertex3f(_preview3DFace._p[2].x, _preview3DFace._p[2].y, _preview3DFace._p[2].z);
-					glVertex3f(_preview3DFace._p[3].x, _preview3DFace._p[3].y, _preview3DFace._p[3].z);
-				glEnd();
-			}
-
-			break;
+		}
 	}
 	
 	// Draw only in current view
@@ -247,7 +252,7 @@ void MVGBuildFaceManipulator::draw(M3dView & view, const MDagPath & path,
 			glMatrixMode(GL_MODELVIEW);
 			glLoadIdentity();
 			
-			glColor4f(1.f, 0.f, 0.f, 0.6f);
+			glColor4f(1.f, 0.f, 0.f, 0.8f);
 			// draw GL cursor
 			glBegin(GL_LINES);
 			glVertex2f((GLfloat)(mousex + (cos(M_PI / 4.0f) * (radius + 10.0f))),
@@ -265,6 +270,9 @@ void MVGBuildFaceManipulator::draw(M3dView & view, const MDagPath & path,
 			
 			if(_editAction == eEditActionNone)
 			{
+				if(_mode == eModeCreate)
+					setCursor(QCursor(Qt::CrossCursor));
+				
 				// Intersection with point
 				if(intersectPoint(view, _mousePoint))
 				{
@@ -272,11 +280,11 @@ void MVGBuildFaceManipulator::draw(M3dView & view, const MDagPath & path,
 					{	
 						// Green
 						if(_mode == eModeMoveInPlane)
-							glColor4f(0.f, 1.f, 0.f, 0.6f);
+							glColor4f(0.f, 1.f, 0.f, 0.8f);
 
 						// Cyan
 						else if(_mode == eModeMoveRecompute && !_faceConnected)
-							glColor4f(0.f, 1.f, 1.f, 0.6f);	//glColor4f(0.8f, 0.1f, 1.f, 0.6f);
+							glColor4f(0.f, 1.f, 1.f, 0.8f);
 
 						short x, y;				
 						drawCircle(mousex, mousey, 13, 20);
@@ -293,18 +301,20 @@ void MVGBuildFaceManipulator::draw(M3dView & view, const MDagPath & path,
 				{
 					// Yellow
 					if(_mode == eModeCreate)
-						glColor4f(0.9f, 0.9f, 0.1f, 0.6f);
-
+					{
+						glColor4f(0.9f, 0.9f, 0.1f, 0.8f);
+						setCursor(QCursor(Qt::SplitHCursor));
+					}
+						
 					else if(_connectedFacesId.length() == 1
 						&& !_edgeConnected)
 					{
 						// Green
 						if(_mode == eModeMoveInPlane)
-							glColor4f(0.f, 1.f, 0.f, 0.6f);
+							glColor4f(0.f, 1.f, 0.f, 0.8f);
 						// Purple
 						else if(eModeMoveRecompute)
-							glColor4f(0.f, 1.f, 1.f, 0.6f);	
-
+							glColor4f(0.f, 1.f, 1.f, 0.8f);	
 					}
 
 					short x, y;
@@ -322,7 +332,7 @@ void MVGBuildFaceManipulator::draw(M3dView & view, const MDagPath & path,
 				{
 					short x;
 					short y;
-					glColor4f(1.f, 0.f, 0.f, 0.6f);
+					glColor4f(1.f, 0.f, 0.f, 0.8f);
 
 					if(_display2DPoints_world.size() < 3 
 						&& (_cameraPathClickedPoints == _lastCameraPath))
@@ -364,7 +374,7 @@ void MVGBuildFaceManipulator::draw(M3dView & view, const MDagPath & path,
 					&& _lastCameraPath == _cameraPathClickedPoints))
 				{
 					short x, y;
-					glColor4f(0.f, 0.f, 1.f, 0.6f);
+					glColor4f(0.f, 0.f, 1.f, 0.8f);
 					glLineWidth(1.5f);
 					glBegin(GL_LINE_LOOP);
 						MVGGeometryUtil::cameraToView(view, _camera, _preview2DFace._p[0], x, y);
@@ -979,13 +989,13 @@ bool MVGBuildFaceManipulator::eventFilter(QObject *obj, QEvent *e)
 			// Mode MoveInPlane
 			case Qt::Key_Control:	
 				if(_editAction == eEditActionNone)
-					_mode = eModeMoveInPlane;
+					setMode(eModeMoveInPlane);
 				view.refresh(true, true);
 				break;
 			// Mode MoveRecompute
 			case Qt::Key_Shift:
 				if(_editAction == eEditActionNone)
-					_mode = eModeMoveRecompute;
+					setMode(eModeMoveRecompute);
 				view.refresh(true, true);
 				break;
 			case Qt::Key_Meta:
@@ -1015,22 +1025,16 @@ bool MVGBuildFaceManipulator::eventFilter(QObject *obj, QEvent *e)
 //			case Qt::Key_Alt:
 			case Qt::Key_Control:
 				if(!(modifiers && Qt::Key_Shift))
-				{
-					_mode = eModeCreate;
-					_editAction = eEditActionNone;
-				}		
+					setMode(eModeCreate);	
 				else
-					_mode = eModeMoveRecompute;
+					setMode(eModeMoveRecompute);
 				view.refresh(true, true);
 				break;
 			case Qt::Key_Shift:
 				if(!(modifiers && Qt::Key_Control))
-				{
-					_mode = eModeCreate;
-					_editAction = eEditActionNone;
-				}
+					setMode(eModeCreate);
 				else
-					_mode = eModeMoveInPlane;
+					setMode(eModeMoveInPlane);
 				view.refresh(true, true);
 				break;
 			case Qt::Key_Meta:
@@ -1089,6 +1093,24 @@ bool MVGBuildFaceManipulator::intersectPoint(M3dView& view, MPoint& point)
 	}
 	
 	return false;
+}
+
+void MVGBuildFaceManipulator::setMode(EMode mode)
+{
+	_mode = mode;
+	
+	switch(mode)
+	{
+		case eModeCreate:
+			_editAction = eEditActionNone;
+			setCursor(QCursor(Qt::CrossCursor));
+			break;
+		case eModeMoveInPlane:
+		case eModeMoveRecompute:
+			setCursor(QCursor(Qt::SizeAllCursor));
+			break;
+			
+	}
 }
 
 bool MVGBuildFaceManipulator::intersectEdge(M3dView& view, MPoint& point)

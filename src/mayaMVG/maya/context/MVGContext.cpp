@@ -31,9 +31,16 @@ void MVGContext::toolOffCleanup()
 	QWidget* leftViewport = MVGMayaUtil::getMVGLeftViewportLayout();
 	QWidget* rightViewport = MVGMayaUtil::getMVGRightViewportLayout();
 	if(leftViewport)
+	{
 		leftViewport->installEventFilter(m_eventFilter);
+		leftViewport->setCursor(QCursor(Qt::ArrowCursor));
+	}		
 	if(rightViewport)
+	{
 		rightViewport->installEventFilter(m_eventFilter);
+		rightViewport->setCursor(QCursor(Qt::ArrowCursor));
+	}
+		
 	MPxContext::toolOffCleanup();
 }
 
