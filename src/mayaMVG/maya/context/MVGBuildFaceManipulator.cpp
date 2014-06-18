@@ -293,15 +293,15 @@ void MVGBuildFaceManipulator::draw(M3dView & view, const MDagPath & path,
 						// Cyan
 						else if(_mode == eModeMoveRecompute && !_faceConnected)
 							glColor4f(0.f, 1.f, 1.f, 0.8f);
-
-						short x, y;				
-						drawCircle(mousex, mousey, 13, 20);
-						glPointSize(4.f);
-						glBegin(GL_POINTS);
-						MVGGeometryUtil::cameraToView(view, _camera, _mousePoint, x, y);
-							glVertex2f(x, y);
-						glEnd();	
-					}						
+					}
+					
+					short x, y;				
+					drawCircle(mousex, mousey, 10, 20);
+					glPointSize(4.f);
+					glBegin(GL_POINTS);
+					MVGGeometryUtil::cameraToView(view, _camera, _mousePoint, x, y);
+						glVertex2f(x, y);
+					glEnd();
 				}
 
 				// Intersection with edge
@@ -460,19 +460,15 @@ MStatus MVGBuildFaceManipulator::doPress(M3dView& view)
 					// Check edge status
 					if(_connectedFacesId.length() == 1
 						&& !_edgeConnected)
-					{
 						_editAction = eEditActionMoveEdge;
-					}
 					break;
 				case eModeMoveRecompute:
 					// Check edge status
 					if(_connectedFacesId.length() == 1
 						&& !_edgeConnected)
-					{
 						_editAction = eEditActionMoveEdge;
-					}
 					break;
-			}
+			}		
 		}
 		else
 		{
@@ -631,6 +627,9 @@ MStatus MVGBuildFaceManipulator::doDrag(M3dView& view)
 {	
 	updateMouse(view);
 	updateCamera(view);
+	
+	if(_editAction != eEditActionNone)
+		_display2DPoints_world.clear();
 	
 	_mousePointOnDragEdge = _mousePoint;
 	update3DFacePreview(view);
