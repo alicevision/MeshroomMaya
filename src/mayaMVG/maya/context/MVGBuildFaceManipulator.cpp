@@ -1079,11 +1079,10 @@ bool MVGBuildFaceManipulator::intersectPoint(M3dView& view, MPoint& point)
 		short x, y;
 		view.worldToView(meshPoints[i], x, y);
 
-		// Tolerance en pixels ... 
-		if(pointX <= x + 1 + _camera.getZoom() * 3
-			&& pointX >= x - 1 - _camera.getZoom() * 3
-			&& pointY <= y + 1 + _camera.getZoom() * 3
-			&& pointY >= y - 1 - _camera.getZoom() * 3)
+		if(pointX <= x + (2 + _camera.getZoom()) * 5
+			&& pointX >= x - (2 + _camera.getZoom()) * 5
+			&& pointY <= y + (2 + _camera.getZoom()) * 5
+			&& pointY >= y - (2 + _camera.getZoom()) * 5)
 		{
 			_pressedPointId = i;
 			_connectedFacesId = mesh.getConnectedFacesToVertex(_pressedPointId);
@@ -1166,7 +1165,7 @@ bool MVGBuildFaceManipulator::intersectEdge(M3dView& view, MPoint& point)
 			MVGGeometryUtil::viewToCamera(view, _camera, x0, y0, A);
 			MVGGeometryUtil::viewToCamera(view, _camera, x1, y1, B);
 			
-			if(isPointOnEdge(_mousePoint, A, B, kMFnMeshTolerance * _camera.getZoom() * 10))
+			if(isPointOnEdge(_mousePoint, A, B, kMFnMeshTolerance * _camera.getZoom() * 30))
 			{
 				check = true;
 				lenght = A.distanceTo(B);
