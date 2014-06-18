@@ -6,10 +6,12 @@
 
 #include "mayaMVG/maya/context/MVGBuildFaceManipulator.h"
 #include "mayaMVG/maya/MVGMayaUtil.h"
+#include "mayaMVG/maya/context/MVGContext.h"
 #include "mayaMVG/core/MVGLog.h"
 #include "mayaMVG/core/MVGPointCloud.h"
 #include "mayaMVG/core/MVGMesh.h"
 #include "mayaMVG/core/MVGProject.h"
+
 #include <maya/MFnCamera.h>
 #include <maya/MFnMesh.h>
 #include <maya/MItMeshPolygon.h>
@@ -138,12 +140,12 @@ namespace {
 		if(rightViewport)
 			rightViewport->setCursor(cursor);
 	}
-
 }
 
 MVGBuildFaceManipulator::MVGBuildFaceManipulator()
 : _keyEvent(NULL)
 {	
+	_context = NULL;
 	QWidget* mayaWindow = MVGMayaUtil::getMVGWindow();
 	_keyEvent = new MVGManipulatorKeyEventFilter(mayaWindow, this);
 	
@@ -232,9 +234,10 @@ void MVGBuildFaceManipulator::draw(M3dView & view, const MDagPath & path,
 	
 	// Draw only in current view
 	_drawEnabled = MVGMayaUtil::isActiveView(view);
-	if(!_drawEnabled)
+	if(!_drawEnabled
+		|| (!MVGMayaUtil::isMVGView(view)))
 		return;
-	
+
 	// needed to enable doPress, doRelease
 	MGLuint glPickableItem;
 	glFirstHandle(glPickableItem);
@@ -252,26 +255,31 @@ void MVGBuildFaceManipulator::draw(M3dView & view, const MDagPath & path,
 			glMatrixMode(GL_MODELVIEW);
 			glLoadIdentity();
 			
-			glColor4f(1.f, 0.f, 0.f, 0.8f);
+			glColor4f(0.f, 0.f, 0.f, 0.8f);
 			// draw GL cursor
-			glBegin(GL_LINES);
-			glVertex2f((GLfloat)(mousex + (cos(M_PI / 4.0f) * (radius + 10.0f))),
-			           (GLfloat)(mousey + (sin(M_PI / 4.0f) * (radius + 10.0f))));
-			glVertex2f((GLfloat)(mousex + (cos(-3.0f * M_PI / 4.0f) * (radius + 10.0f))),
-			           (GLfloat)(mousey + (sin(-3.0f * M_PI / 4.0f) * (radius + 10.0f))));
-			glVertex2f((GLfloat)(mousex + (cos(3.0f * M_PI / 4.0f) * (radius + 10.0f))),
-			           (GLfloat)(mousey + (sin(3.0f * M_PI / 4.0f) * (radius + 10.0f))));
-			glVertex2f((GLfloat)(mousex + (cos(-M_PI / 4.0f) * (radius + 10.0f))),
-			           (GLfloat)(mousey + (sin(-M_PI / 4.0f) * (radius + 10.0f))));
+			glBegin(GL_POINTS);
+				glVertex2f(mousex, mousey);
 			glEnd();
+//			glBegin(GL_LINES);
+//				glVertex2f((GLfloat)(mousex + (cos(M_PI / 4.0f) * (radius + 10.0f))),
+//						   (GLfloat)(mousey + (sin(M_PI / 4.0f) * (radius + 10.0f))));
+//				glVertex2f((GLfloat)(mousex + (cos(-3.0f * M_PI / 4.0f) * (radius + 10.0f))),
+//						   (GLfloat)(mousey + (sin(-3.0f * M_PI / 4.0f) * (radius + 10.0f))));
+//				glVertex2f((GLfloat)(mousex + (cos(3.0f * M_PI / 4.0f) * (radius + 10.0f))),
+//						   (GLfloat)(mousey + (sin(3.0f * M_PI / 4.0f) * (radius + 10.0f))));
+//				glVertex2f((GLfloat)(mousex + (cos(-M_PI / 4.0f) * (radius + 10.0f))),
+//						   (GLfloat)(mousey + (sin(-M_PI / 4.0f) * (radius + 10.0f))));
+//			glEnd();
 			
+			glColor4f(1.f, 0.f, 0.f, 0.8f);
 			MDagPath cameraPath;
 			view.getCamera(cameraPath);
 			
 			if(_editAction == eEditActionNone)
 			{
 				if(_mode == eModeCreate)
-					setCursor(QCursor(Qt::CrossCursor));
+					setCursor(MCursor::crossHairCursor);			
+					//setCursor(QCursor(Qt::CrossCursor));
 				
 				// Intersection with point
 				if(intersectPoint(view, _mousePoint))
@@ -303,7 +311,8 @@ void MVGBuildFaceManipulator::draw(M3dView & view, const MDagPath & path,
 					if(_mode == eModeCreate)
 					{
 						glColor4f(0.9f, 0.9f, 0.1f, 0.8f);
-						setCursor(QCursor(Qt::SplitHCursor));
+						setCursor(MCursor::editCursor);
+						//setCursor(QCursor(Qt::SplitHCursor));
 					}
 						
 					else if(_connectedFacesId.length() == 1
@@ -501,7 +510,7 @@ MStatus MVGBuildFaceManipulator::doPress(M3dView& view)
 			{
 				if(_mode != eModeCreate)
 					break;
-						
+					
 				if(!(_cameraPathClickedPoints == _lastCameraPath))
 				{
 					_display2DPoints_world.clear();
@@ -1106,14 +1115,22 @@ void MVGBuildFaceManipulator::setMode(EMode mode)
 	{
 		case eModeCreate:
 			_editAction = eEditActionNone;
-			setCursor(QCursor(Qt::CrossCursor));
+			setCursor(MCursor::crossHairCursor);
+			//setCursor(QCursor(Qt::CrossCursor));
 			break;
 		case eModeMoveInPlane:
 		case eModeMoveRecompute:
-			setCursor(QCursor(Qt::SizeAllCursor));
+			setCursor(MCursor::handCursor);
+			//setCursor(QCursor(Qt::SizeAllCursor));
 			break;
 			
 	}
+}
+
+void MVGBuildFaceManipulator::setCursor(MCursor cursor)
+{
+	if(_context)
+		_context->setCursor(cursor);
 }
 
 bool MVGBuildFaceManipulator::intersectEdge(M3dView& view, MPoint& point)
