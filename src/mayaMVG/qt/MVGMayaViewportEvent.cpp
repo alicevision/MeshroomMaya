@@ -21,8 +21,7 @@ namespace {
 		QVariant panelName = obj->property("mvg_panel");
 		if(panelName.type()==QVariant::Invalid)
 			return MS::kFailure;
-		return (panelName.toString()=="left") ? 
-			MVGMayaUtil::getMVGLeftCamera(path) : MVGMayaUtil::getMVGRightCamera(path);
+		return MVGMayaUtil::getCameraInView(path, panelName.toByteArray().constData());
 	}
 }
 

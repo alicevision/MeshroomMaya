@@ -163,40 +163,22 @@ MStatus MVGMayaUtil::activeSelectionContext()
 		"cmds.setToolTo('selectSuperContext')\n");
 }
 
-MStatus MVGMayaUtil::getMVGLeftCamera(MDagPath& path) {
+MStatus MVGMayaUtil::setCameraInView(const MVGCamera& camera, const MString& viewName) {
+	return MGlobal::executePythonCommand(
+		MString("import maya.cmds as cmds\n"
+		"cmds.modelPanel('")+viewName+MString("', e=True, cam='")+camera.name().c_str()+"')");
+}
+
+MStatus MVGMayaUtil::getCameraInView(MDagPath& path, const MString& viewName) {
 	MString camera;
 	MGlobal::executePythonCommand(
 		"import maya.cmds as cmds\n"
 		"def getMVGPanel():\n"
-		"    return cmds.modelPanel('mvgLPanel', q=True, cam=True)\n");
+		"    return cmds.modelPanel('"+viewName+"', q=True, cam=True)\n");
 	MGlobal::executePythonCommand("getMVGPanel()", camera);
 	MSelectionList sList;
 	MGlobal::getSelectionListByName(camera, sList);
 	return sList.isEmpty() ? MS::kFailure : sList.getDagPath(0, path);
-}
-
-MStatus MVGMayaUtil::setMVGLeftCamera(const MVGCamera& camera) {
-	return MGlobal::executePythonCommand(
-		MString("import maya.cmds as cmds\n"
-		"cmds.modelPanel('mvgLPanel', e=True, cam='")+camera.name().c_str()+"')");
-}
-
-MStatus MVGMayaUtil::getMVGRightCamera(MDagPath& path) {
-	MString camera;
-	MGlobal::executePythonCommand(
-		"import maya.cmds as cmds\n"
-		"def getMVGPanel():\n"
-		"    return cmds.modelPanel('mvgRPanel', q=True, cam=True)\n");
-	MGlobal::executePythonCommand("getMVGPanel()", camera);
-	MSelectionList sList;
-	MGlobal::getSelectionListByName(camera, sList);
-	return sList.isEmpty() ? MS::kFailure : sList.getDagPath(0, path);
-}
-
-MStatus MVGMayaUtil::setMVGRightCamera(const MVGCamera& camera) {
-	return MGlobal::executePythonCommand(
-		MString("import maya.cmds as cmds\n"
-		"cmds.modelPanel('mvgRPanel', e=True, cam='")+camera.name().c_str()+"')");
 }
 
 MStatus MVGMayaUtil::addToMayaSelection(MString objectName) {

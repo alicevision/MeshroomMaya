@@ -117,10 +117,10 @@ MStatus MVGCmd::doIt(const MArgList& args) {
 		return MS::kFailure;
 	}
 	leftViewport->installEventFilter(mouseEventFilter);
-	leftViewport->setProperty("mvg_panel", "left");
+	leftViewport->setProperty("mvg_panel", "mvgLPanel");
 	leftViewport->setProperty("mvg_mouseFiltered", true);
 	rightViewport->installEventFilter(mouseEventFilter);
-	rightViewport->setProperty("mvg_panel", "right");
+	rightViewport->setProperty("mvg_panel", "mvgRPanel");
 	rightViewport->setProperty("mvg_mouseFiltered", true);
 
 	// maya callbacks
@@ -134,10 +134,8 @@ MStatus MVGCmd::doIt(const MArgList& args) {
 	
 	// -p
 	if(argData.isFlagSet(projectPathFlag)) {
-		
 		MString projectPath;
 		argData.getFlagArgument(projectPathFlag, 0, projectPath);
-			
 		MVGProjectWrapper::instance().loadProject(MQtUtil::toQString(projectPath));
 	}
 

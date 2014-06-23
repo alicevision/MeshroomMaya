@@ -1,75 +1,39 @@
 import QtQuick 1.1
 import QtDesktop 0.1
 
-Rectangle {
-    id: main
-    color: "transparent"
-
-    property string textColor: "white"
-    property int thumbSize: 90
-
+Item {
+   
     ColumnLayout
     {
-        id: mainLayout
-        anchors.horizontalCenter: parent.horizontalCenter
-        width: parent.width - 10
-        height: parent.height
-
-        // ContextBar
-        ContextBar
-        {
+        anchors.fill: parent
+        ContextBar {
             id: contextBar
-            width: parent.width
-            implicitHeight: 30
+            implicitHeight: 35
+            implicitWidth: parent.width
+            project: _project
         }
-
-        // ContextSettings
-        Params
-        {
-            id: params
-            width: parent.width
-
-            property int height_standard: 80
-            implicitHeight: visible ? height_standard : 0
-            Layout.maximumHeight: visible ? height_standard : 0
-            visible: contextBar.settingsVisibility
-        }
-
-        PointCloudItem {
-            id: pointCloud
-
-            width: parent.width
-            implicitHeight: 120
-        }
-
-        CameraList {
-            id: cameraList
-
-            width: parent.width
+        ProjectSettings {
+            id: settings
+            implicitWidth: parent.width
+            Layout.minimumHeight: childrenRect.height
+            Layout.maximumHeight: childrenRect.height
             Layout.verticalSizePolicy: Layout.Expanding
+            isOpen: contextBar.settingsVisibility
+            project: _project
         }
-
-    } // ColumnLayout
-
-    // Log
-    TextBox {
-        id: logArea
-        readOnly: true
-        width: parent.width - 20
-        height: 120
-        visible: false
-
-        anchors {
-            bottom: parent.bottom
-            left: parent.left
-
-            bottomMargin: 10
-            leftMargin: 10
-
+        // PointCloudItem {
+        //     implicitWidth: parent.width
+        //     Layout.minimumHeight: childrenRect.height
+        //     Layout.maximumHeight: childrenRect.height
+        //     Layout.verticalSizePolicy: Layout.Expanding
+        //     thumbSize: settings.thumbSize
+        // }
+        CameraList {
+            implicitWidth: parent.width
+            Layout.verticalSizePolicy: Layout.Expanding
+            thumbSize: settings.thumbSize
+            project: _project
         }
-
-        text: _project.logText
     }
-
 
 }

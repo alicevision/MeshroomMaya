@@ -208,8 +208,10 @@ void MVGCamera::setImagePlane(const std::string& img) const
 void MVGCamera::loadImagePlane() const
 {
 	MFnDagNode fnImage(imagePath());
-	MString img = fnImage.findPlug(_DEFERRED).asString();
-	fnImage.findPlug("imageName").setValue(img);
+	MString deferred = fnImage.findPlug(_DEFERRED).asString();
+	MString name = fnImage.findPlug("imageName").asString();
+	if(name!=deferred)
+		fnImage.findPlug("imageName").setValue(deferred);
 }
 
 openMVG::PinholeCamera MVGCamera::pinholeCamera() const
