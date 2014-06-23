@@ -4,6 +4,7 @@
 #include <QtGui/QWidget>
 #include <QtGui/QKeyEvent>
 
+#include "mayaMVG/qt/MVGUserLog.h"
 #include "mayaMVG/maya/context/MVGBuildFaceManipulator.h"
 #include "mayaMVG/maya/MVGMayaUtil.h"
 #include "mayaMVG/maya/context/MVGContext.h"
@@ -613,7 +614,7 @@ MStatus MVGBuildFaceManipulator::doMove(M3dView& view, bool& refresh)
 	if( !_display2DPoints_world.empty() 
 		&& !(_camera.dagPath() == _cameraPathClickedPoints))
 	{
-		LOG_WARNING("Change of view while creating a face : if you click a point, it will erase previous points. ");			
+		USER_WARNING("Change of view while creating a face : if you click a point, it will erase previous points. ");			
 	}
 	
 	refresh = true;
