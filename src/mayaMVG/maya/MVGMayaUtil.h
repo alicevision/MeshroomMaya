@@ -25,13 +25,10 @@ struct MVGMayaUtil {
 	// window menu
 	static QWidget* getMVGMenuLayout();
 	// viewports
-	static QWidget* getMVGLeftViewportLayout();
-	static QWidget* getMVGRightViewportLayout();
-	static MStatus setFocusOnLeftView();
-	static MStatus setFocusOnRightView();
+	static QWidget* getMVGViewportLayout(const MString& viewName);
+	static MStatus setFocusOnView(const MString& viewName);
 	static bool isMVGView(const M3dView & view);
 	static bool isActiveView(const M3dView & view);
-	static bool mouseUnderView(const M3dView & view);
 	// context
 	static MStatus createMVGContext();
 	static MStatus deleteMVGContext();
@@ -61,11 +58,8 @@ struct MVGMayaUtil {
 	// environment
 	static MString getEnv(const MString&);
 	static MString getModulePath();
-	
 	// filedialog
 	static MStatus openFileDialog(MString& directory);
-	// shapes
-	static MStatus deletePreviewShape();
 };
 
 } // mayaMVG

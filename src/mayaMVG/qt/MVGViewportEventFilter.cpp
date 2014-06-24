@@ -1,40 +1,33 @@
-#include "mayaMVG/qt/MVGMayaViewportEvent.h"
+#include "mayaMVG/qt/MVGViewportEventFilter.h"
 #include "mayaMVG/maya/MVGMayaUtil.h"
-#include <QEvent>
+#include "mayaMVG/core/MVGLog.h"
 #include <QMouseEvent>
-#include <QKeyEvent>
-#include <QApplication>
 #include <QWidget>
 #include <maya/MDagPath.h>
 #include <maya/MFnCamera.h>
+#include <maya/MQtUtil.h>
 
-#include "mayaMVG/qt/MVGProjectWrapper.h"
-#include "mayaMVG/core/MVGLog.h"
-#include "mayaMVG/maya/context/MVGBuildFaceManipulator.h"
+using namespace mayaMVG;
 
-namespace mayaMVG {
-
-namespace {
+namespace { // empty namespace
 	MStatus getCameraPathFromQbject(const QObject* obj, MDagPath& path) {
 		if(!obj)
 			return MS::kFailure;
 		QVariant panelName = obj->property("mvg_panel");
-		if(panelName.type()==QVariant::Invalid)
+		if(panelName == QVariant::Invalid)
 			return MS::kFailure;
-		return MVGMayaUtil::getCameraInView(path, panelName.toByteArray().constData());
+		return MVGMayaUtil::getCameraInView(path, MQtUtil::toMString(panelName.toString()));
 	}
-}
+} // empty namespace
 
-//
-// MVGMouseEventFilter
-//
-MVGMayaViewportMouseEventFilter::MVGMayaViewportMouseEventFilter(QObject* parent)
-: QObject(parent)
-, m_tracking(false)
+
+MVGViewportEventFilter::MVGViewportEventFilter(QObject* parent)
+	: QObject(parent)
+	, _tracking(false)
 {
 }
 
-bool MVGMayaViewportMouseEventFilter::eventFilter(QObject * obj, QEvent * e)
+bool MVGViewportEventFilter::eventFilter(QObject * obj, QEvent * e)
 {  
 	// Image is fitted on width.
 	QMouseEvent * mouseevent = static_cast<QMouseEvent *>(e);
@@ -50,19 +43,19 @@ bool MVGMayaViewportMouseEventFilter::eventFilter(QObject * obj, QEvent * e)
 		  {
 			MFnCamera camera(cameraPath);
 			// register click position
-			m_clickPos = mouseevent->pos();
+			_clickPos = mouseevent->pos();
 			// register camera film offset
-			m_cameraHPan = camera.horizontalPan();
-			m_cameraVPan = camera.verticalPan();
+			_cameraHPan = camera.horizontalPan();
+			_cameraVPan = camera.verticalPan();
 			// set as tracking
-			m_tracking = true;
+			_tracking = true;
 		  }
 		}
 	}
 	// Apply Pan 
 	else if(e->type() == QEvent::MouseMove) 
 	{
-		if(!m_tracking)
+		if(!_tracking)
 			return QObject::eventFilter(obj, e);
 
 		QWidget* widget = qobject_cast<QWidget*>(obj);
@@ -71,18 +64,18 @@ bool MVGMayaViewportMouseEventFilter::eventFilter(QObject * obj, QEvent * e)
 		{
 			MFnCamera camera(cameraPath);
 			// compute mouse offset
-			QPointF offset_screen = m_clickPos - mouseevent->pos();
+			QPointF offset_screen = _clickPos - mouseevent->pos();
 			const double viewport_width = widget->width();
 			QPointF offset = (offset_screen / viewport_width) * camera.horizontalFilmAperture() * camera.zoom();
 
-			camera.setHorizontalPan(m_cameraHPan + offset.x());
-			camera.setVerticalPan(m_cameraVPan - offset.y());
+			camera.setHorizontalPan(_cameraHPan + offset.x());
+			camera.setVerticalPan(_cameraVPan - offset.y());
 		}
 	}
 	else if(e->type() == QEvent::MouseButtonRelease) 
 	{
 		// disable tracking
-		m_tracking = false;
+		_tracking = false;
 	}
 	// Apply zoom
 	else if (e->type() == QEvent::Wheel)
@@ -107,17 +100,24 @@ bool MVGMayaViewportMouseEventFilter::eventFilter(QObject * obj, QEvent * e)
 			const double scaleRatio = newZoom / previousZoom;
 
 			// compute mouse offset
-			  QPointF center_ratio(0.5, 0.5 * viewport_height / viewport_width);
+			QPointF center_ratio(0.5, 0.5 * viewport_height / viewport_width);
 			QPointF mouse_ratio_center = (center_ratio - (mouseevent->posF() / viewport_width));
 			QPointF mouse_maya_center = mouse_ratio_center * camera.horizontalFilmAperture() * previousZoom;
-			QPointF mouseAfterZoom_maya_center = mouse_maya_center * scaleRatio;
-			QPointF offset = mouse_maya_center - mouseAfterZoom_maya_center;
+			QPointF mouseAfterZoo_maya_center = mouse_maya_center * scaleRatio;
+			QPointF offset = mouse_maya_center - mouseAfterZoo_maya_center;
 
 			camera.setHorizontalPan( camera.horizontalPan() - offset.x() );
 			camera.setVerticalPan( camera.verticalPan() + offset.y() );
 		}
 	}
+	else if (e->type() == QEvent::Enter) {
+		// automagically set focus on mvg panel
+		QVariant panelName = obj->property("mvg_panel");
+		if(panelName.type()==QVariant::Invalid)
+			return QObject::eventFilter(obj, e);
+		MVGMayaUtil::setFocusOnView(MQtUtil::toMString(panelName.toString()));
+	} else if ((e->type() == QEvent::Close)) {
+		LOG_ERROR("PANEL CLOSED")
+	}
 	return QObject::eventFilter(obj, e);
-}
-
 }

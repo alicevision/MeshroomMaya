@@ -5,11 +5,7 @@
 
 namespace mayaMVG {
 
-// forward declaration
-class MVGContextEventFilter;
-
 class MVGContext: public MPxContext {
-
     public:
         MVGContext();
         virtual ~MVGContext(){}
@@ -19,14 +15,9 @@ class MVGContext: public MPxContext {
         virtual MStatus doRelease(MEvent & e);
         virtual MStatus doDrag(MEvent & e);
         virtual void getClassName(MString & name) const;
-
     public:
         void updateManipulators(void* clientData);
 		void setCursor(MCursor cursor);
-		
-    private:
-        MVGContextEventFilter* m_eventFilter;
-        
 };
 
 } // mayaMVG

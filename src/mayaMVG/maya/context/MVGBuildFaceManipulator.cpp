@@ -133,10 +133,10 @@ namespace {
 	
 	void setCursor(QCursor cursor)
 	{
-		QWidget* leftViewport = MVGMayaUtil::getMVGLeftViewportLayout();
+		QWidget* leftViewport = MVGMayaUtil::getMVGViewportLayout("mvgLPanel");
 		if(leftViewport)
 			leftViewport->setCursor(cursor);
-		QWidget* rightViewport = MVGMayaUtil::getMVGRightViewportLayout();
+		QWidget* rightViewport = MVGMayaUtil::getMVGViewportLayout("mvgLPanel");
 		if(rightViewport)
 			rightViewport->setCursor(cursor);
 	}
