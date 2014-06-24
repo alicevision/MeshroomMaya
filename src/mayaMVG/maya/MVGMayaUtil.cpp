@@ -392,6 +392,27 @@ MStatus MVGMayaUtil::setPointArrayAttribute(const MObject& object, const MString
 	return status;
 }
 
+MStatus MVGMayaUtil::getStringAttribute(const MObject& object, const MString& param, MString& string, bool networked)
+{
+	MStatus status;
+	MFnDependencyNode fn(object, &status);
+	CHECK_RETURN_STATUS(status);
+	MPlug plug(fn.findPlug(param, networked, &status));
+	CHECK_RETURN_STATUS(status);
+	string = plug.asString();
+	return status;
+}
+MStatus MVGMayaUtil::setStringAttribute(const MObject& object, const MString& param, const MString& string, bool networked)
+{
+	MStatus status;
+	MFnDependencyNode fn(object, &status);
+	CHECK_RETURN_STATUS(status);
+	MPlug plug(fn.findPlug(param, networked, &status));
+	CHECK_RETURN_STATUS(status);
+	plug.setString(string);
+	return status;
+}
+
 MStatus MVGMayaUtil::findConnectedNodes(const MObject& object, const MString& param, std::vector<MObject>& nodes)
 {
 	MStatus status;

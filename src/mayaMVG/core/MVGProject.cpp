@@ -5,6 +5,8 @@
 #include "mayaMVG/io/pointCloudIO.h"
 #include "mayaMVG/maya/MVGMayaUtil.h"
 #include <maya/MFnTransform.h>
+#include <maya/MDagModifier.h>
+#include <maya/MFnTypedAttribute.h>
 #include <third_party/stlplus3/filesystemSimplified/file_system.hpp>
 
 using namespace mayaMVG;
@@ -13,6 +15,8 @@ std::string MVGProject::_CLOUD = "mvgPointCloud";
 std::string MVGProject::_MESH = "mvgMesh";
 std::string MVGProject::_PREVIEW_MESH = "previewMesh";
 std::string MVGProject::_PROJECT = "mayaMVG";
+
+MString	MVGProject::_PROJECTPATH = "project";
 
 MVGProject::MVGProject(const std::string& name)
 	: MVGNodeWrapper(name)
@@ -59,6 +63,13 @@ MVGProject MVGProject::create(const std::string& name)
 	MDagPath::getAPathTo(transform, path);
 	MVGProject project(path);
 	project.setName(name);
+	
+	// Add root attributes
+	MDagModifier dagModifier;
+	MFnTypedAttribute tAttr;
+	MObject projectAttr = tAttr.create(_PROJECTPATH, "project", MFnData::kString);
+	dagModifier.addAttribute(path.node(), projectAttr);
+	dagModifier.doIt();
 	return project;
 }
 
@@ -103,15 +114,14 @@ std::string MVGProject::moduleDirectory() const
 
 std::string MVGProject::projectDirectory() const
 {
-	MStringArray result;
-	MGlobal::executeCommand("fileInfo -q \"openMVG_root_dir\";", result);
-	return (result.length() > 0) ? result[0].asChar() : "";
+	MString directory;
+	MVGMayaUtil::getStringAttribute(_dagpath.node(), _PROJECTPATH, directory);
+	return (directory.length() > 0) ? directory.asChar() : "";
 }
 
 void MVGProject::setProjectDirectory(const std::string& directory) const
 {
-	MGlobal::executeCommand(
-		MString("fileInfo \"openMVG_root_dir\" \"")+directory.c_str()+"\";");
+	MVGMayaUtil::setStringAttribute(_dagpath.node(), _PROJECTPATH, directory.c_str());
 }
 
 std::string MVGProject::cameraFile() const

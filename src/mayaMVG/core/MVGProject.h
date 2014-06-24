@@ -48,6 +48,9 @@ class MVGProject : public MVGNodeWrapper {
 		static std::string _MESH;
 		static std::string _PREVIEW_MESH;
 		static std::string _PROJECT;
+		
+		// dynamic attributes
+		static MString _PROJECTPATH;
 };
 
 } // mayaMVG
