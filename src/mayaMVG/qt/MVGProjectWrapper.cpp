@@ -4,11 +4,10 @@
 #include "mayaMVG/core/MVGLog.h"
 #include <maya/MQtUtil.h>
 
+#include "mayaMVG/qt/MVGUserLog.h"
 #include "mayaMVG/maya/context/MVGBuildFaceManipulator.h"
 
-using namespace mayaMVG;
-
-using namespace mayaMVG;
+namespace mayaMVG {
 
 MVGProjectWrapper::MVGProjectWrapper()
 {
@@ -95,7 +94,8 @@ void MVGProjectWrapper::onBrowseDirectoryButtonClicked()
 	QString directory = MQtUtil::toQString(directoryPath);
 
 	if(directory.isEmpty()) {
-		LOG_INFO("Directory is empty");
+		USER_ERROR("Directory is empty");
+		
 		return;
 	}
 
@@ -103,21 +103,16 @@ void MVGProjectWrapper::onBrowseDirectoryButtonClicked()
 }
 
 void MVGProjectWrapper::onSelectContextButtonClicked() {
-	appendLogText("SelectContextButton clicked");
-	LOG_INFO("SelectContextButton clicked");
 	MVGMayaUtil::activeSelectionContext();
-
 }
 
 void MVGProjectWrapper::onPlaceContextButtonClicked() 
 {
-	LOG_INFO("PlaceContextButton clicked");
 	MVGMayaUtil::activeContext();
 }
 
 void MVGProjectWrapper::onMoveContextButtonClicked()
 {
-	LOG_INFO("MoveContextButton clicked");
 }
 
 void MVGProjectWrapper::loadProject(QString projectDirectoryPath)
@@ -125,8 +120,8 @@ void MVGProjectWrapper::loadProject(QString projectDirectoryPath)
 	_project.setProjectDirectory(projectDirectoryPath.toStdString());
 	if(!_project.load())
 	{
-		LOG_ERROR("An error occured when loading project.");
-		appendLogText(QString("An error occured when loading project."));
+		USER_ERROR("An error occured when loading project.");
+		//appendLogText(QString("[ERROR] An error occured when loading project."));
 	}
 		
 
@@ -173,3 +168,5 @@ void MVGProjectWrapper::setRightView(MVGCameraWrapper& camera) const
 {
 	_project.setRightView(camera.camera());
 }
+
+} // namespace mayaMVG 
