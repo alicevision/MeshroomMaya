@@ -57,7 +57,7 @@ bool MVGContextEventFilter::eventFilter(QObject * obj, QEvent * e)
 		if(panelName.type()==QVariant::Invalid)
 			return QObject::eventFilter(obj, e);
 		// set focus
-		if(panelName.toString()=="left")
+		if(panelName.toString()=="mvgLPanel")
 			MVGMayaUtil::setFocusOnLeftView();
 		else
 			MVGMayaUtil::setFocusOnRightView();
