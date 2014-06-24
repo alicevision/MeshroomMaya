@@ -36,13 +36,10 @@ struct MVGMayaUtil {
 	static MStatus createMVGContext();
 	static MStatus deleteMVGContext();
 	static MStatus activeContext(); 
-	
 	static MStatus activeSelectionContext();
 	// cameras
-	static MStatus getMVGLeftCamera(MDagPath& path);
-	static MStatus setMVGLeftCamera(const MVGCamera& camera);
-	static MStatus getMVGRightCamera(MDagPath& path);
-	static MStatus setMVGRightCamera(const MVGCamera& camera);
+	static MStatus setCameraInView(const MVGCamera& camera, const MString& viewName);
+	static MStatus getCameraInView(MDagPath& path, const MString& viewName);
 	// maya selection
 	static MStatus addToMayaSelection(MString objectName);
 	static MStatus clearMayaSelection();

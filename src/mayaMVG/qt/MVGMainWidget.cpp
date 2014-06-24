@@ -9,6 +9,9 @@ using namespace mayaMVG;
 MVGMainWidget::MVGMainWidget(QWidget * parent)
 	: QWidget(parent)
 {
+    qmlRegisterType<MVGCameraWrapper>();
+    qmlRegisterType<QObjectListModel>();
+
 	_view = new QDeclarativeView(parent);
 	
 	MVGProjectWrapper& project = MVGProjectWrapper::instance();

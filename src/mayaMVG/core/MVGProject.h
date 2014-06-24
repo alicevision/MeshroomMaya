@@ -27,8 +27,7 @@ class MVGProject : public MVGNodeWrapper {
 	
 	public:
 		// views
-		void setLeftView(const MVGCamera& camera) const;
-		void setRightView(const MVGCamera& camera) const;
+		void setCameraInView(const MVGCamera& camera, const std::string& viewName) const;
 		// filesystem
 		std::string moduleDirectory() const;
 		std::string projectDirectory() const;

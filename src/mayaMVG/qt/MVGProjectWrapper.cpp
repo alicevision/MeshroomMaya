@@ -47,11 +47,6 @@ const QString MVGProjectWrapper::pointCloudFile() const
 	return QString::fromStdString(_project.pointCloudFile());
 }
 
-const QList<QObject*>& MVGProjectWrapper::cameraModel() const
-{
-	return _cameraList;
-}
-
 const QString MVGProjectWrapper::logText() const
 {
 	return _logText;
@@ -69,11 +64,6 @@ void MVGProjectWrapper::appendLogText(const QString text)
 	emit logTextChanged();
 }
 
-QObject* MVGProjectWrapper::getCameraAtIndex(int index) const
-{
-	return _cameraList.at(index);
-}
-
 void MVGProjectWrapper::setProjectDirectory(const QString& directory)
 {
 	_project.setProjectDirectory(directory.toStdString());
@@ -86,20 +76,12 @@ void MVGProjectWrapper::addCamera(const MVGCamera& camera)
 	emit cameraModelChanged();
 }
 
-void MVGProjectWrapper::onBrowseDirectoryButtonClicked()
+QString MVGProjectWrapper::openFileDialog() const
 {
-
 	MString directoryPath;
 	MVGMayaUtil::openFileDialog(directoryPath);	
-	QString directory = MQtUtil::toQString(directoryPath);
 
-	if(directory.isEmpty()) {
-		USER_ERROR("Directory is empty");
-		
-		return;
-	}
-
-	loadProject(directory);
+    return MQtUtil::toQString(directoryPath);
 }
 
 void MVGProjectWrapper::onSelectContextButtonClicked() {
@@ -111,62 +93,43 @@ void MVGProjectWrapper::onPlaceContextButtonClicked()
 	MVGMayaUtil::activeContext();
 }
 
-void MVGProjectWrapper::onMoveContextButtonClicked()
-{
-}
-
-void MVGProjectWrapper::loadProject(QString projectDirectoryPath)
+void MVGProjectWrapper::loadProject(const QString& projectDirectoryPath)
 {	
 	_project.setProjectDirectory(projectDirectoryPath.toStdString());
 	if(!_project.load())
 	{
 		USER_ERROR("An error occured when loading project.");
-		//appendLogText(QString("[ERROR] An error occured when loading project."));
 	}
-		
-
-	emit projectDirectoryChanged();
-
+	Q_EMIT projectDirectoryChanged();
 	// Populate menu
 	const std::vector<MVGCamera>& cameraList = _project.cameras();
 	std::vector<MVGCamera>::const_iterator it = cameraList.begin();
-
+	_cameraList.clear();
 	for(; it != cameraList.end(); ++it) {
 		addCamera(*it);
 	}
-	
-	// Select the two first cameras for the views
-	if(_cameraList.size() > 1)
-	{
-		MVGCameraWrapper* leftCamera = dynamic_cast<MVGCameraWrapper*>(getCameraAtIndex(0));
-		MVGCameraWrapper* rightCamera = dynamic_cast<MVGCameraWrapper*>(getCameraAtIndex(1));
-		
-		leftCamera->setLeftChecked(true);
-		MVGProjectWrapper::instance().setLeftView(*leftCamera);
-			
-		rightCamera->setRightChecked(true);
-		MVGProjectWrapper::instance().setRightView(*rightCamera);
+	// select the two first cameras for the views
+	if(_cameraList.size() > 1) {
+		QList<MVGCameraWrapper*>& cameras = _cameraList.asQList<MVGCameraWrapper>();
+		_project.setCameraInView(cameras[0]->camera(), "mvgLPanel");
+		_project.setCameraInView(cameras[1]->camera(), "mvgRPanel");
 	}
 }
 
 void MVGProjectWrapper::selectItems(const QList<QString>& cameraNames)
 {
-	for(int i = 0; i < _cameraList.size(); ++i)
-	{
-		dynamic_cast<MVGCameraWrapper*>(getCameraAtIndex(i))->setState("NORMAL");		
-		if(cameraNames.contains(dynamic_cast<MVGCameraWrapper*>(getCameraAtIndex(i))->name()))
-			dynamic_cast<MVGCameraWrapper*>(getCameraAtIndex(i))->setState("SELECTED");
-	}
+    foreach(MVGCameraWrapper* camera, _cameraList.asQList<MVGCameraWrapper>())
+        camera->setIsSelected(cameraNames.contains(camera->name()));
 }
 
-void MVGProjectWrapper::setLeftView(MVGCameraWrapper& camera) const
+void MVGProjectWrapper::setCameraToView(QObject* camera, const QString& viewName)
 {
-	_project.setLeftView(camera.camera());
-}
-
-void MVGProjectWrapper::setRightView(MVGCameraWrapper& camera) const
-{
-	_project.setRightView(camera.camera());
+    foreach(MVGCameraWrapper* c, _cameraList.asQList<MVGCameraWrapper>())
+        c->setInView(viewName, false);
+    MVGCameraWrapper*cam = qobject_cast<MVGCameraWrapper*>(camera);
+    cam->setInView(viewName, true);
+    _project.setCameraInView(cam->camera(), viewName.toStdString());
 }
 
 } // namespace mayaMVG 
+

@@ -3,60 +3,56 @@ import QtDesktop 0.1
 
 
 Item {
-    id: browseDirectory
 
+    property alias project: m.project
+    QtObject {
+        id: m
+        property variant project
+        property string directory: m.project.projectDirectory
+    }
     RowLayout
     {
-        id: browseDirectoryRowLayout
-
         width: parent.width
         height: parent.height
-
-        // Directory TextEdit
         Rectangle {
-            id: directoryRectangle
-
             Layout.horizontalSizePolicy: Layout.Expanding
             height: parent.height
             color: "grey"
             radius: 2
-
             TextInput {
-                id: directoryTextEdit
-
                 anchors.fill: parent
-                focus: false
-                color: "black"
-                text: _project.projectDirectory
+                text: m.directory
+                readOnly: true
                 selectByMouse: true
                 font.pointSize: 13
-
-                onAccepted: _project.loadProject(text)
+                MouseArea {
+                    anchors.fill: parent
+                    onDoubleClicked: {
+                        var projectPath = m.project.openFileDialog()
+                        m.project.loadProject(projectPath)
+                    }
+                }
             }
-
             TooltipArea {
-                id: qualityComboBoxTooltip
                 anchors.fill: parent
-                text: "Project directory path"
+                text: "Project root path"
             }
         }
-
-        // Folder button
         ToolButton {
-            id: folderButton
-
             implicitWidth: 30
             height: 30
             iconSource: "img/Folder.png"
-            tooltip: "Browse project folder"
-
+            tooltip: "Select project root path"
             MouseArea {
                 id: folderButtonMouseArea
                 anchors.fill: parent
-
-                onClicked: _project.onBrowseDirectoryButtonClicked()
+                onClicked: {
+                    var projectPath = m.project.openFileDialog()
+                    m.project.loadProject(projectPath)
+                }
             }
         }
     }
+    
 }
 

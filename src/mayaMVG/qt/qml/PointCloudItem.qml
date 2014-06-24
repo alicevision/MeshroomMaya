@@ -1,116 +1,102 @@
 import QtQuick 1.1
 import QtDesktop 0.1
 
-GroupBox {
+Item {
+
     id: pointCloudItem
+    clip: true
+    property int thumbSize
+    property string title: "mvgPointCloud"
+    property string filepath: "/"
+    QtObject {
+        id: m
+        property int thumbRatio: 4/3
+    }
 
-    flat: false
-    title: "PointCloud"
+    state: "NORMAL"
+    states: [
+        State {
+            name: "NORMAL"
+            PropertyChanges { target: pointCloudItem; height: m.thumbHeight }
+            PropertyChanges { target: loader; opacity: 0; }
+        },
+        State {
+            name: "SELECTED"
+            PropertyChanges { target: pointCloudItem; height: m.thumbHeight + 50; }
+            PropertyChanges { target: loader; opacity: 100; }
+        }
+    ]
 
-    ColumnLayout {
+    transitions: Transition {
+        PropertyAnimation { properties: "height"; duration: 200 }
+        PropertyAnimation { properties: "opacity"; duration: 400 }
+    }
+
+    RowLayout {
         width: parent.width
         height: parent.height
-
+        spacing: 10
+        // thumbnail
+        Rectangle {
+            implicitWidth: thumbSize
+            height: parent.height
+            color: "#111111"
+            Rectangle {
+                implicitWidth: thumbSize
+                height: m.thumbHeight
+                color: "#666666"
+                anchors.verticalCenter: parent.verticalCenter
+            }
+        }
+        // item data
         Item {
-            width: parent.width
-            implicitHeight: 20
-
-            RowLayout {
-                width: parent.width
-                height: parent.height
-
-                Button {
-                    text: "Load dense pointCloud"
-                    tooltip: "Load dense pointCloud"
+            Layout.horizontalSizePolicy: Layout.Expanding
+            height: parent.height
+            ColumnLayout {
+                anchors.fill: parent
+                // title
+                Item {
+                    width: parent.width
+                    Layout.verticalSizePolicy: Layout.Expanding
+                    Text {
+                        text: title
+                        font.pointSize: 12
+                        color: "white"
+                        anchors.verticalCenter: parent.verticalCenter
+                    }
                 }
-                Rectangle {
-                    Layout.horizontalSizePolicy: Layout.Expanding
-                    height: parent.height
-                    color: "transparent"
+                // extra infos (see component below)
+                Item {
+                    width: parent.width
+                    Layout.verticalSizePolicy: Layout.Expanding
+                    Loader {
+                        id: loader
+                        opacity: 0
+                        width: parent.width
+                    }
                 }
             }
         }
-
-        // Path
-        Item {
-            id: pathItem
-            width: parent.width
-            implicitHeight: 20
-
-            Text {
-                id: pointCloudPath
-
-                text: _project.pointCloudFile
-                elide: Text.ElideLeft
-                width: parent.width
-                anchors.left: parent.left
-                font.pointSize: 10
-                color: main.textColor
-            }
-
-            TooltipArea {
-                id: pathItemTooltip
-                anchors.fill: parent
-                text: "PointCloud path"
-            }
-        }
-
-        // Color checkBox
-        Item {
-            id: coloredPointCloud
-
-            width: parent.width
-            implicitHeight: 10
-
-            RowLayout {
-                id: coloredPointCloudLayout
-
-                width: parent.width
-                height: parent.height
-
-                CheckBox {
-                    id: coloredPointCloudCheckBox
-                    implicitWidth: 20
-                    checked: false
-
-                }
-
-                Text {
-                    id: computeLastPointLabel
-
-                    text: "Colored point cloud"
-                    color: main.textColor
-                    font.pointSize: 11
-                    horizontalAlignment: Text.AlignLeft
-                    Layout.horizontalSizePolicy: Layout.Expanding
-                }
-
-            }
-
-            TooltipArea {
-                id: computeLastPointTooltip
-                anchors.fill: parent
-                text: "Colored pointCloud checkbox"
-            }
-        }
-
-        // Progress bar
-        ProgressBar {
-            id: progressbar
-
-            width: parent.width
-            implicitHeight: 10
-            value: 30
-            maximumValue: 100
-
-
-            TooltipArea {
-                id:progressbarTooltip
-                anchors.fill: parent
-                text: "Reconstruction progress"
+        // mouse area
+        MouseArea {
+            anchors.fill: parent
+            onDoubleClicked: {
+                loader.sourceComponent = extraInformation
+                pointCloudItem.state = (pointCloudItem.state == 'NORMAL') ? 'SELECTED' : 'NORMAL' 
             }
         }
     }
-
+    // component
+    Component {
+        id: extraInformation
+        Text {
+            text: filepath
+            elide: Text.ElideLeft
+            width: parent.width -5
+            font.pointSize: 9
+            color: "#888888"
+            anchors.horizontalCenter: parent.horizontalCenter
+        }
+    }
 
 }

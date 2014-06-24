@@ -7,9 +7,8 @@ namespace mayaMVG {
 
 MVGCameraWrapper::MVGCameraWrapper(const MVGCamera& camera)
 	: _camera(camera)
-	, _state("NORMAL")
-	, _isLeftChecked(false)
-	, _isRightChecked(false)
+    , _isSelected(false)
+    , _imageLoaded(false)
 {
 }
 
@@ -21,55 +20,27 @@ const MVGCamera& MVGCameraWrapper::camera() const
 	return _camera;
 }
 
-const QString MVGCameraWrapper::name() const 
+void MVGCameraWrapper::setInView(const QString& viewName, const bool value)
 {
-	return QString(_camera.name().c_str());
+    if(value) {
+        if(!_views.contains(viewName)){
+            _views.push_back(viewName);
+            Q_EMIT viewsChanged();
+        }
+        return;
+    }
+    if(_views.removeOne(viewName))
+        Q_EMIT viewsChanged();
 }
 
-const QString MVGCameraWrapper::imagePath() const
+const QSize MVGCameraWrapper::sourceSize()
 {
-	return _camera.imagePlane().c_str();
-}
-
-const QString& MVGCameraWrapper::state() const
-{
-	return _state;
-}
-
-const bool MVGCameraWrapper::isLeftChecked() const
-{
-	return _isLeftChecked;
-}
-
-const bool MVGCameraWrapper::isRightChecked() const
-{
-	return _isRightChecked;
-}
-
-void MVGCameraWrapper::setState(const QString& state)
-{
-	_state = state;
-	emit stateChanged();
-}
-
-void  MVGCameraWrapper::setLeftChecked(const bool state)
-{
-	_isLeftChecked = state;
-	emit isLeftCheckedChanged();
-}
-
-void  MVGCameraWrapper::setRightChecked(const bool state)
-{
-	_isRightChecked = state;
-	emit isRightCheckedChanged();
-}
-
-const QSize MVGCameraWrapper::sourceSize() const
-{
-	QImage image(imagePath());
-	
-	return image.size();
-	//QSize(image.width(), image.height());
+    if(!_imageLoaded) {
+        QImage image(imagePath());
+        _imageLoaded = true;
+        _imageSize = image.size();
+    }
+    return _imageSize;
 }
 
 const qint64 MVGCameraWrapper::sourceWeight() const
@@ -78,37 +49,8 @@ const qint64 MVGCameraWrapper::sourceWeight() const
 	return info.size();
 }
 
-void MVGCameraWrapper::onLeftButtonClicked() 
-{	
-	// Reset left states
-	for(int i = 0; i < MVGProjectWrapper::instance().cameraModel().size(); ++i)
-	{
-		dynamic_cast<MVGCameraWrapper*>(MVGProjectWrapper::instance().getCameraAtIndex(i))->setLeftChecked(false);
-	}
-	
-	// Update new left button
-	setLeftChecked(true);
-	
-	// Update left view
-	MVGProjectWrapper::instance().setLeftView(*this);
-}
-
-void MVGCameraWrapper::onRightButtonClicked()
-{
-	// Reset right states
-	for(int i = 0; i < MVGProjectWrapper::instance().cameraModel().size(); ++i)
-	{
-		dynamic_cast<MVGCameraWrapper*>(MVGProjectWrapper::instance().getCameraAtIndex(i))->setRightChecked(false);
-	}
-	
-	// Update new right button
-	setRightChecked(true);
-	
-	// Update right view
-	MVGProjectWrapper::instance().setRightView(*this);
-}
-
 void MVGCameraWrapper::select() const{
 	_camera.select();
 }
+
 }

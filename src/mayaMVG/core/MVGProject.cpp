@@ -88,22 +88,13 @@ bool MVGProject::loadCameras()
 
 bool MVGProject::loadPointCloud()
 {
-
 	return readPointCloud(pointCloudFile());
 }
 
-void MVGProject::setLeftView(const MVGCamera& camera) const
+void MVGProject::setCameraInView(const MVGCamera& camera, const std::string& viewName) const
 {
-	camera.select();
 	camera.loadImagePlane();
-	MVGMayaUtil::setMVGLeftCamera(camera);
-}
-
-void MVGProject::setRightView(const MVGCamera& camera) const
-{
-	camera.select();
-	camera.loadImagePlane();
-	MVGMayaUtil::setMVGRightCamera(camera);
+	MVGMayaUtil::setCameraInView(camera, viewName.c_str());
 }
 
 std::string MVGProject::moduleDirectory() const

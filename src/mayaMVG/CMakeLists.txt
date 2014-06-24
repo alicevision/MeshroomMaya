@@ -58,6 +58,7 @@ set(MOC_HDRS
 	qt/MVGCameraWrapper.h
 	qt/MVGProjectWrapper.h
 	qt/QmlInstantCoding.h
+	qt/QObjectListModel.h
 )
 qt4_wrap_cpp(MOC_SRCS ${MOC_HDRS})
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
