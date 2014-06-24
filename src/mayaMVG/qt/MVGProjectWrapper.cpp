@@ -25,27 +25,27 @@ MVGProjectWrapper::~MVGProjectWrapper()
 
 const QString MVGProjectWrapper::moduleDirectory() const
 {
-	return QString(_project.moduleDirectory().c_str());
+	return QString::fromStdString(_project.moduleDirectory());
 }
 
 const QString MVGProjectWrapper::projectDirectory() const
 {
-	return QString(_project.projectDirectory().c_str());
+	return QString::fromStdString(_project.projectDirectory());
 }
 
 const QString MVGProjectWrapper::cameraDirectory() const
 {
-	return QString(_project.cameraDirectory().c_str());
+	return QString::fromStdString(_project.cameraDirectory());
 }
 
 const QString MVGProjectWrapper::imageDirectory() const
 {
-	return QString(_project.imageDirectory().c_str());
+	return QString::fromStdString(_project.imageDirectory());
 }
 
 const QString MVGProjectWrapper::pointCloudFile() const
 {
-	return QString(_project.pointCloudFile().c_str());
+	return QString::fromStdString(_project.pointCloudFile());
 }
 
 const QList<QObject*>& MVGProjectWrapper::cameraModel() const

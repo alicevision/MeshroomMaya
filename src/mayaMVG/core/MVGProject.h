@@ -46,7 +46,6 @@ class MVGProject : public MVGNodeWrapper {
 		// openMVG node names
 		static std::string _CLOUD;
 		static std::string _MESH;
-		static std::string _PREVIEW_MESH;
 		static std::string _PROJECT;
 		
 		// dynamic attributes

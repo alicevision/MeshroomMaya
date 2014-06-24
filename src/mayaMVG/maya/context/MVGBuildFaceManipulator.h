@@ -60,13 +60,13 @@ class MVGBuildFaceManipulator: public MPxManipulatorNode
 		void updateCamera(M3dView& view);
 		void updateMouse(M3dView& view);
 		
-		bool intersectPoint(M3dView& view, MPoint& point);
-		bool intersectEdge(M3dView& view, MPoint& point);
+		bool intersectPoint(M3dView& view, MDagPath& meshPath, MPoint& point);
+		bool intersectEdge(M3dView& view, MDagPath& meshPath, MPoint& point);
 		
 		void update2DFacePreview(M3dView& view);
 		bool update3DFacePreview(M3dView& view);
 		bool computeFace3d(M3dView& view, std::vector<MPoint>& pointArray, MVGFace3D& face3D, bool computeLastPoint = false, MVector height = MVector(0, 0, 0));
-		void addFace3d(MVGFace3D& face3d);
+		void addFace3d(MVGFace3D& face3d, bool newMesh = false);
 		
 		bool eventFilter(QObject *obj, QEvent *e);
 		void setMode(EMode mode);
@@ -115,6 +115,7 @@ class MVGBuildFaceManipulator: public MPxManipulatorNode
 		MVector	_edgeHeight3D;
 		MVector	_edgeHeight2D;
 		float	_edgeRatio;
+		MDagPath _intersectedMeshPath;
 		///@}
 		
 		///@brief Status when moving point/

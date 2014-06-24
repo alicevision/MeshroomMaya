@@ -17,7 +17,7 @@
 #include <maya/MItMeshPolygon.h>
 #include <maya/MItMeshEdge.h>
 #include <maya/MItMeshVertex.h>
-#include <maya/MSelectionList.h>
+#include <maya/MItDependencyNodes.h>
 #include <vector>
 
 namespace mayaMVG {
@@ -140,6 +140,19 @@ namespace {
 		if(rightViewport)
 			rightViewport->setCursor(cursor);
 	}
+
+	void getMeshList(std::vector<MDagPath>& meshList)
+	{
+		meshList.clear();
+		MStatus status;
+		MItDependencyNodes meshIt(MFn::kMesh, &status);
+		CHECK(status);
+		while(!meshIt.isDone())
+		{
+			meshList.push_back(MDagPath::getAPathTo(meshIt.item()));
+			meshIt.next();
+		}
+	}	
 }
 
 MVGBuildFaceManipulator::MVGBuildFaceManipulator()
@@ -153,6 +166,7 @@ MVGBuildFaceManipulator::MVGBuildFaceManipulator()
 	_editAction = eEditActionNone;
 	_cameraPathClickedPoints = MDagPath();
 	_pressedPointId = -1;
+	_intersectedMeshPath = MDagPath();
 }
 
 MVGBuildFaceManipulator::~MVGBuildFaceManipulator()
@@ -260,17 +274,7 @@ void MVGBuildFaceManipulator::draw(M3dView & view, const MDagPath & path,
 			glBegin(GL_POINTS);
 				glVertex2f(mousex, mousey);
 			glEnd();
-//			glBegin(GL_LINES);
-//				glVertex2f((GLfloat)(mousex + (cos(M_PI / 4.0f) * (radius + 10.0f))),
-//						   (GLfloat)(mousey + (sin(M_PI / 4.0f) * (radius + 10.0f))));
-//				glVertex2f((GLfloat)(mousex + (cos(-3.0f * M_PI / 4.0f) * (radius + 10.0f))),
-//						   (GLfloat)(mousey + (sin(-3.0f * M_PI / 4.0f) * (radius + 10.0f))));
-//				glVertex2f((GLfloat)(mousex + (cos(3.0f * M_PI / 4.0f) * (radius + 10.0f))),
-//						   (GLfloat)(mousey + (sin(3.0f * M_PI / 4.0f) * (radius + 10.0f))));
-//				glVertex2f((GLfloat)(mousex + (cos(-M_PI / 4.0f) * (radius + 10.0f))),
-//						   (GLfloat)(mousey + (sin(-M_PI / 4.0f) * (radius + 10.0f))));
-//			glEnd();
-			
+
 			glColor4f(1.f, 0.f, 0.f, 0.8f);
 			MDagPath cameraPath;
 			view.getCamera(cameraPath);
@@ -279,63 +283,66 @@ void MVGBuildFaceManipulator::draw(M3dView & view, const MDagPath & path,
 			{
 				if(_mode == eModeCreate)
 					setCursor(MCursor::crossHairCursor);			
-					//setCursor(QCursor(Qt::CrossCursor));
 				
-				// Intersection with point
-				if(intersectPoint(view, _mousePoint))
+				std::vector<MDagPath> mList;
+				getMeshList(mList);
+
+				for(std::vector<MDagPath>::iterator it = mList.begin(); it != mList.end(); ++it)
 				{
-					if(_connectedFacesId.length() == 1)
-					{	
-						// Green
-						if(_mode == eModeMoveInPlane)
-							glColor4f(0.f, 1.f, 0.f, 0.8f);
-
-						// Cyan
-						else if(_mode == eModeMoveRecompute && !_faceConnected)
-							glColor4f(0.f, 1.f, 1.f, 0.8f);
-					}
-					
-					short x, y;				
-					drawCircle(mousex, mousey, 10, 20);
-					glPointSize(4.f);
-					glBegin(GL_POINTS);
-					MVGGeometryUtil::cameraToView(view, _camera, _mousePoint, x, y);
-						glVertex2f(x, y);
-					glEnd();
-				}
-
-				// Intersection with edge
-				else if(intersectEdge(view, _mousePoint))
-				{
-					// Yellow
-					if(_mode == eModeCreate)
+					// Intersection with point
+					if(intersectPoint(view, *it, _mousePoint))
 					{
-						glColor4f(0.9f, 0.9f, 0.1f, 0.8f);
-						setCursor(MCursor::editCursor);
-						//setCursor(QCursor(Qt::SplitHCursor));
+						if(_connectedFacesId.length() == 1)
+						{	
+							// Green
+							if(_mode == eModeMoveInPlane)
+								glColor4f(0.f, 1.f, 0.f, 0.8f);
+
+							// Cyan
+							else if(_mode == eModeMoveRecompute && !_faceConnected)
+								glColor4f(0.f, 1.f, 1.f, 0.8f);
+						}
+
+						short x, y;				
+						drawCircle(mousex, mousey, 10, 20);
+						glPointSize(4.f);
+						glBegin(GL_POINTS);
+						MVGGeometryUtil::cameraToView(view, _camera, _mousePoint, x, y);
+							glVertex2f(x, y);
+						glEnd();
 					}
-						
-					else if(_connectedFacesId.length() == 1
-						&& !_edgeConnected)
+
+					// Intersection with edge					
+					else if(intersectEdge(view, *it, _mousePoint))
 					{
-						// Green
-						if(_mode == eModeMoveInPlane)
-							glColor4f(0.f, 1.f, 0.f, 0.8f);
-						// Purple
-						else if(eModeMoveRecompute)
-							glColor4f(0.f, 1.f, 1.f, 0.8f);	
+						// Yellow
+						if(_mode == eModeCreate)
+						{
+							glColor4f(0.9f, 0.9f, 0.1f, 0.8f);
+							setCursor(MCursor::editCursor);
+						}
+
+						else if(_connectedFacesId.length() == 1
+							&& !_edgeConnected)
+						{
+							// Green
+							if(_mode == eModeMoveInPlane)
+								glColor4f(0.f, 1.f, 0.f, 0.8f);
+							// Purple
+							else if(eModeMoveRecompute)
+								glColor4f(0.f, 1.f, 1.f, 0.8f);	
+						}
+
+						short x, y;
+						glLineWidth(1.5f);
+						glBegin(GL_LINES);
+							view.worldToView(_intersectingEdgePoints3D[0], x, y);
+							glVertex2f(x, y);
+							view.worldToView(_intersectingEdgePoints3D[1], x, y);
+							glVertex2f(x, y);
+						glEnd();
 					}
-
-					short x, y;
-					glLineWidth(1.5f);
-					glBegin(GL_LINES);
-						view.worldToView(_intersectingEdgePoints3D[0], x, y);
-						glVertex2f(x, y);
-						view.worldToView(_intersectingEdgePoints3D[1], x, y);
-						glVertex2f(x, y);
-					glEnd();
 				}
-
 				// Draw lines and poly : if face creation
 				if(!_display2DPoints_world.empty())
 				{
@@ -431,50 +438,58 @@ MStatus MVGBuildFaceManipulator::doPress(M3dView& view)
 		updateMouse(view);
 		updateCamera(view);
 		
-		// Define action
-		if(intersectPoint(view, _mousePoint))
+		std::vector<MDagPath> mList;
+		getMeshList(mList);
+
+		bool checkIntersection = false;
+		for(std::vector<MDagPath>::iterator it = mList.begin(); it != mList.end(); ++it)
 		{
-			switch(_mode)
+			// Define action
+			if(intersectPoint(view, *it, _mousePoint))
 			{
-				case eModeCreate:
-					break;
-				case eModeMoveInPlane:
-					if(_connectedFacesId.length() == 1)
-						_editAction = eEditActionMovePoint;
-					break;
-				case eModeMoveRecompute:
-					if(_connectedFacesId.length() == 1
-						&& !_faceConnected)
-						_editAction = eEditActionMovePoint;
-					break;				
+				checkIntersection = true;
+				switch(_mode)
+				{
+					case eModeCreate:
+						break;
+					case eModeMoveInPlane:
+						if(_connectedFacesId.length() == 1)
+							_editAction = eEditActionMovePoint;
+						break;
+					case eModeMoveRecompute:
+						if(_connectedFacesId.length() == 1
+							&& !_faceConnected)
+							_editAction = eEditActionMovePoint;
+						break;				
+				}
+			}
+			else if(intersectEdge(view, *it, _mousePoint))
+			{
+				checkIntersection = true;
+				switch(_mode)
+				{
+					case eModeCreate:
+						_editAction = eEditActionExtendEdge;
+						break;
+					case eModeMoveInPlane:
+						// Check edge status
+						if(_connectedFacesId.length() == 1
+							&& !_edgeConnected)
+							_editAction = eEditActionMoveEdge;
+						break;
+					case eModeMoveRecompute:
+						// Check edge status
+						if(_connectedFacesId.length() == 1
+							&& !_edgeConnected)
+							_editAction = eEditActionMoveEdge;
+						break;
+				}		
 			}
 		}
-		else if(intersectEdge(view, _mousePoint))
-		{
-			switch(_mode)
-			{
-				case eModeCreate:
-					_editAction = eEditActionExtendEdge;
-					break;
-				case eModeMoveInPlane:
-					// Check edge status
-					if(_connectedFacesId.length() == 1
-						&& !_edgeConnected)
-						_editAction = eEditActionMoveEdge;
-					break;
-				case eModeMoveRecompute:
-					// Check edge status
-					if(_connectedFacesId.length() == 1
-						&& !_edgeConnected)
-						_editAction = eEditActionMoveEdge;
-					break;
-			}		
-		}
-		else
-		{
+		
+		if(!checkIntersection)
 			_editAction = eEditActionNone;
-		}
-
+		
 		switch(_editAction)
 		{
 			case eEditActionExtendEdge:
@@ -527,7 +542,7 @@ MStatus MVGBuildFaceManipulator::doPress(M3dView& view)
 					}
 					if(computeFace3d(view, pointArray, face3D))
 					{
-						addFace3d(face3D);
+						addFace3d(face3D, true);
 						_display2DPoints_world.clear();
 					}	
 				}
@@ -561,27 +576,23 @@ MStatus MVGBuildFaceManipulator::doRelease(M3dView& view)
 			break;
 		case eEditActionMoveEdge:
 			{
-				MVGMesh mesh(MVGProject::_MESH);
-				if(!mesh.isValid()) {
-					mesh = MVGMesh::create(MVGProject::_MESH);
-					LOG_INFO("New OpenMVG Mesh.")
-				}
-
+				MVGMesh mesh(_intersectedMeshPath);
+				if(!mesh.isValid())
+					return MStatus::kFailure;
+				
 				MPointArray meshPoints;
 				mesh.getPoints(meshPoints);
 
-				MIntArray edgeVerticesId = mesh.getEdgeVertices(_intersectedEdgeId);
+				MIntArray edgeVerticesId =mesh.getEdgeVertices(_intersectedEdgeId);
 				mesh.setPoint(edgeVerticesId[1], _preview3DFace._p[2]);
 				mesh.setPoint(edgeVerticesId[0], _preview3DFace._p[3]);
 			}
 			break;
 		case eEditActionMovePoint: 
 			{		
-				MVGMesh mesh(MVGProject::_MESH);
-				if(!mesh.isValid()) {
-					mesh = MVGMesh::create(MVGProject::_MESH);
-					LOG_INFO("New OpenMVG Mesh.")
-				}
+				MVGMesh mesh(_intersectedMeshPath);
+				if(!mesh.isValid())
+					return MStatus::kFailure;
 
 				MPointArray meshPoints;
 				mesh.getPoints(meshPoints);
@@ -608,7 +619,7 @@ MStatus MVGBuildFaceManipulator::doMove(M3dView& view, bool& refresh)
 {	
 	updateMouse(view);
 	updateCamera(view);
-		
+			
 	// Warning if change of view during shape creation
 	if( !_display2DPoints_world.empty() 
 		&& !(_camera.dagPath() == _cameraPathClickedPoints))
@@ -728,11 +739,9 @@ bool MVGBuildFaceManipulator::update3DFacePreview(M3dView& view)
 				// If compute failed, use the plan of the extended fae
 				if(!check)
 				{
-					MVGMesh mesh(MVGProject::_MESH);
-					if(!mesh.isValid()) {
-						mesh = MVGMesh::create(MVGProject::_MESH);
-						LOG_INFO("New OpenMVG Mesh.")
-					}
+					MVGMesh mesh(_intersectedMeshPath);
+					if(!mesh.isValid())
+						return false;
 					
 					MPointArray meshPoints;
 					mesh.getPoints(meshPoints);
@@ -769,11 +778,9 @@ bool MVGBuildFaceManipulator::update3DFacePreview(M3dView& view)
 			
 		case eEditActionMoveEdge:
 			{
-				MVGMesh mesh(MVGProject::_MESH);
-				if(!mesh.isValid()) {
-					mesh = MVGMesh::create(MVGProject::_MESH);
-					LOG_INFO("New OpenMVG Mesh.")
-				}
+				MVGMesh mesh(_intersectedMeshPath);
+				if(!mesh.isValid())
+					return false;
 
 				MIntArray verticesId = mesh.getFaceVertices(_connectedFacesId[0]);	
 				MPointArray meshPoints;
@@ -873,11 +880,10 @@ bool MVGBuildFaceManipulator::update3DFacePreview(M3dView& view)
 			break;
 		case eEditActionMovePoint:
 			{
-				MVGMesh mesh(MVGProject::_MESH);
-				if(!mesh.isValid()) {
-					mesh = MVGMesh::create(MVGProject::_MESH);
-					LOG_INFO("New OpenMVG Mesh.")
-				}
+				MVGMesh mesh(_intersectedMeshPath);
+				if(!mesh.isValid())
+					return false;
+				
 				MPointArray meshPoints;
 				mesh.getPoints(meshPoints);
 
@@ -958,16 +964,16 @@ bool MVGBuildFaceManipulator::computeFace3d(
 	return MVGGeometryUtil::projectFace2D(outFace3D, view, _camera, face2D, computeLastPoint, height);
 }
 
-void MVGBuildFaceManipulator::addFace3d(MVGFace3D& face3d)
+void MVGBuildFaceManipulator::addFace3d(MVGFace3D& face3d, bool newMesh)
 {
-	MVGMesh mesh(MVGProject::_MESH);
-	if(!mesh.isValid()) {
+	MVGMesh mesh(_intersectedMeshPath);
+	if(newMesh
+		|| !mesh.isValid())
+	{
 		mesh = MVGMesh::create(MVGProject::_MESH);
-		LOG_INFO("New OpenMVG Mesh.")
 	}
-		
-	mesh.addPolygon(face3d);
 
+	mesh.addPolygon(face3d);
 }
 
 bool MVGBuildFaceManipulator::eventFilter(QObject *obj, QEvent *e)
@@ -1057,14 +1063,13 @@ bool MVGBuildFaceManipulator::eventFilter(QObject *obj, QEvent *e)
 	}
 	return false;
 }
-bool MVGBuildFaceManipulator::intersectPoint(M3dView& view, MPoint& point)
+bool MVGBuildFaceManipulator::intersectPoint(M3dView& view, MDagPath& meshPath, MPoint& point)
 {		
 	_faceConnected = false;
-	MVGMesh mesh(MVGProject::_MESH);
-	if(!mesh.isValid()) {
-		mesh = MVGMesh::create(MVGProject::_MESH);
-		LOG_INFO("New OpenMVG Mesh.")
-	}
+	
+	MVGMesh mesh(meshPath);
+	if(!mesh.isValid())
+		return false;
 	MPointArray meshPoints;
 	mesh.getPoints(meshPoints);
 
@@ -1086,6 +1091,7 @@ bool MVGBuildFaceManipulator::intersectPoint(M3dView& view, MPoint& point)
 		{
 			_pressedPointId = i;
 			_connectedFacesId = mesh.getConnectedFacesToVertex(_pressedPointId);
+			_intersectedMeshPath = mesh.dagPath();
 
 			// Face not connected to other face
 			MIntArray vertices = mesh.getFaceVertices(_connectedFacesId[0]);	
@@ -1114,12 +1120,10 @@ void MVGBuildFaceManipulator::setMode(EMode mode)
 		case eModeCreate:
 			_editAction = eEditActionNone;
 			setCursor(MCursor::crossHairCursor);
-			//setCursor(QCursor(Qt::CrossCursor));
 			break;
 		case eModeMoveInPlane:
 		case eModeMoveRecompute:
 			setCursor(MCursor::handCursor);
-			//setCursor(QCursor(Qt::SizeAllCursor));
 			break;
 			
 	}
@@ -1131,14 +1135,14 @@ void MVGBuildFaceManipulator::setCursor(MCursor cursor)
 		_context->setCursor(cursor);
 }
 
-bool MVGBuildFaceManipulator::intersectEdge(M3dView& view, MPoint& point)
+bool MVGBuildFaceManipulator::intersectEdge(M3dView& view, MDagPath& meshPath, MPoint& point)
 {
 	_edgeConnected = false;
-	MVGMesh mesh(MVGProject::_MESH);
-	if(!mesh.isValid()) {
-		mesh = MVGMesh::create(MVGProject::_MESH);
-		LOG_INFO("New OpenMVG Mesh.")
-	}
+
+	MVGMesh mesh(meshPath);
+	if(!mesh.isValid())
+		return false;
+	
 	MPointArray meshPoints;
 	mesh.getPoints(meshPoints);
 
@@ -1175,7 +1179,7 @@ bool MVGBuildFaceManipulator::intersectEdge(M3dView& view, MPoint& point)
 					edgePoints.clear();
 					edgePoints.append(edgeIt.point(0));
 					edgePoints.append(edgeIt.point(1));	
-					_intersectedEdgeId = edgeIt.index();
+					_intersectedEdgeId = edgeIt.index();		
 				}
 			}
 			edgeIt.next();
@@ -1194,6 +1198,7 @@ bool MVGBuildFaceManipulator::intersectEdge(M3dView& view, MPoint& point)
 					if(mesh.getNumConnectedFacesToVertex(edgeVertices[i]) > 1)
 					{
 						_edgeConnected = true;
+						_intersectedMeshPath = mesh.dagPath();
 					}
 				}
 			}	

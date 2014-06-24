@@ -13,7 +13,6 @@ using namespace mayaMVG;
 
 std::string MVGProject::_CLOUD = "mvgPointCloud";
 std::string MVGProject::_MESH = "mvgMesh";
-std::string MVGProject::_PREVIEW_MESH = "previewMesh";
 std::string MVGProject::_PROJECT = "mayaMVG";
 
 MString	MVGProject::_PROJECTPATH = "project";
@@ -48,7 +47,7 @@ MVGProject MVGProject::create(const std::string& name)
 	MDagPath path;
 	
 	// root node
-	MObject transform = fn.create(MObject::kNullObj, &status);
+	MObject transform = fn.create(MObject::kNullObj, &status);	
 	// root/cameras
 	fn.create(transform, &status);
 	fn.setName("cameras");
@@ -116,7 +115,8 @@ std::string MVGProject::projectDirectory() const
 {
 	MString directory;
 	MVGMayaUtil::getStringAttribute(_dagpath.node(), _PROJECTPATH, directory);
-	return (directory.length() > 0) ? directory.asChar() : "";
+	
+	return directory.asChar();
 }
 
 void MVGProject::setProjectDirectory(const std::string& directory) const
