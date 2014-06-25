@@ -3,11 +3,12 @@ import QtDesktop 0.1
 
 Item {
 
-    property bool settingsVisibility
+    property alias settingsVisibility: m.settingsVisibility
     property alias project: m.project
     QtObject {
         id: m
         property variant project
+        property bool settingsVisibility
     }
     RowLayout
     {
@@ -28,9 +29,9 @@ Item {
             }
         }
         ToolButton {
-            iconSource: (settingsVisibility ? "img/down_arrow.png" : "img/right_arrow.png")
-            onClicked: contextBar.settingsVisibility = !contextBar.settingsVisibility
+            iconSource: (m.settingsVisibility ? "img/down_arrow.png" : "img/right_arrow.png")
+            tooltip: (m.settingsVisibility ? "Close settings" : "Show settings")
+            onClicked: m.settingsVisibility = !m.settingsVisibility
         }
     }
-
 }

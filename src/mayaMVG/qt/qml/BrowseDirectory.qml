@@ -3,12 +3,14 @@ import QtDesktop 0.1
 
 
 Item {
-
     property alias project: m.project
+
+    signal browserProjectLoaded
     QtObject {
         id: m
         property variant project
         property string directory: m.project.projectDirectory
+
     }
     RowLayout
     {
@@ -30,6 +32,7 @@ Item {
                     onDoubleClicked: {
                         var projectPath = m.project.openFileDialog()
                         m.project.loadProject(projectPath)
+                        browserProjectLoadedd()
                     }
                 }
             }
@@ -49,10 +52,10 @@ Item {
                 onClicked: {
                     var projectPath = m.project.openFileDialog()
                     m.project.loadProject(projectPath)
+                    browserProjectLoaded()
                 }
             }
         }
-    }
-    
+    }   
 }
 

@@ -41,7 +41,7 @@ Rectangle {
             model: viewModel
             anchors.fill: parent
             orientation: ListView.Horizontal
-            property int itemWidth: parent.width / viewModel.count
+            property int itemWidth: (parent.width - spacing)/ viewModel.count
             spacing: 2
             delegate: Rectangle {
                 id: cameraSelection

@@ -8,6 +8,7 @@ Item {
     property alias project: m.project
     property alias isOpen: m.isOpen
     property alias thumbSize: m.thumbSize
+    signal settingProjectLoaded
     QtObject {
         id: m
         property variant project
@@ -53,6 +54,7 @@ Item {
                     implicitHeight: 35
                     implicitWidth: parent.width
 
+                    onBrowserProjectLoaded: settingProjectLoaded()
                 }
                 // thumbnail slider
                 Item {
