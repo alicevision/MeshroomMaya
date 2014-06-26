@@ -28,20 +28,21 @@ Rectangle {
         anchors.verticalCenter: parent.verticalCenter
         // TODO: use max(width, height)
         width: parent.width
-        height: parent.width * m.thumbRatio
+        height: parent.height
         Image {
             id: cameraThumbnail
             anchors.fill: parent
             sourceSize.width: 400  // Use proxy buffer at smaller resolution
             source: m.camera ? m.camera.imagePath : m.source
             asynchronous: true
+            fillMode: Image.PreserveAspectFit
         }
         ListView {
             id: viewList
             model: viewModel
             anchors.fill: parent
             orientation: ListView.Horizontal
-            property int itemWidth: parent.width / viewModel.count
+            property int itemWidth: (parent.width - spacing)/ viewModel.count
             spacing: 2
             delegate: Rectangle {
                 id: cameraSelection

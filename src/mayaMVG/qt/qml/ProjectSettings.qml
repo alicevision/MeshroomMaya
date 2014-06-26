@@ -8,11 +8,18 @@ Item {
     property alias project: m.project
     property alias isOpen: m.isOpen
     property alias thumbSize: m.thumbSize
+    property alias sliderMinValue: m.sliderMinValue
+    property alias sliderMaxValue: m.sliderMaxValue
+
+    signal settingProjectLoaded
     QtObject {
         id: m
         property variant project
         property bool isOpen
         property int thumbSize
+        property int sliderMinValue
+        property int sliderMaxValue
+
     }
     opacity: 0  // needed for animation
 
@@ -53,6 +60,7 @@ Item {
                     implicitHeight: 35
                     implicitWidth: parent.width
 
+                    onBrowserProjectLoaded: settingProjectLoaded()
                 }
                 // thumbnail slider
                 Item {
@@ -67,13 +75,18 @@ Item {
                         }
                         Slider {
                             Layout.horizontalSizePolicy: Layout.Expanding
-                            minimumValue: 90
-                            maximumValue: 180
-                            value: 100
+                            minimumValue: m.sliderMinValue //90
+                            maximumValue: m.sliderMaxValue //180
+                            value:  m.thumbSize
                             onValueChanged: {
                                 m.thumbSize = value
                             }
                         }
+                    }
+
+                    TooltipArea {
+                        anchors.fill: parent
+                        text: "Thumbnail size"
                     }
                 }
             }
