@@ -22,7 +22,6 @@ class MVGContext: public MPxContext {
 
     public:
         void updateManipulators(void* clientData);
-		void setCursor(MCursor cursor);
 		
     private:
         MVGContextEventFilter* m_eventFilter;

@@ -14,7 +14,6 @@ class QObject;
 
 namespace mayaMVG {
 class MVGManipulatorKeyEventFilter;
-class MVGContext;
 
 class MVGBuildFaceManipulator: public MPxManipulatorNode
 {
@@ -70,7 +69,6 @@ class MVGBuildFaceManipulator: public MPxManipulatorNode
 		
 		bool eventFilter(QObject *obj, QEvent *e);
 		void setMode(EMode mode);
-		void setCursor(MCursor);
 
 	public:
 		friend class MVGManipulatorKeyEventFilter;
@@ -93,7 +91,6 @@ class MVGBuildFaceManipulator: public MPxManipulatorNode
 		///@{
 		EMode	_mode;
 		EEditAction _editAction;
-		MVGContext* _context;
 		///@}
 		
 		///@brief Display & Preview

@@ -3,8 +3,6 @@
 #include "mayaMVG/maya/context/MVGBuildFaceManipulator.h"
 #include "mayaMVG/maya/MVGMayaUtil.h"
 #include "mayaMVG/qt/MVGMayaEvent.h"
-
-#include "mayaMVG/core/MVGLog.h"
 #include <maya/MCursor.h>
 
 using namespace mayaMVG;
@@ -26,6 +24,9 @@ void MVGContext::toolOnSetup(MEvent & event)
 	m_eventFilter = new MVGContextEventFilter(this, leftViewport);
 	leftViewport->installEventFilter(m_eventFilter);
 	rightViewport->installEventFilter(m_eventFilter);
+	
+	// Cursor 
+	setCursor(MCursor(MCursor::crossHairCursor));
 }
 
 void MVGContext::toolOffCleanup()
@@ -34,15 +35,9 @@ void MVGContext::toolOffCleanup()
 	QWidget* leftViewport = MVGMayaUtil::getMVGLeftViewportLayout();
 	QWidget* rightViewport = MVGMayaUtil::getMVGRightViewportLayout();
 	if(leftViewport)
-	{
 		leftViewport->removeEventFilter(m_eventFilter);
-		//leftViewport->setCursor(QCursor(Qt::ArrowCursor));
-	}		
 	if(rightViewport)
-	{
 		rightViewport->removeEventFilter(m_eventFilter);
-		//rightViewport->setCursor(QCursor(Qt::ArrowCursor));
-	}
 		
 	MPxContext::toolOffCleanup();
 }
@@ -76,14 +71,7 @@ void MVGContext::updateManipulators(void * data)
 	// then add a new one
 	MString manipName("MVGBuildFaceManipulator");
 	MObject manipObject;
-	MPxManipulatorNode * manipNode = MPxManipulatorNode::newManipulator(manipName, manipObject);
-	MVGBuildFaceManipulator* manipulator = dynamic_cast<MVGBuildFaceManipulator*>(manipNode);
-	manipulator->_context = this;
+	MPxManipulatorNode::newManipulator(manipName, manipObject);
 	
 	ctxPtr->addManipulator(manipObject);
-}
-
-void MVGContext::setCursor(MCursor cursor)
-{
-	MPxContext::setCursor(cursor);
 }

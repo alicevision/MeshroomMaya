@@ -1,13 +1,11 @@
 #include "mayaMVG/maya/context/MVGManipulatorKeyEventFilter.h"
 #include <QtGui/QApplication>  // warning: include before maya
-#include <QtGui/QCursor>
 #include <QtGui/QWidget>
 #include <QtGui/QKeyEvent>
 
 #include "mayaMVG/qt/MVGUserLog.h"
 #include "mayaMVG/maya/context/MVGBuildFaceManipulator.h"
 #include "mayaMVG/maya/MVGMayaUtil.h"
-#include "mayaMVG/maya/context/MVGContext.h"
 #include "mayaMVG/core/MVGLog.h"
 #include "mayaMVG/core/MVGPointCloud.h"
 #include "mayaMVG/core/MVGMesh.h"
@@ -132,16 +130,6 @@ namespace {
 		glEnd();
 	}
 	
-	void setCursor(QCursor cursor)
-	{
-		QWidget* leftViewport = MVGMayaUtil::getMVGLeftViewportLayout();
-		if(leftViewport)
-			leftViewport->setCursor(cursor);
-		QWidget* rightViewport = MVGMayaUtil::getMVGRightViewportLayout();
-		if(rightViewport)
-			rightViewport->setCursor(cursor);
-	}
-
 	void getMeshList(std::vector<MDagPath>& meshList)
 	{
 		meshList.clear();
@@ -159,7 +147,6 @@ namespace {
 MVGBuildFaceManipulator::MVGBuildFaceManipulator()
 : _keyEvent(NULL)
 {	
-	_context = NULL;
 	QWidget* mayaWindow = MVGMayaUtil::getMVGWindow();
 	_keyEvent = new MVGManipulatorKeyEventFilter(mayaWindow, this);
 	
@@ -196,7 +183,6 @@ void MVGBuildFaceManipulator::draw(M3dView & view, const MDagPath & path,
 	short mousex, mousey;
 	mousePosition(mousex, mousey);
 	updateMouse(view);
-	GLdouble radius = 3.0;
 
 	view.beginGL();
 	
@@ -281,10 +267,7 @@ void MVGBuildFaceManipulator::draw(M3dView & view, const MDagPath & path,
 			view.getCamera(cameraPath);
 			
 			if(_editAction == eEditActionNone)
-			{
-				if(_mode == eModeCreate)
-					setCursor(MCursor::crossHairCursor);			
-				
+			{		
 				std::vector<MDagPath> mList;
 				getMeshList(mList);
 
@@ -320,7 +303,6 @@ void MVGBuildFaceManipulator::draw(M3dView & view, const MDagPath & path,
 						if(_mode == eModeCreate)
 						{
 							glColor4f(0.9f, 0.9f, 0.1f, 0.8f);
-							setCursor(MCursor::editCursor);
 						}
 
 						else if(_connectedFacesId.length() == 1
@@ -1120,20 +1102,12 @@ void MVGBuildFaceManipulator::setMode(EMode mode)
 	{
 		case eModeCreate:
 			_editAction = eEditActionNone;
-			setCursor(MCursor::crossHairCursor);
 			break;
 		case eModeMoveInPlane:
 		case eModeMoveRecompute:
-			setCursor(MCursor::handCursor);
 			break;
 			
 	}
-}
-
-void MVGBuildFaceManipulator::setCursor(MCursor cursor)
-{
-	if(_context)
-		_context->setCursor(cursor);
 }
 
 bool MVGBuildFaceManipulator::intersectEdge(M3dView& view, MDagPath& meshPath, MPoint& point)
