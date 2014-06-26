@@ -1,9 +1,12 @@
 #include <maya/MFnPlugin.h>
-#include "mayaMVG/maya/cmd/MVGCmd.h"
 #include "mayaMVG/core/MVGLog.h"
 #include "mayaMVG/maya/MVGMayaUtil.h"
-#include "context/MVGContextCmd.h"
-#include "context/MVGBuildFaceManipulator.h"
+#include "mayaMVG/maya/cmd/MVGCmd.h"
+#include "mayaMVG/maya/cmd/MVGEditCmd.h"
+#include "mayaMVG/maya/context/MVGContextCmd.h"
+#include "mayaMVG/maya/context/MVGCreateManipulator.h"
+#include "mayaMVG/maya/context/MVGMoveManipulator.h"
+
 
 using namespace mayaMVG;
 
@@ -11,20 +14,22 @@ MStatus initializePlugin(MObject obj) {
 	MStatus status;
 	MFnPlugin plugin(obj, PLUGIN_COMPANY, "1.0", "Any");
 
-	// commands
+	// register commands
 	status = plugin.registerCommand("MVGCmd", MVGCmd::creator);
-
-	// context
-	status = plugin.registerContextCommand(MVGContextCmd::name, &MVGContextCmd::creator);
-
-	// nodes
-	// MVGCreateManipulator
-	status = plugin.registerNode("MVGBuildFaceManipulator", MVGBuildFaceManipulator::_id, &MVGBuildFaceManipulator::creator
-								, &MVGBuildFaceManipulator::initialize, MPxNode::kManipulatorNode);
-//	status = plugin.registerNode("MVGMoveManipulator", MVGBuildFaceManipulator::_id, &MVGBuildFaceManipulator::creator
-//								, &MVGBuildFaceManipulator::initialize, MPxNode::kManipulatorNode);
-
+	// register context
+	status = plugin.registerContextCommand(MVGContextCmd::name, &MVGContextCmd::creator, 
+								MVGEditCmd::name, MVGEditCmd::creator, MVGEditCmd::newSyntax);
+	// register nodes
+	status = plugin.registerNode("MVGCreateManipulator", MVGCreateManipulator::_id, 
+								&MVGCreateManipulator::creator, &MVGCreateManipulator::initialize, 
+								MPxNode::kManipulatorNode);
+	status = plugin.registerNode("MVGMoveManipulator", MVGMoveManipulator::_id, 
+								&MVGMoveManipulator::creator, &MVGMoveManipulator::initialize, 
+								MPxNode::kManipulatorNode);
+	// register ui
 	status = plugin.registerUI("mayaMVGCreateUI", "mayaMVGDeleteUI");
+
+	MVGMayaUtil::createMVGContext();
 
 	if (!status)
 		LOG_ERROR("unexpected error");
@@ -41,12 +46,13 @@ MStatus uninitializePlugin(MObject obj) {
 
 	// deregister commands
 	status = plugin.deregisterCommand("MVGCmd");
+	// deregister context
+	status = plugin.deregisterContextCommand(MVGContextCmd::name, MVGEditCmd::name);
+	// deregister nodes
+	status = plugin.deregisterNode(MVGCreateManipulator::_id);
+	status = plugin.deregisterNode(MVGMoveManipulator::_id);
 
-	// context
-	status = plugin.deregisterContextCommand(MVGContextCmd::name);
-
-	// nodes
-	status = plugin.deregisterNode(MVGBuildFaceManipulator::_id);
+	MVGMayaUtil::deleteMVGContext();
 
 	if (!status)
 		LOG_ERROR("unexpected error");

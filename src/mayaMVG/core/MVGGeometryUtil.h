@@ -99,7 +99,7 @@ class MVGCamera;
 struct MVGGeometryUtil {
 	static MPoint worldToView(M3dView&, const MPoint&);
 	static MPoint viewToWorld(M3dView&, const MPoint&);
-	static void viewToCamera(M3dView& view, MVGCamera& camera, short x, short y, MPoint& point);
+	static void viewToCamera(M3dView& view, const MVGCamera& camera, const short& x, const short& y, MPoint& point);
 	static void worldToCamera(M3dView& view, MVGCamera& camera, MPoint& worldPoint, MPoint& point);
 	static void cameraToView(M3dView& view, MVGCamera& camera, MPoint& point, short& x, short& y);
 	static bool projectFace2D(MVGFace3D&, M3dView&, MVGCamera&, MVGFace2D&, bool compute = false, MVector height = MVector(0, 0, 0));

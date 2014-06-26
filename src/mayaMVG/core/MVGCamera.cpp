@@ -282,11 +282,9 @@ std::vector<MVGPointCloudItem> MVGCamera::visibleItems() const
 	std::vector<MVGPointCloudItem> allItems, items;
 	MVGPointCloud pointCloud(MVGProject::_CLOUD);
 	allItems = pointCloud.getItems();
-
 	MIntArray intArray;
 	MVGMayaUtil::getIntArrayAttribute(_dagpath.node(), _ITEMS, intArray);
-	if(intArray.length() > 0)
-	{
+	if(intArray.length() > 0) {
 		for(size_t i = 0; i < intArray.length(); ++i) {
 			int index = intArray[i];
 			if(index < allItems.size()){
@@ -295,7 +293,6 @@ std::vector<MVGPointCloudItem> MVGCamera::visibleItems() const
 		}
 		return items;
 	}
-	
 	LOG_WARNING("No visibility information in pointCloud.");
 	return allItems;
 }
@@ -345,38 +342,22 @@ void MVGCamera::setVerticalPan(const double pan) const
 	fnCamera.setVerticalPan(pan);
 }
 
-std::vector<MPoint> MVGCamera::getClickedPoints() const
+MPointArray MVGCamera::getClickedPoints() const
 {
 	MPointArray pointArray;
 	MVGMayaUtil::getPointArrayAttribute(_dagpath.node(), _POINTS, pointArray);
-	
-	std::vector<MPoint> points;
-	points.reserve(pointArray.length());
-	for(size_t i = 0; i < pointArray.length(); ++i)
-	{
-		points.push_back(pointArray[i]);
-	}
-	
-	return points;
+	return pointArray;
 }
 
-void MVGCamera::setClickedPoints(const std::vector<MPoint>& points) const
+void MVGCamera::setClickedPoints(const MPointArray& points) const
 {
-	MPointArray pointArray;
-	pointArray.setLength(points.size());
-	for(size_t i = 0; i < points.size(); ++i)
-	{
-		pointArray.set(points[i], i);
-	}
-	
-	MVGMayaUtil::setPointArrayAttribute(_dagpath.node(), _POINTS, pointArray);
+	MVGMayaUtil::setPointArrayAttribute(_dagpath.node(), _POINTS, points);
 }
 
 void MVGCamera::addClickedPoint(const MPoint& point) const
 {
 	MPointArray pointArray;
 	MVGMayaUtil::getPointArrayAttribute(_dagpath.node(), _POINTS, pointArray);
-	
 	pointArray.append(point);
 	MVGMayaUtil::setPointArrayAttribute(_dagpath.node(), _POINTS, pointArray);
 }
@@ -388,30 +369,26 @@ void MVGCamera::clearClickedPoints() const
 	MVGMayaUtil::setPointArrayAttribute(_dagpath.node(), _POINTS, pointArray);
 }
 
-MPoint MVGCamera::geClickedtPointAtIndex(int i) const
+MPoint MVGCamera::getClickedtPointAtIndex(int i) const
 {
 	MPoint point;
 	MVGMayaUtil::getPointInArrayAttribute(_dagpath.node(), _POINTS, point, i);
-	
 	return point;
 }
 
-void MVGCamera::seClickedtPointAtIndex(int i, const MPoint& point) const
+void MVGCamera::setClickedtPointAtIndex(int i, const MPoint& point) const
 {
 	MPointArray pointArray;
 	MVGMayaUtil::getPointArrayAttribute(_dagpath.node(), _POINTS, pointArray);
-	
 	pointArray.set(point, i);
-	
 	MVGMayaUtil::setPointArrayAttribute(_dagpath.node(), _POINTS, pointArray);
 }
 
 int MVGCamera::getClickedPointsCount() const 
 {
-
 	int size;
 	MVGMayaUtil::getPointArrayAttributeSize(_dagpath.node(), _POINTS, size);
-	
 	return size;
 }
-}
+
+} // namespace

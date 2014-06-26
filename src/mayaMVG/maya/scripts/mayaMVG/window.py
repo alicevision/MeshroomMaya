@@ -20,9 +20,8 @@ def mvgCreateWindow():
     if cmds.modelPanel('mvgLPanel', ex=True):
         cmds.modelPanel('mvgLPanel', e=True, p='leftPane')
     else:
-        cmds.modelPanel('mvgLPanel', mbv=False)
-        cmds.modelEditor('mvgLPanel', e=True, grid=False)
-        cmds.modelEditor('mvgLPanel', e=True, cameras=False)
+        cmds.modelPanel('mvgLPanel', mbv=False, l='MVG leftView')
+        cmds.modelEditor('mvgLPanel', e=True, grid=False, cameras=False, dynamics=False)
         cmds.modelEditor('mvgLPanel', e=True, displayAppearance='smoothShaded')
     cmds.setParent('..')
     cmds.setParent('..')
@@ -31,9 +30,8 @@ def mvgCreateWindow():
     if cmds.modelPanel('mvgRPanel', ex=True):
         cmds.modelPanel('mvgRPanel', e=True, p='rightPane')
     else:
-        cmds.modelPanel('mvgRPanel', mbv=False)
-        cmds.modelEditor('mvgRPanel', e=True, grid=False)
-        cmds.modelEditor('mvgRPanel', e=True, cameras=False)
+        cmds.modelPanel('mvgRPanel', mbv=False, l='MVG rightView')
+        cmds.modelEditor('mvgRPanel', e=True, grid=False, cameras=False, dynamics=False)
         cmds.modelEditor('mvgRPanel', e=True, displayAppearance='smoothShaded')
     cmds.setParent('..')
     cmds.setParent('..')

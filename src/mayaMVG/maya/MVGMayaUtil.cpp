@@ -45,8 +45,9 @@ QWidget* MVGMayaUtil::getMVGMenuLayout()
 QWidget* MVGMayaUtil::getMVGViewportLayout(const MString& viewName)
 {
 	M3dView view;
-	M3dView::getM3dViewFromModelPanel(viewName, view);
-	return view.widget();
+	if(M3dView::getM3dViewFromModelPanel(viewName, view))
+		return view.widget();
+	return NULL;
 }
 
 MStatus MVGMayaUtil::setFocusOnView(const MString& viewName)
@@ -60,6 +61,8 @@ bool MVGMayaUtil::isMVGView(const M3dView & view)
 {
 	QWidget* leftViewport = MVGMayaUtil::getMVGViewportLayout("mvgLPanel");
 	QWidget* rightViewport = MVGMayaUtil::getMVGViewportLayout("mvgRPanel");
+	if(!leftViewport || !rightViewport)
+		return false;
 	return ((view.widget() == leftViewport) || (view.widget() == rightViewport));
 }
 
@@ -205,6 +208,8 @@ MStatus MVGMayaUtil::getDoubleArrayAttribute(const MObject& object, const MStrin
 	} else {
 		MDataHandle dataHandle = plug.asMDataHandle(MDGContext::fsNormal, &status);
 		CHECK_RETURN_STATUS(status);
+		if(dataHandle.data() == MObject::kNullObj)
+			return MS::kFailure;
 		MFnDoubleArrayData arrayData(dataHandle.data(), &status);
 		CHECK_RETURN_STATUS(status);
 		status = arrayData.copyTo(doubleArray);
@@ -243,6 +248,8 @@ MStatus MVGMayaUtil::getPointArrayAttribute(const MObject& object, const MString
 	} else {
 		MDataHandle dataHandle = plug.asMDataHandle(MDGContext::fsNormal, &status);
 		CHECK_RETURN_STATUS(status);
+		if(dataHandle.data() == MObject::kNullObj)
+			return MS::kFailure;
 		MFnPointArrayData arrayData(dataHandle.data(), &status);
 		CHECK_RETURN_STATUS(status);
 		status = arrayData.copyTo(pointArray);
@@ -257,21 +264,17 @@ MStatus MVGMayaUtil::getPointArrayAttributeSize(const MObject& object, const MSt
 	CHECK_RETURN_STATUS(status);
 	MPlug plug(fn.findPlug(param, networked, &status));
 	CHECK_RETURN_STATUS(status);
-	
 	if (plug.isArray()) {
 		size = plug.numElements();
-	}
-	else
-	{		
+	} else {		
 		MDataHandle dataHandle = plug.asMDataHandle(MDGContext::fsNormal, &status);
 		CHECK_RETURN_STATUS(status);
+		if(dataHandle.data() == MObject::kNullObj)
+			return MS::kFailure;
 		MFnPointArrayData arrayData(dataHandle.data(), &status);
 		CHECK_RETURN_STATUS(status);
-		
 		size = arrayData.length();
 	}
-
-	
 	return status;
 }
 
@@ -282,14 +285,13 @@ MStatus MVGMayaUtil::getPointInArrayAttribute(const MObject& object, const MStri
 	CHECK_RETURN_STATUS(status);
 	MPlug plug(fn.findPlug(param, networked, &status));
 	CHECK_RETURN_STATUS(status);
-
 	if (plug.isArray()) {
-		
 		point = MPoint(plug[index].child(0).asDouble(), plug[index].child(1).asDouble());
-
 	} else {
 		MDataHandle dataHandle = plug.asMDataHandle(MDGContext::fsNormal, &status);
 		CHECK_RETURN_STATUS(status);
+		if(dataHandle.data() == MObject::kNullObj)
+			return MS::kFailure;
 		MFnPointArrayData arrayData(dataHandle.data(), &status);
 		CHECK_RETURN_STATUS(status);
 		point = arrayData.array()[index];

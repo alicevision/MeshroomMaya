@@ -1,7 +1,6 @@
 #include "mayaMVG/core/MVGGeometryUtil.h"
 #include "mayaMVG/core/MVGPointCloud.h"
 #include "mayaMVG/core/MVGCamera.h"
-#include "mayaMVG/maya/context/MVGBuildFaceManipulator.h"
 #include "mayaMVG/core/MVGLog.h"
 #include <openMVG/robust_estimation/robust_estimator_LMeds.hpp>
 #include <maya/MPointArray.h>
@@ -46,7 +45,7 @@ namespace { // empty namespace
 		return wn;
 	}
 
-	static bool plane_line_intersect(const PlaneKernel::Model& model, 
+	bool plane_line_intersect(const PlaneKernel::Model& model, 
 									const MPoint& P1, 
 									const MPoint& P2, 
 									MPoint& P)
@@ -74,20 +73,15 @@ MPoint MVGGeometryUtil::viewToWorld(M3dView& view, const MPoint& screen)
 	return wpoint;
 }
 
-void MVGGeometryUtil::viewToCamera(M3dView& view, MVGCamera& camera, short x, short y, MPoint& point)
+void MVGGeometryUtil::viewToCamera(M3dView& view, const MVGCamera& camera, const short& x, const short& y, MPoint& point)
 {
 	MFnCamera fnCamera(camera.dagPath().node()); 
-	
-
-	// / viewportWidth
 	point.x = ((float)x / view.portWidth()) - 0.5;
 	point.y = ((float)y / view.portWidth()) - 0.5 - 0.5 * ((view.portHeight() / (float)view.portWidth()) - 1.0 );
 	point.z = 0.f;
-
-	// Zoom
+	// zoom
 	point =  point * fnCamera.horizontalFilmAperture() * fnCamera.zoom();
-
-	// Pan
+	// pan
 	point.x += fnCamera.horizontalPan();
 	point.y += fnCamera.verticalPan();
 }
@@ -102,30 +96,22 @@ void MVGGeometryUtil::worldToCamera(M3dView& view, MVGCamera& camera, MPoint& wo
 void MVGGeometryUtil::cameraToView(M3dView& view, MVGCamera& camera, MPoint& point, short& x, short& y)
 {
 	MFnCamera fnCamera(camera.dagPath().node()); 
-	
 	float newX = point.x;
 	float newY = point.y;
-	
-	// Pan
+	// pan
 	newX -= fnCamera.horizontalPan();
 	newY -= fnCamera.verticalPan();
-	
-	// Zoom
+	// zoom
 	newX /= (fnCamera.horizontalFilmAperture() * fnCamera.zoom());
 	newY /= (fnCamera.horizontalFilmAperture() * fnCamera.zoom());
-	
-	// Center	
+	// center	
 	x = round((newX + 0.5) * view.portWidth());
 	y = round((newY + 0.5 + 0.5 * (view.portHeight() / (float)view.portWidth() - 1.0)) * view.portWidth());	
 }
 
 bool MVGGeometryUtil::projectFace2D(MVGFace3D& face3D, M3dView& view, MVGCamera& camera, MVGFace2D& face2D, bool compute, MVector height)
 {
-	// TODO 
-	// use visible points
-	// std::vector<MVGPointCloudItem> items = pointCloud.getItems();
 	std::vector<MVGPointCloudItem> items = camera.visibleItems();
-	//LOG_INFO("projectFace2D: " << items.size() << " point cloud items.");
 	if(items.size() < 3) {
 		LOG_ERROR("Need more than " << items.size() << " point cloud items. Abort.");
 		return false;
@@ -170,8 +156,6 @@ bool MVGGeometryUtil::projectFace2D(MVGFace3D& face3D, M3dView& view, MVGCamera&
 	double outlierThreshold = std::numeric_limits<double>::infinity();
 	double dBestMedian = openMVG::robust::LeastMedianOfSquares(kernel, &model, &outlierThreshold);
 
-	//LOG_INFO("projectFace2D, outlierThreshold: " << outlierThreshold << ", dBestMedian: " << dBestMedian);
-	
 	// retrieve Face3D vertices from this model
 	MPoint P;
 	MPoint cameraCenter = AS_MPOINT(camera.pinholeCamera()._C);
@@ -197,8 +181,7 @@ bool MVGGeometryUtil::projectFace2D(MVGFace3D& face3D, M3dView& view, MVGCamera&
 		plane_line_intersect(model, cameraCenter, worldPoint, P);
 		face3DPoints.push_back(P);
 	}
-	else
-	{
+	else {
 		for(size_t i = 0; i < facePoints.size()-1; ++i) // remove extra point
 		{
 			worldPoint = viewToWorld(view, facePoints[i]);
@@ -217,20 +200,17 @@ void MVGGeometryUtil::computePlane(MVGFace3D& face3D, PlaneKernel::Model& model)
 	openMVG::Mat facePointsMat(3, 4);
 	for (size_t i = 0; i <4; ++i)
 		facePointsMat.col(i) = AS_VEC3(face3D._p[i]);
-
 	PlaneKernel kernel(facePointsMat);
 	double outlierThreshold = std::numeric_limits<double>::infinity();
 	openMVG::robust::LeastMedianOfSquares(kernel, &model, &outlierThreshold);
 }
 
-void MVGGeometryUtil::projectPointOnPlane(MPoint& point, M3dView& view, PlaneKernel::Model& model, MVGCamera& camera,  MPoint& projectedPoint)
+void MVGGeometryUtil::projectPointOnPlane(MPoint& point, M3dView& view, PlaneKernel::Model& model, MVGCamera& camera, MPoint& projectedPoint)
 {
 	MPoint cameraCenter = AS_MPOINT(camera.pinholeCamera()._C);
-	
 	short x, y;
 	MVector dir;
 	cameraToView(view, camera, point, x, y);
 	view.viewToWorld(x, y, point, dir);
-
 	plane_line_intersect(model, cameraCenter, point, projectedPoint);
 }

@@ -2,17 +2,12 @@
 #include "QtDeclarative/qdeclarativecontext.h"
 #include "mayaMVG/maya/cmd/MVGCmd.h"
 #include "mayaMVG/maya/MVGMayaUtil.h"
-#include "mayaMVG/qt/MVGViewportEventFilter.h"
-#include "mayaMVG/qt/MVGWindowEventFilter.h"
 #include "mayaMVG/core/MVGLog.h"
 #include "mayaMVG/qt/MVGMainWidget.h"
 #include <mayaMVG/qt/MVGProjectWrapper.h>
 #include <maya/MQtUtil.h>
 #include <maya/MGlobal.h>
-#include <maya/MDagPath.h>
-#include <maya/MEventMessage.h>
-#include <maya/MSelectionList.h>
-#include <maya/MFnDependencyNode.h>
+
 
 using namespace mayaMVG;
 
@@ -22,26 +17,6 @@ namespace {
 	static const char * helpFlagLong = "-help";
 	static const char * projectPathFlag = "-p";
 	static const char * projectPathFlagLong = "-project";
-
-	void selectionChangedCB(void* userData) {
-		if(!userData)
-			return;
-		MDagPath path;
-		MObject component;
-		MSelectionList list;
-		MGlobal::getActiveSelectionList(list);
-		QList<QString> selectedCameras;
-		for ( size_t i = 0; i < list.length(); i++) {
-			list.getDagPath(i, path, component);
-			path.extendToShape();
-			if(path.isValid() 
-				&& ((path.child(0).apiType() == MFn::kCamera) || (path.apiType() == MFn::kCamera))) {
-				MFnDependencyNode fn(path.transform());
-				selectedCameras.push_back(fn.name().asChar());
-			}
-		}
-		MVGProjectWrapper::instance().selectItems(selectedCameras);
-	}
 
 }
 
@@ -105,7 +80,7 @@ MStatus MVGCmd::doIt(const MArgList& args) {
 	}
 
 	// install mouse event filter on maya viewports
-	MVGViewportEventFilter * viewportEventFilter = new MVGViewportEventFilter(mayaWindow);
+	// MVGViewportEventFilter * viewportEventFilter = new MVGViewportEventFilter(mayaWindow);
 	QWidget* leftViewport = MVGMayaUtil::getMVGViewportLayout("mvgLPanel");
 	QWidget* rightViewport = MVGMayaUtil::getMVGViewportLayout("mvgRPanel");
 	if(!leftViewport || !rightViewport) {
@@ -113,19 +88,19 @@ MStatus MVGCmd::doIt(const MArgList& args) {
 		return MS::kFailure;
 	}
 
-	leftViewport->installEventFilter(viewportEventFilter);
+	// leftViewport->installEventFilter(viewportEventFilter);
 	leftViewport->setProperty("mvg_panel", "mvgLPanel");
-	rightViewport->installEventFilter(viewportEventFilter);
+	// rightViewport->installEventFilter(viewportEventFilter);
 	rightViewport->setProperty("mvg_panel", "mvgRPanel");
 
-	// maya callbacks
-	MCallbackIdArray callbackIDs;
-	callbackIDs.append(MEventMessage::addEventCallback("SelectionChanged", selectionChangedCB, mainWidget->view()));
+	// // maya callbacks
+	// MCallbackIdArray callbackIDs;
+	// callbackIDs.append(MEventMessage::addEventCallback("SelectionChanged", selectionChangedCB, mainWidget->view()));
 
 	// install a window event filter on 'mayaWindow'
 	// needed to remove all maya callbacks and all Qt event filters 
-	MVGWindowEventFilter * windowEventFilter = new MVGWindowEventFilter(callbackIDs, viewportEventFilter, mayaWindow);
-	mayaWindow->installEventFilter(windowEventFilter); // auto delete on window close
+	// MVGWindowEventFilter * windowEventFilter = new MVGWindowEventFilter(callbackIDs, viewportEventFilter, mayaWindow);
+	// mayaWindow->installEventFilter(windowEventFilter); // auto delete on window close
 	
 	// -p
 	if(argData.isFlagSet(projectPathFlag)) {

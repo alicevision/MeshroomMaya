@@ -2,7 +2,9 @@
 
 #include "mayaMVG/core/MVGNodeWrapper.h"
 #include "mayaMVG/core/MVGPointCloudItem.h"
+#undef Success // needed by eigen..
 #include <openMVG/cameras/PinholeCamera.hpp>
+#include <maya/MPointArray.h>
 #include <vector>
 
 class MString;
@@ -13,6 +15,7 @@ namespace mayaMVG {
 class MVGCamera : public MVGNodeWrapper {
 
 	public:
+		MVGCamera(): MVGNodeWrapper() {}
 		MVGCamera(const std::string& name);
 		MVGCamera(const MDagPath& dagPath);
 		MVGCamera(const int& id);
@@ -47,16 +50,15 @@ class MVGCamera : public MVGNodeWrapper {
 		double getVerticalPan() const;
 		void setVerticalPan(const double pan) const;
 		
-		std::vector<MPoint> getClickedPoints() const;
-		void setClickedPoints(const std::vector<MPoint>& points) const;
+		MPointArray getClickedPoints() const;
+		void setClickedPoints(const MPointArray& points) const;
 		void addClickedPoint(const MPoint& point) const;
 		void clearClickedPoints() const;
-		MPoint geClickedtPointAtIndex(int i) const;
-		void seClickedtPointAtIndex(int i, const MPoint& point) const;
+		MPoint getClickedtPointAtIndex(int i) const;
+		void setClickedtPointAtIndex(int i, const MPoint& point) const;
 		int getClickedPointsCount() const;
 		
 	private:
-		// MfnCamera _mfnCamera; TODO
 		// dynamic attributes
 		static MString _ID;
 		static MString _PINHOLE;
@@ -65,4 +67,4 @@ class MVGCamera : public MVGNodeWrapper {
 		static MString _POINTS;
 };
 
-} // mayaMVG
+} // namespace

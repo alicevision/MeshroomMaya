@@ -4,10 +4,6 @@
 #include "mayaMVG/core/MVGLog.h"
 #include <maya/MQtUtil.h>
 
-#include "mayaMVG/maya/context/MVGBuildFaceManipulator.h"
-
-using namespace mayaMVG;
-
 using namespace mayaMVG;
 
 MVGProjectWrapper::MVGProjectWrapper()
