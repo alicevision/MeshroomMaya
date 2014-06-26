@@ -59,6 +59,7 @@ set(MOC_HDRS
 	qt/MVGProjectWrapper.h
 	qt/QmlInstantCoding.h
 	qt/QObjectListModel.h
+	qt/QWheelArea.h
 )
 qt4_wrap_cpp(MOC_SRCS ${MOC_HDRS})
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
