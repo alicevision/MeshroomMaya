@@ -266,66 +266,14 @@ void MVGBuildFaceManipulator::draw(M3dView & view, const MDagPath & path,
 			MDagPath cameraPath;
 			view.getCamera(cameraPath);
 			
+			// Cursor
+			drawCursor(mousex, mousey);
+			
 			if(_editAction == eEditActionNone)
 			{		
-				std::vector<MDagPath> mList;
-				getMeshList(mList);
-
-				for(std::vector<MDagPath>::iterator it = mList.begin(); it != mList.end(); ++it)
-				{
-					// Intersection with point
-					if(intersectPoint(view, *it, _mousePoint))
-					{
-						if(_connectedFacesId.length() == 1)
-						{	
-							// Green
-							if(_mode == eModeMoveInPlane)
-								glColor4f(0.f, 1.f, 0.f, 0.8f);
-
-							// Cyan
-							else if(_mode == eModeMoveRecompute && !_faceConnected)
-								glColor4f(0.f, 1.f, 1.f, 0.8f);
-						}
-
-						short x, y;				
-						drawCircle(mousex, mousey, 10, 20);
-						glPointSize(4.f);
-						glBegin(GL_POINTS);
-						MVGGeometryUtil::cameraToView(view, _camera, _mousePoint, x, y);
-							glVertex2f(x, y);
-						glEnd();
-					}
-
-					// Intersection with edge					
-					else if(intersectEdge(view, *it, _mousePoint))
-					{
-						// Yellow
-						if(_mode == eModeCreate)
-						{
-							glColor4f(0.9f, 0.9f, 0.1f, 0.8f);
-						}
-
-						else if(_connectedFacesId.length() == 1
-							&& !_edgeConnected)
-						{
-							// Green
-							if(_mode == eModeMoveInPlane)
-								glColor4f(0.f, 1.f, 0.f, 0.8f);
-							// Purple
-							else if(eModeMoveRecompute)
-								glColor4f(0.f, 1.f, 1.f, 0.8f);	
-						}
-
-						short x, y;
-						glLineWidth(1.5f);
-						glBegin(GL_LINES);
-							view.worldToView(_intersectingEdgePoints3D[0], x, y);
-							glVertex2f(x, y);
-							view.worldToView(_intersectingEdgePoints3D[1], x, y);
-							glVertex2f(x, y);
-						glEnd();
-					}
-				}
+				
+				drawIntersections(view, mousex, mousey);
+				
 				// Draw lines and poly : if face creation
 				if(!_display2DPoints_world.empty())
 				{
@@ -1109,6 +1057,184 @@ void MVGBuildFaceManipulator::setMode(EMode mode)
 			
 	}
 }
+
+void MVGBuildFaceManipulator::drawCursor(double x, double y)
+{
+	switch(_mode)
+	{
+		case eModeCreate:
+			break;
+		case eModeMoveInPlane:
+			drawMoveInPlaneCursor(x, y);
+			break;
+		case eModeMoveRecompute:
+			drawMoveRecomputePlaneCursor(x, y);
+			break;
+	}
+}
+
+void MVGBuildFaceManipulator::drawArrowsCursor(double mousex, double mousey)
+{
+	GLfloat step = 8;
+	GLfloat width = 4;
+	GLfloat height = 4;
+	glBegin(GL_POLYGON);
+		glVertex2f(mousex + step, mousey + height);
+		glVertex2f(mousex + step, mousey - height);
+		glVertex2f(mousex + step + width, mousey);
+	glEnd();
+
+	glBegin(GL_POLYGON);
+		glVertex2f(mousex + height, mousey - step);
+		glVertex2f(mousex - height, mousey - step);
+		glVertex2f(mousex, mousey - (step + width));
+	glEnd();
+
+	glBegin(GL_POLYGON);
+		glVertex2f(mousex - step, mousey + height);
+		glVertex2f(mousex - step, mousey - height);
+		glVertex2f(mousex - (step + width), mousey);
+	glEnd();
+
+	glBegin(GL_POLYGON);
+		glVertex2f(mousex + height, mousey + step);
+		glVertex2f(mousex - height, mousey + step);
+		glVertex2f(mousex, mousey + step + width);
+	glEnd();
+}
+
+void MVGBuildFaceManipulator::drawMoveInPlaneCursor(double x, double y)
+{
+	glColor4f(0.f, 0.f, 0.f, 0.8f);
+	drawArrowsCursor(x, y);
+	
+	glColor4f(0.f, 1.f, 0.f, 0.8f);
+	GLfloat step = 10;
+	drawDisk(x + step, y + step, 4, 10);
+}
+void MVGBuildFaceManipulator::drawMoveRecomputePlaneCursor(double x, double y)
+{
+	glColor4f(0.f, 0.f, 0.f, 0.8f);
+	drawArrowsCursor(x, y);
+	
+	glColor4f(0.f, 1.f, 1.f, 0.8f);
+	GLfloat step = 10;
+	GLfloat width = 3;
+	glBegin(GL_POLYGON);
+		glVertex2f(x + step + width, y + step + width);
+		glVertex2f(x + step - width, y + step + width);
+		glVertex2f(x + step - width, y + step - width);
+		glVertex2f(x + step + width, y + step - width);
+	glEnd();
+}
+void MVGBuildFaceManipulator::drawExtendCursor(double x, double y, MVector dir)
+{
+	GLfloat lenght = 10;
+	MVector n;
+	n.x = dir.y;
+	n.y = -dir.x;
+	glColor4f(0.9f, 0.9f, 0.1f, 0.8f);
+	glLineWidth(1.5f);
+	glBegin(GL_LINES);
+		glVertex2f(x + n.x*lenght, y + n.y*lenght);
+		glVertex2f(x - n.x*lenght, y - n.y*lenght);
+	glEnd();
+	glLineWidth(1.f);
+	
+	glColor4f(1.0f, 0.f, 0.f, 0.8f);
+	glBegin(GL_POLYGON);
+		glVertex2f(x + n.x*lenght + 5*dir.x , y + n.y*lenght + 5*dir.y); 
+		glVertex2f(x + n.x*lenght - 5*dir.x , y + n.y*lenght - 5*dir.y);
+		glVertex2f(x + n.x*lenght + 5*n.x, y + n.y*lenght + 5*n.y);
+	glEnd();
+	glBegin(GL_POLYGON);
+		glVertex2f(x - n.x*lenght + 5*dir.x , y - n.y*lenght + 5*dir.y); 
+		glVertex2f(x - n.x*lenght - 5*dir.x , y - n.y*lenght - 5*dir.y);
+		glVertex2f(x - n.x*lenght - 5*n.x, y - n.y*lenght - 5*n.y);
+	glEnd();
+	
+	glColor4f(0.9f, 0.9f, 0.1f, 0.8f);
+}
+
+void MVGBuildFaceManipulator::drawIntersections(M3dView& view, double mousex, double mousey)
+{	
+	std::vector<MDagPath> mList;
+	getMeshList(mList);
+
+	// Iterate through meshes
+	for(std::vector<MDagPath>::iterator it = mList.begin(); it != mList.end(); ++it)
+	{
+		// Initialize color : red	
+		glColor4f(1.f, 0.f, 0.f, 0.8f);
+		
+		// Intersection with point
+		if(intersectPoint(view, *it, _mousePoint))
+		{
+			if(_connectedFacesId.length() == 1)
+			{	
+				// Green
+				if(_mode == eModeMoveInPlane)
+					glColor4f(0.f, 1.f, 0.f, 0.8f);
+				// Cyan
+				else if(_mode == eModeMoveRecompute && !_faceConnected)
+					glColor4f(0.f, 1.f, 1.f, 0.8f);
+				// Grey
+				else
+					glColor4f(0.3f, 0.3f, 0.6f, 0.8f);
+			}
+	
+			drawCircle(mousex, mousey, 10, 20);
+			glPointSize(4.f);
+			glBegin(GL_POINTS);	
+				glVertex2f(mousex, mousey);
+			glEnd();
+		}
+
+		// Intersection with edge					
+		else if(intersectEdge(view, *it, _mousePoint))
+		{
+			MPoint edgePoint2D_0, edgePoint2D_1;
+			short x, y;
+			view.worldToView(_intersectingEdgePoints3D[0], x, y);
+			edgePoint2D_0.x = x;
+			edgePoint2D_0.y = y;
+			view.worldToView(_intersectingEdgePoints3D[1], x, y);
+			edgePoint2D_1.x = x;
+			edgePoint2D_1.y = y;
+			
+			// Yellow
+			if(_mode == eModeCreate)
+			{
+				glColor4f(0.9f, 0.9f, 0.1f, 0.8f);
+
+				MVector dir;
+				dir.x =	edgePoint2D_1.x - edgePoint2D_0.x;
+				dir.y = edgePoint2D_1.y - edgePoint2D_0.y;
+				dir.normalize();
+				
+				drawExtendCursor(mousex, mousey, dir);		
+			}
+
+			else if(_connectedFacesId.length() == 1
+				&& !_edgeConnected)
+			{
+				// Green
+				if(_mode == eModeMoveInPlane)
+					glColor4f(0.f, 1.f, 0.f, 0.8f);
+				// Cyan
+				else if(eModeMoveRecompute)
+					glColor4f(0.f, 1.f, 1.f, 0.8f);	
+			}
+
+			glLineWidth(1.5f);
+			glBegin(GL_LINES);
+				glVertex2f(edgePoint2D_0.x, edgePoint2D_0.y);
+				glVertex2f(edgePoint2D_1.x, edgePoint2D_1.y);
+			glEnd();
+		}
+	}
+}
+
 
 bool MVGBuildFaceManipulator::intersectEdge(M3dView& view, MDagPath& meshPath, MPoint& point)
 {

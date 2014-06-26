@@ -69,6 +69,14 @@ class MVGBuildFaceManipulator: public MPxManipulatorNode
 		
 		bool eventFilter(QObject *obj, QEvent *e);
 		void setMode(EMode mode);
+		
+		// Draw
+		void drawCursor(double x, double y);
+		void drawArrowsCursor(double x, double y);
+		void drawMoveInPlaneCursor(double x, double y);
+		void drawMoveRecomputePlaneCursor(double x, double y);
+		void drawExtendCursor(double x, double y, MVector dir);
+		void drawIntersections(M3dView& view, double x, double y);
 
 	public:
 		friend class MVGManipulatorKeyEventFilter;
