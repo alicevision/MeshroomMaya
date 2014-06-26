@@ -78,7 +78,7 @@ namespace {
 		return true;
 	}
 	
-	bool isPointOnEdge(MPoint& P, MPoint& A, MPoint& B, double tolerance)
+	bool isPointOnEdge(MPoint& P, MPoint& A, MPoint& B, double& dist, double tolerance)
 	{		
 		MVector AB = B - A;
 		MVector PA = A - P;
@@ -99,10 +99,10 @@ namespace {
 		double s = crossProduct2d(AB, PA) /  (AB.length()*AB.length());
 		if(s < 0)
 			s*= -1;
-		double PH = s * AB.length();
+		dist = s * AB.length();
 
-		if(PH < - tolerance 
-			|| PH > tolerance)
+		if(dist < - tolerance 
+			|| dist > tolerance)
 			return false;
 		
 		return true;
@@ -373,49 +373,47 @@ MStatus MVGBuildFaceManipulator::doPress(M3dView& view)
 		getMeshList(mList);
 
 		bool checkIntersection = false;
-		for(std::vector<MDagPath>::iterator it = mList.begin(); it != mList.end(); ++it)
+			
+		// Define action
+		if(intersectPoint(view, mList, _mousePoint))
 		{
-			// Define action
-			if(intersectPoint(view, *it, _mousePoint))
+			checkIntersection = true;
+			switch(_mode)
 			{
-				checkIntersection = true;
-				switch(_mode)
-				{
-					case eModeCreate:
-						break;
-					case eModeMoveInPlane:
-						if(_connectedFacesId.length() == 1)
-							_editAction = eEditActionMovePoint;
-						break;
-					case eModeMoveRecompute:
-						if(_connectedFacesId.length() == 1
-							&& !_faceConnected)
-							_editAction = eEditActionMovePoint;
-						break;				
-				}
+				case eModeCreate:
+					break;
+				case eModeMoveInPlane:
+					if(_connectedFacesId.length() == 1)
+						_editAction = eEditActionMovePoint;
+					break;
+				case eModeMoveRecompute:
+					if(_connectedFacesId.length() == 1
+						&& !_faceConnected)
+						_editAction = eEditActionMovePoint;
+					break;				
 			}
-			else if(intersectEdge(view, *it, _mousePoint))
+		}
+		else if(intersectEdge(view, mList, _mousePoint))
+		{
+			checkIntersection = true;
+			switch(_mode)
 			{
-				checkIntersection = true;
-				switch(_mode)
-				{
-					case eModeCreate:
-						_editAction = eEditActionExtendEdge;
-						break;
-					case eModeMoveInPlane:
-						// Check edge status
-						if(_connectedFacesId.length() == 1
-							&& !_edgeConnected)
-							_editAction = eEditActionMoveEdge;
-						break;
-					case eModeMoveRecompute:
-						// Check edge status
-						if(_connectedFacesId.length() == 1
-							&& !_edgeConnected)
-							_editAction = eEditActionMoveEdge;
-						break;
-				}		
-			}
+				case eModeCreate:
+					_editAction = eEditActionExtendEdge;
+					break;
+				case eModeMoveInPlane:
+					// Check edge status
+					if(_connectedFacesId.length() == 1
+						&& !_edgeConnected)
+						_editAction = eEditActionMoveEdge;
+					break;
+				case eModeMoveRecompute:
+					// Check edge status
+					if(_connectedFacesId.length() == 1
+						&& !_edgeConnected)
+						_editAction = eEditActionMoveEdge;
+					break;
+			}		
 		}
 		
 		if(!checkIntersection)
@@ -994,48 +992,51 @@ bool MVGBuildFaceManipulator::eventFilter(QObject *obj, QEvent *e)
 	}
 	return false;
 }
-bool MVGBuildFaceManipulator::intersectPoint(M3dView& view, MDagPath& meshPath, MPoint& point)
+bool MVGBuildFaceManipulator::intersectPoint(M3dView& view, std::vector<MDagPath>& mList, MPoint& point)
 {		
 	_faceConnected = false;
 	
-	MVGMesh mesh(meshPath);
-	if(!mesh.isValid())
-		return false;
-	MPointArray meshPoints;
-	mesh.getPoints(meshPoints);
-
-	if(meshPoints.length() < 1)
-		return false;
-	
-	short pointX, pointY;
-	MVGGeometryUtil::cameraToView(view, _camera, point, pointX, pointY);
-	
-	for(int i = 0; i < meshPoints.length(); ++i)
+	for(std::vector<MDagPath>::iterator it = mList.begin(); it != mList.end(); ++it)
 	{
-		short x, y;
-		view.worldToView(meshPoints[i], x, y);
+		MVGMesh mesh(*it);
+		if(!mesh.isValid())
+			return false;
+		MPointArray meshPoints;
+		mesh.getPoints(meshPoints);
 
-		if(pointX <= x + (2 + _camera.getZoom()) * 5
-			&& pointX >= x - (2 + _camera.getZoom()) * 5
-			&& pointY <= y + (2 + _camera.getZoom()) * 5
-			&& pointY >= y - (2 + _camera.getZoom()) * 5)
+		if(meshPoints.length() < 1)
+			return false;
+
+		short pointX, pointY;
+		MVGGeometryUtil::cameraToView(view, _camera, point, pointX, pointY);
+
+		for(int i = 0; i < meshPoints.length(); ++i)
 		{
-			_pressedPointId = i;
-			_connectedFacesId = mesh.getConnectedFacesToVertex(_pressedPointId);
-			_intersectedMeshPath = mesh.dagPath();
+			short x, y;
+			view.worldToView(meshPoints[i], x, y);
 
-			// Face not connected to other face
-			MIntArray vertices = mesh.getFaceVertices(_connectedFacesId[0]);	
-			for(int i = 0; i < vertices.length(); ++i)
+			if(pointX <= x + (2 + _camera.getZoom()) * 5
+				&& pointX >= x - (2 + _camera.getZoom()) * 5
+				&& pointY <= y + (2 + _camera.getZoom()) * 5
+				&& pointY >= y - (2 + _camera.getZoom()) * 5)
 			{
-				if(mesh.getNumConnectedFacesToVertex(vertices[i]) > 1)
-				{
-					_faceConnected = true;
+				_pressedPointId = i;
+				_connectedFacesId = mesh.getConnectedFacesToVertex(_pressedPointId);
+				_intersectedMeshPath = mesh.dagPath();
 
-					return true;
+				// Face not connected to other face
+				MIntArray vertices = mesh.getFaceVertices(_connectedFacesId[0]);	
+				for(int i = 0; i < vertices.length(); ++i)
+				{
+					if(mesh.getNumConnectedFacesToVertex(vertices[i]) > 1)
+					{
+						_faceConnected = true;
+
+						return true;
+					}
 				}
+				return true;
 			}
-			return true;
 		}
 	}
 	
@@ -1161,106 +1162,105 @@ void MVGBuildFaceManipulator::drawIntersections(M3dView& view, double mousex, do
 	std::vector<MDagPath> mList;
 	getMeshList(mList);
 
-	// Iterate through meshes
-	for(std::vector<MDagPath>::iterator it = mList.begin(); it != mList.end(); ++it)
+	// Initialize color : red	
+	glColor4f(1.f, 0.f, 0.f, 0.8f);
+
+	// Intersection with point
+	if(intersectPoint(view, mList, _mousePoint))
 	{
-		// Initialize color : red	
-		glColor4f(1.f, 0.f, 0.f, 0.8f);
-		
-		// Intersection with point
-		if(intersectPoint(view, *it, _mousePoint))
-		{
-			if(_connectedFacesId.length() == 1)
-			{	
-				// Green
-				if(_mode == eModeMoveInPlane)
-					glColor4f(0.f, 1.f, 0.f, 0.8f);
-				// Cyan
-				else if(_mode == eModeMoveRecompute && !_faceConnected)
-					glColor4f(0.f, 1.f, 1.f, 0.8f);
-				// Grey
-				else
-					glColor4f(0.3f, 0.3f, 0.6f, 0.8f);
-			}
-	
-			drawCircle(mousex, mousey, 10, 20);
-			glPointSize(4.f);
-			glBegin(GL_POINTS);	
-				glVertex2f(mousex, mousey);
-			glEnd();
+		if(_connectedFacesId.length() == 1)
+		{	
+			// Green
+			if(_mode == eModeMoveInPlane)
+				glColor4f(0.f, 1.f, 0.f, 0.8f);
+			// Cyan
+			else if(_mode == eModeMoveRecompute && !_faceConnected)
+				glColor4f(0.f, 1.f, 1.f, 0.8f);
+			// Grey
+			else
+				glColor4f(0.3f, 0.3f, 0.6f, 0.8f);
 		}
 
-		// Intersection with edge					
-		else if(intersectEdge(view, *it, _mousePoint))
+		drawCircle(mousex, mousey, 10, 20);
+		glPointSize(4.f);
+		glBegin(GL_POINTS);	
+			glVertex2f(mousex, mousey);
+		glEnd();
+	}
+
+	// Intersection with edge					
+	else if(intersectEdge(view, mList, _mousePoint))
+	{
+		MPoint edgePoint2D_0, edgePoint2D_1;
+		short x, y;
+		view.worldToView(_intersectingEdgePoints3D[0], x, y);
+		edgePoint2D_0.x = x;
+		edgePoint2D_0.y = y;
+		view.worldToView(_intersectingEdgePoints3D[1], x, y);
+		edgePoint2D_1.x = x;
+		edgePoint2D_1.y = y;
+
+		// Yellow
+		if(_mode == eModeCreate)
 		{
-			MPoint edgePoint2D_0, edgePoint2D_1;
-			short x, y;
-			view.worldToView(_intersectingEdgePoints3D[0], x, y);
-			edgePoint2D_0.x = x;
-			edgePoint2D_0.y = y;
-			view.worldToView(_intersectingEdgePoints3D[1], x, y);
-			edgePoint2D_1.x = x;
-			edgePoint2D_1.y = y;
-			
-			// Yellow
-			if(_mode == eModeCreate)
-			{
-				glColor4f(0.9f, 0.9f, 0.1f, 0.8f);
+			glColor4f(0.9f, 0.9f, 0.1f, 0.8f);
 
-				MVector dir;
-				dir.x =	edgePoint2D_1.x - edgePoint2D_0.x;
-				dir.y = edgePoint2D_1.y - edgePoint2D_0.y;
-				dir.normalize();
-				
-				drawExtendCursor(mousex, mousey, dir);		
-			}
+			MVector dir;
+			dir.x =	edgePoint2D_1.x - edgePoint2D_0.x;
+			dir.y = edgePoint2D_1.y - edgePoint2D_0.y;
+			dir.normalize();
 
-			else if(_connectedFacesId.length() == 1
-				&& !_edgeConnected)
-			{
-				// Green
-				if(_mode == eModeMoveInPlane)
-					glColor4f(0.f, 1.f, 0.f, 0.8f);
-				// Cyan
-				else if(eModeMoveRecompute)
-					glColor4f(0.f, 1.f, 1.f, 0.8f);	
-			}
-
-			glLineWidth(1.5f);
-			glBegin(GL_LINES);
-				glVertex2f(edgePoint2D_0.x, edgePoint2D_0.y);
-				glVertex2f(edgePoint2D_1.x, edgePoint2D_1.y);
-			glEnd();
+			drawExtendCursor(mousex, mousey, dir);		
 		}
+
+		else if(_connectedFacesId.length() == 1
+			&& !_edgeConnected)
+		{
+			// Green
+			if(_mode == eModeMoveInPlane)
+				glColor4f(0.f, 1.f, 0.f, 0.8f);
+			// Cyan
+			else if(eModeMoveRecompute)
+				glColor4f(0.f, 1.f, 1.f, 0.8f);	
+		}
+
+		glLineWidth(1.5f);
+		glBegin(GL_LINES);
+			glVertex2f(edgePoint2D_0.x, edgePoint2D_0.y);
+			glVertex2f(edgePoint2D_1.x, edgePoint2D_1.y);
+		glEnd();
 	}
 }
 
 
-bool MVGBuildFaceManipulator::intersectEdge(M3dView& view, MDagPath& meshPath, MPoint& point)
+bool MVGBuildFaceManipulator::intersectEdge(M3dView& view, std::vector<MDagPath>& mList, MPoint& point)
 {
-	_edgeConnected = false;
-
-	MVGMesh mesh(meshPath);
-	if(!mesh.isValid())
-		return false;
+	double minDist = -1;
+	double dist;
 	
-	MPointArray meshPoints;
-	mesh.getPoints(meshPoints);
+	// Iterate through meshes
+	for(std::vector<MDagPath>::iterator it = mList.begin(); it != mList.end(); ++it)
+	{
+		_edgeConnected = false;
 
-	if(meshPoints.length() < 1)
-		return false;
+		MVGMesh mesh(*it);
+		if(!mesh.isValid())
+			return false;
+
+		MPointArray meshPoints;
+		mesh.getPoints(meshPoints);
+
+		if(meshPoints.length() < 1)
+			return false;
 	
-//	MPointArray points;
-	short x0, y0, x1, y1;
-	bool check = false;
-//	if(mesh.intersect(_mousePoint, wdir, points)) // TODO: detect intersection with mesh
-//	{
+		short x0, y0, x1, y1;
+		bool check = false;
+		
+		// TODO: detect intersection with mesh
 		MItMeshEdge edgeIt(mesh.dagPath());
-		double minLenght = -1;
-		double lenght;
 		MPointArray edgePoints;
 
-		MFnCamera fnCamera(_camera.dagPath().node());
+		// Iterate through edges
 		while(!edgeIt.isDone())
 		{
 			view.worldToView(edgeIt.point(0), x0, y0);
@@ -1269,14 +1269,13 @@ bool MVGBuildFaceManipulator::intersectEdge(M3dView& view, MDagPath& meshPath, M
 			MPoint A, B;
 			MVGGeometryUtil::viewToCamera(view, _camera, x0, y0, A);
 			MVGGeometryUtil::viewToCamera(view, _camera, x1, y1, B);
-			
-			if(isPointOnEdge(_mousePoint, A, B, kMFnMeshTolerance * _camera.getZoom() * 30))
+
+			if(isPointOnEdge(_mousePoint, A, B, dist, kMFnMeshTolerance * _camera.getZoom() * 30))
 			{
 				check = true;
-				lenght = A.distanceTo(B);
-				if(minLenght < 0)
+				if(minDist < 0 || dist < minDist)
 				{
-					minLenght = lenght;
+					minDist = dist;
 					edgePoints.clear();
 					edgePoints.append(edgeIt.point(0));
 					edgePoints.append(edgeIt.point(1));	
@@ -1288,7 +1287,7 @@ bool MVGBuildFaceManipulator::intersectEdge(M3dView& view, MDagPath& meshPath, M
 		if(check)
 		{
 			_intersectingEdgePoints3D = edgePoints;
-			
+
 			mesh.getConnectedFacesToEdge(_connectedFacesId, _intersectedEdgeId);
 			if(_connectedFacesId.length() == 1)
 			{
@@ -1305,7 +1304,7 @@ bool MVGBuildFaceManipulator::intersectEdge(M3dView& view, MDagPath& meshPath, M
 			}	
 			return true;
 		}
-//	}			
+	}
 	return false;
 }
 }	// namespace mayaMVG 

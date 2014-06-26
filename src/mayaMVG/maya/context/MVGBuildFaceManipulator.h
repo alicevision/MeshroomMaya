@@ -59,8 +59,8 @@ class MVGBuildFaceManipulator: public MPxManipulatorNode
 		void updateCamera(M3dView& view);
 		void updateMouse(M3dView& view);
 		
-		bool intersectPoint(M3dView& view, MDagPath& meshPath, MPoint& point);
-		bool intersectEdge(M3dView& view, MDagPath& meshPath, MPoint& point);
+		bool intersectPoint(M3dView& view, std::vector<MDagPath>& mList, MPoint& point);
+		bool intersectEdge(M3dView& view, std::vector<MDagPath>& mList, MPoint& point);
 		
 		void update2DFacePreview(M3dView& view);
 		bool update3DFacePreview(M3dView& view);
