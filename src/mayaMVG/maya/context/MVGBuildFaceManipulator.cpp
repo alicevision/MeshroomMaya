@@ -145,16 +145,15 @@ namespace {
 }
 
 MVGBuildFaceManipulator::MVGBuildFaceManipulator()
-: _keyEvent(NULL)
+	: _keyEvent(NULL)
+	, _editAction(eEditActionNone)
+	, _pressedPointId(-1)
+	, _cameraPathClickedPoints(MDagPath())
+	, _intersectedMeshPath(MDagPath())
 {	
 	QWidget* mayaWindow = MVGMayaUtil::getMVGWindow();
-	_keyEvent = new MVGManipulatorKeyEventFilter(mayaWindow, this);
-	
+	_keyEvent = new MVGManipulatorKeyEventFilter(mayaWindow, this);	
 	setMode(eModeCreate);
-	_editAction = eEditActionNone;
-	_cameraPathClickedPoints = MDagPath();
-	_pressedPointId = -1;
-	_intersectedMeshPath = MDagPath();
 }
 
 MVGBuildFaceManipulator::~MVGBuildFaceManipulator()
@@ -1279,7 +1278,8 @@ bool MVGBuildFaceManipulator::intersectEdge(M3dView& view, std::vector<MDagPath>
 					edgePoints.clear();
 					edgePoints.append(edgeIt.point(0));
 					edgePoints.append(edgeIt.point(1));	
-					_intersectedEdgeId = edgeIt.index();		
+					_intersectedEdgeId = edgeIt.index();
+					_intersectedMeshPath = mesh.dagPath();
 				}
 			}
 			edgeIt.next();
@@ -1298,7 +1298,6 @@ bool MVGBuildFaceManipulator::intersectEdge(M3dView& view, std::vector<MDagPath>
 					if(mesh.getNumConnectedFacesToVertex(edgeVertices[i]) > 1)
 					{
 						_edgeConnected = true;
-						_intersectedMeshPath = mesh.dagPath();
 					}
 				}
 			}	
