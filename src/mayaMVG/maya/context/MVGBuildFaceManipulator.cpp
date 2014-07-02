@@ -1107,29 +1107,31 @@ void MVGBuildFaceManipulator::drawMoveInPlaneCursor(double x, double y)
 {
 	glColor4f(0.f, 0.f, 0.f, 0.8f);
 	drawArrowsCursor(x, y);
-	
-	glColor4f(0.f, 1.f, 0.f, 0.8f);
-	GLfloat step = 10;
-	drawDisk(x + step, y + step, 4, 10);
 }
 void MVGBuildFaceManipulator::drawMoveRecomputePlaneCursor(double x, double y)
 {
 	glColor4f(0.f, 0.f, 0.f, 0.8f);
 	drawArrowsCursor(x, y);
 	
+	// Point Cloud
 	glColor4f(0.f, 1.f, 1.f, 0.8f);
 	GLfloat step = 10;
-	GLfloat width = 3;
-	glBegin(GL_POLYGON);
-		glVertex2f(x + step + width, y + step + width);
-		glVertex2f(x + step - width, y + step + width);
-		glVertex2f(x + step - width, y + step - width);
-		glVertex2f(x + step + width, y + step - width);
+	glPointSize(2.f);
+	glBegin(GL_POINTS);		
+		glVertex2f(x + step, y + step);
+		glVertex2f(x + step + 2, y + step + 4);
+		glVertex2f(x + step - 2, y + step + 4);
+		glVertex2f(x + step + 4, y + step);
+		glVertex2f(x + step - 4, y + step);
+		glVertex2f(x + step + 2, y + step - 4);
+		glVertex2f(x + step - 2, y + step - 4);
 	glEnd();
 }
 void MVGBuildFaceManipulator::drawExtendCursor(double x, double y, MVector dir)
 {
 	GLfloat lenght = 10;
+	GLfloat step = 10;
+	GLfloat width = 4;
 	MVector n;
 	n.x = dir.y;
 	n.y = -dir.x;
@@ -1141,6 +1143,17 @@ void MVGBuildFaceManipulator::drawExtendCursor(double x, double y, MVector dir)
 	glEnd();
 	glLineWidth(1.f);
 	
+	// Plus
+	glBegin(GL_LINES);
+		glVertex2f(x + step - width, y + step);
+		glVertex2f(x + step + width, y + step);
+	glEnd();
+	glBegin(GL_LINES);
+		glVertex2f(x + step, y + step - width);
+		glVertex2f(x + step, y + step + width);
+	glEnd();
+	
+	// Arrows
 	glColor4f(1.0f, 0.f, 0.f, 0.8f);
 	glBegin(GL_POLYGON);
 		glVertex2f(x + n.x*lenght + 5*dir.x , y + n.y*lenght + 5*dir.y); 
