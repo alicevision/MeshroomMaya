@@ -10,6 +10,8 @@
 
 using namespace mayaMVG;
 
+#define POINT_RADIUS 10
+
 MTypeId MVGCreateManipulator::_id(0x99111); // FIXME /!\ 
 
 
@@ -72,7 +74,7 @@ void MVGCreateManipulator::draw(M3dView & view, const MDagPath & path,
 		for(int i = 0; i < points.length(); ++i) {
 			short x, y;
 			MVGGeometryUtil::cameraToView(view, data->camera, points[i], x, y);
-			MVGDrawUtil::drawCircle(x, y, 10, 30);
+			MVGDrawUtil::drawCircle(x, y, POINT_RADIUS, 30);
 		}
 
 	MVGDrawUtil::end2DDrawing();
@@ -213,7 +215,7 @@ MVGCreateManipulator::DisplayData* MVGCreateManipulator::getCachedDisplayData(M3
 
 bool MVGCreateManipulator::intersectPoint(M3dView& view, const MVGCamera& camera, const short&x, const short& y)
 {
-	double threshold = 4.0/view.portHeight();//(2 + camera.getZoom()) * 5;
+	double threshold = (2*POINT_RADIUS*camera.getZoom())/view.portHeight();
 	MPointArray points = camera.getClickedPoints();
 	MPoint cameraPoint;
 	MVGGeometryUtil::viewToCamera(view, camera, x, y, cameraPoint);
