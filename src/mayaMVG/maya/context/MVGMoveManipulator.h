@@ -4,6 +4,8 @@
 
 namespace mayaMVG {
 
+class MVGContext;
+
 class MVGMoveManipulator: public MPxManipulatorNode
 {
 	public:
@@ -25,8 +27,11 @@ class MVGMoveManipulator: public MPxManipulatorNode
 		virtual void drawUI(MHWRender::MUIDrawManager&,	const MHWRender::MFrameContext&) const;
 
 	public:
+		void setContext(MVGContext* ctx);
+		
+	public:
 		static MTypeId _id;
-
+		MVGContext* _ctx;
 };
 
 } // namespace

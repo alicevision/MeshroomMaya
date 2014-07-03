@@ -47,15 +47,15 @@ void MVGContext::updateManipulators()
 		case eModeCreate: {
 			MVGCreateManipulator* manip = static_cast<MVGCreateManipulator*>(
 				MPxManipulatorNode::newManipulator("MVGCreateManipulator", manipObject, &status));
-			if(!manip)
+			if(status && !manip)
 				return;
 			manip->setContext(this);
 			break;
 		}
 		case eModeMove: {
-			MVGCreateManipulator* manip = static_cast<MVGCreateManipulator*>(
+			MVGMoveManipulator* manip = static_cast<MVGMoveManipulator*>(
 				MPxManipulatorNode::newManipulator("MVGMoveManipulator", manipObject, &status));
-			if(!manip)
+			if(status && !manip)
 				return;
 			manip->setContext(this);
 			break;

@@ -68,6 +68,11 @@ void MVGMoveManipulator::preDrawUI(const M3dView& view)
 {
 }
 
+void MVGMoveManipulator::setContext(MVGContext* ctx)
+{
+	_ctx = ctx;
+}
+
 void MVGMoveManipulator::drawUI(MHWRender::MUIDrawManager& drawManager, const MHWRender::MFrameContext&) const
 {
 	drawManager.beginDrawable();
