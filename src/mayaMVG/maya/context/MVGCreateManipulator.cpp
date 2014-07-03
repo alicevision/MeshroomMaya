@@ -208,6 +208,7 @@ MVGCreateManipulator::DisplayData* MVGCreateManipulator::getCachedDisplayData(M3
 	} else {
 		return &(it->second);
 	}
+	return NULL;
 }
 
 bool MVGCreateManipulator::intersectPoint(M3dView& view, const MVGCamera& camera, const short&x, const short& y)
