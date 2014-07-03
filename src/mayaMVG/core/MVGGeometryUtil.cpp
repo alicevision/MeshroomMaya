@@ -108,102 +108,102 @@ void MVGGeometryUtil::cameraToView(M3dView& view, MVGCamera& camera, MPoint& poi
 	x = round((newX + 0.5) * view.portWidth());
 	y = round((newY + 0.5 + 0.5 * (view.portHeight() / (float)view.portWidth() - 1.0)) * view.portWidth());	
 }
-
-bool MVGGeometryUtil::projectFace2D(MVGFace3D& face3D, M3dView& view, MVGCamera& camera, MVGFace2D& face2D, bool compute, MVector height)
-{
-	std::vector<MVGPointCloudItem> items = camera.visibleItems();
-	if(items.size() < 3) {
-		LOG_ERROR("Need more than " << items.size() << " point cloud items. Abort.");
-		return false;
-	}
-	
-	std::vector<MVGPointCloudItem>::const_iterator it = items.begin();
-	std::vector<MPoint> facePoints;
-	
-	short x, y;
-	cameraToView(view, camera, face2D._p[0], x, y);
-	facePoints.push_back(MPoint(x, y));
-	cameraToView(view, camera, face2D._p[1], x, y);
-	facePoints.push_back(MPoint(x, y));
-	cameraToView(view, camera, face2D._p[2], x, y);
-	facePoints.push_back(MPoint(x, y));
-	cameraToView(view, camera, face2D._p[3], x, y);
-	facePoints.push_back(MPoint(x, y));
-	cameraToView(view, camera, face2D._p[0], x, y);
-	facePoints.push_back(MPoint(x, y));
-	
-	std::vector<MVGPointCloudItem> selectedItems;
-	int windingNumber = 0;
-	for(; it != items.end(); ++it){
-		windingNumber = wn_PnPoly(worldToView(view, it->_position), facePoints);
-		if(windingNumber != 0)
-			selectedItems.push_back(*it);
-	}
-
-	if(selectedItems.size() < 3) {
-		LOG_ERROR("Need more than " << selectedItems.size() << " selected points. Abort.");
-		return false;
-	}
-
-	// 3D plane estimation
-	// w/ a variant of RANSAC using Least Median of Squares
-	openMVG::Mat selectedItemsMat(3, selectedItems.size());
-	for (size_t i = 0; i < selectedItems.size(); ++i)
-		selectedItemsMat.col(i) = AS_VEC3(selectedItems[i]._position);
-
-	PlaneKernel kernel(selectedItemsMat);
-	PlaneKernel::Model model;
-	double outlierThreshold = std::numeric_limits<double>::infinity();
-	double dBestMedian = openMVG::robust::LeastMedianOfSquares(kernel, &model, &outlierThreshold);
-
-	// retrieve Face3D vertices from this model
-	MPoint P;
-	MPoint cameraCenter = AS_MPOINT(camera.pinholeCamera()._C);
-	std::vector<MPoint> face3DPoints;
-	MPoint worldPoint;
-	
-	if(compute) {	
-		// Three first points are retrieved from the selection points
-		for(size_t i = 0; i < facePoints.size()-2; ++i) // remove extra point
-		{
-			worldPoint = viewToWorld(view, facePoints[i]);
-			plane_line_intersect(model, cameraCenter, worldPoint, P);
-			face3DPoints.push_back(P);
-		}
-		// Compute last point to keep 3D lenghts
-		if(height.length() == 0)
-		{
-			height = face3DPoints[0]- face3DPoints[1];
-		}			
-		MPoint lastPoint3D = face3DPoints[2] + height; // TODO : warning
-		MPoint viewPoint = worldToView(view, lastPoint3D);
-		worldPoint = viewToWorld(view, viewPoint);
-		plane_line_intersect(model, cameraCenter, worldPoint, P);
-		face3DPoints.push_back(P);
-	}
-	else {
-		for(size_t i = 0; i < facePoints.size()-1; ++i) // remove extra point
-		{
-			worldPoint = viewToWorld(view, facePoints[i]);
-			plane_line_intersect(model, cameraCenter, worldPoint, P);
-			face3DPoints.push_back(P);
-		}
-	}
-	
-
-	face3D = MVGFace3D(face3DPoints);
-	return true;
-}
-
-void MVGGeometryUtil::computePlane(MVGFace3D& face3D, PlaneKernel::Model& model)
-{
-	openMVG::Mat facePointsMat(3, 4);
-	for (size_t i = 0; i <4; ++i)
-		facePointsMat.col(i) = AS_VEC3(face3D._p[i]);
-	PlaneKernel kernel(facePointsMat);
-	double outlierThreshold = std::numeric_limits<double>::infinity();
-	openMVG::robust::LeastMedianOfSquares(kernel, &model, &outlierThreshold);
-}
+//
+//bool MVGGeometryUtil::projectFace2D(MVGFace3D& face3D, M3dView& view, MVGCamera& camera, MVGFace2D& face2D, bool compute, MVector height)
+//{
+//	std::vector<MVGPointCloudItem> items = camera.visibleItems();
+//	if(items.size() < 3) {
+//		LOG_ERROR("Need more than " << items.size() << " point cloud items. Abort.");
+//		return false;
+//	}
+//	
+//	std::vector<MVGPointCloudItem>::const_iterator it = items.begin();
+//	std::vector<MPoint> facePoints;
+//	
+//	short x, y;
+//	cameraToView(view, camera, face2D._p[0], x, y);
+//	facePoints.push_back(MPoint(x, y));
+//	cameraToView(view, camera, face2D._p[1], x, y);
+//	facePoints.push_back(MPoint(x, y));
+//	cameraToView(view, camera, face2D._p[2], x, y);
+//	facePoints.push_back(MPoint(x, y));
+//	cameraToView(view, camera, face2D._p[3], x, y);
+//	facePoints.push_back(MPoint(x, y));
+//	cameraToView(view, camera, face2D._p[0], x, y);
+//	facePoints.push_back(MPoint(x, y));
+//	
+//	std::vector<MVGPointCloudItem> selectedItems;
+//	int windingNumber = 0;
+//	for(; it != items.end(); ++it){
+//		windingNumber = wn_PnPoly(worldToView(view, it->_position), facePoints);
+//		if(windingNumber != 0)
+//			selectedItems.push_back(*it);
+//	}
+//
+//	if(selectedItems.size() < 3) {
+//		LOG_ERROR("Need more than " << selectedItems.size() << " selected points. Abort.");
+//		return false;
+//	}
+//
+//	// 3D plane estimation
+//	// w/ a variant of RANSAC using Least Median of Squares
+//	openMVG::Mat selectedItemsMat(3, selectedItems.size());
+//	for (size_t i = 0; i < selectedItems.size(); ++i)
+//		selectedItemsMat.col(i) = AS_VEC3(selectedItems[i]._position);
+//
+//	PlaneKernel kernel(selectedItemsMat);
+//	PlaneKernel::Model model;
+//	double outlierThreshold = std::numeric_limits<double>::infinity();
+//	double dBestMedian = openMVG::robust::LeastMedianOfSquares(kernel, &model, &outlierThreshold);
+//
+//	// retrieve Face3D vertices from this model
+//	MPoint P;
+//	MPoint cameraCenter = AS_MPOINT(camera.pinholeCamera()._C);
+//	std::vector<MPoint> face3DPoints;
+//	MPoint worldPoint;
+//	
+//	if(compute) {	
+//		// Three first points are retrieved from the selection points
+//		for(size_t i = 0; i < facePoints.size()-2; ++i) // remove extra point
+//		{
+//			worldPoint = viewToWorld(view, facePoints[i]);
+//			plane_line_intersect(model, cameraCenter, worldPoint, P);
+//			face3DPoints.push_back(P);
+//		}
+//		// Compute last point to keep 3D lenghts
+//		if(height.length() == 0)
+//		{
+//			height = face3DPoints[0]- face3DPoints[1];
+//		}			
+//		MPoint lastPoint3D = face3DPoints[2] + height; // TODO : warning
+//		MPoint viewPoint = worldToView(view, lastPoint3D);
+//		worldPoint = viewToWorld(view, viewPoint);
+//		plane_line_intersect(model, cameraCenter, worldPoint, P);
+//		face3DPoints.push_back(P);
+//	}
+//	else {
+//		for(size_t i = 0; i < facePoints.size()-1; ++i) // remove extra point
+//		{
+//			worldPoint = viewToWorld(view, facePoints[i]);
+//			plane_line_intersect(model, cameraCenter, worldPoint, P);
+//			face3DPoints.push_back(P);
+//		}
+//	}
+//	
+//
+//	face3D = MVGFace3D(face3DPoints);
+//	return true;
+//}
+//
+//void MVGGeometryUtil::computePlane(MVGFace3D& face3D, PlaneKernel::Model& model)
+//{
+//	openMVG::Mat facePointsMat(3, 4);
+//	for (size_t i = 0; i <4; ++i)
+//		facePointsMat.col(i) = AS_VEC3(face3D._p[i]);
+//	PlaneKernel kernel(facePointsMat);
+//	double outlierThreshold = std::numeric_limits<double>::infinity();
+//	openMVG::robust::LeastMedianOfSquares(kernel, &model, &outlierThreshold);
+//}
 
 void MVGGeometryUtil::projectPointOnPlane(MPoint& point, M3dView& view, PlaneKernel::Model& model, MVGCamera& camera, MPoint& projectedPoint)
 {

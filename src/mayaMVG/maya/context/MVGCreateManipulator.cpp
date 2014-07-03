@@ -84,18 +84,12 @@ void MVGCreateManipulator::draw(M3dView & view, const MDagPath & path,
 
 MStatus MVGCreateManipulator::doPress(M3dView& view)
 {
-	// MVGEditCmd* cmd = NULL;
-	// if(!_ctx) {
-	// 	LOG_ERROR("invalid context object.")
-	// 	return MS::kFailure;
-	// }
-	// cmd = (MVGEditCmd *)_ctx->newCmd();
-	// if(!cmd) {
-	// 	LOG_ERROR("invalid command object.")
-	// 	return MS::kFailure;
-	// }
-	// cmd->doCreate();
-	// cmd->finalize();
+	 MVGEditCmd* cmd = NULL;
+	 if(!_ctx) {
+	 	LOG_ERROR("invalid context object.")
+	 	return MS::kFailure;
+	 }
+
 
 	switch(_selectionState) {
 		case SS_NONE: {
@@ -109,6 +103,22 @@ MStatus MVGCreateManipulator::doPress(M3dView& view)
 			data->camera.addClickedPoint(point);
 			data->cameraPoints.append(point);
 			_selectionState = SS_POINT;
+			
+			if(data->cameraPoints.length() < 4)
+				break;
+			cmd = (MVGEditCmd *)_ctx->newCmd();
+			if(!cmd) {
+			  LOG_ERROR("invalid command object.")
+			  return MS::kFailure;
+			}
+			MDagPath meshPath;
+			MVGMayaUtil::getDagPathByName(MVGProject::_MESH.c_str(), meshPath);
+			cmd->doAddPolygon(meshPath, data->cameraPoints);
+			if(cmd->redoIt())
+				cmd->finalize();
+			
+			data->cameraPoints.clear();
+			data->camera.clearClickedPoints();
 			break;
 		}
 		case SS_POINT: {

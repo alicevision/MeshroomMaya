@@ -1,6 +1,8 @@
 #pragma once
 
 #include <maya/MPxToolCommand.h>
+#include <maya/MDagPath.h>
+#include <maya/MPointArray.h>
 
 namespace mayaMVG {
 
@@ -24,13 +26,16 @@ class MVGEditCmd : public MPxToolCommand {
 		bool isUndoable() const;
 		MStatus finalize();
 	public:
-		void doCreate();
+		void doAddPolygon(const MDagPath& meshPath, const MPointArray& points);
 		void doMove();
 		void doDelete();
 	public:
 		static MString name;
 	private:
 		size_t _flags;
+		MDagPath _meshPath;
+		MPointArray _points;
+		int _index;
 };
 
 } // namespace

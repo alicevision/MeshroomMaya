@@ -23,8 +23,8 @@ class MVGMesh : public MVGNodeWrapper  {
 		static MVGMesh create(const std::string& name);
 
 	public:
-		void addPolygon(const MVGFace3D& face3d) const;
-		void deleteFace(const int index) const;
+		bool addPolygon(const MPointArray& pointArray, int& index) const;
+		bool deletePolygon(const int index) const;
 		void getPoints(MPointArray& pointArray) const;
 		int getVerticesCount() const;
 		bool intersect(MPoint& point, MVector& dir, MPointArray&points) const;

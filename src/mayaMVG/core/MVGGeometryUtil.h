@@ -15,29 +15,29 @@ namespace mayaMVG {
 	openMVG::Vec3(a.x, a.y, a.z)
 
 
-struct MVGFace2D {
-	MVGFace2D(){}
-	MVGFace2D(MPoint a, MPoint b, MPoint c, MPoint d) {
-		_p[0] = a; _p[1] = b; _p[2] = c; _p[3] = d;
-	}
-	MVGFace2D(std::vector<MPoint> p) {
-		for(size_t i = 0; i<std::min((size_t)4, p.size()); ++i)
-			_p[i] = p[i];
-	}
-	MPoint _p[4];
-};
-
-struct MVGFace3D {
-	MVGFace3D(){}
-	MVGFace3D(MPoint a, MPoint b, MPoint c, MPoint d) {
-		_p[0] = a; _p[1] = b; _p[2] = c; _p[3] = d;
-	}
-	MVGFace3D(std::vector<MPoint> p) {
-		for(size_t i = 0; i<std::min((size_t)4, p.size()); ++i)
-			_p[i] = p[i];
-	}
-	MPoint _p[4];
-};
+//struct MVGFace2D {
+//	MVGFace2D(){}
+//	MVGFace2D(MPoint a, MPoint b, MPoint c, MPoint d) {
+//		_p[0] = a; _p[1] = b; _p[2] = c; _p[3] = d;
+//	}
+//	MVGFace2D(std::vector<MPoint> p) {
+//		for(size_t i = 0; i<std::min((size_t)4, p.size()); ++i)
+//			_p[i] = p[i];
+//	}
+//	MPoint _p[4];
+//};
+//
+//struct MVGFace3D {
+//	MVGFace3D(){}
+//	MVGFace3D(MPoint a, MPoint b, MPoint c, MPoint d) {
+//		_p[0] = a; _p[1] = b; _p[2] = c; _p[3] = d;
+//	}
+//	MVGFace3D(std::vector<MPoint> p) {
+//		for(size_t i = 0; i<std::min((size_t)4, p.size()); ++i)
+//			_p[i] = p[i];
+//	}
+//	MPoint _p[4];
+//};
 
 // Should be part of OpenMVG
 struct PlaneKernel
@@ -102,8 +102,8 @@ struct MVGGeometryUtil {
 	static void viewToCamera(M3dView& view, const MVGCamera& camera, const short& x, const short& y, MPoint& point);
 	static void worldToCamera(M3dView& view, MVGCamera& camera, MPoint& worldPoint, MPoint& point);
 	static void cameraToView(M3dView& view, MVGCamera& camera, MPoint& point, short& x, short& y);
-	static bool projectFace2D(MVGFace3D&, M3dView&, MVGCamera&, MVGFace2D&, bool compute = false, MVector height = MVector(0, 0, 0));
-	static void computePlane(MVGFace3D& face3D, PlaneKernel::Model& model);
+//	static bool projectFace2D(MVGFace3D&, M3dView&, MVGCamera&, MVGFace2D&, bool compute = false, MVector height = MVector(0, 0, 0));
+//	static void computePlane(MVGFace3D& face3D, PlaneKernel::Model& model);
 	static void projectPointOnPlane(MPoint& point, M3dView& view, PlaneKernel::Model& model, MVGCamera&,  MPoint& projectedPoint);
 };
 

@@ -1,5 +1,7 @@
 #include "mayaMVG/maya/cmd/MVGEditCmd.h"
 #include "mayaMVG/core/MVGLog.h"
+#include "mayaMVG/core/MVGMesh.h"
+#include "mayaMVG/core/MVGProject.h"
 #include <maya/MSyntax.h>
 #include <maya/MArgList.h>
 #include <maya/MArgDatabase.h>
@@ -63,11 +65,18 @@ MStatus MVGEditCmd::redoIt()
 	MStatus status;
 	// -create
 	if(_flags & CMD_CREATE) {
-		MGlobal::executeCommand("");
+		MVGMesh mesh(_meshPath);
+		if(!mesh.isValid()) {
+			mesh = MVGMesh::create(MVGProject::_MESH);
+			_meshPath = mesh.dagPath();
+			if(!mesh.isValid())
+				return MS::kFailure;
+		}
+		if(!mesh.addPolygon(_points, _index))
+			return MS::kFailure;
 	}
 	// -move
 	if(_flags & CMD_MOVE) {
-		MGlobal::executeCommand("");
 	}
 	return status;
 }
@@ -76,12 +85,15 @@ MStatus MVGEditCmd::undoIt()
 {
 	MStatus status;
 	// -create
-	if(_flags & CMD_CREATE) {
-		MGlobal::executeCommand("");
+	if(_flags & CMD_CREATE) {			
+		MVGMesh mesh(_meshPath);
+		if(!mesh.isValid())
+			return MStatus::kFailure;
+		if(!mesh.deletePolygon(_index))
+			return MS::kFailure;	
 	}
 	// -move
 	if(_flags & CMD_MOVE) {
-		MGlobal::executeCommand("");
 	}
 	return status;
 }
@@ -97,18 +109,20 @@ MStatus MVGEditCmd::finalize()
 	command.addArg(MVGEditCmd::name);
 	// -create
 	if(_flags & CMD_CREATE) {
-		command.addArg(createFlagLong);
+		command.addArg(MString(createFlagLong));
 	}
 	// -move
 	if(_flags & CMD_MOVE) {
-		command.addArg(moveFlagLong);
+		command.addArg(MString(moveFlagLong));
 	}
 	return MPxToolCommand::doFinalize(command);
 }
 
-void MVGEditCmd::doCreate()
+void MVGEditCmd::doAddPolygon(const MDagPath& meshPath, const MPointArray& points)
 {
 	_flags |= CMD_CREATE;
+	_meshPath = meshPath;
+	_points = points;
 }
 
 void MVGEditCmd::doMove()
