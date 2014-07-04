@@ -1,6 +1,7 @@
 #pragma once
 
 #include <maya/MPxManipulatorNode.h>
+#include "mayaMVG/maya/context/MVGManipulatorUtil.h"
 #include "mayaMVG/core/MVGMesh.h"
 #include "mayaMVG/core/MVGCamera.h"
 #include <map>
@@ -17,11 +18,6 @@ class MVGCreateManipulator: public MPxManipulatorNode
         , SS_EDGE
     };
 
-	struct DisplayData {
-		MVGCamera camera;
-		MPointArray cameraPoints;
-	};
-	
 	public:
 		MVGCreateManipulator();
 		virtual ~MVGCreateManipulator();
@@ -44,13 +40,13 @@ class MVGCreateManipulator: public MPxManipulatorNode
 		void setContext(MVGContext* ctx);
 
 	private:
-		DisplayData* getCachedDisplayData(M3dView& view);
-		bool intersectPoint(M3dView& view, DisplayData* displayData, const short&x, const short& y);
-		bool intersectEdge(M3dView& view, DisplayData* displayData, const short&x, const short& y);
+		MVGManipulatorUtil::DisplayData* getCachedDisplayData(M3dView& view);
+				
+		void drawPreview2D(M3dView& view, MVGManipulatorUtil::DisplayData* data);
 
 	public:
 		static MTypeId _id;
-		std::map<std::string, DisplayData> _cache; //FIXME use caching on the wrapper side
+		std::map<std::string, MVGManipulatorUtil::DisplayData> _cache; //FIXME use caching on the wrapper side
 		SelectionState _selectionState;
         MVGContext* _ctx;
 };

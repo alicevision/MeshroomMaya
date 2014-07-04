@@ -10,15 +10,7 @@
 
 using namespace mayaMVG;
 
-#define POINT_RADIUS 10
-
 MTypeId MVGCreateManipulator::_id(0x99111); // FIXME /!\ 
-
-namespace { // empty namespace
-	double crossProduct2D(MVector& A, MVector& B) {
-		return A.x*B.y - A.y*B.x;
-	}
-} // empty namespace
 
 MVGCreateManipulator::MVGCreateManipulator()
 	: _selectionState(SS_NONE)
@@ -48,7 +40,7 @@ void MVGCreateManipulator::postConstructor()
 void MVGCreateManipulator::draw(M3dView & view, const MDagPath & path,
                                M3dView::DisplayStyle style, M3dView::DisplayStatus dispStatus)
 {
-	DisplayData* data = getCachedDisplayData(view);
+	MVGManipulatorUtil::DisplayData* data = getCachedDisplayData(view);
 	if(!data)
 		return;
 
@@ -74,13 +66,8 @@ void MVGCreateManipulator::draw(M3dView & view, const MDagPath & path,
 	// draw	
 	MVGDrawUtil::begin2DDrawing(view);
 		MVGDrawUtil::drawCircle(0, 0, 1, 5); // needed - FIXME
-
-		MPointArray points = data->cameraPoints;
-		for(int i = 0; i < points.length(); ++i) {
-			short x, y;
-			MVGGeometryUtil::cameraToView(view, data->camera, points[i], x, y);
-			MVGDrawUtil::drawCircle(x, y, POINT_RADIUS, 30);
-		}
+		drawPreview2D(view, data);
+	
 
 	MVGDrawUtil::end2DDrawing();
 	
@@ -98,7 +85,7 @@ MStatus MVGCreateManipulator::doPress(M3dView& view)
 
 	switch(_selectionState) {
 		case SS_NONE: {
-			DisplayData* data = getCachedDisplayData(view);
+			MVGManipulatorUtil::DisplayData* data = getCachedDisplayData(view);
 			if(!data)
 				return MS::kFailure;
 			short mousex, mousey;
@@ -117,9 +104,13 @@ MStatus MVGCreateManipulator::doPress(M3dView& view)
 			  LOG_ERROR("invalid command object.")
 			  return MS::kFailure;
 			}
+			
+			// Create face
+			MPointArray facePoints3D;	
+			MVGGeometryUtil::projectFace2D(view, facePoints3D, data->camera, data->cameraPoints);
 			MDagPath meshPath;
 			MVGMayaUtil::getDagPathByName(MVGProject::_MESH.c_str(), meshPath);
-			cmd->doAddPolygon(meshPath, data->cameraPoints);
+			cmd->doAddPolygon(meshPath, facePoints3D);
 			if(cmd->redoIt())
 				cmd->finalize();
 			data->cameraPoints.clear();
@@ -156,7 +147,7 @@ MStatus MVGCreateManipulator::doRelease(M3dView& view)
 
 MStatus MVGCreateManipulator::doMove(M3dView& view, bool& refresh)
 {	
-	DisplayData* data = getCachedDisplayData(view);
+	MVGManipulatorUtil::DisplayData* data = getCachedDisplayData(view);
 	if(!data)
 		return MS::kFailure;
 	if(data->cameraPoints.length() == 0)
@@ -166,9 +157,9 @@ MStatus MVGCreateManipulator::doMove(M3dView& view, bool& refresh)
 	// TODO: intersect 2D point (from camera object)
 	//       or intersect 2D edge (from camera object)
 	//       or intersect 3D point (fetched point from mesh object)
-	if(intersectPoint(view, data, mousex, mousey)) {
+	if(MVGManipulatorUtil::intersectPoint(view, data, mousex, mousey)) {
 		_selectionState = SS_POINT;
-	} else if(intersectEdge(view, data, mousex, mousey)) {
+	} else if(MVGManipulatorUtil::intersectEdge(view, data, mousex, mousey)) {
 	 	_selectionState = SS_EDGE;
 	} else {
 		_selectionState = SS_NONE;
@@ -207,17 +198,17 @@ void MVGCreateManipulator::setContext(MVGContext* ctx)
 	_ctx = ctx;
 }
 
-MVGCreateManipulator::DisplayData* MVGCreateManipulator::getCachedDisplayData(M3dView& view)
+MVGManipulatorUtil::DisplayData* MVGCreateManipulator::getCachedDisplayData(M3dView& view)
 {
 	if(!MVGMayaUtil::isMVGView(view))
 		return NULL;
 	MDagPath cameraPath;
 	view.getCamera(cameraPath);
-	std::map<std::string, DisplayData>::iterator it = _cache.find(cameraPath.fullPathName().asChar());
+	std::map<std::string, MVGManipulatorUtil::DisplayData>::iterator it = _cache.find(cameraPath.fullPathName().asChar());
 	if(it == _cache.end()) {
 		MVGCamera c(cameraPath);
 		if(c.isValid()) {
-			DisplayData data;
+			MVGManipulatorUtil::DisplayData data;
 			data.camera = c;
 			data.cameraPoints = c.getClickedPoints();
 			_cache[cameraPath.fullPathName().asChar()] = data;
@@ -229,57 +220,59 @@ MVGCreateManipulator::DisplayData* MVGCreateManipulator::getCachedDisplayData(M3
 	return NULL;
 }
 
-bool MVGCreateManipulator::intersectPoint(M3dView& view, DisplayData* displayData, const short&x, const short& y)
-{
-	if(!displayData)
-		return false;
-	double threshold = (2*POINT_RADIUS*displayData->camera.getZoom())/view.portHeight();
-	const MPointArray& points = displayData->cameraPoints;
-	MPoint mousePoint;
-	MVGGeometryUtil::viewToCamera(view, displayData->camera, x, y, mousePoint);
-	for(int i = 0; i < points.length(); ++i) {
-		if(points[i].x <= mousePoint.x + threshold && points[i].x >= mousePoint.x - threshold
-			&& points[i].y <= mousePoint.y + threshold && points[i].y >= mousePoint.y - threshold)
-			return true;
-	}
-	return false;
-}
 
-bool MVGCreateManipulator::intersectEdge(M3dView& view, DisplayData* displayData, const short&x, const short& y)
+
+void MVGCreateManipulator::drawPreview2D(M3dView& view, MVGManipulatorUtil::DisplayData* data)
 {
-	if(!displayData)
-		return false;
-	const MPointArray& points = displayData->cameraPoints;
-	MPoint mousePoint;
-	MVGGeometryUtil::viewToCamera(view, displayData->camera, x, y, mousePoint);
+	short x, y;
+	short mousex, mousey;
+	mousePosition(mousex, mousey);
 	
-	if(points.length() < 2)
-		return false;
-	
-	double minDistanceFound = -1.0;
-	double tolerance = 0.001 * displayData->camera.getZoom() * 30;
-	double distance;
-	for(int i = 0; i < points.length() - 1; i++) {
-		MVector AB = points[i+1] - points[i];
-		MVector PA = points[i] - mousePoint;
-		MVector AP = mousePoint - points[i];
-		MVector BP = mousePoint - points[i+1];
-		MVector BA = points[i] - points[i+1];
-		// Dot signs			
-		int sign1, sign2;
-		((AP*AB) > 0) ? sign1 = 1 : sign1 = -1;
-		((BP*BA) > 0) ? sign2 = 1 : sign2 = -1;
-		if(sign1 != sign2)
-			continue;
-		// Lenght of orthogonal projection on edge
-		double s = crossProduct2D(AB, PA) / (AB.length()*AB.length());
-		if(s < 0)
-			s *= -1;
-		distance = s * AB.length();
-		if(minDistanceFound < 0.0 || distance < minDistanceFound)
-			minDistanceFound = distance;
+	MPointArray points = data->cameraPoints;
+	if(points.length() > 0)
+	{
+		for(int i = 0; i < points.length() - 1; ++i) {
+			MVGGeometryUtil::cameraToView(view, data->camera, points[i], x, y);
+			MVGDrawUtil::drawCircle(x, y, POINT_RADIUS, 30);
+			
+			glBegin(GL_LINES);
+				MVGGeometryUtil::cameraToView(view, data->camera, points[i], x, y);
+				glVertex2f(x, y);
+				MVGGeometryUtil::cameraToView(view, data->camera, points[i+1], x, y);
+				glVertex2f(x, y);
+			glEnd();
+		}
+		
+		// Last point to mouse
+		MVGGeometryUtil::cameraToView(view, data->camera, points[points.length() - 1], x, y);
+		MVGDrawUtil::drawCircle(x, y, POINT_RADIUS, 30);
+		glBegin(GL_LINES);
+			MVGGeometryUtil::cameraToView(view, data->camera, points[points.length() - 1], x, y);
+			glVertex2f(x, y);
+			glVertex2f(mousex, mousey);
+		glEnd();	
+		
+		
 	}
-	if(minDistanceFound < -tolerance || minDistanceFound > tolerance)
-		return false;
-	return true;
+	if(points.length() > 2)
+	{
+		glColor4f(0.f, 0.f, 1.f, 0.8f);
+		glLineWidth(1.5f);
+		glBegin(GL_LINE_LOOP);
+			for(int i = 0; i < 3; ++i) {			
+				MVGGeometryUtil::cameraToView(view, data->camera, points[i], x, y);
+				glVertex2f(x, y);
+			}
+			glVertex2f(mousex, mousey);
+		glEnd();
+		
+		glColor4f(1.f, 1.f, 1.f, 0.6f);
+		glBegin(GL_POLYGON);
+			for(int i = 0; i < 3; ++i) {			
+				MVGGeometryUtil::cameraToView(view, data->camera, points[i], x, y);
+				glVertex2f(x, y);
+			}
+			glVertex2f(mousex, mousey);
+		glEnd();
+	}
 }
