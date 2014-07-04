@@ -14,6 +14,11 @@ using namespace mayaMVG;
 
 MTypeId MVGCreateManipulator::_id(0x99111); // FIXME /!\ 
 
+namespace { // empty namespace
+	double crossProduct2D(MVector& A, MVector& B) {
+		return A.x*B.y - A.y*B.x;
+	}
+} // empty namespace
 
 MVGCreateManipulator::MVGCreateManipulator()
 	: _selectionState(SS_NONE)
@@ -104,6 +109,7 @@ MStatus MVGCreateManipulator::doPress(M3dView& view)
 			data->cameraPoints.append(point);
 			_selectionState = SS_POINT;
 			
+			// undo/redo
 			if(data->cameraPoints.length() < 4)
 				break;
 			cmd = (MVGEditCmd *)_ctx->newCmd();
@@ -116,9 +122,9 @@ MStatus MVGCreateManipulator::doPress(M3dView& view)
 			cmd->doAddPolygon(meshPath, data->cameraPoints);
 			if(cmd->redoIt())
 				cmd->finalize();
-			
 			data->cameraPoints.clear();
 			data->camera.clearClickedPoints();
+			_selectionState = SS_NONE;
 			break;
 		}
 		case SS_POINT: {
@@ -160,9 +166,9 @@ MStatus MVGCreateManipulator::doMove(M3dView& view, bool& refresh)
 	// TODO: intersect 2D point (from camera object)
 	//       or intersect 2D edge (from camera object)
 	//       or intersect 3D point (fetched point from mesh object)
-	if(intersectPoint(view, data->camera, mousex, mousey)) {
+	if(intersectPoint(view, data, mousex, mousey)) {
 		_selectionState = SS_POINT;
-	} else if(intersectEdge(view, data->camera, mousex, mousey)) {
+	} else if(intersectEdge(view, data, mousex, mousey)) {
 	 	_selectionState = SS_EDGE;
 	} else {
 		_selectionState = SS_NONE;
@@ -223,21 +229,57 @@ MVGCreateManipulator::DisplayData* MVGCreateManipulator::getCachedDisplayData(M3
 	return NULL;
 }
 
-bool MVGCreateManipulator::intersectPoint(M3dView& view, const MVGCamera& camera, const short&x, const short& y)
+bool MVGCreateManipulator::intersectPoint(M3dView& view, DisplayData* displayData, const short&x, const short& y)
 {
-	double threshold = (2*POINT_RADIUS*camera.getZoom())/view.portHeight();
-	MPointArray points = camera.getClickedPoints();
-	MPoint cameraPoint;
-	MVGGeometryUtil::viewToCamera(view, camera, x, y, cameraPoint);
+	if(!displayData)
+		return false;
+	double threshold = (2*POINT_RADIUS*displayData->camera.getZoom())/view.portHeight();
+	const MPointArray& points = displayData->cameraPoints;
+	MPoint mousePoint;
+	MVGGeometryUtil::viewToCamera(view, displayData->camera, x, y, mousePoint);
 	for(int i = 0; i < points.length(); ++i) {
-		if(points[i].x <= cameraPoint.x + threshold && points[i].x >= cameraPoint.x - threshold
-			&& points[i].y <= cameraPoint.y + threshold && points[i].y >= cameraPoint.y - threshold)
+		if(points[i].x <= mousePoint.x + threshold && points[i].x >= mousePoint.x - threshold
+			&& points[i].y <= mousePoint.y + threshold && points[i].y >= mousePoint.y - threshold)
 			return true;
 	}
 	return false;
 }
 
-bool MVGCreateManipulator::intersectEdge(M3dView& view, const MVGCamera& camera, const short&x, const short& y)
+bool MVGCreateManipulator::intersectEdge(M3dView& view, DisplayData* displayData, const short&x, const short& y)
 {
-	return false;
+	if(!displayData)
+		return false;
+	const MPointArray& points = displayData->cameraPoints;
+	MPoint mousePoint;
+	MVGGeometryUtil::viewToCamera(view, displayData->camera, x, y, mousePoint);
+	
+	if(points.length() < 2)
+		return false;
+	
+	double minDistanceFound = -1.0;
+	double tolerance = 0.001 * displayData->camera.getZoom() * 30;
+	double distance;
+	for(int i = 0; i < points.length() - 1; i++) {
+		MVector AB = points[i+1] - points[i];
+		MVector PA = points[i] - mousePoint;
+		MVector AP = mousePoint - points[i];
+		MVector BP = mousePoint - points[i+1];
+		MVector BA = points[i] - points[i+1];
+		// Dot signs			
+		int sign1, sign2;
+		((AP*AB) > 0) ? sign1 = 1 : sign1 = -1;
+		((BP*BA) > 0) ? sign2 = 1 : sign2 = -1;
+		if(sign1 != sign2)
+			continue;
+		// Lenght of orthogonal projection on edge
+		double s = crossProduct2D(AB, PA) / (AB.length()*AB.length());
+		if(s < 0)
+			s *= -1;
+		distance = s * AB.length();
+		if(minDistanceFound < 0.0 || distance < minDistanceFound)
+			minDistanceFound = distance;
+	}
+	if(minDistanceFound < -tolerance || minDistanceFound > tolerance)
+		return false;
+	return true;
 }

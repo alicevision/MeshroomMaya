@@ -45,8 +45,8 @@ class MVGCreateManipulator: public MPxManipulatorNode
 
 	private:
 		DisplayData* getCachedDisplayData(M3dView& view);
-		bool intersectPoint(M3dView& view, const MVGCamera& camera, const short&x, const short& y);
-		bool intersectEdge(M3dView& view, const MVGCamera& camera, const short&x, const short& y);
+		bool intersectPoint(M3dView& view, DisplayData* displayData, const short&x, const short& y);
+		bool intersectEdge(M3dView& view, DisplayData* displayData, const short&x, const short& y);
 
 	public:
 		static MTypeId _id;
