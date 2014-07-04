@@ -27,6 +27,44 @@ struct MVGDrawUtil {
 		glPopMatrix();
 		glPopAttrib();
 	}
+	
+	static void drawEmptyCross(double x, double y)
+	{
+		GLfloat thickness= 2;
+		GLfloat width = 10;
+		glBegin(GL_LINE_LOOP);
+			glVertex2f(x + width, y - thickness);
+			glVertex2f(x + width, y + thickness);
+			glVertex2f(x + thickness, y + thickness);
+			glVertex2f(x + thickness, y + width);
+			glVertex2f(x - thickness, y + width);
+			glVertex2f(x - thickness, y + thickness);
+			glVertex2f(x - width, y + thickness);
+			glVertex2f(x - width, y - thickness);
+			glVertex2f(x - thickness, y - thickness);
+			glVertex2f(x - thickness, y - width);
+			glVertex2f(x + thickness, y - width);
+			glVertex2f(x + thickness, y - thickness);
+		glEnd();
+	}
+
+	static void drawFullCross(double x, double y)
+	{
+		GLfloat width = 10;
+		GLfloat thickness = 2;
+		glBegin(GL_POLYGON);
+			glVertex2f(x + thickness, y - width);
+			glVertex2f(x + thickness, y + width);
+			glVertex2f(x - thickness, y + width);
+			glVertex2f(x - thickness, y - width);
+		glEnd();
+		glBegin(GL_POLYGON);
+			glVertex2f(x + width, y + thickness);
+			glVertex2f(x - width, y + thickness);
+			glVertex2f(x - width, y - thickness);
+			glVertex2f(x + width, y - thickness);
+		glEnd();
+	}
 };
 
 } // namespace

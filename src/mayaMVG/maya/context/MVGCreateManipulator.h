@@ -39,9 +39,7 @@ class MVGCreateManipulator: public MPxManipulatorNode
 	public:
 		void setContext(MVGContext* ctx);
 
-	private:
-		MVGManipulatorUtil::DisplayData* getCachedDisplayData(M3dView& view);
-				
+	private:			
 		void drawPreview2D(M3dView& view, MVGManipulatorUtil::DisplayData* data);
 
 	public:
@@ -49,6 +47,7 @@ class MVGCreateManipulator: public MPxManipulatorNode
 		std::map<std::string, MVGManipulatorUtil::DisplayData> _cache; //FIXME use caching on the wrapper side
 		SelectionState _selectionState;
         MVGContext* _ctx;
+		MVGManipulatorUtil::IntersectionData _intersectionData;
 };
 
 } // namespace
