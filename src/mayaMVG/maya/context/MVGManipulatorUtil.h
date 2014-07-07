@@ -34,6 +34,10 @@ struct MVGManipulatorUtil {
 	struct IntersectionData {
 		int	pointIndex;
 		MIntArray edgePointIndexes;
+		MVector edgeHeight3D;
+		MVector edgeHeight2D;
+		double edgeRatio;
+		
 	};
 		
 	static DisplayData* getCachedDisplayData(M3dView& view, std::map<std::string, DisplayData>& cache);

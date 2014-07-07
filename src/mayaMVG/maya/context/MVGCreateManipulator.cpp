@@ -53,6 +53,27 @@ void MVGCreateManipulator::draw(M3dView & view, const MDagPath & path,
 	glFirstHandle(glPickableItem);
 	colorAndName(view, glPickableItem, true, mainColor());
 		
+	// Preview 3D (while extending edge)
+	if(_previewFace3D.length() > 0)
+	{
+		glLineWidth(1.5f);
+		glBegin(GL_LINE_LOOP);
+			glVertex3f(_previewFace3D[0].x, _previewFace3D[0].y, _previewFace3D[0].z);
+			glVertex3f(_previewFace3D[1].x, _previewFace3D[1].y, _previewFace3D[1].z);
+			glVertex3f(_previewFace3D[2].x, _previewFace3D[2].y, _previewFace3D[2].z);
+			glVertex3f(_previewFace3D[3].x, _previewFace3D[3].y, _previewFace3D[3].z);
+		glEnd();
+		glLineWidth(1.f);
+		glDisable(GL_LINE_STIPPLE);
+			glColor4f(1.f, 1.f, 1.f, 0.6f);
+			glBegin(GL_POLYGON);
+				glVertex3f(_previewFace3D[0].x, _previewFace3D[0].y, _previewFace3D[0].z);
+				glVertex3f(_previewFace3D[1].x, _previewFace3D[1].y, _previewFace3D[1].z);
+				glVertex3f(_previewFace3D[2].x, _previewFace3D[2].y, _previewFace3D[2].z);
+				glVertex3f(_previewFace3D[3].x, _previewFace3D[3].y, _previewFace3D[3].z);
+			glEnd();
+	}
+	
 	// draw	
 	MVGDrawUtil::begin2DDrawing(view);
 		MVGDrawUtil::drawCircle(0, 0, 1, 5); // needed - FIXME
@@ -70,12 +91,13 @@ void MVGCreateManipulator::draw(M3dView & view, const MDagPath & path,
 			MVGDrawUtil::drawFullCross(x, y);
 		}
 		
+		// Draw only in active view
 		if(MVGMayaUtil::isActiveView(view))
 		{
 			// Draw intersections
 			MVGManipulatorUtil::drawIntersections(view, data, cameraPoints, _intersectionData, _intersectionState);
 		}
-			
+				
 	MVGDrawUtil::end2DDrawing();
 	view.endGL();
 }
@@ -94,33 +116,22 @@ MStatus MVGCreateManipulator::doPress(M3dView& view)
 
 	short mousex, mousey;
 	mousePosition(mousex, mousey);
+	MPoint mousePoint;
+	MVGGeometryUtil::viewToCamera(view, data->camera, mousex, mousey, mousePoint);
 	
 	// Define selectionState
 	updateIntersectionState(view, data, mousex, mousey);
 			
 	switch(_intersectionState) {
 		case MVGManipulatorUtil::eIntersectionNone: {			
-			MPoint point;
-			MVGGeometryUtil::viewToCamera(view, data->camera, mousex, mousey, point);
-			data->buildPoints2D.append(point);
 			
-			// Undo/redo
-			if(data->buildPoints2D.length() < 4)
-				break;
-			cmd = (MVGEditCmd *)_ctx->newCmd();
-			if(!cmd) {
-			  LOG_ERROR("invalid command object.")
-			  return MS::kFailure;
-			}
+			data->buildPoints2D.append(mousePoint);
 			
-			// Create face
 			MPointArray facePoints3D;	
 			MVGGeometryUtil::projectFace2D(view, facePoints3D, data->camera, data->buildPoints2D);
-			MDagPath meshPath;
-			MVGMayaUtil::getDagPathByName(MVGProject::_MESH.c_str(), meshPath);
-			cmd->doAddPolygon(meshPath, facePoints3D);
-			if(cmd->redoIt())
-				cmd->finalize();
+
+			if(!addCreateFaceCommand(view, data, cmd, facePoints3D))
+				return MS::kFailure;
 
 			// Add points to camera
 			MPoint point2D;
@@ -129,8 +140,17 @@ MStatus MVGCreateManipulator::doPress(M3dView& view)
 				MVGGeometryUtil::worldToCamera(view, data->camera, facePoints3D[i], point2D);
 				data->camera.addClickedPoint(point2D);
 				data->cameraPoints2D.append(point2D);
-			}	
+			}
 			
+			// Add points to map
+			for(size_t i = 0; i < facePoints3D.length(); ++i)
+			{
+				MVGGeometryUtil::worldToCamera(view, data->camera, facePoints3D[i], point2D);
+				const std::pair<std::string, MPoint> cameraPair = std::make_pair(data->camera.name(), point2D);
+				const std::pair<std::string, MPoint> meshPair = std::make_pair(MVGProject::_MESH, facePoints3D[i]);
+				_pointsMap.insert(std::make_pair(cameraPair, meshPair));
+			}
+								
 			data->buildPoints2D.clear();
 			break;
 		}
@@ -140,6 +160,23 @@ MStatus MVGCreateManipulator::doPress(M3dView& view)
 		}
 		case MVGManipulatorUtil::eIntersectionEdge: {
 			LOG_INFO("SELECT EDGE")
+				
+			MPointArray cameraPoints = data->cameraPoints2D;
+			
+			// Compute height and ratio 2D
+			MPoint& edgePoint0 = cameraPoints[_intersectionData.edgePointIndexes[0]];
+			MPoint& edgePoint1 = cameraPoints[_intersectionData.edgePointIndexes[1]];
+			MVector ratioVector2D = edgePoint1 - mousePoint;
+			_intersectionData.edgeHeight2D =  edgePoint1 - edgePoint0;
+			_intersectionData.edgeRatio = ratioVector2D.length() / _intersectionData.edgeHeight2D.length();
+			
+			// Compute height 3D
+			std::pair<std::string, MPoint> cameraPair = std::make_pair(data->camera.name(), edgePoint0);
+			MPoint& edgePoint3D_0 = _pointsMap.at(cameraPair).second;
+			cameraPair = std::make_pair(data->camera.name(), edgePoint1);
+			MPoint& edgePoint3D_1 = _pointsMap.at(cameraPair).second;	
+			_intersectionData.edgeHeight3D = edgePoint3D_1 - edgePoint3D_0;
+			
 			break;
 		}
 	}
@@ -153,17 +190,26 @@ MStatus MVGCreateManipulator::doRelease(M3dView& view)
 	if(!data)
 		return MS::kFailure;
 	
+	MVGEditCmd* cmd = NULL;
+	if(!_ctx) {
+	   LOG_ERROR("invalid context object.")
+	   return MS::kFailure;
+	}
+	
 	short mousex, mousey;
 	mousePosition(mousex, mousey);
-	
-	updateIntersectionState(view, data, mousex, mousey);
-	
+		
 	switch(_intersectionState) {
 		case MVGManipulatorUtil::eIntersectionNone:
-		case MVGManipulatorUtil::eIntersectionPoint:
+		case MVGManipulatorUtil::eIntersectionPoint:	
 			break;
 		case MVGManipulatorUtil::eIntersectionEdge: {
 			LOG_INFO("CREATE POLYGON W/ TMP EDGE")
+			
+			if(!addCreateFaceCommand(view, data, cmd, _previewFace3D))
+				return MS::kFailure;
+			
+			_previewFace3D.clear();
 			break;
 		}
 	}
@@ -187,14 +233,42 @@ MStatus MVGCreateManipulator::doMove(M3dView& view, bool& refresh)
 }
 
 MStatus MVGCreateManipulator::doDrag(M3dView& view)
-{	
+{		
+	MVGManipulatorUtil::DisplayData* data = MVGManipulatorUtil::getCachedDisplayData(view, _cache);
+	if(!data)
+		return MS::kFailure;
+	
+	short mousex, mousey;
+	mousePosition(mousex, mousey);
+	MPoint mousePoint;
+	MVGGeometryUtil::viewToCamera(view, data->camera, mousex, mousey, mousePoint);
+	
+	MPointArray cameraPoints = data->cameraPoints2D;
+	
 	switch(_intersectionState) {
 		case MVGManipulatorUtil::eIntersectionNone:
 		case MVGManipulatorUtil::eIntersectionPoint:
 			break;
 		case MVGManipulatorUtil::eIntersectionEdge: {
-			LOG_INFO("MOVE TMP EDGE")
+			{
+			//LOG_INFO("MOVE TMP EDGE")
+			MPointArray previewPoints2D;
+			
+			previewPoints2D.append(cameraPoints[_intersectionData.edgePointIndexes[1]]);
+			previewPoints2D.append(cameraPoints[_intersectionData.edgePointIndexes[0]]);
+			MPoint P3 = mousePoint - (1 - _intersectionData.edgeRatio) * _intersectionData.edgeHeight2D;
+			MPoint P4 = mousePoint + _intersectionData.edgeRatio * _intersectionData.edgeHeight2D;
+			previewPoints2D.append(P3);
+			previewPoints2D.append(P4);
+			
+			_previewFace3D.clear();
+			MVGGeometryUtil::projectFace2D(view, _previewFace3D, data->camera, previewPoints2D, true, _intersectionData.edgeHeight3D);
+				
+			// TODO[1]: Keep the old first 2 points to have a connected face
+			// TODO[2] : compute plane with straight line constraint
+
 			break;
+			}
 		}
 	}
 	return MPxManipulatorNode::doDrag(view);
@@ -283,4 +357,25 @@ void MVGCreateManipulator::drawPreview2D(M3dView& view, MVGManipulatorUtil::Disp
 			glVertex2f(mousex, mousey);
 		glEnd();
 	}
+}
+
+bool MVGCreateManipulator::addCreateFaceCommand(M3dView& view, MVGManipulatorUtil::DisplayData* data, MVGEditCmd* cmd, MPointArray& facePoints3D)
+{
+	// Undo/redo
+	if(facePoints3D.length() < 4)
+		return false;
+	cmd = (MVGEditCmd *)_ctx->newCmd();
+	if(!cmd) {
+	  LOG_ERROR("invalid command object.")
+	  return false;
+	}
+
+	// Create face
+	MDagPath meshPath;
+	MVGMayaUtil::getDagPathByName(MVGProject::_MESH.c_str(), meshPath);
+	cmd->doAddPolygon(meshPath, facePoints3D);
+	if(cmd->redoIt())
+		cmd->finalize();
+	
+	return true;
 }
