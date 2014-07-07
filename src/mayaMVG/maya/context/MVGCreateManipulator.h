@@ -43,7 +43,6 @@ class MVGCreateManipulator: public MPxManipulatorNode
 	public:
 		static MTypeId _id;
 		std::map<std::string, MVGManipulatorUtil::DisplayData> _cache; //FIXME use caching on the wrapper side
-		std::map<std::pair<std::string, MPoint>, std::pair<std::string, MPoint> >_pointsMap;
 		MVGManipulatorUtil::IntersectionState _intersectionState;
         MVGContext* _ctx;
 		MVGManipulatorUtil::IntersectionData _intersectionData;		
@@ -54,17 +53,3 @@ class MVGCreateManipulator: public MPxManipulatorNode
 
 
 } // namespace
-
-namespace std {
-	typedef std::pair<std::string, MPoint> cameraPair;
-	inline bool operator<(const cameraPair& pair_a, const cameraPair& pair_b) { 
-		
-		if(pair_a.first != pair_b.first)
-			return (pair_a.first < pair_b.first);
-		
-		if(pair_a.second.x != pair_b.second.x)
-			return pair_a.second.x < pair_b.second.x;
-		
-		return pair_a.second.y < pair_b.second.y;
-	}
-}

@@ -14,6 +14,8 @@ std::string MVGProject::_MESH = "mvgMesh";
 std::string MVGProject::_PREVIEW_MESH = "previewMesh";
 std::string MVGProject::_PROJECT = "mayaMVG";
 
+std::map<std::pair<std::string, MPoint>, std::pair<std::string, MPoint> > MVGProject::_pointsMap = std::map<std::pair<std::string, MPoint>, std::pair<std::string, MPoint> > ();
+
 MVGProject::MVGProject(const std::string& name)
 	: MVGNodeWrapper(name)
 {

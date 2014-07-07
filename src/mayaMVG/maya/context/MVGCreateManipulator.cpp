@@ -148,7 +148,7 @@ MStatus MVGCreateManipulator::doPress(M3dView& view)
 				MVGGeometryUtil::worldToCamera(view, data->camera, facePoints3D[i], point2D);
 				const std::pair<std::string, MPoint> cameraPair = std::make_pair(data->camera.name(), point2D);
 				const std::pair<std::string, MPoint> meshPair = std::make_pair(MVGProject::_MESH, facePoints3D[i]);
-				_pointsMap.insert(std::make_pair(cameraPair, meshPair));
+				MVGProject::_pointsMap.insert(std::make_pair(cameraPair, meshPair));
 			}
 								
 			data->buildPoints2D.clear();
@@ -172,9 +172,9 @@ MStatus MVGCreateManipulator::doPress(M3dView& view)
 			
 			// Compute height 3D
 			std::pair<std::string, MPoint> cameraPair = std::make_pair(data->camera.name(), edgePoint0);
-			MPoint& edgePoint3D_0 = _pointsMap.at(cameraPair).second;
+			MPoint& edgePoint3D_0 = MVGProject::_pointsMap.at(cameraPair).second;
 			cameraPair = std::make_pair(data->camera.name(), edgePoint1);
-			MPoint& edgePoint3D_1 = _pointsMap.at(cameraPair).second;	
+			MPoint& edgePoint3D_1 = MVGProject::_pointsMap.at(cameraPair).second;	
 			_intersectionData.edgeHeight3D = edgePoint3D_1 - edgePoint3D_0;
 			
 			break;

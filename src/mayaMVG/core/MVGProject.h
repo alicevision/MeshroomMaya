@@ -4,6 +4,7 @@
 #include "mayaMVG/core/MVGPointCloud.h"
 #include "mayaMVG/core/MVGMesh.h"
 #include <vector>
+#include <map>
 
 namespace mayaMVG {
 
@@ -47,6 +48,22 @@ class MVGProject : public MVGNodeWrapper {
 		static std::string _MESH;
 		static std::string _PREVIEW_MESH;
 		static std::string _PROJECT;
+		
+		static std::map<std::pair<std::string, MPoint>, std::pair<std::string, MPoint> >_pointsMap;
 };
 
 } // mayaMVG
+
+namespace std {
+	typedef std::pair<std::string, MPoint> cameraPair;
+	inline bool operator<(const cameraPair& pair_a, const cameraPair& pair_b) { 
+		
+		if(pair_a.first != pair_b.first)
+			return (pair_a.first < pair_b.first);
+		
+		if(pair_a.second.x != pair_b.second.x)
+			return pair_a.second.x < pair_b.second.x;
+		
+		return pair_a.second.y < pair_b.second.y;
+	}
+}	// std
