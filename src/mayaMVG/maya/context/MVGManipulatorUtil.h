@@ -19,6 +19,12 @@ struct MVGManipulatorUtil {
 	
 	#define POINT_RADIUS 10
 
+	enum IntersectionState {
+        eIntersectionNone = 0
+        , eIntersectionPoint
+        , eIntersectionEdge
+    };
+	
 	struct DisplayData {
 		MVGCamera camera;
 		MPointArray cameraPoints2D;
@@ -34,6 +40,8 @@ struct MVGManipulatorUtil {
 	
 	static bool intersectPoint(M3dView& view, DisplayData* displayData, IntersectionData& intersectionData, const short&x, const short& y);
 	static bool intersectEdge(M3dView& view, DisplayData* displayData, IntersectionData& intersectionData, const short&x, const short& y);
+	
+	static void drawIntersections(M3dView& view, DisplayData* data, MPointArray& cameraPoints, IntersectionData& intersectionData, IntersectionState intersectionState);
 		
 };
 

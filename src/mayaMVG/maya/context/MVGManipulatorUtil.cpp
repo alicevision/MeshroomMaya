@@ -1,5 +1,6 @@
 #include "mayaMVG/maya/context/MVGManipulatorUtil.h"
 #include "mayaMVG/maya/MVGMayaUtil.h"
+#include "mayaMVG/maya/context/MVGDrawUtil.h"
 
 namespace mayaMVG {
 
@@ -96,5 +97,29 @@ bool MVGManipulatorUtil::intersectEdge(M3dView& view, DisplayData* displayData, 
 	
 	intersectionData.edgePointIndexes = tmp;
 	return true;
+}
+void MVGManipulatorUtil::drawIntersections(M3dView& view, DisplayData* data, MPointArray& cameraPoints, IntersectionData& intersectionData, IntersectionState intersectionState)
+{
+	short x, y;
+	if(cameraPoints.length() > 0) {
+		switch(intersectionState)
+		{
+			case MVGManipulatorUtil::eIntersectionPoint:
+				glColor3f(0.f, 1.f, 0.f);
+				MVGGeometryUtil::cameraToView(view, data->camera, cameraPoints[intersectionData.pointIndex], x, y);
+				MVGDrawUtil::drawCircle(x, y, POINT_RADIUS, 30);
+				break;
+			case MVGManipulatorUtil::eIntersectionEdge:
+				short x, y;
+				glColor3f(0.f, 1.f, 0.f);
+				glBegin(GL_LINES);
+					MVGGeometryUtil::cameraToView(view, data->camera, cameraPoints[intersectionData.edgePointIndexes[0]], x, y);
+					glVertex2f(x, y);
+					MVGGeometryUtil::cameraToView(view, data->camera, cameraPoints[intersectionData.edgePointIndexes[1]], x, y);
+					glVertex2f(x, y);
+				glEnd();
+				break;
+		}	
+	}
 }
 }

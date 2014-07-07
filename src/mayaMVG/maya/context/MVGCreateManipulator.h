@@ -12,12 +12,6 @@ class MVGContext;
 
 class MVGCreateManipulator: public MPxManipulatorNode
 {
-    enum SelectionState {
-        SS_NONE = 0
-        , SS_POINT
-        , SS_EDGE
-    };
-
 	public:
 		MVGCreateManipulator();
 		virtual ~MVGCreateManipulator();
@@ -39,13 +33,14 @@ class MVGCreateManipulator: public MPxManipulatorNode
 	public:
 		void setContext(MVGContext* ctx);
 
-	private:			
+	private:	
+		void updateIntersectionState(M3dView& view, MVGManipulatorUtil::DisplayData* data, double mousex, double mousey);		
 		void drawPreview2D(M3dView& view, MVGManipulatorUtil::DisplayData* data);
 
 	public:
 		static MTypeId _id;
 		std::map<std::string, MVGManipulatorUtil::DisplayData> _cache; //FIXME use caching on the wrapper side
-		SelectionState _selectionState;
+		MVGManipulatorUtil::IntersectionState _intersectionState;
         MVGContext* _ctx;
 		MVGManipulatorUtil::IntersectionData _intersectionData;
 };
