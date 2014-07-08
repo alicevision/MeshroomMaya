@@ -1,6 +1,8 @@
 #include "mayaMVG/maya/context/MVGMoveManipulator.h"
 #include "mayaMVG/maya/context/MVGDrawUtil.h"
 #include "mayaMVG/maya/MVGMayaUtil.h"
+#include "mayaMVG/core/MVGLog.h"
+#include "mayaMVG/core/MVGProject.h"
 
 
 using namespace mayaMVG;
@@ -58,19 +60,13 @@ void MVGMoveManipulator::draw(M3dView & view, const MDagPath & path,
 		MVGDrawUtil::drawCircle(0, 0, 1, 5); // needed - FIXME
 				
 		// Draw Camera points
-		short x, y;
-		MPointArray cameraPoints = data->cameraPoints2D;
 		glColor3f(1.f, 0.5f, 0.f);
-		for(size_t i = 0; i < cameraPoints.length(); ++i)
-		{
-			MVGGeometryUtil::cameraToView(view, data->camera, cameraPoints[i], x, y);
-			MVGDrawUtil::drawFullCross(x, y);
-		}
+		MVGManipulatorUtil::drawCameraPoints(view, data);
 		
 		if(MVGMayaUtil::isActiveView(view))
 		{		
 			// Draw intersections
-			MVGManipulatorUtil::drawIntersections(view, data, cameraPoints, _intersectionData, _intersectionState);
+			MVGManipulatorUtil::drawIntersections(view, data, _intersectionData, _intersectionState);
 
 			switch(_moveState)
 			{
@@ -125,9 +121,22 @@ MStatus MVGMoveManipulator::doRelease(M3dView& view)
 		case eMoveNone:
 			break;
 		case eMovePoint:
+		{		
+			try {	
+				std::pair<std::string, MPoint> cameraPair = std::make_pair(data->camera.name(), data->cameraPoints2D[_intersectionData.pointIndex]);
+				const std::pair<std::string, MPoint> meshPair = MVGProject::_pointsMap.at(cameraPair);
+				MVGProject::_pointsMap.erase(cameraPair);
+				cameraPair = std::make_pair(data->camera.name(), mousePoint);
+				MVGProject::_pointsMap.insert(std::make_pair(cameraPair, meshPair));
+			}
+			catch(const std::exception& e){
+				break;
+			}
+			
 			data->cameraPoints2D[_intersectionData.pointIndex] = mousePoint;
-			data->camera.setClickedtPointAtIndex(_intersectionData.pointIndex, mousePoint);
+			data->camera.setClickedtPointAtIndex(_intersectionData.pointIndex, mousePoint);			
 			break;
+		}
 		case eMoveEdge:
 			break;
 	}

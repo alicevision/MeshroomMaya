@@ -1,6 +1,7 @@
 #include "mayaMVG/maya/context/MVGManipulatorUtil.h"
 #include "mayaMVG/maya/MVGMayaUtil.h"
 #include "mayaMVG/maya/context/MVGDrawUtil.h"
+#include "mayaMVG/core/MVGProject.h"
 
 namespace mayaMVG {
 
@@ -98,9 +99,10 @@ bool MVGManipulatorUtil::intersectEdge(M3dView& view, DisplayData* displayData, 
 	intersectionData.edgePointIndexes = tmp;
 	return true;
 }
-void MVGManipulatorUtil::drawIntersections(M3dView& view, DisplayData* data, MPointArray& cameraPoints, IntersectionData& intersectionData, IntersectionState intersectionState)
+void MVGManipulatorUtil::drawIntersections(M3dView& view, DisplayData* data, IntersectionData& intersectionData, IntersectionState intersectionState)
 {
 	short x, y;
+	MPointArray cameraPoints = data->cameraPoints2D;
 	if(cameraPoints.length() > 0) {
 		switch(intersectionState)
 		{
@@ -122,4 +124,33 @@ void MVGManipulatorUtil::drawIntersections(M3dView& view, DisplayData* data, MPo
 		}	
 	}
 }
+void MVGManipulatorUtil::drawCameraPoints(M3dView& view, DisplayData* data)
+{
+	short x, y;
+	MPointArray cameraPoints = data->cameraPoints2D;
+	for(size_t i = 0; i < cameraPoints.length(); ++i)
+	{
+		MVGGeometryUtil::cameraToView(view, data->camera, cameraPoints[i], x, y);
+		MVGDrawUtil::drawFullCross(x, y);
+
+		// Line toward 3D point
+		const std::pair<std::string, MPoint> cameraPair = std::make_pair(data->camera.name(), cameraPoints[i]);	
+		try {
+			MVGProject::_pointsMap.at(cameraPair);
+		}
+		catch(const std::exception& e){
+			//LOG_INFO("EXCEPTION : " << e.what());
+			continue;
+		}
+
+		MPoint point3D_view = MVGGeometryUtil::worldToView(view, MVGProject::_pointsMap.at(cameraPair).second);
+		glEnable(GL_LINE_STIPPLE);
+		glLineStipple(1.f, 0x5555);
+		glBegin(GL_LINES);
+			glVertex2f(x, y);
+			glVertex2f(point3D_view.x, point3D_view.y);
+		glEnd();
+		glDisable(GL_LINE_STIPPLE);
+	}
 }
+}	// mayaMVG

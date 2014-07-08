@@ -45,8 +45,8 @@ struct MVGManipulatorUtil {
 	static bool intersectPoint(M3dView& view, DisplayData* displayData, IntersectionData& intersectionData, const short&x, const short& y);
 	static bool intersectEdge(M3dView& view, DisplayData* displayData, IntersectionData& intersectionData, const short&x, const short& y);
 	
-	static void drawIntersections(M3dView& view, DisplayData* data, MPointArray& cameraPoints, IntersectionData& intersectionData, IntersectionState intersectionState);
-		
+	static void drawIntersections(M3dView& view, DisplayData* data, IntersectionData& intersectionData, IntersectionState intersectionState);
+	static void drawCameraPoints(M3dView& view, DisplayData* data);
 };
 
 } // mayaMVG

@@ -7,6 +7,7 @@
 #include "mayaMVG/core/MVGProject.h"
 #include "mayaMVG/core/MVGGeometryUtil.h"
 
+#include <exception>
 
 using namespace mayaMVG;
 
@@ -74,7 +75,7 @@ void MVGCreateManipulator::draw(M3dView & view, const MDagPath & path,
 			glEnd();
 	}
 	
-	// draw	
+	// Draw	
 	MVGDrawUtil::begin2DDrawing(view);
 		MVGDrawUtil::drawCircle(0, 0, 1, 5); // needed - FIXME
 		
@@ -82,20 +83,14 @@ void MVGCreateManipulator::draw(M3dView & view, const MDagPath & path,
 		drawPreview2D(view, data);
 		
 		// Draw Camera points
-		short x, y;
-		MPointArray cameraPoints = data->cameraPoints2D;
 		glColor3f(1.f, 0.5f, 0.f);
-		for(size_t i = 0; i < cameraPoints.length(); ++i)
-		{
-			MVGGeometryUtil::cameraToView(view, data->camera, cameraPoints[i], x, y);
-			MVGDrawUtil::drawFullCross(x, y);
-		}
+		MVGManipulatorUtil::drawCameraPoints(view, data);
 		
 		// Draw only in active view
 		if(MVGMayaUtil::isActiveView(view))
 		{
 			// Draw intersections
-			MVGManipulatorUtil::drawIntersections(view, data, cameraPoints, _intersectionData, _intersectionState);
+			MVGManipulatorUtil::drawIntersections(view, data, _intersectionData, _intersectionState);
 		}
 				
 	MVGDrawUtil::end2DDrawing();
@@ -150,7 +145,7 @@ MStatus MVGCreateManipulator::doPress(M3dView& view)
 				const std::pair<std::string, MPoint> meshPair = std::make_pair(MVGProject::_MESH, facePoints3D[i]);
 				MVGProject::_pointsMap.insert(std::make_pair(cameraPair, meshPair));
 			}
-								
+			
 			data->buildPoints2D.clear();
 			break;
 		}
