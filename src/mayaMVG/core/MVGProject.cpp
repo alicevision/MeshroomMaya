@@ -7,14 +7,15 @@
 #include <maya/MFnTransform.h>
 #include <third_party/stlplus3/filesystemSimplified/file_system.hpp>
 
-using namespace mayaMVG;
+namespace mayaMVG {
 
 std::string MVGProject::_CLOUD = "mvgPointCloud";
 std::string MVGProject::_MESH = "mvgMesh";
 std::string MVGProject::_PREVIEW_MESH = "previewMesh";
 std::string MVGProject::_PROJECT = "mayaMVG";
 
-std::map<std::pair<std::string, MPoint>, std::pair<std::string, MPoint> > MVGProject::_pointsMap = std::map<std::pair<std::string, MPoint>, std::pair<std::string, MPoint> > ();
+map2Dto3D MVGProject::_map2Dto3D = map2Dto3D();
+map3Dto2D MVGProject::_map3Dto2D = map3Dto2D();
 
 MVGProject::MVGProject(const std::string& name)
 	: MVGNodeWrapper(name)
@@ -155,3 +156,5 @@ std::vector<MVGCamera> MVGProject::cameras() const
 {
 	return MVGCamera::list();
 }
+
+}	//mayaMVG

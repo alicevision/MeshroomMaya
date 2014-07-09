@@ -123,11 +123,17 @@ MStatus MVGMoveManipulator::doRelease(M3dView& view)
 		case eMovePoint:
 		{		
 			try {	
-				std::pair<std::string, MPoint> cameraPair = std::make_pair(data->camera.name(), data->cameraPoints2D[_intersectionData.pointIndex]);
-				const std::pair<std::string, MPoint> meshPair = MVGProject::_pointsMap.at(cameraPair);
-				MVGProject::_pointsMap.erase(cameraPair);
+				pairStringToPoint cameraPair = std::make_pair(data->camera.name(), data->cameraPoints2D[_intersectionData.pointIndex]);
+				const pairStringToPoint meshPair = MVGProject::_map2Dto3D.at(cameraPair);
+				
+				MVGProject::_map2Dto3D.erase(cameraPair);		
+				std::vector<pairStringToPoint >& vec = MVGProject::_map3Dto2D.at(meshPair);			
+				vec.erase(std::remove(vec.begin(), vec.end(), cameraPair));
+				
 				cameraPair = std::make_pair(data->camera.name(), mousePoint);
-				MVGProject::_pointsMap.insert(std::make_pair(cameraPair, meshPair));
+				MVGProject::_map2Dto3D.insert(std::make_pair(cameraPair, meshPair));
+				vec.push_back(cameraPair);		
+				
 			}
 			catch(const std::exception& e){
 				break;

@@ -3,6 +3,8 @@
 #include "mayaMVG/maya/context/MVGDrawUtil.h"
 #include "mayaMVG/core/MVGProject.h"
 
+#include "mayaMVG/core/MVGLog.h"
+
 namespace mayaMVG {
 
 MVGManipulatorUtil::DisplayData* MVGManipulatorUtil::getCachedDisplayData(M3dView& view, std::map<std::string, MVGManipulatorUtil::DisplayData>& cache)
@@ -127,30 +129,47 @@ void MVGManipulatorUtil::drawIntersections(M3dView& view, DisplayData* data, Int
 void MVGManipulatorUtil::drawCameraPoints(M3dView& view, DisplayData* data)
 {
 	short x, y;
-	MPointArray cameraPoints = data->cameraPoints2D;
-	for(size_t i = 0; i < cameraPoints.length(); ++i)
+	MPoint wPoint;
+	MVector wdir;
+	
+	for(map3Dto2D::iterator mapIt = MVGProject::_map3Dto2D.begin(); mapIt != MVGProject::_map3Dto2D.end(); ++mapIt)
 	{
-		MVGGeometryUtil::cameraToView(view, data->camera, cameraPoints[i], x, y);
-		MVGDrawUtil::drawFullCross(x, y);
+		for(std::vector<pairStringToPoint>::iterator vecIt = mapIt->second.begin(); vecIt != mapIt->second.end(); ++vecIt)
+		{
+			if(data->camera.name() == vecIt->first)
+			{
+				// Draw full cross
+				MVGGeometryUtil::cameraToView(view, data->camera, vecIt->second, x, y);
+				MVGDrawUtil::drawFullCross(x, y);
+				
+				// Line toward 3D point
+				MPoint point3D_view = MVGGeometryUtil::worldToView(view, mapIt->first.second);	
+				glEnable(GL_LINE_STIPPLE);
+				glLineStipple(1.f, 0x5555);
+				glBegin(GL_LINES);
+					glVertex2f(x, y);
+					glVertex2f(point3D_view.x, point3D_view.y);
+				glEnd();
+				glDisable(GL_LINE_STIPPLE);
+				
+				view.viewToWorld(x + 5, y - 15, wPoint, wdir);
+			}
+			else
+			{
+				MPoint point3D_view =  MVGGeometryUtil::worldToView(view, mapIt->first.second);
+				MVGDrawUtil::drawEmptyCross(point3D_view.x, point3D_view.y);
+				
+				view.viewToWorld(point3D_view.x + 5, point3D_view.y - 15, wPoint, wdir);
+			}
+				
+			// Text
+			MString str;
+			str += (int)mapIt->second.size();
+			view.drawText(str, wPoint);
 
-		// Line toward 3D point
-		const std::pair<std::string, MPoint> cameraPair = std::make_pair(data->camera.name(), cameraPoints[i]);	
-		try {
-			MVGProject::_pointsMap.at(cameraPair);
+			
 		}
-		catch(const std::exception& e){
-			//LOG_INFO("EXCEPTION : " << e.what());
-			continue;
-		}
-
-		MPoint point3D_view = MVGGeometryUtil::worldToView(view, MVGProject::_pointsMap.at(cameraPair).second);
-		glEnable(GL_LINE_STIPPLE);
-		glLineStipple(1.f, 0x5555);
-		glBegin(GL_LINES);
-			glVertex2f(x, y);
-			glVertex2f(point3D_view.x, point3D_view.y);
-		glEnd();
-		glDisable(GL_LINE_STIPPLE);
+		
 	}
 }
 }	// mayaMVG
