@@ -149,7 +149,8 @@ DisplayData* MVGProjectWrapper::getCachedDisplayData(M3dView& view)
 void MVGProjectWrapper::rebuildCacheFromMaya() 
 {
 	// Remove unused camera
-	for(std::map<std::string, DisplayData>::iterator cacheIt = _cache.begin(); cacheIt != _cache.end(); ++cacheIt)
+	std::map<std::string, DisplayData>::iterator cacheIt = _cache.begin();
+	while(cacheIt != _cache.end())
 	{
 		bool isInView = false;
 		for(std::map<std::string, std::string>::iterator camIt = _panelToCamera.begin(); camIt != _panelToCamera.end(); ++camIt)
@@ -163,7 +164,11 @@ void MVGProjectWrapper::rebuildCacheFromMaya()
 		
 		if(!isInView)
 		{
-			_cache.erase(cacheIt);
+			_cache.erase(cacheIt++);
+		} 
+		else
+		{
+			++cacheIt;
 		}
 	}
 	
@@ -182,22 +187,6 @@ void MVGProjectWrapper::rebuildCacheFromMaya()
 		}
 	}
 	
-	// Rebuild maps
-//	for(size_t i = 0; i < facePoints3D.length(); ++i)
-//	{
-//		MVGGeometryUtil::worldToCamera(view, data->camera, facePoints3D[i], point2D);
-//		const PairStringToPoint cameraPair = std::make_pair(data->camera.name(), point2D);
-//		const PairStringToPoint meshPair = std::make_pair(MVGProject::_MESH, facePoints3D[i]);
-//		MVGProjectWrapper::instance().getMap2Dto3D().insert(std::make_pair(cameraPair, meshPair));
-//		if(MVGProjectWrapper::instance().getMap3Dto2D().count(meshPair) == 0)
-//		{
-//			std::vector<PairStringToPoint> cameraVector;
-//			cameraVector.push_back(cameraPair);
-//			MVGProjectWrapper::instance().getMap3Dto2D().insert(std::make_pair(meshPair, cameraVector));
-//		}
-//		else
-//		{
-//			MVGProjectWrapper::instance().getMap3Dto2D().at(meshPair).push_back(cameraPair);
-//		}
-//	}
+	// TODO : Rebuild maps
+
 }
