@@ -7,10 +7,6 @@
 #include <map>
 
 namespace mayaMVG {
-
-	typedef std::pair<std::string, MPoint> pairStringToPoint;
-	typedef std::map<std::pair<std::string, MPoint>, std::pair<std::string, MPoint> > map2Dto3D;
-	typedef std::map<std::pair<std::string, MPoint>, std::vector<std::pair<std::string, MPoint> > > map3Dto2D;
 		
 class MVGProject : public MVGNodeWrapper {
 	
@@ -52,22 +48,6 @@ class MVGProject : public MVGNodeWrapper {
 		static std::string _MESH;
 		static std::string _PREVIEW_MESH;
 		static std::string _PROJECT;
-			
-		static map2Dto3D _map2Dto3D;
-		static map3Dto2D _map3Dto2D;
 };
 
 } // mayaMVG
-
-namespace std {
-	typedef std::pair<std::string, MPoint> cameraPair;
-	inline bool operator<(const cameraPair& pair_a, const cameraPair& pair_b) { 
-		if(pair_a.first != pair_b.first)
-			return (pair_a.first < pair_b.first);
-		
-		if(pair_a.second.x != pair_b.second.x)
-			return pair_a.second.x < pair_b.second.x;
-		
-		return pair_a.second.y < pair_b.second.y;
-	}
-}	// std

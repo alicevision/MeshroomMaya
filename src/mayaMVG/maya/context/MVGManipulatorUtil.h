@@ -1,5 +1,6 @@
 #pragma once
 
+#include "mayaMVG/qt/MVGProjectWrapper.h"
 #include "mayaMVG/core/MVGCamera.h"
 #include "mayaMVG/core/MVGGeometryUtil.h"
 #include <maya/MPointArray.h>
@@ -25,12 +26,6 @@ struct MVGManipulatorUtil {
         , eIntersectionEdge
     };
 	
-	struct DisplayData {
-		MVGCamera camera;
-		MPointArray cameraPoints2D;
-		MPointArray buildPoints2D;
-	};
-	
 	struct IntersectionData {
 		int	pointIndex;
 		MIntArray edgePointIndexes;
@@ -39,9 +34,7 @@ struct MVGManipulatorUtil {
 		double edgeRatio;
 		
 	};
-		
-	static DisplayData* getCachedDisplayData(M3dView& view, std::map<std::string, DisplayData>& cache);
-	
+			
 	static bool intersectPoint(M3dView& view, DisplayData* displayData, IntersectionData& intersectionData, const short&x, const short& y);
 	static bool intersectEdge(M3dView& view, DisplayData* displayData, IntersectionData& intersectionData, const short&x, const short& y);
 	

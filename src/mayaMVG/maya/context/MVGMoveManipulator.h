@@ -1,7 +1,7 @@
 #pragma once
 
-#include <maya/MPxManipulatorNode.h>
 #include "mayaMVG/maya/context/MVGManipulatorUtil.h"
+#include <maya/MPxManipulatorNode.h>
 
 namespace mayaMVG {
 
@@ -37,10 +37,10 @@ class MVGMoveManipulator: public MPxManipulatorNode
 		void setContext(MVGContext* ctx);
 		
 	private:
-		void updateIntersectionState(M3dView& view, MVGManipulatorUtil::DisplayData* data, double mousex, double mousey);	
+		void updateIntersectionState(M3dView& view, DisplayData* data, double mousex, double mousey);	
 	public:
 		static MTypeId _id;
-		std::map<std::string, MVGManipulatorUtil::DisplayData> _cache; //FIXME use caching on the wrapper side
+//		std::map<std::string, MVGManipulatorUtil::DisplayData> _cache; //FIXME use caching on the wrapper side
 		MVGManipulatorUtil::IntersectionState _intersectionState;
 		EMoveState _moveState;
         MVGContext* _ctx;

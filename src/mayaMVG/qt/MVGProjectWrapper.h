@@ -7,7 +7,37 @@
 #include "mayaMVG/patterns/Singleton.h"
 #include "mayaMVG/qt/QObjectListModel.h"
 
+#include <maya/M3dView.h>
+
 namespace mayaMVG {
+	
+typedef std::pair<std::string, MPoint> PairStringToPoint;
+typedef std::map<std::pair<std::string, MPoint>, std::pair<std::string, MPoint> > Map2Dto3D;
+typedef std::map<std::pair<std::string, MPoint>, std::vector<std::pair<std::string, MPoint> > > Map3Dto2D;
+
+
+struct	Point2D {
+	/// Position in camera coords
+	MPoint	pos;
+	/// Position in camera coord of the projected associated point 3D
+	MPoint	projectedPoint3D;
+	/// Number of views in which point3D is placed
+	int		nbViews;
+	/// Is point placed in this view
+	bool	isInThisView;
+
+};
+
+struct DisplayData {
+	MVGCamera camera;
+	/// temporary points in Camera before having 3D information
+	MPointArray buildPoints2D;
+	/// 2D points in Camera coord (centered normalized on width?)
+	MPointArray cameraPoints2D;
+
+	// TODO : use instead of cameraPoints2D
+	std::vector<Point2D> allPoints2D;
+};
 
 class MVGProjectWrapper : public QObject, public Singleton<MVGProjectWrapper>
 {
@@ -38,6 +68,14 @@ public:
     Q_INVOKABLE void loadProject(const QString& projectDirectoryPath);
     void selectItems(const QList<QString>& cameraNames);
     Q_INVOKABLE void setCameraToView(QObject* camera, const QString& viewName);
+	
+	// TODO
+	Map3Dto2D& getMap3Dto2D() { return _map3Dto2D; }
+	Map2Dto3D& getMap2Dto3D() { return _map2Dto3D; }
+	
+	DisplayData* getCachedDisplayData(M3dView& view);
+	//Q_INVOKABLE void reloadProjectFromMaya();
+	Q_INVOKABLE void rebuildCacheFromMaya();
 
 private:
     void addCamera(const MVGCamera& camera);
@@ -54,7 +92,27 @@ private:
     QObjectListModel _cameraList;
     MVGProject _project;
     QString _logText;
-
+	
+	// TODO
+	Map2Dto3D _map2Dto3D;
+	Map3Dto2D _map3Dto2D;
+	std::map<std::string, DisplayData> _cache;
+	std::vector<std::string> _allPanelNames;
+	std::vector<std::string> _visiblePanelNames;
+	std::map<std::string, std::string> _panelToCamera;
+	
 };
 
 } // mayaMVG
+
+namespace std {
+	inline bool operator<(const mayaMVG::PairStringToPoint& pair_a, const mayaMVG::PairStringToPoint& pair_b) { 
+		if(pair_a.first != pair_b.first)
+			return (pair_a.first < pair_b.first);
+		
+		if(pair_a.second.x != pair_b.second.x)
+			return pair_a.second.x < pair_b.second.x;
+		
+		return pair_a.second.y < pair_b.second.y;
+	}
+}	// std

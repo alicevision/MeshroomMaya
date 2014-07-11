@@ -14,9 +14,6 @@ std::string MVGProject::_MESH = "mvgMesh";
 std::string MVGProject::_PREVIEW_MESH = "previewMesh";
 std::string MVGProject::_PROJECT = "mayaMVG";
 
-map2Dto3D MVGProject::_map2Dto3D = map2Dto3D();
-map3Dto2D MVGProject::_map3Dto2D = map3Dto2D();
-
 MVGProject::MVGProject(const std::string& name)
 	: MVGNodeWrapper(name)
 {

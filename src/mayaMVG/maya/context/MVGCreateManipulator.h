@@ -1,7 +1,7 @@
 #pragma once
 
-#include <maya/MPxManipulatorNode.h>
 #include "mayaMVG/maya/context/MVGManipulatorUtil.h"
+#include <maya/MPxManipulatorNode.h>
 #include "mayaMVG/core/MVGMesh.h"
 #include "mayaMVG/core/MVGCamera.h"
 #include <map>
@@ -35,14 +35,14 @@ class MVGCreateManipulator: public MPxManipulatorNode
 	public:
 		void setContext(MVGContext* ctx);
 	private:	
-		void updateIntersectionState(M3dView& view, MVGManipulatorUtil::DisplayData* data, double mousex, double mousey);		
-		void drawPreview2D(M3dView& view, MVGManipulatorUtil::DisplayData* data);
+		void updateIntersectionState(M3dView& view, DisplayData* data, double mousex, double mousey);		
+		void drawPreview2D(M3dView& view, DisplayData* data);
 		
-		bool addCreateFaceCommand(M3dView& view, MVGManipulatorUtil::DisplayData* data, MVGEditCmd* cmd, MPointArray& facePoints3D);
+		bool addCreateFaceCommand(M3dView& view, DisplayData* data, MVGEditCmd* cmd, MPointArray& facePoints3D);
 
 	public:
 		static MTypeId _id;
-		std::map<std::string, MVGManipulatorUtil::DisplayData> _cache; //FIXME use caching on the wrapper side
+//		std::map<std::string, DisplayData> _cache; //FIXME use caching on the wrapper side
 		MVGManipulatorUtil::IntersectionState _intersectionState;
         MVGContext* _ctx;
 		MVGManipulatorUtil::IntersectionData _intersectionData;		

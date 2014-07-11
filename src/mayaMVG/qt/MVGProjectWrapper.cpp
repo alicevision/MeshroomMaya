@@ -108,8 +108,8 @@ void MVGProjectWrapper::loadProject(const QString& projectDirectoryPath)
 	// select the two first cameras for the views
 	if(_cameraList.size() > 1) {
 		QList<MVGCameraWrapper*>& cameras = _cameraList.asQList<MVGCameraWrapper>();
-		_project.setCameraInView(cameras[0]->camera(), "mvgLPanel");
-		_project.setCameraInView(cameras[1]->camera(), "mvgRPanel");
+		setCameraToView(cameras[0], "mvgLPanel");
+		setCameraToView(cameras[1], "mvgRPanel");
 	}
 }
 
@@ -126,4 +126,78 @@ void MVGProjectWrapper::setCameraToView(QObject* camera, const QString& viewName
     MVGCameraWrapper*cam = qobject_cast<MVGCameraWrapper*>(camera);
     cam->setInView(viewName, true);
     _project.setCameraInView(cam->camera(), viewName.toStdString());
+	
+	_panelToCamera[viewName.toStdString()] = cam->camera().dagPath().fullPathName().asChar();
+	rebuildCacheFromMaya();
+}
+
+
+DisplayData* MVGProjectWrapper::getCachedDisplayData(M3dView& view)
+{
+	if(!MVGMayaUtil::isMVGView(view))
+		return NULL;
+	MDagPath cameraPath;
+	view.getCamera(cameraPath);
+	std::map<std::string, DisplayData>::iterator it = _cache.find(cameraPath.fullPathName().asChar());
+	
+	if(it == _cache.end())
+		return NULL;
+	
+	return &(it->second);
+}
+
+void MVGProjectWrapper::rebuildCacheFromMaya() 
+{
+	// Remove unused camera
+	for(std::map<std::string, DisplayData>::iterator cacheIt = _cache.begin(); cacheIt != _cache.end(); ++cacheIt)
+	{
+		bool isInView = false;
+		for(std::map<std::string, std::string>::iterator camIt = _panelToCamera.begin(); camIt != _panelToCamera.end(); ++camIt)
+		{
+			if(cacheIt->first == camIt->second)
+			{
+				isInView = true;
+				break;
+			}
+		}
+		
+		if(!isInView)
+		{
+			_cache.erase(cacheIt);
+		}
+	}
+	
+	// Rebuild cache
+	for(std::map<std::string, std::string>::iterator camIt = _panelToCamera.begin(); camIt != _panelToCamera.end(); ++camIt)
+	{
+		MDagPath cameraPath;
+		MVGMayaUtil::getDagPathByName(camIt->second.c_str(), cameraPath);
+	
+		MVGCamera c(cameraPath);
+		if(c.isValid()) {
+			DisplayData data;
+			data.camera = c;
+			data.cameraPoints2D = c.getClickedPoints();
+			_cache[cameraPath.fullPathName().asChar()] = data;
+		}
+	}
+	
+	// Rebuild maps
+//	for(size_t i = 0; i < facePoints3D.length(); ++i)
+//	{
+//		MVGGeometryUtil::worldToCamera(view, data->camera, facePoints3D[i], point2D);
+//		const PairStringToPoint cameraPair = std::make_pair(data->camera.name(), point2D);
+//		const PairStringToPoint meshPair = std::make_pair(MVGProject::_MESH, facePoints3D[i]);
+//		MVGProjectWrapper::instance().getMap2Dto3D().insert(std::make_pair(cameraPair, meshPair));
+//		if(MVGProjectWrapper::instance().getMap3Dto2D().count(meshPair) == 0)
+//		{
+//			std::vector<PairStringToPoint> cameraVector;
+//			cameraVector.push_back(cameraPair);
+//			MVGProjectWrapper::instance().getMap3Dto2D().insert(std::make_pair(meshPair, cameraVector));
+//		}
+//		else
+//		{
+//			MVGProjectWrapper::instance().getMap3Dto2D().at(meshPair).push_back(cameraPair);
+//		}
+//	}
 }

@@ -42,7 +42,7 @@ void MVGCreateManipulator::postConstructor()
 void MVGCreateManipulator::draw(M3dView & view, const MDagPath & path,
                                M3dView::DisplayStyle style, M3dView::DisplayStatus dispStatus)
 {
-	MVGManipulatorUtil::DisplayData* data = MVGManipulatorUtil::getCachedDisplayData(view, _cache);
+	DisplayData* data = MVGProjectWrapper::instance().getCachedDisplayData(view);
 	if(!data)
 		return;
 
@@ -99,7 +99,8 @@ void MVGCreateManipulator::draw(M3dView & view, const MDagPath & path,
 
 MStatus MVGCreateManipulator::doPress(M3dView& view)
 {
-	MVGManipulatorUtil::DisplayData* data = MVGManipulatorUtil::getCachedDisplayData(view, _cache);
+	DisplayData* data = MVGProjectWrapper::instance().getCachedDisplayData(view);
+	
 	if(!data)
 		return MS::kFailure;
 	
@@ -134,25 +135,26 @@ MStatus MVGCreateManipulator::doPress(M3dView& view)
 			{
 				MVGGeometryUtil::worldToCamera(view, data->camera, facePoints3D[i], point2D);
 				data->camera.addClickedPoint(point2D);
-				data->cameraPoints2D.append(point2D);
+				//data->cameraPoints2D.append(point2D);
 			}
 			
+			MVGProjectWrapper::instance().rebuildCacheFromMaya();
 			// Add points to map
 			for(size_t i = 0; i < facePoints3D.length(); ++i)
 			{
 				MVGGeometryUtil::worldToCamera(view, data->camera, facePoints3D[i], point2D);
-				const pairStringToPoint cameraPair = std::make_pair(data->camera.name(), point2D);
-				const pairStringToPoint meshPair = std::make_pair(MVGProject::_MESH, facePoints3D[i]);
-				MVGProject::_map2Dto3D.insert(std::make_pair(cameraPair, meshPair));
-				if(MVGProject::_map3Dto2D.count(meshPair) == 0)
+				const PairStringToPoint cameraPair = std::make_pair(data->camera.name(), point2D);
+				const PairStringToPoint meshPair = std::make_pair(MVGProject::_MESH, facePoints3D[i]);
+				MVGProjectWrapper::instance().getMap2Dto3D().insert(std::make_pair(cameraPair, meshPair));
+				if(MVGProjectWrapper::instance().getMap3Dto2D().count(meshPair) == 0)
 				{
-					std::vector<pairStringToPoint> cameraVector;
+					std::vector<PairStringToPoint> cameraVector;
 					cameraVector.push_back(cameraPair);
-					MVGProject::_map3Dto2D.insert(std::make_pair(meshPair, cameraVector));
+					MVGProjectWrapper::instance().getMap3Dto2D().insert(std::make_pair(meshPair, cameraVector));
 				}
 				else
 				{
-					MVGProject::_map3Dto2D.at(meshPair).push_back(cameraPair);
+					MVGProjectWrapper::instance().getMap3Dto2D().at(meshPair).push_back(cameraPair);
 				}
 			}
 			
@@ -176,10 +178,10 @@ MStatus MVGCreateManipulator::doPress(M3dView& view)
 			_intersectionData.edgeRatio = ratioVector2D.length() / _intersectionData.edgeHeight2D.length();
 			
 			// Compute height 3D
-			pairStringToPoint cameraPair = std::make_pair(data->camera.name(), edgePoint0);
-			MPoint& edgePoint3D_0 = MVGProject::_map2Dto3D.at(cameraPair).second;
+			PairStringToPoint cameraPair = std::make_pair(data->camera.name(), edgePoint0);
+			MPoint& edgePoint3D_0 = MVGProjectWrapper::instance().getMap2Dto3D().at(cameraPair).second;
 			cameraPair = std::make_pair(data->camera.name(), edgePoint1);
-			MPoint& edgePoint3D_1 = MVGProject::_map2Dto3D.at(cameraPair).second;	
+			MPoint& edgePoint3D_1 = MVGProjectWrapper::instance().getMap2Dto3D().at(cameraPair).second;	
 			_intersectionData.edgeHeight3D = edgePoint3D_1 - edgePoint3D_0;
 			
 			break;
@@ -191,7 +193,7 @@ MStatus MVGCreateManipulator::doPress(M3dView& view)
 
 MStatus MVGCreateManipulator::doRelease(M3dView& view)
 {	
-	MVGManipulatorUtil::DisplayData* data = MVGManipulatorUtil::getCachedDisplayData(view, _cache);
+	DisplayData* data = MVGProjectWrapper::instance().getCachedDisplayData(view);
 	if(!data)
 		return MS::kFailure;
 	
@@ -223,7 +225,7 @@ MStatus MVGCreateManipulator::doRelease(M3dView& view)
 
 MStatus MVGCreateManipulator::doMove(M3dView& view, bool& refresh)
 {	
-	MVGManipulatorUtil::DisplayData* data = MVGManipulatorUtil::getCachedDisplayData(view, _cache);
+	DisplayData* data = MVGProjectWrapper::instance().getCachedDisplayData(view);
 	if(!data)
 		return MS::kFailure;
 	if(data->buildPoints2D.length() == 0 && data->cameraPoints2D.length() == 0)
@@ -239,7 +241,7 @@ MStatus MVGCreateManipulator::doMove(M3dView& view, bool& refresh)
 
 MStatus MVGCreateManipulator::doDrag(M3dView& view)
 {		
-	MVGManipulatorUtil::DisplayData* data = MVGManipulatorUtil::getCachedDisplayData(view, _cache);
+	DisplayData* data = MVGProjectWrapper::instance().getCachedDisplayData(view);
 	if(!data)
 		return MS::kFailure;
 	
@@ -296,7 +298,7 @@ void MVGCreateManipulator::setContext(MVGContext* ctx)
 	_ctx = ctx;
 }
 
-void MVGCreateManipulator::updateIntersectionState(M3dView& view, MVGManipulatorUtil::DisplayData* data, double mousex, double mousey)
+void MVGCreateManipulator::updateIntersectionState(M3dView& view, DisplayData* data, double mousex, double mousey)
 {
 	_intersectionData.pointIndex = -1;
 	_intersectionData.edgePointIndexes.clear();
@@ -309,7 +311,7 @@ void MVGCreateManipulator::updateIntersectionState(M3dView& view, MVGManipulator
 	}
 }
 	
-void MVGCreateManipulator::drawPreview2D(M3dView& view, MVGManipulatorUtil::DisplayData* data)
+void MVGCreateManipulator::drawPreview2D(M3dView& view, DisplayData* data)
 {
 	short x, y;
 	short mousex, mousey;
@@ -364,7 +366,7 @@ void MVGCreateManipulator::drawPreview2D(M3dView& view, MVGManipulatorUtil::Disp
 	}
 }
 
-bool MVGCreateManipulator::addCreateFaceCommand(M3dView& view, MVGManipulatorUtil::DisplayData* data, MVGEditCmd* cmd, MPointArray& facePoints3D)
+bool MVGCreateManipulator::addCreateFaceCommand(M3dView& view, DisplayData* data, MVGEditCmd* cmd, MPointArray& facePoints3D)
 {
 	// Undo/redo
 	if(facePoints3D.length() < 4)

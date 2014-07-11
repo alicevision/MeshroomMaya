@@ -7,28 +7,6 @@
 
 namespace mayaMVG {
 
-MVGManipulatorUtil::DisplayData* MVGManipulatorUtil::getCachedDisplayData(M3dView& view, std::map<std::string, MVGManipulatorUtil::DisplayData>& cache)
-{
-	if(!MVGMayaUtil::isMVGView(view))
-		return NULL;
-	MDagPath cameraPath;
-	view.getCamera(cameraPath);
-	std::map<std::string, MVGManipulatorUtil::DisplayData>::iterator it = cache.find(cameraPath.fullPathName().asChar());
-	if(it == cache.end()) {
-		MVGCamera c(cameraPath);
-		if(c.isValid()) {
-			MVGManipulatorUtil::DisplayData data;
-			data.camera = c;
-			data.cameraPoints2D = c.getClickedPoints();
-			cache[cameraPath.fullPathName().asChar()] = data;
-			return &cache[cameraPath.fullPathName().asChar()];
-		}
-	} else {
-		return &(it->second);
-	}
-	return NULL;
-}
-
 bool MVGManipulatorUtil::intersectPoint(M3dView& view, DisplayData* displayData, IntersectionData& intersectionData, const short&x, const short& y)
 {
 	if(!displayData)
@@ -132,9 +110,9 @@ void MVGManipulatorUtil::drawCameraPoints(M3dView& view, DisplayData* data)
 	MPoint wPoint;
 	MVector wdir;
 	
-	for(map3Dto2D::iterator mapIt = MVGProject::_map3Dto2D.begin(); mapIt != MVGProject::_map3Dto2D.end(); ++mapIt)
+	for(Map3Dto2D::iterator mapIt = MVGProjectWrapper::instance().getMap3Dto2D().begin(); mapIt != MVGProjectWrapper::instance().getMap3Dto2D().end(); ++mapIt)
 	{
-		for(std::vector<pairStringToPoint>::iterator vecIt = mapIt->second.begin(); vecIt != mapIt->second.end(); ++vecIt)
+		for(std::vector<PairStringToPoint>::iterator vecIt = mapIt->second.begin(); vecIt != mapIt->second.end(); ++vecIt)
 		{
 			if(data->camera.name() == vecIt->first)
 			{
