@@ -100,7 +100,7 @@ private:
 	Map2Dto3D _map2Dto3D;
 	Map3Dto2D _map3Dto2D;
 	std::map<std::string, DisplayData> _cache;
-	std::vector<std::string> _allPanelNames;
+	QStringList _allPanelNames;
 	QStringList _visiblePanelNames;
 	std::map<std::string, std::string> _panelToCamera;
 	
