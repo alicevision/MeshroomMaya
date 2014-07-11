@@ -8,6 +8,10 @@ using namespace mayaMVG;
 
 MVGProjectWrapper::MVGProjectWrapper()
 {
+	_allPanelNames.append("mvgLPanel");
+	_allPanelNames.append("mvgRPanel");
+	_visiblePanelNames = _allPanelNames;
+	
 	_project = MVGProject(MVGProject::_PROJECT);
 	if(!_project.isValid()) {
 		_project = MVGProject::create(MVGProject::_PROJECT);
@@ -108,8 +112,8 @@ void MVGProjectWrapper::loadProject(const QString& projectDirectoryPath)
 	// select the two first cameras for the views
 	if(_cameraList.size() > 1) {
 		QList<MVGCameraWrapper*>& cameras = _cameraList.asQList<MVGCameraWrapper>();
-		setCameraToView(cameras[0], "mvgLPanel");
-		setCameraToView(cameras[1], "mvgRPanel");
+		setCameraToView(cameras[0], _visiblePanelNames[0]);
+		setCameraToView(cameras[1], _visiblePanelNames[1]);
 	}
 }
 

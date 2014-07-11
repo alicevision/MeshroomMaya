@@ -48,6 +48,7 @@ class MVGProjectWrapper : public QObject, public Singleton<MVGProjectWrapper>
     Q_PROPERTY(QString imageDirectory READ imageDirectory NOTIFY imageDirectoryChanged);
     Q_PROPERTY(QString pointCloudFile READ pointCloudFile NOTIFY pointCloudFileChanged);
     Q_PROPERTY(QObjectListModel* cameraModel READ cameraModel NOTIFY cameraModelChanged);
+	Q_PROPERTY(QStringList panelModel READ panelModel NOTIFY panelModelChanged);
     Q_PROPERTY(QString logText READ logText WRITE setLogText NOTIFY logTextChanged);
     MAKE_SINGLETON_WITHCONSTRUCTORS(MVGProjectWrapper)
 
@@ -58,6 +59,7 @@ public:
     Q_INVOKABLE const QString imageDirectory() const;
     Q_INVOKABLE const QString pointCloudFile() const;
     Q_INVOKABLE QObjectListModel* cameraModel() {return &_cameraList;}
+    Q_INVOKABLE QStringList panelModel() {return _visiblePanelNames;}
     Q_INVOKABLE void setProjectDirectory(const QString& directory);
     Q_INVOKABLE const QString logText() const;
     Q_INVOKABLE void setLogText(const QString);
@@ -86,6 +88,7 @@ signals:
     void imageDirectoryChanged();
     void pointCloudFileChanged();
     void cameraModelChanged();
+	void panelModelChanged();
     void logTextChanged();
 
 private:
@@ -98,7 +101,7 @@ private:
 	Map3Dto2D _map3Dto2D;
 	std::map<std::string, DisplayData> _cache;
 	std::vector<std::string> _allPanelNames;
-	std::vector<std::string> _visiblePanelNames;
+	QStringList _visiblePanelNames;
 	std::map<std::string, std::string> _panelToCamera;
 	
 };

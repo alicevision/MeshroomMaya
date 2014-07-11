@@ -56,6 +56,10 @@ MStatus MVGCmd::doIt(const MArgList& args) {
 	}
 	
 	// create maya window
+	const QStringList& qlist = MVGProjectWrapper::instance().panelModel();
+	std::vector<MString> mlist;
+	mlist.push_back(qlist[0].toStdString().c_str());
+	mlist.push_back(qlist[1].toStdString().c_str());
 	status = MVGMayaUtil::createMVGWindow();
 	if(!status) {
 		LOG_ERROR("Unable to create MVGContext.")
@@ -81,17 +85,20 @@ MStatus MVGCmd::doIt(const MArgList& args) {
 
 	// install mouse event filter on maya viewports
 	// MVGViewportEventFilter * viewportEventFilter = new MVGViewportEventFilter(mayaWindow);
-	QWidget* leftViewport = MVGMayaUtil::getMVGViewportLayout("mvgLPanel");
-	QWidget* rightViewport = MVGMayaUtil::getMVGViewportLayout("mvgRPanel");
+	const QString& leftPanel = MVGProjectWrapper::instance().panelModel().at(0);
+	const QString& rightPanel = MVGProjectWrapper::instance().panelModel().at(1);
+	
+	QWidget* leftViewport = MVGMayaUtil::getMVGViewportLayout(leftPanel.toStdString().c_str());
+	QWidget* rightViewport = MVGMayaUtil::getMVGViewportLayout(rightPanel.toStdString().c_str());
 	if(!leftViewport || !rightViewport) {
 		LOG_ERROR("Unable to retrieve maya viewport layouts.");
 		return MS::kFailure;
 	}
 
 	// leftViewport->installEventFilter(viewportEventFilter);
-	leftViewport->setProperty("mvg_panel", "mvgLPanel");
+	leftViewport->setProperty("mvg_panel", leftPanel);
 	// rightViewport->installEventFilter(viewportEventFilter);
-	rightViewport->setProperty("mvg_panel", "mvgRPanel");
+	rightViewport->setProperty("mvg_panel", rightPanel);
 
 	// // maya callbacks
 	// MCallbackIdArray callbackIDs;

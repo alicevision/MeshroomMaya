@@ -1,3 +1,5 @@
+#include "mayaMVG/qt/MVGProjectWrapper.h"
+
 #include "mayaMVG/maya/MVGMayaUtil.h"
 #include "mayaMVG/core/MVGCamera.h"
 #include "mayaMVG/core/MVGLog.h"
@@ -59,8 +61,8 @@ MStatus MVGMayaUtil::setFocusOnView(const MString& viewName)
 
 bool MVGMayaUtil::isMVGView(const M3dView & view)
 {
-	QWidget* leftViewport = MVGMayaUtil::getMVGViewportLayout("mvgLPanel");
-	QWidget* rightViewport = MVGMayaUtil::getMVGViewportLayout("mvgRPanel");
+	QWidget* leftViewport = MVGMayaUtil::getMVGViewportLayout(MVGProjectWrapper::instance().panelModel().at(0).toStdString().c_str());
+	QWidget* rightViewport = MVGMayaUtil::getMVGViewportLayout(MVGProjectWrapper::instance().panelModel().at(1).toStdString().c_str());
 	if(!leftViewport || !rightViewport)
 		return false;
 	return ((view.widget() == leftViewport) || (view.widget() == rightViewport));

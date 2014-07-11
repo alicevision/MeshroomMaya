@@ -17,11 +17,6 @@ Rectangle {
         property color normalColor: "transparent"
     }
 
-    ListModel {
-        id: viewModel
-        ListElement { view: "mvgLPanel" }
-        ListElement { view: "mvgRPanel" }
-    }
     Item {
         anchors.fill: parent
         visible: cameraThumbnail.status == Image.Ready || cameraThumbnail.status == Image.Error
@@ -38,10 +33,10 @@ Rectangle {
         }
         ListView {
             id: viewList
-            model: viewModel
+            model: m.project.panelModel
             anchors.fill: parent
             orientation: ListView.Horizontal
-            property int itemWidth: parent.width / viewModel.count
+            property int itemWidth: parent.width / m.project.panelModel.length
             spacing: 2
             delegate: Rectangle {
                 id: cameraSelection
@@ -52,7 +47,7 @@ Rectangle {
                 property variant views: m.camera.views
                 property bool isInView: false
                 onViewsChanged: {
-                    isInView = m.camera.isInView(view)
+                    isInView = m.camera.isInView(model.modelData)
                 }
                 states: [
                     State {
@@ -71,7 +66,7 @@ Rectangle {
                     anchors.fill: parent
                     hoverEnabled: true
                     onClicked: {
-                        m.project.setCameraToView(m.camera, view);
+                        m.project.setCameraToView(m.camera, model.modelData);
                     }
                 }
             }

@@ -13,8 +13,8 @@ using namespace mayaMVG;
 
 MVGContext::MVGContext() 
 	: _filter((QObject*)MVGMayaUtil::getMVGWindow(), this, &_eventData)
-	, _filterLV((QObject*)MVGMayaUtil::getMVGViewportLayout("mvgLPanel"), this, &_eventData)
-	, _filterRV((QObject*)MVGMayaUtil::getMVGViewportLayout("mvgRPanel"), this, &_eventData)
+	, _filterLV((QObject*)MVGMayaUtil::getMVGViewportLayout(MVGProjectWrapper::instance().panelModel().at(0).toStdString().c_str()), this, &_eventData)
+	, _filterRV((QObject*)MVGMayaUtil::getMVGViewportLayout(MVGProjectWrapper::instance().panelModel().at(1).toStdString().c_str()), this, &_eventData)
 	, _editMode(eModeCreate)
 {
 	setTitleString("MVG tool");
