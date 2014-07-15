@@ -110,6 +110,14 @@ void MVGManipulatorUtil::drawCameraPoints(M3dView& view, DisplayData* data)
 	MPoint wPoint;
 	MVector wdir;
 	
+	// To test reloadProjectFromMaya (since map are not reload for the moment)
+//	const MPointArray& points = data->cameraPoints2D;
+//	for(int i = 0; i < points.length(); ++i)
+//	{
+//		MVGGeometryUtil::cameraToView(view, data->camera, points[i], x, y);
+//		MVGDrawUtil::drawFullCross(x, y);
+//	}
+//	
 	for(Map3Dto2D::iterator mapIt = MVGProjectWrapper::instance().getMap3Dto2D().begin(); mapIt != MVGProjectWrapper::instance().getMap3Dto2D().end(); ++mapIt)
 	{
 		for(std::vector<PairStringToPoint>::iterator vecIt = mapIt->second.begin(); vecIt != mapIt->second.end(); ++vecIt)
@@ -143,11 +151,8 @@ void MVGManipulatorUtil::drawCameraPoints(M3dView& view, DisplayData* data)
 			// Text
 			MString str;
 			str += (int)mapIt->second.size();
-			view.drawText(str, wPoint);
-
-			
+			view.drawText(str, wPoint);			
 		}
-		
 	}
 }
 }	// mayaMVG

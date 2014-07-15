@@ -76,11 +76,8 @@ public:
 	Map2Dto3D& getMap2Dto3D() { return _map2Dto3D; }
 	
 	DisplayData* getCachedDisplayData(M3dView& view);
-	//Q_INVOKABLE void reloadProjectFromMaya();
+	Q_INVOKABLE void reloadProjectFromMaya();
 	Q_INVOKABLE void rebuildCacheFromMaya();
-
-private:
-    void addCamera(const MVGCamera& camera);
 
 signals:
     void projectDirectoryChanged();

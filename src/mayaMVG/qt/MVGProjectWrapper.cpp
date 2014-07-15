@@ -71,12 +71,6 @@ void MVGProjectWrapper::setProjectDirectory(const QString& directory)
 	emit projectDirectoryChanged();
 }
 
-void MVGProjectWrapper::addCamera(const MVGCamera& camera)
-{
-	_cameraList.append(new MVGCameraWrapper(camera));
-	emit cameraModelChanged();
-}
-
 QString MVGProjectWrapper::openFileDialog() const
 {
 	MString directoryPath;
@@ -102,14 +96,10 @@ void MVGProjectWrapper::loadProject(const QString& projectDirectoryPath)
 		appendLogText(QString("An error occured when loading project."));
 	}
 	Q_EMIT projectDirectoryChanged();
-	// Populate menu
-	const std::vector<MVGCamera>& cameraList = _project.cameras();
-	std::vector<MVGCamera>::const_iterator it = cameraList.begin();
-	_cameraList.clear();
-	for(; it != cameraList.end(); ++it) {
-		addCamera(*it);
-	}
-	// select the two first cameras for the views
+	
+	reloadProjectFromMaya();
+	
+	// Select the two first cameras for the views
 	if(_cameraList.size() > 1) {
 		QList<MVGCameraWrapper*>& cameras = _cameraList.asQList<MVGCameraWrapper>();
 		setCameraToView(cameras[0], _visiblePanelNames[0]);
@@ -133,6 +123,7 @@ void MVGProjectWrapper::setCameraToView(QObject* camera, const QString& viewName
 	
 	_panelToCamera[viewName.toStdString()] = cam->camera().dagPath().fullPathName().asChar();
 	rebuildCacheFromMaya();
+	LOG_INFO("Rebuild after change of camera")
 }
 
 
@@ -148,6 +139,21 @@ DisplayData* MVGProjectWrapper::getCachedDisplayData(M3dView& view)
 		return NULL;
 	
 	return &(it->second);
+}
+
+void MVGProjectWrapper::reloadProjectFromMaya()
+{
+	// Cameras
+	const std::vector<MVGCamera>& cameraList = _project.cameras();
+	std::vector<MVGCamera>::const_iterator it = cameraList.begin();
+	_cameraList.clear();
+	for(; it != cameraList.end(); ++it) {
+		_cameraList.append(new MVGCameraWrapper(*it));	
+	}
+	emit cameraModelChanged();
+	
+	// TODO : Camera selection
+	
 }
 
 void MVGProjectWrapper::rebuildCacheFromMaya() 
@@ -187,6 +193,8 @@ void MVGProjectWrapper::rebuildCacheFromMaya()
 			DisplayData data;
 			data.camera = c;
 			data.cameraPoints2D = c.getClickedPoints();
+			LOG_INFO("data.cameraPoints2D : " << data.cameraPoints2D.length());			
+				
 			_cache[cameraPath.fullPathName().asChar()] = data;
 		}
 	}

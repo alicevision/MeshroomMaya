@@ -73,7 +73,7 @@ bool MVGProject::load()
 
 bool MVGProject::loadCameras()
 {
-	return readCamera(cameraFile(), imageDirectory(), cameraDirectory());
+	return readCameras(cameraFile(), imageDirectory(), cameraDirectory());
 }
 
 bool MVGProject::loadPointCloud()

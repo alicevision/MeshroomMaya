@@ -73,7 +73,7 @@ MPoint MVGGeometryUtil::viewToWorld(M3dView& view, const MPoint& screen)
 	return wpoint;
 }
 
-void MVGGeometryUtil::viewToCamera(M3dView& view, const MVGCamera& camera, const short& x, const short& y, MPoint& point)
+void MVGGeometryUtil::viewToCamera(M3dView& view, const MVGCamera& camera, const short x, const short y, MPoint& point)
 {
 	MFnCamera fnCamera(camera.dagPath().node()); 
 	point.x = ((float)x / view.portWidth()) - 0.5;
@@ -86,14 +86,14 @@ void MVGGeometryUtil::viewToCamera(M3dView& view, const MVGCamera& camera, const
 	point.y += fnCamera.verticalPan();
 }
 
-void MVGGeometryUtil::worldToCamera(M3dView& view, MVGCamera& camera, MPoint& worldPoint, MPoint& point)
+void MVGGeometryUtil::worldToCamera(M3dView& view, const MVGCamera& camera, const MPoint& worldPoint, MPoint& point)
 {
 	short x, y;
 	view.worldToView(worldPoint, x, y);
 	viewToCamera(view, camera,  x, y, point);
 }
 
-void MVGGeometryUtil::cameraToView(M3dView& view, MVGCamera& camera, MPoint& point, short& x, short& y)
+void MVGGeometryUtil::cameraToView(M3dView& view, const MVGCamera& camera, const MPoint& point, short& x, short& y)
 {
 	MFnCamera fnCamera(camera.dagPath().node()); 
 	float newX = point.x;
@@ -109,7 +109,7 @@ void MVGGeometryUtil::cameraToView(M3dView& view, MVGCamera& camera, MPoint& poi
 	y = round((newY + 0.5 + 0.5 * (view.portHeight() / (float)view.portWidth() - 1.0)) * view.portWidth());	
 }
 
-bool MVGGeometryUtil::projectFace2D(M3dView& view, MPointArray& face3DPoints, MVGCamera& camera, MPointArray& face2DPoints, bool compute, MVector height)
+bool MVGGeometryUtil::projectFace2D(M3dView& view, MPointArray& face3DPoints, const MVGCamera& camera, const MPointArray& face2DPoints, bool compute, MVector height)
 {
 	std::vector<MVGPointCloudItem> items = camera.visibleItems();
 	if(items.size() < 3) {
@@ -201,12 +201,13 @@ bool MVGGeometryUtil::projectFace2D(M3dView& view, MPointArray& face3DPoints, MV
 //	openMVG::robust::LeastMedianOfSquares(kernel, &model, &outlierThreshold);
 //}
 
-void MVGGeometryUtil::projectPointOnPlane(MPoint& point, M3dView& view, PlaneKernel::Model& model, MVGCamera& camera, MPoint& projectedPoint)
+void MVGGeometryUtil::projectPointOnPlane(const MPoint& point, M3dView& view, PlaneKernel::Model& model, const MVGCamera& camera, MPoint& projectedPoint)
 {
 	MPoint cameraCenter = AS_MPOINT(camera.pinholeCamera()._C);
 	short x, y;
 	MVector dir;
 	cameraToView(view, camera, point, x, y);
-	view.viewToWorld(x, y, point, dir);
-	plane_line_intersect(model, cameraCenter, point, projectedPoint);
+	MPoint worldPoint;
+	view.viewToWorld(x, y, worldPoint, dir);
+	plane_line_intersect(model, cameraCenter, worldPoint, projectedPoint);
 }

@@ -82,6 +82,10 @@ MStatus MVGCmd::doIt(const MArgList& args) {
 		LOG_ERROR("Unable to create MVGContext.")
 		return status;
 	}
+	
+	// Reload project from Maya
+	MVGProjectWrapper::instance().reloadProjectFromMaya();
+	MVGProjectWrapper::instance().rebuildCacheFromMaya();
 
 	// install mouse event filter on maya viewports
 	// MVGViewportEventFilter * viewportEventFilter = new MVGViewportEventFilter(mayaWindow);
@@ -108,6 +112,7 @@ MStatus MVGCmd::doIt(const MArgList& args) {
 	// needed to remove all maya callbacks and all Qt event filters 
 	// MVGWindowEventFilter * windowEventFilter = new MVGWindowEventFilter(callbackIDs, viewportEventFilter, mayaWindow);
 	// mayaWindow->installEventFilter(windowEventFilter); // auto delete on window close
+	
 	
 	// -p
 	if(argData.isFlagSet(projectPathFlag)) {

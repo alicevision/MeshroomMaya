@@ -35,8 +35,10 @@ namespace { // empty namespace
 
 } // empty namespace
 
-
-bool readCamera(std::string filePath, std::string imageDir, std::string cameraDir)
+/**
+ * @brief Read file with list of cameras.
+ */
+bool readCameras(std::string filePath, std::string imageDir, std::string cameraDir)
 {
 	std::ifstream infile(filePath.c_str());
 	if (!infile.is_open())
