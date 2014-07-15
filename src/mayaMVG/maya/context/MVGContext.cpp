@@ -88,6 +88,9 @@ bool MVGContext::eventFilter(QObject *obj, QEvent *e, void* eventData)
 				_editMode = eModeCreate;
 				updateManipulators();
 				break;
+			case Qt::Key_Escape:
+				// TODO : clear buildingPoints
+				break;
 			default:
 				return false;
 		}

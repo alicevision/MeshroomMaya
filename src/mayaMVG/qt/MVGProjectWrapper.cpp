@@ -123,7 +123,6 @@ void MVGProjectWrapper::setCameraToView(QObject* camera, const QString& viewName
 	
 	_panelToCamera[viewName.toStdString()] = cam->camera().dagPath().fullPathName().asChar();
 	rebuildCacheFromMaya();
-	LOG_INFO("Rebuild after change of camera")
 }
 
 
@@ -192,9 +191,7 @@ void MVGProjectWrapper::rebuildCacheFromMaya()
 		if(c.isValid()) {
 			DisplayData data;
 			data.camera = c;
-			data.cameraPoints2D = c.getClickedPoints();
-			LOG_INFO("data.cameraPoints2D : " << data.cameraPoints2D.length());			
-				
+			data.cameraPoints2D = c.getClickedPoints();				
 			_cache[cameraPath.fullPathName().asChar()] = data;
 		}
 	}

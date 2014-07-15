@@ -99,6 +99,11 @@ void MVGCreateManipulator::draw(M3dView & view, const MDagPath & path,
 
 MStatus MVGCreateManipulator::doPress(M3dView& view)
 {
+	// Left Button
+	Qt::MouseButtons mouseButtons = QApplication::mouseButtons();
+	if(!(mouseButtons & Qt::LeftButton))
+		return MS::kFailure;
+	
 	DisplayData* data = MVGProjectWrapper::instance().getCachedDisplayData(view);
 	
 	if(!data)
