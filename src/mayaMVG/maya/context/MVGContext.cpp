@@ -89,8 +89,14 @@ bool MVGContext::eventFilter(QObject *obj, QEvent *e, void* eventData)
 				updateManipulators();
 				break;
 			case Qt::Key_Escape:
-				// TODO : clear buildingPoints
+			{
+				M3dView view = M3dView::active3dView();
+
+				DisplayData* data = MVGProjectWrapper::instance().getCachedDisplayData(view);
+				data->buildPoints2D.clear();
+				view.refresh(true, true);
 				break;
+			}
 			default:
 				return false;
 		}

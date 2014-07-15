@@ -79,9 +79,6 @@ void MVGCreateManipulator::draw(M3dView & view, const MDagPath & path,
 	MVGDrawUtil::begin2DDrawing(view);
 		MVGDrawUtil::drawCircle(0, 0, 1, 5); // needed - FIXME
 		
-		// Draw preview 2D
-		drawPreview2D(view, data);
-		
 		// Draw Camera points
 		glColor3f(1.f, 0.5f, 0.f);
 		MVGManipulatorUtil::drawCameraPoints(view, data);
@@ -89,7 +86,9 @@ void MVGCreateManipulator::draw(M3dView & view, const MDagPath & path,
 		// Draw only in active view
 		if(MVGMayaUtil::isActiveView(view))
 		{
-			// Draw intersections
+			glColor3f(1.f, 0.f, 0.f);
+			drawPreview2D(view, data);
+		
 			MVGManipulatorUtil::drawIntersections(view, data, _intersectionData, _intersectionState);
 		}
 				
@@ -127,6 +126,9 @@ MStatus MVGCreateManipulator::doPress(M3dView& view)
 		case MVGManipulatorUtil::eIntersectionNone: {			
 			
 			data->buildPoints2D.append(mousePoint);
+			
+			if(data->buildPoints2D.length() < 4)
+				break;
 			
 			MPointArray facePoints3D;	
 			MVGGeometryUtil::projectFace2D(view, facePoints3D, data->camera, data->buildPoints2D);

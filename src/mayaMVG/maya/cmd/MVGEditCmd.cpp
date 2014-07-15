@@ -1,3 +1,4 @@
+#include "mayaMVG/qt/MVGProjectWrapper.h"
 #include "mayaMVG/maya/cmd/MVGEditCmd.h"
 #include "mayaMVG/core/MVGLog.h"
 #include "mayaMVG/core/MVGMesh.h"
@@ -78,11 +79,13 @@ MStatus MVGEditCmd::redoIt()
 	// -move
 	if(_flags & CMD_MOVE) {
 	}
+	
+	MVGProjectWrapper::instance().rebuildCacheFromMaya();
 	return status;
 }
 
 MStatus MVGEditCmd::undoIt()
-{
+{ 
 	MStatus status;
 	// -create
 	if(_flags & CMD_CREATE) {			
@@ -91,10 +94,14 @@ MStatus MVGEditCmd::undoIt()
 			return MStatus::kFailure;
 		if(!mesh.deletePolygon(_index))
 			return MS::kFailure;	
+		
+		// TODO : remove points from all cameras
+		
 	}
 	// -move
 	if(_flags & CMD_MOVE) {
 	}
+	MVGProjectWrapper::instance().rebuildCacheFromMaya();
 	return status;
 }
 
