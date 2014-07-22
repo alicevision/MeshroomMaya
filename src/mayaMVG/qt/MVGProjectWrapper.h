@@ -11,32 +11,32 @@
 
 namespace mayaMVG {
 	
-typedef std::pair<std::string, MPoint> PairStringToPoint;
-typedef std::map<std::pair<std::string, MPoint>, std::pair<std::string, MPoint> > Map2Dto3D;
-typedef std::map<std::pair<std::string, MPoint>, std::vector<std::pair<std::string, MPoint> > > Map3Dto2D;
-
-
-struct	Point2D {
-	/// Position in camera coords
-	MPoint	pos;
-	/// Position in camera coord of the projected associated point 3D
-	MPoint	projectedPoint3D;
-	/// Number of views in which point3D is placed
-	int		nbViews;
-	/// Is point placed in this view
-	bool	isInThisView;
-
-};
+//typedef std::pair<std::string, MPoint> PairStringToPoint;
+//typedef std::map<std::pair<std::string, MPoint>, std::pair<std::string, MPoint> > Map2Dto3D;
+//typedef std::map<std::pair<std::string, MPoint>, std::vector<std::pair<std::string, MPoint> > > Map3Dto2D;
+//
+//
+//struct	Point2D {
+//	/// Position in camera coords
+//	MPoint	pos;
+//	/// Position in camera coord of the projected associated point 3D
+//	MPoint	projectedPoint3D;
+//	/// Number of views in which point3D is placed
+//	int		nbViews;
+//	/// Is point placed in this view
+//	bool	isInThisView;
+//
+//};
 
 struct DisplayData {
 	MVGCamera camera;
 	/// temporary points in Camera before having 3D information
 	MPointArray buildPoints2D;
 	/// 2D points in Camera coord (centered normalized on width?)
-	MPointArray cameraPoints2D;
+	//MPointArray cameraPoints2D;
 
 	// TODO : use instead of cameraPoints2D
-	std::vector<Point2D> allPoints2D;
+	//std::vector<Point2D> allPoints2D;
 };
 
 class MVGProjectWrapper : public QObject, public Singleton<MVGProjectWrapper>
@@ -72,12 +72,18 @@ public:
     Q_INVOKABLE void setCameraToView(QObject* camera, const QString& viewName);
 	
 	// TODO
-	Map3Dto2D& getMap3Dto2D() { return _map3Dto2D; }
-	Map2Dto3D& getMap2Dto3D() { return _map2Dto3D; }
+//	Map3Dto2D& getMap3Dto2D() { return _map3Dto2D; }
+//	Map2Dto3D& getMap2Dto3D() { return _map2Dto3D; }
 	
 	DisplayData* getCachedDisplayData(M3dView& view);
+	std::map<std::string, MPointArray>& getCacheMeshToPointArray() { return _cacheMeshToPointArray; }
+	MPointArray& getMeshPoints(std::string meshName) { return _cacheMeshToPointArray[meshName]; }
+	std::map<std::string, std::vector<MIntArray> >& getCacheMeshToEdgeArray() { return _cacheMeshToEdgeArray; }
+	std::vector<MIntArray>& getMeshEdges(std::string meshName) { return _cacheMeshToEdgeArray[meshName]; }
 	Q_INVOKABLE void reloadProjectFromMaya();
-	Q_INVOKABLE void rebuildCacheFromMaya();
+	//Q_INVOKABLE void rebuildCacheFromMaya();
+	MStatus rebuildAllMeshesCacheFromMaya();	// Temporay
+	MStatus rebuildMeshCacheFromMaya(MDagPath& meshPath);	// Temporay
 
 signals:
     void projectDirectoryChanged();
@@ -94,9 +100,14 @@ private:
     QString _logText;
 	
 	// TODO
-	Map2Dto3D _map2Dto3D;
-	Map3Dto2D _map3Dto2D;
-	std::map<std::string, DisplayData> _cache;
+//	Map2Dto3D _map2Dto3D;
+//	Map3Dto2D _map3Dto2D;
+	
+	std::map<std::string, DisplayData> _cacheCameraToDisplayData;	
+	/// Map from meshName to mesh points
+	std::map<std::string, MPointArray> _cacheMeshToPointArray;	// Temporary
+	/// Map from meshName to edge points ID
+	std::map<std::string, std::vector<MIntArray> > _cacheMeshToEdgeArray;	// Temporary
 	QStringList _allPanelNames;
 	QStringList _visiblePanelNames;
 	std::map<std::string, std::string> _panelToCamera;
@@ -105,14 +116,14 @@ private:
 
 } // mayaMVG
 
-namespace std {
-	inline bool operator<(const mayaMVG::PairStringToPoint& pair_a, const mayaMVG::PairStringToPoint& pair_b) { 
-		if(pair_a.first != pair_b.first)
-			return (pair_a.first < pair_b.first);
-		
-		if(pair_a.second.x != pair_b.second.x)
-			return pair_a.second.x < pair_b.second.x;
-		
-		return pair_a.second.y < pair_b.second.y;
-	}
-}	// std
+//namespace std {
+//	inline bool operator<(const mayaMVG::PairStringToPoint& pair_a, const mayaMVG::PairStringToPoint& pair_b) { 
+//		if(pair_a.first != pair_b.first)
+//			return (pair_a.first < pair_b.first);
+//		
+//		if(pair_a.second.x != pair_b.second.x)
+//			return pair_a.second.x < pair_b.second.x;
+//		
+//		return pair_a.second.y < pair_b.second.y;
+//	}
+//}	// std

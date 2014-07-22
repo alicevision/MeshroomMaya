@@ -27,7 +27,9 @@ struct MVGManipulatorUtil {
     };
 	
 	struct IntersectionData {
+		std::string meshName;
 		int	pointIndex;
+		//int edgeIndex;
 		MIntArray edgePointIndexes;
 		MVector edgeHeight3D;
 		MVector edgeHeight2D;
@@ -39,7 +41,7 @@ struct MVGManipulatorUtil {
 	static bool intersectEdge(M3dView& view, DisplayData* displayData, IntersectionData& intersectionData, const short&x, const short& y);
 	
 	static void drawIntersections(M3dView& view, DisplayData* data, IntersectionData& intersectionData, IntersectionState intersectionState);
-	static void drawCameraPoints(M3dView& view, DisplayData* data);
+//	static void drawCameraPoints(M3dView& view, DisplayData* data);
 };
 
 } // mayaMVG

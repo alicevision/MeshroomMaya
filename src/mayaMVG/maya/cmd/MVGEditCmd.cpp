@@ -66,6 +66,8 @@ MStatus MVGEditCmd::redoIt()
 	MStatus status;
 	// -create
 	if(_flags & CMD_CREATE) {
+		
+		// Retrieve mesh or create it
 		MVGMesh mesh(_meshPath);
 		if(!mesh.isValid()) {
 			mesh = MVGMesh::create(MVGProject::_MESH);
@@ -80,7 +82,8 @@ MStatus MVGEditCmd::redoIt()
 	if(_flags & CMD_MOVE) {
 	}
 	
-	MVGProjectWrapper::instance().rebuildCacheFromMaya();
+	//MVGProjectWrapper::instance().rebuildCacheFromMaya();
+	MVGProjectWrapper::instance().rebuildMeshCacheFromMaya(_meshPath);
 	return status;
 }
 
@@ -101,7 +104,8 @@ MStatus MVGEditCmd::undoIt()
 	// -move
 	if(_flags & CMD_MOVE) {
 	}
-	MVGProjectWrapper::instance().rebuildCacheFromMaya();
+	//MVGProjectWrapper::instance().rebuildCacheFromMaya();
+	MVGProjectWrapper::instance().rebuildAllMeshesCacheFromMaya();
 	return status;
 }
 

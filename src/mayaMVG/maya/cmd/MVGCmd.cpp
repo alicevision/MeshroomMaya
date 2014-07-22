@@ -85,10 +85,9 @@ MStatus MVGCmd::doIt(const MArgList& args) {
 	
 	// Reload project from Maya
 	MVGProjectWrapper::instance().reloadProjectFromMaya();
-	MVGProjectWrapper::instance().rebuildCacheFromMaya();
+	// TODO : MVGProjectWrapper::instance().rebuildCacheFromMaya();
 
 	// install mouse event filter on maya viewports
-	// MVGViewportEventFilter * viewportEventFilter = new MVGViewportEventFilter(mayaWindow);
 	const QString& leftPanel = MVGProjectWrapper::instance().panelModel().at(0);
 	const QString& rightPanel = MVGProjectWrapper::instance().panelModel().at(1);
 	
@@ -99,21 +98,9 @@ MStatus MVGCmd::doIt(const MArgList& args) {
 		return MS::kFailure;
 	}
 
-	// leftViewport->installEventFilter(viewportEventFilter);
 	leftViewport->setProperty("mvg_panel", leftPanel);
-	// rightViewport->installEventFilter(viewportEventFilter);
 	rightViewport->setProperty("mvg_panel", rightPanel);
 
-	// // maya callbacks
-	// MCallbackIdArray callbackIDs;
-	// callbackIDs.append(MEventMessage::addEventCallback("SelectionChanged", selectionChangedCB, mainWidget->view()));
-
-	// install a window event filter on 'mayaWindow'
-	// needed to remove all maya callbacks and all Qt event filters 
-	// MVGWindowEventFilter * windowEventFilter = new MVGWindowEventFilter(callbackIDs, viewportEventFilter, mayaWindow);
-	// mayaWindow->installEventFilter(windowEventFilter); // auto delete on window close
-	
-	
 	// -p
 	if(argData.isFlagSet(projectPathFlag)) {
 		MString projectPath;
