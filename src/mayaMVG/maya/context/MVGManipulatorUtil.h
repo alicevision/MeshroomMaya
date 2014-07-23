@@ -29,7 +29,6 @@ struct MVGManipulatorUtil {
 	struct IntersectionData {
 		std::string meshName;
 		int	pointIndex;
-		//int edgeIndex;
 		MIntArray edgePointIndexes;
 		MVector edgeHeight3D;
 		MVector edgeHeight2D;

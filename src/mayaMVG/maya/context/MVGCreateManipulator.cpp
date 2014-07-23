@@ -18,7 +18,6 @@ MVGCreateManipulator::MVGCreateManipulator()
 	, _ctx(NULL)
 {
 	_intersectionData.pointIndex = -1;
-	MVGProjectWrapper::instance().rebuildAllMeshesCacheFromMaya();
 }
 
 MVGCreateManipulator::~MVGCreateManipulator()
@@ -149,7 +148,7 @@ MStatus MVGCreateManipulator::doRelease(M3dView& view)
 		case MVGManipulatorUtil::eIntersectionPoint:	
 			break;
 		case MVGManipulatorUtil::eIntersectionEdge: {
-			LOG_INFO("CREATE POLYGON W/ TMP EDGE")
+			//LOG_INFO("CREATE POLYGON W/ TMP EDGE")
 			
 			if(!addCreateFaceCommand(view, data, cmd, _previewFace3D))
 				return MS::kFailure;
@@ -357,11 +356,14 @@ void MVGCreateManipulator::computeTmpFaceOnEdgeExtend(M3dView& view, DisplayData
 
 	// Compute 3D face
 	_previewFace3D.clear();
-	MVGGeometryUtil::projectFace2D(view, _previewFace3D, data->camera, previewPoints2D, true, _intersectionData.edgeHeight3D);
+	if(MVGGeometryUtil::projectFace2D(view, _previewFace3D, data->camera, previewPoints2D, true, _intersectionData.edgeHeight3D))
+	{
+		// Keep the old first 2 points to have a connected face
+		_previewFace3D[0] = edgePoint3D_1;
+		_previewFace3D[1] = edgePoint3D_0;
+	}
 
-	// Keep the old first 2 points to have a connected face
-	_previewFace3D[0] = edgePoint3D_1;
-	_previewFace3D[1] = edgePoint3D_0;
+	
 
 	// TODO[2] : compute plane with straight line constraint
 }

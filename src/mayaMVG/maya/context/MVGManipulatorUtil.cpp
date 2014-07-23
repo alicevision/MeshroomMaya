@@ -52,6 +52,7 @@ bool MVGManipulatorUtil::intersectEdge(M3dView& view, DisplayData* displayData, 
 	double tolerance = 0.001 * displayData->camera.getZoom() * 30;
 	double distance;
 	MIntArray tmp;
+	std::string tmpMesh;
 	
 	// Browse meshes
 	std::map<std::string, std::vector<MIntArray> >& meshMap= MVGProjectWrapper::instance().getCacheMeshToEdgeArray();
@@ -90,6 +91,7 @@ bool MVGManipulatorUtil::intersectEdge(M3dView& view, DisplayData* displayData, 
 				tmp.clear();
 				tmp.append((*edgeIt)[0]);
 				tmp.append((*edgeIt)[1]);
+				tmpMesh = it->first;
 
 				minDistanceFound = distance;
 			}
@@ -99,11 +101,12 @@ bool MVGManipulatorUtil::intersectEdge(M3dView& view, DisplayData* displayData, 
 	if(minDistanceFound < -tolerance || minDistanceFound > tolerance)
 	{
 		intersectionData.edgePointIndexes.clear();
+		intersectionData.meshName = "";
 		return false;
 	}
-		
 	
 	intersectionData.edgePointIndexes = tmp;
+	intersectionData.meshName = tmpMesh;
 	return true;
 }
 
@@ -123,14 +126,15 @@ void MVGManipulatorUtil::drawIntersections(M3dView& view, DisplayData* data, Int
 	
 				MVGDrawUtil::drawCircle(pointViewCoord_0.x, pointViewCoord_0.y, POINT_RADIUS, 30);
 				break;
-			case MVGManipulatorUtil::eIntersectionEdge:
+			case MVGManipulatorUtil::eIntersectionEdge:				
 				glColor3f(0.f, 1.f, 0.f);
+				
 				pointViewCoord_0 = MVGGeometryUtil::worldToView(view, meshCache.at(intersectionData.meshName)[intersectionData.edgePointIndexes[0]]);
 				pointViewCoord_1 = MVGGeometryUtil::worldToView(view, meshCache.at(intersectionData.meshName)[intersectionData.edgePointIndexes[1]]);
 				glBegin(GL_LINES);
 					glVertex2f(pointViewCoord_0.x, pointViewCoord_0.y);
 					glVertex2f(pointViewCoord_1.x, pointViewCoord_1.y);
-				glEnd();
+				glEnd();	
 				break;
 		}	
 	}

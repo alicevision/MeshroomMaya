@@ -130,7 +130,7 @@ MStatus MVGEditCmd::finalize()
 void MVGEditCmd::doAddPolygon(const MDagPath& meshPath, const MPointArray& points)
 {
 	_flags |= CMD_CREATE;
-	//_meshPath = meshPath;
+	_meshPath = meshPath;
 	_points = points;
 }
 
