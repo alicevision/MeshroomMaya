@@ -41,7 +41,7 @@ class MVGCreateManipulator: public MPxManipulatorNode
 		void computeEdgeIntersectionData(M3dView& view, DisplayData* data, const MPoint& mousePointInCameraCoord);
 		void computeTmpFaceOnEdgeExtend(M3dView& view, DisplayData* data, const MPoint& mousePointInCameraCoord);
 		
-		bool addCreateFaceCommand(M3dView& view, DisplayData* data, MVGEditCmd* cmd, const MPointArray& facePoints3D);
+		bool addCreateFaceCommand(M3dView& view, DisplayData* data, MVGEditCmd* cmd, MDagPath& meshPath, const MPointArray& facePoints3D);
 
 	public:
 		static MTypeId _id;

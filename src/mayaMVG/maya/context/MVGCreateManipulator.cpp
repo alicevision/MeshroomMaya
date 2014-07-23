@@ -110,7 +110,8 @@ MStatus MVGCreateManipulator::doPress(M3dView& view)
 			MPointArray facePoints3D;	
 			MVGGeometryUtil::projectFace2D(view, facePoints3D, data->camera, data->buildPoints2D);
 
-			if(!addCreateFaceCommand(view, data, cmd, facePoints3D))
+			MDagPath emptyPath = MDagPath();
+			if(!addCreateFaceCommand(view, data, cmd, emptyPath, facePoints3D))
 				return MS::kFailure;
 	
 			data->buildPoints2D.clear();
@@ -150,7 +151,9 @@ MStatus MVGCreateManipulator::doRelease(M3dView& view)
 		case MVGManipulatorUtil::eIntersectionEdge: {
 			//LOG_INFO("CREATE POLYGON W/ TMP EDGE")
 			
-			if(!addCreateFaceCommand(view, data, cmd, _previewFace3D))
+			MDagPath meshPath;
+			MVGMayaUtil::getDagPathByName(_intersectionData.meshName.c_str(), meshPath);
+			if(!addCreateFaceCommand(view, data, cmd, meshPath, _previewFace3D))
 				return MS::kFailure;
 			
 			_previewFace3D.clear();
@@ -368,7 +371,7 @@ void MVGCreateManipulator::computeTmpFaceOnEdgeExtend(M3dView& view, DisplayData
 	// TODO[2] : compute plane with straight line constraint
 }
 
-bool MVGCreateManipulator::addCreateFaceCommand(M3dView& view, DisplayData* data, MVGEditCmd* cmd, const MPointArray& facePoints3D)
+bool MVGCreateManipulator::addCreateFaceCommand(M3dView& view, DisplayData* data, MVGEditCmd* cmd, MDagPath& meshPath, const MPointArray& facePoints3D)
 {
 	// Undo/redo
 	if(facePoints3D.length() < 4)
@@ -380,8 +383,8 @@ bool MVGCreateManipulator::addCreateFaceCommand(M3dView& view, DisplayData* data
 	}
 
 	// Create face
-	MDagPath meshPath;
-	MVGMayaUtil::getDagPathByName(MVGProject::_MESH.c_str(), meshPath);
+//	MDagPath meshPath;
+//	MVGMayaUtil::getDagPathByName(MVGProject::_MESH.c_str(), meshPath);
 	cmd->doAddPolygon(meshPath, facePoints3D);
 	if(cmd->redoIt())
 		cmd->finalize();
