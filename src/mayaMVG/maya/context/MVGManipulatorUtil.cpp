@@ -109,35 +109,29 @@ bool MVGManipulatorUtil::intersectEdge(M3dView& view, DisplayData* displayData, 
 
 void MVGManipulatorUtil::drawIntersections(M3dView& view, DisplayData* data, IntersectionData& intersectionData, IntersectionState intersectionState)
 {
-	short x, y;
 	std::map<std::string, MPointArray>& meshCache = MVGProjectWrapper::instance().getCacheMeshToPointArray();
-	//std::map<std::string, std::vector<MIntArray> >& edgeCache = MVGProjectWrapper::instance().getCacheMeshToEdgeArray();
+	//LOG_INFO("meshCache.size = " << meshCache.size());
 	if(meshCache.size() > 0) {
+		MPoint pointViewCoord_0;
+		MPoint pointViewCoord_1;
+		
 		switch(intersectionState)
 		{
 			case MVGManipulatorUtil::eIntersectionPoint:
-			{
 				glColor3f(0.f, 1.f, 0.f);
-				MPoint pointViewCoord = MVGGeometryUtil::worldToView(view, meshCache.at(intersectionData.meshName)[intersectionData.pointIndex]);
+				pointViewCoord_0 = MVGGeometryUtil::worldToView(view, meshCache.at(intersectionData.meshName)[intersectionData.pointIndex]);
 	
-				MVGDrawUtil::drawCircle(pointViewCoord.x, pointViewCoord.y, POINT_RADIUS, 30);
+				MVGDrawUtil::drawCircle(pointViewCoord_0.x, pointViewCoord_0.y, POINT_RADIUS, 30);
 				break;
-			}
 			case MVGManipulatorUtil::eIntersectionEdge:
-			{	
-				//short x, y;
 				glColor3f(0.f, 1.f, 0.f);
+				pointViewCoord_0 = MVGGeometryUtil::worldToView(view, meshCache.at(intersectionData.meshName)[intersectionData.edgePointIndexes[0]]);
+				pointViewCoord_1 = MVGGeometryUtil::worldToView(view, meshCache.at(intersectionData.meshName)[intersectionData.edgePointIndexes[1]]);
 				glBegin(GL_LINES);
-				MPoint viewPoint;
-				viewPoint = MVGGeometryUtil::worldToView(view, meshCache.at(intersectionData.meshName)[intersectionData.edgePointIndexes[0]]);
-					//MVGGeometryUtil::cameraToView(view, data->camera, cameraPoints[intersectionData.edgePointIndexes[0]], x, y);
-				glVertex2f(viewPoint.x, viewPoint.y);
-					//MVGGeometryUtil::cameraToView(view, data->camera, cameraPoints[intersectionData.edgePointIndexes[1]], x, y);
-				viewPoint = MVGGeometryUtil::worldToView(view, meshCache.at(intersectionData.meshName)[intersectionData.edgePointIndexes[1]]);
-				glVertex2f(viewPoint.x, viewPoint.y);
+					glVertex2f(pointViewCoord_0.x, pointViewCoord_0.y);
+					glVertex2f(pointViewCoord_1.x, pointViewCoord_1.y);
 				glEnd();
 				break;
-			}
 		}	
 	}
 }

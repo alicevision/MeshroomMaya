@@ -18,6 +18,7 @@ MVGCreateManipulator::MVGCreateManipulator()
 	, _ctx(NULL)
 {
 	_intersectionData.pointIndex = -1;
+	MVGProjectWrapper::instance().rebuildAllMeshesCacheFromMaya();
 }
 
 MVGCreateManipulator::~MVGCreateManipulator()
@@ -54,6 +55,26 @@ void MVGCreateManipulator::draw(M3dView & view, const MDagPath & path,
 	glFirstHandle(glPickableItem);
 	colorAndName(view, glPickableItem, true, mainColor());
 
+	// Preview 3D (while extending edge)
+	if(_previewFace3D.length() > 0)
+	{
+		glLineWidth(1.5f);
+		glBegin(GL_LINE_LOOP);
+			glVertex3f(_previewFace3D[0].x, _previewFace3D[0].y, _previewFace3D[0].z);
+			glVertex3f(_previewFace3D[1].x, _previewFace3D[1].y, _previewFace3D[1].z);
+			glVertex3f(_previewFace3D[2].x, _previewFace3D[2].y, _previewFace3D[2].z);
+			glVertex3f(_previewFace3D[3].x, _previewFace3D[3].y, _previewFace3D[3].z);
+		glEnd();
+		glLineWidth(1.f);
+		glDisable(GL_LINE_STIPPLE);
+			glColor4f(1.f, 1.f, 1.f, 0.6f);
+			glBegin(GL_POLYGON);
+				glVertex3f(_previewFace3D[0].x, _previewFace3D[0].y, _previewFace3D[0].z);
+				glVertex3f(_previewFace3D[1].x, _previewFace3D[1].y, _previewFace3D[1].z);
+				glVertex3f(_previewFace3D[2].x, _previewFace3D[2].y, _previewFace3D[2].z);
+				glVertex3f(_previewFace3D[3].x, _previewFace3D[3].y, _previewFace3D[3].z);
+			glEnd();
+	}
 	
 	// Draw	
 	MVGDrawUtil::begin2DDrawing(view);
@@ -115,8 +136,26 @@ MStatus MVGCreateManipulator::doPress(M3dView& view)
 			break;
 		}
 		case MVGManipulatorUtil::eIntersectionPoint:
+			LOG_INFO("SELECT POINT")
 			break;
 		case MVGManipulatorUtil::eIntersectionEdge:
+			
+			std::map<std::string, MPointArray>& meshCache = MVGProjectWrapper::instance().getCacheMeshToPointArray();
+			// Compute height and ratio 2D
+			MPoint edgePoint3D_0 = meshCache.at(_intersectionData.meshName)[_intersectionData.edgePointIndexes[0]];
+			MPoint edgePoint3D_1 = meshCache.at(_intersectionData.meshName)[_intersectionData.edgePointIndexes[1]];
+			MPoint edgePoint0, edgePoint1;
+			
+			MVGGeometryUtil::worldToCamera(view, data->camera, edgePoint3D_0, edgePoint0);
+			MVGGeometryUtil::worldToCamera(view, data->camera, edgePoint3D_1, edgePoint1);
+
+			MVector ratioVector2D = edgePoint1 - mousePoint;
+			_intersectionData.edgeHeight2D =  edgePoint1 - edgePoint0;
+			_intersectionData.edgeRatio = ratioVector2D.length() / _intersectionData.edgeHeight2D.length();
+			
+			// Compute height 3D
+			_intersectionData.edgeHeight3D = edgePoint3D_1 - edgePoint3D_0;
+			
 			break;
 	}
 
@@ -125,7 +164,34 @@ MStatus MVGCreateManipulator::doPress(M3dView& view)
 
 MStatus MVGCreateManipulator::doRelease(M3dView& view)
 {	
-
+	DisplayData* data = MVGProjectWrapper::instance().getCachedDisplayData(view);
+	if(!data)
+		return MS::kFailure;
+	
+	// Undo/Redo
+	MVGEditCmd* cmd = NULL;
+	if(!_ctx) {
+	   LOG_ERROR("invalid context object.")
+	   return MS::kFailure;
+	}
+	
+	short mousex, mousey;
+	mousePosition(mousex, mousey);
+		
+	switch(_intersectionState) {
+		case MVGManipulatorUtil::eIntersectionNone:
+		case MVGManipulatorUtil::eIntersectionPoint:	
+			break;
+		case MVGManipulatorUtil::eIntersectionEdge: {
+			LOG_INFO("CREATE POLYGON W/ TMP EDGE")
+			
+			if(!addCreateFaceCommand(view, data, cmd, _previewFace3D))
+				return MS::kFailure;
+			
+			_previewFace3D.clear();
+			break;
+		}
+	}
 	return MPxManipulatorNode::doRelease(view);
 }
 
@@ -134,8 +200,9 @@ MStatus MVGCreateManipulator::doMove(M3dView& view, bool& refresh)
 	DisplayData* data = MVGProjectWrapper::instance().getCachedDisplayData(view);
 	if(!data)
 		return MS::kFailure;
-//	if(data->buildPoints2D.length() == 0)
-//		return MS::kSuccess;
+	//Needed ? 
+	if(data->buildPoints2D.length() == 0 && MVGProjectWrapper::instance().getCacheMeshToPointArray().size() == 0)
+		return MS::kSuccess;
 	
 	short mousex, mousey;
 	mousePosition(mousex, mousey);
@@ -148,6 +215,50 @@ MStatus MVGCreateManipulator::doMove(M3dView& view, bool& refresh)
 
 MStatus MVGCreateManipulator::doDrag(M3dView& view)
 {		
+	DisplayData* data = MVGProjectWrapper::instance().getCachedDisplayData(view);
+	if(!data)
+		return MS::kFailure;
+	
+	short mousex, mousey;
+	mousePosition(mousex, mousey);
+	MPoint mousePoint;
+	MVGGeometryUtil::viewToCamera(view, data->camera, mousex, mousey, mousePoint);
+		
+	switch(_intersectionState) {
+		case MVGManipulatorUtil::eIntersectionNone:
+		case MVGManipulatorUtil::eIntersectionPoint:
+			break;
+		case MVGManipulatorUtil::eIntersectionEdge: 
+		{
+			//LOG_INFO("MOVE TMP EDGE")
+			std::map<std::string, MPointArray>& pointsCache = MVGProjectWrapper::instance().getCacheMeshToPointArray();
+			MPoint edgePoint3D_0 = pointsCache.at(_intersectionData.meshName)[_intersectionData.edgePointIndexes[0]];
+			MPoint edgePoint3D_1 = pointsCache.at(_intersectionData.meshName)[_intersectionData.edgePointIndexes[1]];
+			MPoint edgePoint0, edgePoint1;
+			
+			MVGGeometryUtil::worldToCamera(view, data->camera, edgePoint3D_0, edgePoint0);
+			MVGGeometryUtil::worldToCamera(view, data->camera, edgePoint3D_1, edgePoint1);
+
+			MPointArray previewPoints2D;
+			previewPoints2D.append(edgePoint1);
+			previewPoints2D.append(edgePoint0);
+			MPoint P3 = mousePoint - (1 - _intersectionData.edgeRatio) * _intersectionData.edgeHeight2D;
+			MPoint P4 = mousePoint + _intersectionData.edgeRatio * _intersectionData.edgeHeight2D;
+			previewPoints2D.append(P3);
+			previewPoints2D.append(P4);
+
+			_previewFace3D.clear();
+			MVGGeometryUtil::projectFace2D(view, _previewFace3D, data->camera, previewPoints2D, true, _intersectionData.edgeHeight3D);
+
+			// TODO[1]: Keep the old first 2 points to have a connected face
+			_previewFace3D[0] = edgePoint3D_1;
+			_previewFace3D[1] = edgePoint3D_0;
+			
+			// TODO[2] : compute plane with straight line constraint
+
+			break;
+		}
+	}
 	return MPxManipulatorNode::doDrag(view);
 }
 
@@ -175,7 +286,7 @@ void MVGCreateManipulator::updateIntersectionState(M3dView& view, DisplayData* d
 	if(MVGManipulatorUtil::intersectPoint(view, data, _intersectionData, mousex, mousey)) {
 		_intersectionState = MVGManipulatorUtil::eIntersectionPoint;
 	} 
-		else if(MVGManipulatorUtil::intersectEdge(view, data, _intersectionData, mousex, mousey)) {
+	else if(MVGManipulatorUtil::intersectEdge(view, data, _intersectionData, mousex, mousey)) {
 	 	_intersectionState = MVGManipulatorUtil::eIntersectionEdge;
 	} 
 	else {

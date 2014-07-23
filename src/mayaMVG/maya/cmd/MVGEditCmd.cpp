@@ -82,7 +82,6 @@ MStatus MVGEditCmd::redoIt()
 	if(_flags & CMD_MOVE) {
 	}
 	
-	//MVGProjectWrapper::instance().rebuildCacheFromMaya();
 	MVGProjectWrapper::instance().rebuildMeshCacheFromMaya(_meshPath);
 	return status;
 }
@@ -104,7 +103,6 @@ MStatus MVGEditCmd::undoIt()
 	// -move
 	if(_flags & CMD_MOVE) {
 	}
-	//MVGProjectWrapper::instance().rebuildCacheFromMaya();
 	MVGProjectWrapper::instance().rebuildAllMeshesCacheFromMaya();
 	return status;
 }
@@ -132,7 +130,7 @@ MStatus MVGEditCmd::finalize()
 void MVGEditCmd::doAddPolygon(const MDagPath& meshPath, const MPointArray& points)
 {
 	_flags |= CMD_CREATE;
-	_meshPath = meshPath;
+	//_meshPath = meshPath;
 	_points = points;
 }
 
