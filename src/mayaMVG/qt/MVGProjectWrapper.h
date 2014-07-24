@@ -76,10 +76,10 @@ public:
 //	Map2Dto3D& getMap2Dto3D() { return _map2Dto3D; }
 	
 	DisplayData* getCachedDisplayData(M3dView& view);
-	std::map<std::string, MPointArray>& getCacheMeshToPointArray() { return _cacheMeshToPointArray; }
-	MPointArray& getMeshPoints(std::string meshName) { return _cacheMeshToPointArray[meshName]; }
-	std::map<std::string, std::vector<MIntArray> >& getCacheMeshToEdgeArray() { return _cacheMeshToEdgeArray; }
-	std::vector<MIntArray>& getMeshEdges(std::string meshName) { return _cacheMeshToEdgeArray[meshName]; }
+	inline std::map<std::string, MPointArray>& getCacheMeshToPointArray() { return _cacheMeshToPointArray; }
+	inline MPointArray& getMeshPoints(std::string meshName) { return _cacheMeshToPointArray[meshName]; }
+	inline std::map<std::string, std::vector<MIntArray> >& getCacheMeshToEdgeArray() { return _cacheMeshToEdgeArray; }
+	inline std::vector<MIntArray>& getMeshEdges(std::string meshName) { return _cacheMeshToEdgeArray[meshName]; }
 	Q_INVOKABLE void reloadProjectFromMaya();
 	//Q_INVOKABLE void rebuildCacheFromMaya();
 	MStatus rebuildAllMeshesCacheFromMaya();	// Temporay

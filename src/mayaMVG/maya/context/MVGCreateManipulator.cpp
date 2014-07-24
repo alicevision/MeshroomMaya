@@ -318,11 +318,11 @@ void MVGCreateManipulator::drawPreview3D()
 
 void MVGCreateManipulator::computeEdgeIntersectionData(M3dView& view, DisplayData* data, const MPoint& mousePointInCameraCoord)
 {
-	std::map<std::string, MPointArray>& meshCache = MVGProjectWrapper::instance().getCacheMeshToPointArray();
+	MPointArray& meshPoints = MVGProjectWrapper::instance().getMeshPoints(_intersectionData.meshName);
 	
 	// Compute height and ratio 2D
-	MPoint edgePoint3D_0 = meshCache.at(_intersectionData.meshName)[_intersectionData.edgePointIndexes[0]];
-	MPoint edgePoint3D_1 = meshCache.at(_intersectionData.meshName)[_intersectionData.edgePointIndexes[1]];
+	MPoint edgePoint3D_0 = meshPoints[_intersectionData.edgePointIndexes[0]];
+	MPoint edgePoint3D_1 = meshPoints[_intersectionData.edgePointIndexes[1]];
 	MPoint edgePoint0, edgePoint1;
 
 	MVGGeometryUtil::worldToCamera(view, data->camera, edgePoint3D_0, edgePoint0);
@@ -339,9 +339,9 @@ void MVGCreateManipulator::computeEdgeIntersectionData(M3dView& view, DisplayDat
 void MVGCreateManipulator::computeTmpFaceOnEdgeExtend(M3dView& view, DisplayData* data, const MPoint& mousePointInCameraCoord)
 {
 	// Get edge 3D points 
-	std::map<std::string, MPointArray>& pointsCache = MVGProjectWrapper::instance().getCacheMeshToPointArray();
-	MPoint edgePoint3D_0 = pointsCache.at(_intersectionData.meshName)[_intersectionData.edgePointIndexes[0]];
-	MPoint edgePoint3D_1 = pointsCache.at(_intersectionData.meshName)[_intersectionData.edgePointIndexes[1]];
+	MPointArray& meshPoints = MVGProjectWrapper::instance().getMeshPoints(_intersectionData.meshName);
+	MPoint edgePoint3D_0 = meshPoints[_intersectionData.edgePointIndexes[0]];
+	MPoint edgePoint3D_1 = meshPoints[_intersectionData.edgePointIndexes[1]];
 	MPoint edgePoint0, edgePoint1;
 
 	// Compute edge points in camera coords
@@ -365,9 +365,8 @@ void MVGCreateManipulator::computeTmpFaceOnEdgeExtend(M3dView& view, DisplayData
 		_previewFace3D[0] = edgePoint3D_1;
 		_previewFace3D[1] = edgePoint3D_0;
 	}
-
 	
-
+	// TODO[1] : If compute failed, use the plan of the extended fae
 	// TODO[2] : compute plane with straight line constraint
 }
 

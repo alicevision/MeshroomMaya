@@ -113,7 +113,6 @@ bool MVGManipulatorUtil::intersectEdge(M3dView& view, DisplayData* displayData, 
 void MVGManipulatorUtil::drawIntersections(M3dView& view, DisplayData* data, IntersectionData& intersectionData, IntersectionState intersectionState)
 {
 	std::map<std::string, MPointArray>& meshCache = MVGProjectWrapper::instance().getCacheMeshToPointArray();
-	//LOG_INFO("meshCache.size = " << meshCache.size());
 	if(meshCache.size() > 0) {
 		MPoint pointViewCoord_0;
 		MPoint pointViewCoord_1;

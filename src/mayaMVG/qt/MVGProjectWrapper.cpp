@@ -171,6 +171,8 @@ void MVGProjectWrapper::reloadProjectFromMaya()
 	
 	// TODO : Camera selection
 	
+	MVGProjectWrapper::instance().rebuildAllMeshesCacheFromMaya();
+	
 }
 
 //void MVGProjectWrapper::rebuildCacheFromMaya() 
