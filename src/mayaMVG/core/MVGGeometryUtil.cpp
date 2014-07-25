@@ -8,6 +8,7 @@
 #include <maya/MFnCamera.h>
 #include <vector>
 
+#include <maya/MPlug.h>
 using namespace mayaMVG;
 
 namespace { // empty namespace
@@ -107,6 +108,23 @@ void MVGGeometryUtil::cameraToView(M3dView& view, const MVGCamera& camera, const
 	// center	
 	x = round((newX + 0.5) * view.portWidth());
 	y = round((newY + 0.5 + 0.5 * (view.portHeight() / (float)view.portWidth() - 1.0)) * view.portWidth());	
+}
+
+void MVGGeometryUtil::cameraToImage(const MVGCamera& camera, const MPoint& point, short& x, short& y)
+{
+	MFnCamera fnCamera(camera.dagPath().node()); 	
+	
+	// Get image size 
+	MFnDagNode fnImage(camera.imagePath());
+	const double width = fnImage.findPlug("coverageX").asDouble();
+	const double height = fnImage.findPlug("coverageY").asDouble();
+
+	MPoint pointCenteredNorm = point / fnCamera.horizontalFilmAperture();
+	
+	const double verticalMargin = (width - height) / 2.0;
+	x = (pointCenteredNorm.x + 0.5 ) * width;
+	//y = height - ((point.y + 0.5) * height);
+	y = (-pointCenteredNorm.y + 0.5) * width - verticalMargin;
 }
 
 bool MVGGeometryUtil::projectFace2D(M3dView& view, MPointArray& face3DPoints, const MVGCamera& camera, const MPointArray& face2DPoints, bool compute, MVector height)
