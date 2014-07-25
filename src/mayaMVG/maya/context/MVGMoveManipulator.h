@@ -5,8 +5,6 @@
 
 namespace mayaMVG {
 
-class MVGContext;
-
 class MVGMoveManipulator: public MPxManipulatorNode
 {	
 	enum EMoveState {
@@ -37,14 +35,15 @@ class MVGMoveManipulator: public MPxManipulatorNode
 		void setContext(MVGContext* ctx);
 		
 	private:
-		void updateIntersectionState(M3dView& view, DisplayData* data, double mousex, double mousey);	
+		MPoint updateMouse(M3dView& view, DisplayData* data, short& mousex, short& mousey);
+		
+		// Compute
+		void computeTmpFaceOnMovePoint(M3dView& view, DisplayData* data, MPoint& mousePoint);
 	public:
 		static MTypeId _id;
-//		std::map<std::string, MVGManipulatorUtil::DisplayData> _cache; //FIXME use caching on the wrapper side
-		MVGManipulatorUtil::IntersectionState _intersectionState;
+		MVGManipulatorUtil _manipUtils;
 		EMoveState _moveState;
-        MVGContext* _ctx;
-		MVGManipulatorUtil::IntersectionData _intersectionData;
+
 };
 
 } // namespace

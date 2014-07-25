@@ -208,16 +208,23 @@ bool MVGGeometryUtil::projectFace2D(M3dView& view, MPointArray& face3DPoints, co
 	
 	return true;
 }
-//
-//void MVGGeometryUtil::computePlane(MVGFace3D& face3D, PlaneKernel::Model& model)
-//{
-//	openMVG::Mat facePointsMat(3, 4);
-//	for (size_t i = 0; i <4; ++i)
-//		facePointsMat.col(i) = AS_VEC3(face3D._p[i]);
-//	PlaneKernel kernel(facePointsMat);
-//	double outlierThreshold = std::numeric_limits<double>::infinity();
-//	openMVG::robust::LeastMedianOfSquares(kernel, &model, &outlierThreshold);
-//}
+
+bool MVGGeometryUtil::computePlane(MPointArray& facePoints3D, PlaneKernel::Model& model)
+{
+	if(facePoints3D.length() < 3)
+	{
+		LOG_ERROR("Need at least 3 points to compute a plane")
+		return false;
+	}
+	openMVG::Mat facePointsMat(3, 4);
+	for (size_t i = 0; i <facePoints3D.length(); ++i)
+		facePointsMat.col(i) = AS_VEC3(facePoints3D[i]);
+	PlaneKernel kernel(facePointsMat);
+	double outlierThreshold = std::numeric_limits<double>::infinity();
+	openMVG::robust::LeastMedianOfSquares(kernel, &model, &outlierThreshold);
+	
+	return true;
+}
 
 void MVGGeometryUtil::projectPointOnPlane(const MPoint& point, M3dView& view, PlaneKernel::Model& model, const MVGCamera& camera, MPoint& projectedPoint)
 {

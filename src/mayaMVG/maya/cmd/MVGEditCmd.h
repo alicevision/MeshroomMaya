@@ -27,7 +27,7 @@ class MVGEditCmd : public MPxToolCommand {
 		MStatus finalize();
 	public:
 		void doAddPolygon(const MDagPath& meshPath, const MPointArray& points);
-		void doMove();
+		void doMove(const MDagPath& meshPath, const MPointArray& points, const MIntArray& verticesIndexes);
 		void doDelete();
 	public:
 		static MString name;
@@ -35,7 +35,7 @@ class MVGEditCmd : public MPxToolCommand {
 		size_t _flags;
 		MDagPath _meshPath;
 		MPointArray _points;
-		int _index;
+		MIntArray _indexes;
 };
 
 } // namespace

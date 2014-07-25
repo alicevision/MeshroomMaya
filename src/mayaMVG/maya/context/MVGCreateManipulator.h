@@ -2,15 +2,8 @@
 
 #include "mayaMVG/maya/context/MVGManipulatorUtil.h"
 #include <maya/MPxManipulatorNode.h>
-#include "mayaMVG/core/MVGMesh.h"
-#include "mayaMVG/core/MVGCamera.h"
-#include <map>
-#include <utility>
 
 namespace mayaMVG {
-
-class MVGContext;
-class MVGEditCmd;
 
 class MVGCreateManipulator: public MPxManipulatorNode
 {
@@ -35,22 +28,14 @@ class MVGCreateManipulator: public MPxManipulatorNode
 	public:
 		void setContext(MVGContext* ctx);
 	private:	
-		void updateIntersectionState(M3dView& view, DisplayData* data, double mousex, double mousey);		
 		void drawPreview2D(M3dView& view, DisplayData* data);
-		void drawPreview3D();
 		void computeEdgeIntersectionData(M3dView& view, DisplayData* data, const MPoint& mousePointInCameraCoord);
 		void computeTmpFaceOnEdgeExtend(M3dView& view, DisplayData* data, const MPoint& mousePointInCameraCoord);
 		
-		bool addCreateFaceCommand(M3dView& view, DisplayData* data, MVGEditCmd* cmd, MDagPath& meshPath, const MPointArray& facePoints3D);
 
 	public:
 		static MTypeId _id;
-//		std::map<std::string, DisplayData> _cache; //FIXME use caching on the wrapper side
-		MVGManipulatorUtil::IntersectionState _intersectionState;
-        MVGContext* _ctx;
-		MVGManipulatorUtil::IntersectionData _intersectionData;		
-		
-		MPointArray _previewFace3D;
+		MVGManipulatorUtil _manipUtils;
 };
 
 

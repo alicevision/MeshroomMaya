@@ -8,7 +8,7 @@
 #include <maya/MArgDatabase.h>
 #include <maya/MGlobal.h>
 
-using namespace mayaMVG;
+namespace mayaMVG {
 
 MString MVGEditCmd::name("MVGEditCmd");
 
@@ -22,7 +22,7 @@ namespace { // empty namespace
 } // empty namespace
 
 MVGEditCmd::MVGEditCmd() 
-	: _flags(CMD_CREATE)
+	: _flags(0)
 {
 }
 
@@ -75,11 +75,24 @@ MStatus MVGEditCmd::redoIt()
 			if(!mesh.isValid())
 				return MS::kFailure;
 		}
-		if(!mesh.addPolygon(_points, _index))
+		int index;
+		if(!mesh.addPolygon(_points, index))
 			return MS::kFailure;
+		
+		_indexes.clear();
+		_indexes.append(index);
+		
 	}
 	// -move
 	if(_flags & CMD_MOVE) {
+		MVGMesh mesh(_meshPath);
+		if(!mesh.isValid())
+			return MS::kFailure;
+		
+		for(int i = 0; i < _points.length(); ++i)
+		{
+			mesh.setPoint(_indexes[i], _points[i]);
+		}
 	}
 	
 	MVGProjectWrapper::instance().rebuildMeshCacheFromMaya(_meshPath);
@@ -94,7 +107,7 @@ MStatus MVGEditCmd::undoIt()
 		MVGMesh mesh(_meshPath);
 		if(!mesh.isValid())
 			return MStatus::kFailure;
-		if(!mesh.deletePolygon(_index))
+		if(!mesh.deletePolygon(_indexes[0]))
 			return MS::kFailure;	
 		
 		// TODO : remove points from all cameras
@@ -102,6 +115,14 @@ MStatus MVGEditCmd::undoIt()
 	}
 	// -move
 	if(_flags & CMD_MOVE) {
+//		MVGMesh mesh(_meshPath);
+//		if(!mesh.isValid())
+//			return MS::kFailure;
+//		
+//		for(int i = 0; i < _points.length(); ++i)
+//		{
+//			mesh.setPoint(_indexes[i], _points[i]);
+//		}
 	}
 	MVGProjectWrapper::instance().rebuildAllMeshesCacheFromMaya();
 	return status;
@@ -134,12 +155,17 @@ void MVGEditCmd::doAddPolygon(const MDagPath& meshPath, const MPointArray& point
 	_points = points;
 }
 
-void MVGEditCmd::doMove()
+void MVGEditCmd::doMove(const MDagPath& meshPath, const MPointArray& points, const MIntArray& verticesIndexes)
 {
 	_flags |= CMD_MOVE;
+	_meshPath = meshPath;
+	_points = points;
+	_indexes = verticesIndexes;
 }
 
 void MVGEditCmd::doDelete()
 {
 	_flags |= CMD_DELETE;
 }
+
+} //mayaMVG

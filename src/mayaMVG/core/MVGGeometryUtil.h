@@ -80,7 +80,7 @@ struct MVGGeometryUtil {
 	static void cameraToView(M3dView& view, const MVGCamera& camera, const MPoint& point, short& x, short& y);
 	static void cameraToImage(const MVGCamera& camera, const MPoint& point, short& , short& y);
 	static bool projectFace2D(M3dView& view, MPointArray& face3DPoints, const MVGCamera& camera, const MPointArray& face2DPoints, bool compute = false, MVector height = MVector(0, 0, 0));
-//	static void computePlane(MVGFace3D& face3D, PlaneKernel::Model& model);
+	static bool computePlane(MPointArray& facePoints3D, PlaneKernel::Model& model);
 	static void projectPointOnPlane(const MPoint& point, M3dView& view, PlaneKernel::Model& model, const MVGCamera&,  MPoint& projectedPoint);
 };
 
