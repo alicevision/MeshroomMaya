@@ -267,27 +267,52 @@ void MVGMoveManipulator::computeTmpFaceOnMovePoint(M3dView& view, DisplayData* d
 
 	MIntArray verticesId = _manipUtils.intersectionData().facePointIndexes;
 
-	// Fill previewFace3D
-	MPointArray facePoints3D;
-	for(int i = 0; i < verticesId.length(); ++i)
+	// Move in plane
+//	{
+//		// Fill previewFace3D
+//		MPointArray facePoints3D;
+//		for(int i = 0; i < verticesId.length(); ++i)
+//		{
+//			facePoints3D.append(meshPoints[verticesId[i]]);
+//		}
+//		MPoint movedPoint;
+//		PlaneKernel::Model model;
+//
+//		MVGGeometryUtil::computePlane(facePoints3D, model);
+//		MVGGeometryUtil::projectPointOnPlane(mousePoint, view, model, data->camera, movedPoint);
+//
+//		_manipUtils.previewFace3D().setLength(4);
+//		for(int i = 0; i < verticesId.length(); ++i)
+//		{
+//			if(_manipUtils.intersectionData().pointIndex == verticesId[i])
+//				_manipUtils.previewFace3D()[i] = movedPoint;
+//			else
+//				_manipUtils.previewFace3D()[i] = facePoints3D[i];
+//		}		
+//	}
+
+	// Recompute plane
 	{
-		facePoints3D.append(meshPoints[verticesId[i]]);
+		MPointArray previewPoints2D;
+		MPoint wpos;
+		for(int i = 0; i < verticesId.length(); ++i)
+		{
+			if(_manipUtils.intersectionData().pointIndex == verticesId[i])
+			{
+				previewPoints2D.append(mousePoint);
+			}
+
+			else
+			{
+				MVGGeometryUtil::worldToCamera(view, data->camera, meshPoints[verticesId[i]], wpos);
+				previewPoints2D.append(wpos);
+			}
+		}
+		
+		// Compute face		
+		_manipUtils.previewFace3D().clear();
+		MVGGeometryUtil::projectFace2D(view, _manipUtils.previewFace3D(), data->camera, previewPoints2D);
 	}
-
-	MPoint movedPoint;
-	PlaneKernel::Model model;
-
-	MVGGeometryUtil::computePlane(facePoints3D, model);
-	MVGGeometryUtil::projectPointOnPlane(mousePoint, view, model, data->camera, movedPoint);
-
-	_manipUtils.previewFace3D().setLength(4);
-	for(int i = 0; i < verticesId.length(); ++i)
-	{
-		if(_manipUtils.intersectionData().pointIndex == verticesId[i])
-			_manipUtils.previewFace3D()[i] = movedPoint;
-		else
-			_manipUtils.previewFace3D()[i] = facePoints3D[i];
-	}						
 }
 
 void MVGMoveManipulator::drawUI(MHWRender::MUIDrawManager& drawManager, const MHWRender::MFrameContext&) const
