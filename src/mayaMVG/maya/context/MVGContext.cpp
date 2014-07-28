@@ -16,6 +16,7 @@ MVGContext::MVGContext()
 	, _filterLV((QObject*)MVGMayaUtil::getMVGViewportLayout(MVGProjectWrapper::instance().panelModel().at(0).toStdString().c_str()), this, &_eventData)
 	, _filterRV((QObject*)MVGMayaUtil::getMVGViewportLayout(MVGProjectWrapper::instance().panelModel().at(1).toStdString().c_str()), this, &_eventData)
 	, _editMode(eModeCreate)
+	, _keyPressed(eKeyNone)
 {
 	setTitleString("MVG tool");
 }
@@ -88,6 +89,12 @@ bool MVGContext::eventFilter(QObject *obj, QEvent *e, void* eventData)
 				_editMode = eModeCreate;
 				updateManipulators();
 				break;
+			case Qt::Key_Control:
+				_keyPressed = eKeyCtrl;
+				break;
+			case Qt::Key_Shift:
+				_keyPressed = eKeyShift;
+				break;
 			case Qt::Key_Escape:
 			{
 				M3dView view = M3dView::active3dView();
@@ -103,9 +110,25 @@ bool MVGContext::eventFilter(QObject *obj, QEvent *e, void* eventData)
 	}
 	// key released
 	else if(e->type() == QEvent::KeyRelease) {
-		// QKeyEvent * keyevent = static_cast<QKeyEvent*>(e);
-		// if (keyevent->isAutoRepeat())
-		// 	return false;
+		Qt::KeyboardModifiers modifiers = QApplication::keyboardModifiers();
+		 QKeyEvent * keyevent = static_cast<QKeyEvent*>(e);
+		 if (keyevent->isAutoRepeat())
+		 	return false;
+		 
+		switch(keyevent->key()) {
+			case Qt::Key_Control:
+				if(!(modifiers & Qt::ShiftModifier))
+					_keyPressed = eKeyNone;
+				else
+					_keyPressed = eKeyShift;
+				break;
+			case Qt::Key_Shift:
+				if(!(modifiers & Qt::ControlModifier))
+					_keyPressed = eKeyNone;
+				else
+					_keyPressed = eKeyCtrl;
+				break;
+		}
 	}
 	// mouse button pressed
 	else if (e->type() == QEvent::MouseButtonPress) {

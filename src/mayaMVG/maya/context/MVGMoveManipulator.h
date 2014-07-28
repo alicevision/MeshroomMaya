@@ -38,7 +38,8 @@ class MVGMoveManipulator: public MPxManipulatorNode
 		MPoint updateMouse(M3dView& view, DisplayData* data, short& mousex, short& mousey);
 		
 		// Compute
-		void computeTmpFaceOnMovePoint(M3dView& view, DisplayData* data, MPoint& mousePoint);
+		void computeTmpFaceOnMovePoint(M3dView& view, DisplayData* data, MPoint& mousePoint, bool recompute = false);
+		void computeTmpFaceOnMoveEdge(M3dView& view, DisplayData* data, MPoint& mousePoint);
 	public:
 		static MTypeId _id;
 		MVGManipulatorUtil _manipUtils;

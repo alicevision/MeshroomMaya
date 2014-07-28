@@ -3,6 +3,7 @@
 #include "mayaMVG/maya/context/MVGDrawUtil.h"
 #include "mayaMVG/maya/MVGMayaUtil.h"
 #include "mayaMVG/core/MVGLog.h"
+#include "mayaMVG/maya/context/MVGContext.h"
 
 namespace mayaMVG {
 
@@ -229,9 +230,21 @@ MStatus MVGMoveManipulator::doDrag(M3dView& view)
 	
 	switch(_manipUtils.intersectionState()) {
 		case MVGManipulatorUtil::eIntersectionNone:
+			break;
 		case MVGManipulatorUtil::eIntersectionPoint:
 			if(!_manipUtils.intersectionData().connectedFace)
-				computeTmpFaceOnMovePoint(view, data, mousePoint);
+				
+				switch(_manipUtils.getContext()->getKeyPressed())
+				{
+					case MVGContext::eKeyNone:
+						break;
+					case MVGContext::eKeyCtrl:
+						computeTmpFaceOnMovePoint(view, data, mousePoint);
+						break;
+					case MVGContext::eKeyShift:
+						computeTmpFaceOnMovePoint(view, data, mousePoint, true);
+						break;					
+				}
 			break;
 		case MVGManipulatorUtil::eIntersectionEdge: 
 		{
@@ -261,37 +274,13 @@ MPoint MVGMoveManipulator::updateMouse(M3dView& view, DisplayData* data, short& 
 	return mousePointInCameraCoord;
 }
 
-void MVGMoveManipulator::computeTmpFaceOnMovePoint(M3dView& view, DisplayData* data, MPoint& mousePoint)
+void MVGMoveManipulator::computeTmpFaceOnMovePoint(M3dView& view, DisplayData* data, MPoint& mousePoint, bool recompute)
 {
 	MPointArray& meshPoints = MVGProjectWrapper::instance().getMeshPoints(_manipUtils.intersectionData().meshName);
 
 	MIntArray verticesId = _manipUtils.intersectionData().facePointIndexes;
 
-	// Move in plane
-//	{
-//		// Fill previewFace3D
-//		MPointArray facePoints3D;
-//		for(int i = 0; i < verticesId.length(); ++i)
-//		{
-//			facePoints3D.append(meshPoints[verticesId[i]]);
-//		}
-//		MPoint movedPoint;
-//		PlaneKernel::Model model;
-//
-//		MVGGeometryUtil::computePlane(facePoints3D, model);
-//		MVGGeometryUtil::projectPointOnPlane(mousePoint, view, model, data->camera, movedPoint);
-//
-//		_manipUtils.previewFace3D().setLength(4);
-//		for(int i = 0; i < verticesId.length(); ++i)
-//		{
-//			if(_manipUtils.intersectionData().pointIndex == verticesId[i])
-//				_manipUtils.previewFace3D()[i] = movedPoint;
-//			else
-//				_manipUtils.previewFace3D()[i] = facePoints3D[i];
-//		}		
-//	}
-
-	// Recompute plane
+	if(recompute)
 	{
 		MPointArray previewPoints2D;
 		MPoint wpos;
@@ -313,6 +302,69 @@ void MVGMoveManipulator::computeTmpFaceOnMovePoint(M3dView& view, DisplayData* d
 		_manipUtils.previewFace3D().clear();
 		MVGGeometryUtil::projectFace2D(view, _manipUtils.previewFace3D(), data->camera, previewPoints2D);
 	}
+	else {
+		// Fill previewFace3D
+		MPointArray facePoints3D;
+		for(int i = 0; i < verticesId.length(); ++i)
+		{
+			facePoints3D.append(meshPoints[verticesId[i]]);
+		}
+		MPoint movedPoint;
+		PlaneKernel::Model model;
+
+		MVGGeometryUtil::computePlane(facePoints3D, model);
+		MVGGeometryUtil::projectPointOnPlane(mousePoint, view, model, data->camera, movedPoint);
+
+		_manipUtils.previewFace3D().setLength(4);
+		for(int i = 0; i < verticesId.length(); ++i)
+		{
+			if(_manipUtils.intersectionData().pointIndex == verticesId[i])
+				_manipUtils.previewFace3D()[i] = movedPoint;
+			else
+				_manipUtils.previewFace3D()[i] = facePoints3D[i];
+		}		
+	}
+
+		
+}
+
+void MVGMoveManipulator::computeTmpFaceOnMoveEdge(M3dView& view, DisplayData* data, MPoint& mousePoint)
+{
+
+//	MPointArray& meshPoints = MVGProjectWrapper::instance().getMeshPoints(_manipUtils.intersectionData().meshName);
+//
+//	MIntArray verticesId = _manipUtils.intersectionData().facePointIndexes;
+//	
+//	MIntArray verticesId = mesh.getFaceVertices(_connectedFacesId[0]);	
+//	MPointArray meshPoints;
+//	mesh.getPoints(meshPoints);
+//
+//	MIntArray edgeVerticesId = mesh.getEdgeVertices(_intersectedEdgeId);
+//	MIntArray fixedVerticesId;
+//	for(int i = 0; i < verticesId.length(); ++i)
+//	{
+//		int found = false;
+//		for(int j = 0; j < edgeVerticesId.length(); ++j)
+//		{
+//			if(verticesId[i] == edgeVerticesId[j])
+//				found = true;
+//		}
+//
+//		if(!found)
+//			fixedVerticesId.append(verticesId[i]);
+//	}
+//
+//	// Switch order if necessary
+//	if(fixedVerticesId[0] == verticesId[0]
+//		&& fixedVerticesId[1] == verticesId[verticesId.length() - 1])
+//	{
+//		MIntArray tmp = fixedVerticesId;
+//		fixedVerticesId[0] = tmp[1];
+//		fixedVerticesId[1] = tmp[0];
+//	}
+	// Same plane
+	
+	// Recompute
 }
 
 void MVGMoveManipulator::drawUI(MHWRender::MUIDrawManager& drawManager, const MHWRender::MFrameContext&) const

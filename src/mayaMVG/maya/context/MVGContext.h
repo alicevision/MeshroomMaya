@@ -24,6 +24,13 @@ class MVGContext: public MPxContext {
         , eModeMove
         // , eModeDelete
     };
+	
+	enum EKeyPressed {
+		eKeyNone = 0
+		, eKeyCtrl
+		, eKeyShift
+	};
+	
     public:
         MVGContext();
         virtual ~MVGContext(){}
@@ -32,6 +39,7 @@ class MVGContext: public MPxContext {
         virtual void getClassName(MString & name) const;
     public:
         void updateManipulators();
+		inline EKeyPressed getKeyPressed() const { return _keyPressed; }
         bool eventFilter(QObject *obj, QEvent *e, void* data);
         MVGEditCmd* newCmd();
     private:
@@ -40,6 +48,7 @@ class MVGContext: public MPxContext {
         MVGEventFilter<MVGContext> _filterLV;
         MVGEventFilter<MVGContext> _filterRV;
         EditMode _editMode;
+		EKeyPressed _keyPressed;
 };
 
 } // namespace
