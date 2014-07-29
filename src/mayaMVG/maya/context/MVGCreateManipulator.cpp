@@ -220,34 +220,68 @@ void MVGCreateManipulator::setContext(MVGContext* ctx)
 
 void MVGCreateManipulator::drawIntersections(M3dView& view)
 {
-	std::map<std::string, MPointArray>& meshCache = MVGProjectWrapper::instance().getCacheMeshToPointArray();
-	if(meshCache.size() > 0) 
-	{
-		MVGManipulatorUtil::IntersectionData& intersectionData = _manipUtils.intersectionData();
-		MPointArray meshPoints = meshCache[intersectionData.meshName];
-		MPoint pointViewCoord_0;
-		MPoint pointViewCoord_1;
-
-		switch(_manipUtils.intersectionState())
+	// DISPLAY DATA
+	DisplayData* data = MVGProjectWrapper::instance().getCachedDisplayData(view);
+	if(!data)
+		return;
+	
+	if(data->allPoints2D.size() == 0)
+		return;
+	
+	MVGManipulatorUtil::IntersectionData& intersectionData = _manipUtils.intersectionData();
+	std::vector<MVGPoint2D>& meshPoints = data->allPoints2D[intersectionData.meshName];
+	
+	short x, y;
+	switch(_manipUtils.intersectionState())
 		{
 			case MVGManipulatorUtil::eIntersectionPoint:
 				glColor4f(0.3f, 0.3f, 0.6f, 0.8f);	// Grey
-				pointViewCoord_0 = MVGGeometryUtil::worldToView(view, meshPoints[intersectionData.pointIndex]);
-
-				MVGDrawUtil::drawCircle(pointViewCoord_0.x, pointViewCoord_0.y, POINT_RADIUS, 30);
+				
+				MVGGeometryUtil::cameraToView(view, data->camera, meshPoints[intersectionData.pointIndex].projectedPoint3D, x, y);
+				MVGDrawUtil::drawCircle(x, y, POINT_RADIUS, 30);
+				
 				break;
 			case MVGManipulatorUtil::eIntersectionEdge:				
 				glColor4f(0.9f, 0.9f, 0.1f, 0.8f);
 
-				pointViewCoord_0 = MVGGeometryUtil::worldToView(view, meshPoints[intersectionData.edgePointIndexes[0]]);
-				pointViewCoord_1 = MVGGeometryUtil::worldToView(view, meshPoints[intersectionData.edgePointIndexes[1]]);
 				glBegin(GL_LINES);
-					glVertex2f(pointViewCoord_0.x, pointViewCoord_0.y);
-					glVertex2f(pointViewCoord_1.x, pointViewCoord_1.y);
+					MVGGeometryUtil::cameraToView(view, data->camera, meshPoints[intersectionData.edgePointIndexes[0]].projectedPoint3D, x, y);
+					glVertex2f(x, y);
+					MVGGeometryUtil::cameraToView(view, data->camera, meshPoints[intersectionData.edgePointIndexes[1]].projectedPoint3D, x, y);
+					glVertex2f(x, y);
 				glEnd();	
 				break;
 		}	
-	}
+	
+	// Temporary caches
+//	std::map<std::string, MPointArray>& meshCache = MVGProjectWrapper::instance().getCacheMeshToPointArray();
+//	if(meshCache.size() > 0) 
+//	{
+//		MVGManipulatorUtil::IntersectionData& intersectionData = _manipUtils.intersectionData();
+//		MPointArray meshPoints = meshCache[intersectionData.meshName];
+//		MPoint pointViewCoord_0;
+//		MPoint pointViewCoord_1;
+//
+//		switch(_manipUtils.intersectionState())
+//		{
+//			case MVGManipulatorUtil::eIntersectionPoint:
+//				glColor4f(0.3f, 0.3f, 0.6f, 0.8f);	// Grey
+//				pointViewCoord_0 = MVGGeometryUtil::worldToView(view, meshPoints[intersectionData.pointIndex]);
+//
+//				MVGDrawUtil::drawCircle(pointViewCoord_0.x, pointViewCoord_0.y, POINT_RADIUS, 30);
+//				break;
+//			case MVGManipulatorUtil::eIntersectionEdge:				
+//				glColor4f(0.9f, 0.9f, 0.1f, 0.8f);
+//
+//				pointViewCoord_0 = MVGGeometryUtil::worldToView(view, meshPoints[intersectionData.edgePointIndexes[0]]);
+//				pointViewCoord_1 = MVGGeometryUtil::worldToView(view, meshPoints[intersectionData.edgePointIndexes[1]]);
+//				glBegin(GL_LINES);
+//					glVertex2f(pointViewCoord_0.x, pointViewCoord_0.y);
+//					glVertex2f(pointViewCoord_1.x, pointViewCoord_1.y);
+//				glEnd();	
+//				break;
+//		}	
+//	}
 }
 
 void MVGCreateManipulator::drawPreview2D(M3dView& view, DisplayData* data)
@@ -308,21 +342,16 @@ void MVGCreateManipulator::drawPreview2D(M3dView& view, DisplayData* data)
 void MVGCreateManipulator::computeTmpFaceOnEdgeExtend(M3dView& view, DisplayData* data, const MPoint& mousePointInCameraCoord)
 {
 	MVGManipulatorUtil::IntersectionData& intersectionData = _manipUtils.intersectionData();
+	std::vector<MVGPoint2D>& mvgPoints = data->allPoints2D[intersectionData.meshName];
 	
 	// Get edge 3D points 
-	MPointArray& meshPoints = MVGProjectWrapper::instance().getMeshPoints(intersectionData.meshName);
-	MPoint edgePoint3D_0 = meshPoints[intersectionData.edgePointIndexes[0]];
-	MPoint edgePoint3D_1 = meshPoints[intersectionData.edgePointIndexes[1]];
-	MPoint edgePoint0, edgePoint1;
-
-	// Compute edge points in camera coords
-	MVGGeometryUtil::worldToCamera(view, data->camera, edgePoint3D_0, edgePoint0);
-	MVGGeometryUtil::worldToCamera(view, data->camera, edgePoint3D_1, edgePoint1);
+	MPoint edgePoint3D_0 = mvgPoints[intersectionData.edgePointIndexes[0]].point3D;
+	MPoint edgePoint3D_1 = mvgPoints[intersectionData.edgePointIndexes[1]].point3D;
 
 	// Build 2D points preview to compute 3D face
 	MPointArray previewPoints2D;
-	previewPoints2D.append(edgePoint1);
-	previewPoints2D.append(edgePoint0);
+	previewPoints2D.append(mvgPoints[intersectionData.edgePointIndexes[0]].projectedPoint3D);
+	previewPoints2D.append(mvgPoints[intersectionData.edgePointIndexes[1]].projectedPoint3D);
 	MPoint P3 = mousePointInCameraCoord - (1 - intersectionData.edgeRatio) * intersectionData.edgeHeight2D;
 	MPoint P4 = mousePointInCameraCoord + intersectionData.edgeRatio * intersectionData.edgeHeight2D;
 	previewPoints2D.append(P3);

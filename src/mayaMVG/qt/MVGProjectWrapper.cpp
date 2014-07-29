@@ -10,6 +10,7 @@
 #include <maya/MItMeshEdge.h>
 #include <maya/MItMeshVertex.h>
 #include <maya/MItMeshPolygon.h>
+#include "mayaMVG/core/MVGGeometryUtil.h"
 
 using namespace mayaMVG;
 
@@ -130,7 +131,7 @@ void MVGProjectWrapper::setCameraToView(QObject* camera, const QString& viewName
 	
 	_panelToCamera[viewName.toStdString()] = cam->camera().dagPath().fullPathName().asChar();
 	// TODO
-	//rebuildCacheFromMaya();
+	rebuildCacheFromMaya();
 }
 
 
@@ -144,14 +145,15 @@ DisplayData* MVGProjectWrapper::getCachedDisplayData(M3dView& view)
 	
 	if(it == _cacheCameraToDisplayData.end())
 	{	
-		// TODO : return NULL when we will use associations
-		MVGCamera c(cameraPath);
-		if(c.isValid()) {
-			DisplayData data;
-			data.camera = c;
-			_cacheCameraToDisplayData[cameraPath.fullPathName().asChar()] = data;
-			return &_cacheCameraToDisplayData[cameraPath.fullPathName().asChar()];			
-		}
+		return NULL;
+//		// TODO : return NULL when we will use associations
+//		MVGCamera c(cameraPath);
+//		if(c.isValid()) {
+//			DisplayData data;
+//			data.camera = c;
+//			_cacheCameraToDisplayData[cameraPath.fullPathName().asChar()] = data;
+//			return &_cacheCameraToDisplayData[cameraPath.fullPathName().asChar()];			
+//		}
 	}
 	else {
 		return &(it->second);
@@ -174,53 +176,84 @@ void MVGProjectWrapper::reloadProjectFromMaya()
 	// TODO : Camera selection
 	
 	MVGProjectWrapper::instance().rebuildAllMeshesCacheFromMaya();
-	
+	MVGProjectWrapper::instance().rebuildCacheFromMaya();
 }
 
-//void MVGProjectWrapper::rebuildCacheFromMaya() 
-//{
-//	// Remove unused camera
-//	std::map<std::string, DisplayData>::iterator cacheIt = _cache.begin();
-//	while(cacheIt != _cache.end())
-//	{
-//		bool isInView = false;
-//		for(std::map<std::string, std::string>::iterator camIt = _panelToCamera.begin(); camIt != _panelToCamera.end(); ++camIt)
-//		{
-//			if(cacheIt->first == camIt->second)
-//			{
-//				isInView = true;
-//				break;
-//			}
-//		}
-//		
-//		if(!isInView)
-//		{
-//			_cache.erase(cacheIt++);
-//		} 
-//		else
-//		{
-//			++cacheIt;
-//		}
-//	}
-//	
-//	// Rebuild cache
-//	for(std::map<std::string, std::string>::iterator camIt = _panelToCamera.begin(); camIt != _panelToCamera.end(); ++camIt)
-//	{
-//		MDagPath cameraPath;
-//		MVGMayaUtil::getDagPathByName(camIt->second.c_str(), cameraPath);
-//	
-//		MVGCamera c(cameraPath);
-//		if(c.isValid()) {
-//			DisplayData data;
-//			data.camera = c;
-//			data.cameraPoints2D = c.getClickedPoints();				
-//			_cache[cameraPath.fullPathName().asChar()] = data;
-//		}
-//	}
-//	
-//	// TODO : Rebuild maps
-//
-//}
+void MVGProjectWrapper::rebuildCacheFromMaya() 
+{
+	// Remove unused camera
+	std::map<std::string, DisplayData>::iterator cacheIt = _cacheCameraToDisplayData.begin();
+	while(cacheIt != _cacheCameraToDisplayData.end())
+	{
+		bool isInView = false;
+		for(std::map<std::string, std::string>::iterator camIt = _panelToCamera.begin(); camIt != _panelToCamera.end(); ++camIt)
+		{
+			if(cacheIt->first == camIt->second)
+			{
+				isInView = true;
+				break;
+			}
+		}
+		
+		if(!isInView)
+		{
+			_cacheCameraToDisplayData.erase(cacheIt++);
+		} 
+		else
+		{
+			++cacheIt;
+		}
+	}
+	
+	M3dView view = M3dView::active3dView();
+	// Rebuild cache
+	for(std::map<std::string, std::string>::iterator camIt = _panelToCamera.begin(); camIt != _panelToCamera.end(); ++camIt)
+	{
+		MDagPath cameraPath;
+		MVGMayaUtil::getDagPathByName(camIt->second.c_str(), cameraPath);
+	
+		MVGCamera c(cameraPath);
+		if(c.isValid()) {
+			DisplayData data;
+			data.camera = c;
+			
+			// Rebuild for temporary cache
+			// TODO: remove to use directly data from Maya
+			
+			// Browse meshes
+			std::map<std::string, std::vector<MVGPoint2D> > newMap;
+			for(std::map<std::string, MPointArray>::iterator it = _cacheMeshToPointArray.begin(); it != _cacheMeshToPointArray.end(); ++it)
+			{
+				std::vector<MVGPoint2D> points2D;
+				// Browse points
+				MPointArray& points3D = it->second;
+				for(int i = 0; i < points3D.length(); ++i)
+				{
+					MVGPoint2D mvgPoint;;
+					mvgPoint.point3D = points3D[i];
+					MPoint point2D;
+					MVGGeometryUtil::worldToCamera(view, c, points3D[i], point2D);
+					mvgPoint.projectedPoint3D = point2D;
+					mvgPoint.movableState = _cacheMeshToMovablePoint[it->first].at(i);
+					
+					points2D.push_back(mvgPoint);
+				}
+				
+				newMap[it->first] = points2D;
+			}
+			
+			data.allPoints2D = newMap;
+			
+			_cacheCameraToDisplayData[cameraPath.fullPathName().asChar()] = data;
+			LOG_INFO("map size = " << data.allPoints2D.size());
+			if(data.allPoints2D.size() > 0)
+				LOG_INFO("vector size = " << data.allPoints2D.begin()->second.size());
+		}
+	}
+	
+	// TODO : Rebuild maps
+
+}
 
 MStatus MVGProjectWrapper::rebuildAllMeshesCacheFromMaya()
 {

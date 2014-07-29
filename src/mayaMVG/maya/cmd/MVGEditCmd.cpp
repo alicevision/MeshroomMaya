@@ -96,6 +96,7 @@ MStatus MVGEditCmd::redoIt()
 	}
 	
 	MVGProjectWrapper::instance().rebuildMeshCacheFromMaya(_meshPath);
+	MVGProjectWrapper::instance().rebuildCacheFromMaya();
 	return status;
 }
 
@@ -125,6 +126,7 @@ MStatus MVGEditCmd::undoIt()
 //		}
 	}
 	MVGProjectWrapper::instance().rebuildAllMeshesCacheFromMaya();
+	MVGProjectWrapper::instance().rebuildCacheFromMaya();
 	return status;
 }
 

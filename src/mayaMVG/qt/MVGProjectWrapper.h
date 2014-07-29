@@ -14,19 +14,6 @@ namespace mayaMVG {
 //typedef std::pair<std::string, MPoint> PairStringToPoint;
 //typedef std::map<std::pair<std::string, MPoint>, std::pair<std::string, MPoint> > Map2Dto3D;
 //typedef std::map<std::pair<std::string, MPoint>, std::vector<std::pair<std::string, MPoint> > > Map3Dto2D;
-//
-//
-//struct	Point2D {
-//	/// Position in camera coords
-//	MPoint	pos;
-//	/// Position in camera coord of the projected associated point 3D
-//	MPoint	projectedPoint3D;
-//	/// Number of views in which point3D is placed
-//	int		nbViews;
-//	/// Is point placed in this view
-//	bool	isInThisView;
-//
-//};
 	
 enum EPointState {
 	eUnMovable = 0
@@ -34,15 +21,29 @@ enum EPointState {
 	, eMovableRecompute = 2
 };
 
+struct	MVGPoint2D {
+	/// Position in camera coords
+//	MPoint	pos;
+	/// Position in camera coord of the projected associated point 3D
+	MPoint	projectedPoint3D;
+	/// Position 3D
+	MPoint	point3D;
+	/// Number of views in which point3D is placed
+//	int		nbViews;
+	/// Is point placed in this view
+//	bool	isInThisView;
+	/// How the point is movable 
+	EPointState movableState;
+
+};
+
 struct DisplayData {
 	MVGCamera camera;
-	/// temporary points in Camera before having 3D information
+	/// Temporary points in Camera before having 3D information
 	MPointArray buildPoints2D;
-	/// 2D points in Camera coord (centered normalized on width?)
-	//MPointArray cameraPoints2D;
-
-	// TODO : use instead of cameraPoints2D
-	//std::vector<Point2D> allPoints2D;
+	//std::vector<MVGPoint2D> allPoints2D;
+	/// Map mesh to MVGPoints2D
+	std::map<std::string, std::vector<MVGPoint2D> > allPoints2D;
 };
 
 class MVGProjectWrapper : public QObject, public Singleton<MVGProjectWrapper>
@@ -82,16 +83,16 @@ public:
 //	Map2Dto3D& getMap2Dto3D() { return _map2Dto3D; }
 	
 	DisplayData* getCachedDisplayData(M3dView& view);
-	inline std::map<std::string, MPointArray>& getCacheMeshToPointArray() { return _cacheMeshToPointArray; }
-	inline MPointArray& getMeshPoints(std::string meshName) { return _cacheMeshToPointArray[meshName]; }
-	inline std::map<std::string, std::vector<EPointState> >& getCacheMeshToMovablePoint() { return _cacheMeshToMovablePoint; }
-	inline std::vector<EPointState>& getMeshMovablePoints(std::string meshName) { return _cacheMeshToMovablePoint[meshName]; }
+	//inline std::map<std::string, MPointArray>& getCacheMeshToPointArray() { return _cacheMeshToPointArray; }
+	//inline MPointArray& getMeshPoints(std::string meshName) { return _cacheMeshToPointArray[meshName]; }
+	//inline std::map<std::string, std::vector<EPointState> >& getCacheMeshToMovablePoint() { return _cacheMeshToMovablePoint; }
+	//inline std::vector<EPointState>& getMeshMovablePoints(std::string meshName) { return _cacheMeshToMovablePoint[meshName]; }
 	inline std::map<std::string, std::vector<MIntArray> >& getCacheMeshToEdgeArray() { return _cacheMeshToEdgeArray; }
 	inline std::vector<MIntArray>& getMeshEdges(std::string meshName) { return _cacheMeshToEdgeArray[meshName]; }
 	Q_INVOKABLE void reloadProjectFromMaya();
-	//Q_INVOKABLE void rebuildCacheFromMaya();
-	MStatus rebuildAllMeshesCacheFromMaya();	// Temporay
-	MStatus rebuildMeshCacheFromMaya(MDagPath& meshPath);	// Temporay
+	Q_INVOKABLE void rebuildCacheFromMaya();
+	MStatus rebuildAllMeshesCacheFromMaya();	// Temporary
+	MStatus rebuildMeshCacheFromMaya(MDagPath& meshPath);	// Temporary
 
 signals:
     void projectDirectoryChanged();
