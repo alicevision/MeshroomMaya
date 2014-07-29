@@ -61,7 +61,8 @@ void MVGCreateManipulator::draw(M3dView & view, const MDagPath & path,
 			glColor3f(1.f, 0.f, 0.f);
 			drawPreview2D(view, data);
 		
-			_manipUtils.drawIntersections(view, data);
+			drawIntersections(view);
+			
 		}
 
 	MVGDrawUtil::end2DDrawing();
@@ -115,7 +116,7 @@ MStatus MVGCreateManipulator::doPress(M3dView& view)
 			LOG_INFO("SELECT POINT")
 			break;
 		case MVGManipulatorUtil::eIntersectionEdge:
-			computeEdgeIntersectionData(view, data, mousePoint);		
+			_manipUtils.computeEdgeIntersectionData(view, data, mousePoint);		
 			break;
 	}
 
@@ -217,6 +218,38 @@ void MVGCreateManipulator::setContext(MVGContext* ctx)
 	_manipUtils.setContext(ctx);
 }
 
+void MVGCreateManipulator::drawIntersections(M3dView& view)
+{
+	std::map<std::string, MPointArray>& meshCache = MVGProjectWrapper::instance().getCacheMeshToPointArray();
+	if(meshCache.size() > 0) 
+	{
+		MVGManipulatorUtil::IntersectionData& intersectionData = _manipUtils.intersectionData();
+		MPointArray meshPoints = meshCache[intersectionData.meshName];
+		MPoint pointViewCoord_0;
+		MPoint pointViewCoord_1;
+
+		switch(_manipUtils.intersectionState())
+		{
+			case MVGManipulatorUtil::eIntersectionPoint:
+				glColor4f(0.3f, 0.3f, 0.6f, 0.8f);	// Grey
+				pointViewCoord_0 = MVGGeometryUtil::worldToView(view, meshPoints[intersectionData.pointIndex]);
+
+				MVGDrawUtil::drawCircle(pointViewCoord_0.x, pointViewCoord_0.y, POINT_RADIUS, 30);
+				break;
+			case MVGManipulatorUtil::eIntersectionEdge:				
+				glColor4f(0.9f, 0.9f, 0.1f, 0.8f);
+
+				pointViewCoord_0 = MVGGeometryUtil::worldToView(view, meshPoints[intersectionData.edgePointIndexes[0]]);
+				pointViewCoord_1 = MVGGeometryUtil::worldToView(view, meshPoints[intersectionData.edgePointIndexes[1]]);
+				glBegin(GL_LINES);
+					glVertex2f(pointViewCoord_0.x, pointViewCoord_0.y);
+					glVertex2f(pointViewCoord_1.x, pointViewCoord_1.y);
+				glEnd();	
+				break;
+		}	
+	}
+}
+
 void MVGCreateManipulator::drawPreview2D(M3dView& view, DisplayData* data)
 {
 	short x, y;
@@ -272,32 +305,14 @@ void MVGCreateManipulator::drawPreview2D(M3dView& view, DisplayData* data)
 	}
 }
 
-void MVGCreateManipulator::computeEdgeIntersectionData(M3dView& view, DisplayData* data, const MPoint& mousePointInCameraCoord)
-{
-	MPointArray& meshPoints = MVGProjectWrapper::instance().getMeshPoints(_manipUtils.intersectionData().meshName);
-	
-	// Compute height and ratio 2D
-	MPoint edgePoint3D_0 = meshPoints[_manipUtils.intersectionData().edgePointIndexes[0]];
-	MPoint edgePoint3D_1 = meshPoints[_manipUtils.intersectionData().edgePointIndexes[1]];
-	MPoint edgePoint0, edgePoint1;
-
-	MVGGeometryUtil::worldToCamera(view, data->camera, edgePoint3D_0, edgePoint0);
-	MVGGeometryUtil::worldToCamera(view, data->camera, edgePoint3D_1, edgePoint1);
-
-	MVector ratioVector2D = edgePoint1 - mousePointInCameraCoord;
-	_manipUtils.intersectionData().edgeHeight2D =  edgePoint1 - edgePoint0;
-	_manipUtils.intersectionData().edgeRatio = ratioVector2D.length() / _manipUtils.intersectionData().edgeHeight2D.length();
-
-	// Compute height 3D
-	_manipUtils.intersectionData().edgeHeight3D = edgePoint3D_1 - edgePoint3D_0;
-}
-
 void MVGCreateManipulator::computeTmpFaceOnEdgeExtend(M3dView& view, DisplayData* data, const MPoint& mousePointInCameraCoord)
 {
+	MVGManipulatorUtil::IntersectionData& intersectionData = _manipUtils.intersectionData();
+	
 	// Get edge 3D points 
-	MPointArray& meshPoints = MVGProjectWrapper::instance().getMeshPoints(_manipUtils.intersectionData().meshName);
-	MPoint edgePoint3D_0 = meshPoints[_manipUtils.intersectionData().edgePointIndexes[0]];
-	MPoint edgePoint3D_1 = meshPoints[_manipUtils.intersectionData().edgePointIndexes[1]];
+	MPointArray& meshPoints = MVGProjectWrapper::instance().getMeshPoints(intersectionData.meshName);
+	MPoint edgePoint3D_0 = meshPoints[intersectionData.edgePointIndexes[0]];
+	MPoint edgePoint3D_1 = meshPoints[intersectionData.edgePointIndexes[1]];
 	MPoint edgePoint0, edgePoint1;
 
 	// Compute edge points in camera coords
@@ -308,14 +323,14 @@ void MVGCreateManipulator::computeTmpFaceOnEdgeExtend(M3dView& view, DisplayData
 	MPointArray previewPoints2D;
 	previewPoints2D.append(edgePoint1);
 	previewPoints2D.append(edgePoint0);
-	MPoint P3 = mousePointInCameraCoord - (1 - _manipUtils.intersectionData().edgeRatio) * _manipUtils.intersectionData().edgeHeight2D;
-	MPoint P4 = mousePointInCameraCoord + _manipUtils.intersectionData().edgeRatio * _manipUtils.intersectionData().edgeHeight2D;
+	MPoint P3 = mousePointInCameraCoord - (1 - intersectionData.edgeRatio) * intersectionData.edgeHeight2D;
+	MPoint P4 = mousePointInCameraCoord + intersectionData.edgeRatio * intersectionData.edgeHeight2D;
 	previewPoints2D.append(P3);
 	previewPoints2D.append(P4);
 
 	// Compute 3D face
 	_manipUtils.previewFace3D().clear();
-	if(MVGGeometryUtil::projectFace2D(view, _manipUtils.previewFace3D(), data->camera, previewPoints2D, true, _manipUtils.intersectionData().edgeHeight3D))
+	if(MVGGeometryUtil::projectFace2D(view, _manipUtils.previewFace3D(), data->camera, previewPoints2D, true, intersectionData.edgeHeight3D))
 	{
 		// Keep the old first 2 points to have a connected face
 		_manipUtils.previewFace3D()[0] = edgePoint3D_1;

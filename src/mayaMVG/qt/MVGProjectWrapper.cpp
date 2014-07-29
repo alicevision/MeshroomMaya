@@ -8,6 +8,8 @@
 #include <maya/MFnDependencyNode.h>
 #include <maya/MFnMesh.h>
 #include <maya/MItMeshEdge.h>
+#include <maya/MItMeshVertex.h>
+#include <maya/MItMeshPolygon.h>
 
 using namespace mayaMVG;
 
@@ -248,6 +250,54 @@ MStatus MVGProjectWrapper::rebuildMeshCacheFromMaya(MDagPath& meshPath)
 		return MS::kFailure;
 	
 	_cacheMeshToPointArray[meshPath.fullPathName().asChar()] = meshPoints;
+	
+	// Connected face
+	std::vector<EPointState> movableStates;
+	MItMeshVertex vertexIt(meshPath, MObject::kNullObj, &status);
+	if(!status)
+		return MS::kFailure;
+	
+	MIntArray faceList;
+	while(!vertexIt.isDone())
+	{
+		vertexIt.getConnectedFaces(faceList);
+		// Point connected to several faces
+		if(faceList.length() > 1)
+			movableStates.push_back(eUnMovable);
+		
+		// Face points connected to several face
+		else if(faceList.length() > 0)
+		{			
+			// Get the points of the first face
+			MItMeshPolygon faceIt(meshPath, MObject::kNullObj);
+			int prev;
+			faceIt.setIndex(faceList[0], prev);
+			MIntArray faceVerticesIndexes;
+			faceIt.getVertices(faceVerticesIndexes);
+			
+			// For each point, check number of connected faces
+			int numConnectedFace;
+			bool check = false;
+			for(int i = 0; i < faceVerticesIndexes.length(); ++i)
+			{
+				MItMeshVertex vertexIter(meshPath, MObject::kNullObj);
+				vertexIter.setIndex(faceVerticesIndexes[i], prev);
+				vertexIter.numConnectedFaces(numConnectedFace);
+				if(numConnectedFace > 1)
+				{
+					movableStates.push_back(eMovableInSamePlane);
+					check = true;
+					break;
+				}
+				
+			}
+			if(!check)
+				movableStates.push_back(eMovableRecompute);
+		}
+
+		vertexIt.next();
+	}
+	_cacheMeshToMovablePoint[meshPath.fullPathName().asChar()] = movableStates;	
 	
 	// Mesh edges
 	MItMeshEdge edgeIt(meshPath, MObject::kNullObj, &status);

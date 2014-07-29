@@ -28,8 +28,11 @@ class MVGCreateManipulator: public MPxManipulatorNode
 	public:
 		void setContext(MVGContext* ctx);
 	private:	
+		// Draw
+		void drawIntersections(M3dView& view);
 		void drawPreview2D(M3dView& view, DisplayData* data);
-		void computeEdgeIntersectionData(M3dView& view, DisplayData* data, const MPoint& mousePointInCameraCoord);
+		
+		// Compute
 		void computeTmpFaceOnEdgeExtend(M3dView& view, DisplayData* data, const MPoint& mousePointInCameraCoord);
 		
 

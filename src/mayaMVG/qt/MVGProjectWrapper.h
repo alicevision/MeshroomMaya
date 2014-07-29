@@ -27,6 +27,12 @@ namespace mayaMVG {
 //	bool	isInThisView;
 //
 //};
+	
+enum EPointState {
+	eUnMovable = 0
+	, eMovableInSamePlane = 1
+	, eMovableRecompute = 2
+};
 
 struct DisplayData {
 	MVGCamera camera;
@@ -78,6 +84,8 @@ public:
 	DisplayData* getCachedDisplayData(M3dView& view);
 	inline std::map<std::string, MPointArray>& getCacheMeshToPointArray() { return _cacheMeshToPointArray; }
 	inline MPointArray& getMeshPoints(std::string meshName) { return _cacheMeshToPointArray[meshName]; }
+	inline std::map<std::string, std::vector<EPointState> >& getCacheMeshToMovablePoint() { return _cacheMeshToMovablePoint; }
+	inline std::vector<EPointState>& getMeshMovablePoints(std::string meshName) { return _cacheMeshToMovablePoint[meshName]; }
 	inline std::map<std::string, std::vector<MIntArray> >& getCacheMeshToEdgeArray() { return _cacheMeshToEdgeArray; }
 	inline std::vector<MIntArray>& getMeshEdges(std::string meshName) { return _cacheMeshToEdgeArray[meshName]; }
 	Q_INVOKABLE void reloadProjectFromMaya();
@@ -106,8 +114,11 @@ private:
 	std::map<std::string, DisplayData> _cacheCameraToDisplayData;	
 	/// Map from meshName to mesh points
 	std::map<std::string, MPointArray> _cacheMeshToPointArray;	// Temporary
+	/// Map from meshName to numConnectedFace by point
+	std::map<std::string, std::vector<EPointState> >	_cacheMeshToMovablePoint;	// Temporary
 	/// Map from meshName to edge points ID
 	std::map<std::string, std::vector<MIntArray> > _cacheMeshToEdgeArray;	// Temporary
+
 	QStringList _allPanelNames;
 	QStringList _visiblePanelNames;
 	std::map<std::string, std::string> _panelToCamera;

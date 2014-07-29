@@ -6,6 +6,40 @@
 #include "mayaMVG/maya/context/MVGContext.h"
 
 namespace mayaMVG {
+	
+namespace {
+	double crossProduct2d(MVector& A, MVector& B) {
+		return A.x*B.y - A.y*B.x;
+	}
+
+	double dotProduct2d(MVector& A, MVector& B) {
+		return A.x*B.x - A.y*B.y;
+	}
+	
+	bool edgesIntersection(MPoint A, MPoint B, MVector AD,  MVector BC)
+	{		
+		// r x s = 0
+		double cross = crossProduct2d(AD, BC);
+		double eps = 0.00001;
+		if(cross < eps && cross > -eps)
+			return false;
+
+		MVector AB = B - A;
+
+		double x =  crossProduct2d(AB, BC) / crossProduct2d(AD, BC);
+		double y = crossProduct2d(AB, AD) / crossProduct2d(AD, BC);
+
+		if( x >= 0 
+			&& x <= 1 
+			&& y >= 0 
+			&& y <= 1)
+		{
+			return true;
+		}
+
+		return false;
+	}
+}
 
 MTypeId MVGMoveManipulator::_id(0x99222); // FIXME /!\ 
 
@@ -63,7 +97,8 @@ void MVGMoveManipulator::draw(M3dView & view, const MDagPath & path,
 		
 		if(MVGMayaUtil::isActiveView(view))
 		{		
-			_manipUtils.drawIntersections(view, data);
+			
+			drawIntersections(view);
 
 			switch(_moveState)
 			{
@@ -92,10 +127,12 @@ MStatus MVGMoveManipulator::doPress(M3dView& view)
 
 	DisplayData* data = MVGProjectWrapper::instance().getCachedDisplayData(view);
 	short mousex, mousey;
-	updateMouse(view, data, mousex, mousey);
+	MPoint mousePoint = updateMouse(view, data, mousex, mousey);
+	
+	MVGManipulatorUtil::IntersectionData& intersectionData = _manipUtils.intersectionData();
 	
 	_manipUtils.updateIntersectionState(view, data, mousex, mousey);
-	
+		
 	switch(_manipUtils.intersectionState())
 	{
 		case MVGManipulatorUtil::eIntersectionNone:
@@ -103,28 +140,29 @@ MStatus MVGMoveManipulator::doPress(M3dView& view)
 		case MVGManipulatorUtil::eIntersectionPoint:
 		{
 			// Update face informations
-			MVGMesh mesh(_manipUtils.intersectionData().meshName);
-			_manipUtils.intersectionData().connectedFace = false;
-			_manipUtils.intersectionData().facePointIndexes.clear();
-			MIntArray connectedFaceIndex = mesh.getConnectedFacesToVertex(_manipUtils.intersectionData().pointIndex);
+			MVGMesh mesh(intersectionData.meshName);
+			intersectionData.facePointIndexes.clear();
+			MIntArray connectedFaceIndex = mesh.getConnectedFacesToVertex(intersectionData.pointIndex);
 			if(connectedFaceIndex.length() > 0)
 			{
-				_manipUtils.intersectionData().facePointIndexes = mesh.getFaceVertices(connectedFaceIndex[0]);				
-				for(int i = 0; i < _manipUtils.intersectionData().facePointIndexes.length(); ++i)
-				{
-					if(mesh.getNumConnectedFacesToVertex(_manipUtils.intersectionData().facePointIndexes[i]) > 1)
-					{
-						_manipUtils.intersectionData().connectedFace = true;
-						break;
-					}
-				}
+				intersectionData.facePointIndexes = mesh.getFaceVertices(connectedFaceIndex[0]);				
+				_moveState = eMovePoint;
 			}
-			
-			_moveState = eMovePoint;
 			break;
 		}
 		case MVGManipulatorUtil::eIntersectionEdge:
-			_moveState = eMoveEdge;
+			
+			_manipUtils.computeEdgeIntersectionData(view, data, mousePoint);	
+			
+			// Update face informations
+			MVGMesh mesh(intersectionData.meshName);
+			intersectionData.facePointIndexes.clear();
+			MIntArray connectedFaceIndex = mesh.getConnectedFacesToVertex(intersectionData.edgePointIndexes[0]);
+			if(connectedFaceIndex.length() > 0)
+			{
+				intersectionData.facePointIndexes = mesh.getFaceVertices(connectedFaceIndex[0]);	
+				_moveState = eMoveEdge;
+			}
 			break;
 	}
 	
@@ -147,58 +185,47 @@ MStatus MVGMoveManipulator::doRelease(M3dView& view)
 	short mousex, mousey;
 	MPoint mousePoint = updateMouse(view, data, mousex, mousey);
 	
-	switch(_manipUtils.intersectionState()) {
-		case MVGManipulatorUtil::eIntersectionNone:
-		case MVGManipulatorUtil::eIntersectionPoint:
-		{
-			MDagPath meshPath;
-			MVGMayaUtil::getDagPathByName(_manipUtils.intersectionData().meshName.c_str(), meshPath);
-			
-			_manipUtils.addUpdateFaceCommand(cmd, meshPath, _manipUtils.previewFace3D(), _manipUtils.intersectionData().facePointIndexes);
-			_manipUtils.previewFace3D().clear();
-			_manipUtils.clearIntersectionData();
+	MVGManipulatorUtil::IntersectionData& intersectionData = _manipUtils.intersectionData();
+	switch(_moveState) {
+		case eMoveNone:
 			break;
-		}
-		case MVGManipulatorUtil::eIntersectionEdge: 
+		case eMovePoint:
 		{
-			//LOG_INFO("MOVE TMP EDGE")
+			if(_manipUtils.getContext()->getKeyPressed() ==  MVGContext::eKeyNone)
+				break;			
+			if(_manipUtils.previewFace3D().length() == 0)
+				break;
+			
+			MDagPath meshPath;
+			MVGMayaUtil::getDagPathByName(intersectionData.meshName.c_str(), meshPath);
+			
+			_manipUtils.addUpdateFaceCommand(cmd, meshPath, _manipUtils.previewFace3D(), intersectionData.facePointIndexes);
+			_manipUtils.previewFace3D().clear();
+			intersectionData.facePointIndexes.clear();
+			
+			break;
+		}		
+		case eMoveEdge: 
+		{
+			if(_manipUtils.getContext()->getKeyPressed() ==  MVGContext::eKeyNone)
+				break;			
+			if(_manipUtils.previewFace3D().length() == 0)
+				break;
+			
+			MDagPath meshPath;
+			MVGMayaUtil::getDagPathByName(intersectionData.meshName.c_str(), meshPath);
+			
+			MPointArray edgePoints;
+			edgePoints.append(_manipUtils.previewFace3D()[2]);
+			edgePoints.append(_manipUtils.previewFace3D()[3]);
+			_manipUtils.addUpdateFaceCommand(cmd, meshPath, edgePoints, intersectionData.edgePointIndexes);
+			_manipUtils.previewFace3D().clear();
+			intersectionData.facePointIndexes.clear();
 			break;
 		}
 	}
 
-
-//	switch(_moveState)
-//	{
-//		case eMoveNone:
-//			break;
-//		case eMovePoint:
-//		{		
-//			try {	
-//				PairStringToPoint cameraPair = std::make_pair(data->camera.name(), data->cameraPoints2D[_manipUtils.intersectionData().pointIndex]);
-//				const PairStringToPoint meshPair = MVGProjectWrapper::instance().getMap2Dto3D().at(cameraPair);
-//				
-//				MVGProjectWrapper::instance().getMap2Dto3D().erase(cameraPair);		
-//				std::vector<PairStringToPoint >& vec = MVGProjectWrapper::instance().getMap3Dto2D().at(meshPair);			
-//				vec.erase(std::remove(vec.begin(), vec.end(), cameraPair));
-//				
-//				cameraPair = std::make_pair(data->camera.name(), mousePoint);
-//				MVGProjectWrapper::instance().getMap2Dto3D().insert(std::make_pair(cameraPair, meshPair));
-//				vec.push_back(cameraPair);		
-//				
-//			}
-//			catch(const std::exception& e){
-//				break;
-//			}
-//			
-//			data->cameraPoints2D[_manipUtils.intersectionData().pointIndex] = mousePoint;
-//			data->camera.setClickedtPointAtIndex(_manipUtils.intersectionData().pointIndex, mousePoint);			
-//			break;
-//		}
-//		case eMoveEdge:
-//			break;
-//	}
-//	
-//	_moveState = eMoveNone;
+	_moveState = eMoveNone;
 	return MPxManipulatorNode::doRelease(view);
 }
 
@@ -228,31 +255,52 @@ MStatus MVGMoveManipulator::doDrag(M3dView& view)
 	short mousex, mousey;
 	MPoint mousePoint = updateMouse(view, data, mousex, mousey);
 	
-	switch(_manipUtils.intersectionState()) {
-		case MVGManipulatorUtil::eIntersectionNone:
+	MVGManipulatorUtil::IntersectionData& intersectionData = _manipUtils.intersectionData();
+	std::vector<EPointState>& movablePoints = MVGProjectWrapper::instance().getMeshMovablePoints(intersectionData.meshName);
+	
+	switch(_moveState) {
+		case eMoveNone:
 			break;
-		case MVGManipulatorUtil::eIntersectionPoint:
-			if(!_manipUtils.intersectionData().connectedFace)
-				
-				switch(_manipUtils.getContext()->getKeyPressed())
-				{
-					case MVGContext::eKeyNone:
-						break;
-					case MVGContext::eKeyCtrl:
+		case eMovePoint:
+			switch(_manipUtils.getContext()->getKeyPressed())
+			{
+				case MVGContext::eKeyNone:
+					break;
+				case MVGContext::eKeyCtrl:
+					if(movablePoints[intersectionData.pointIndex] >= eMovableInSamePlane)
 						computeTmpFaceOnMovePoint(view, data, mousePoint);
-						break;
-					case MVGContext::eKeyShift:
+					break;
+				case MVGContext::eKeyShift:
+					if(movablePoints[intersectionData.pointIndex] == eMovableRecompute)
 						computeTmpFaceOnMovePoint(view, data, mousePoint, true);
-						break;					
-				}
+					break;					
+			}
 			break;
-		case MVGManipulatorUtil::eIntersectionEdge: 
+		case eMoveEdge: 
 		{
-			//LOG_INFO("MOVE TMP EDGE")
+			switch(_manipUtils.getContext()->getKeyPressed())
+			{
+				case MVGContext::eKeyNone:
+					break;
+				case MVGContext::eKeyCtrl:
+					if(movablePoints[intersectionData.edgePointIndexes[0]] >= eMovableInSamePlane
+						&& movablePoints[intersectionData.edgePointIndexes[1]] >= eMovableInSamePlane)
+					{
+						computeTmpFaceOnMoveEdge(view, data, mousePoint);
+					}	
+					break;
+				case MVGContext::eKeyShift:
+					if(movablePoints[intersectionData.edgePointIndexes[0]] >= eMovableInSamePlane
+						&& movablePoints[intersectionData.edgePointIndexes[1]] >= eMovableInSamePlane)
+					{
+						computeTmpFaceOnMoveEdge(view, data, mousePoint, true);
+					}
+					break;					
+			}
 			break;
 		}
 	}
-
+	
 	return MPxManipulatorNode::doDrag(view);
 }
 
@@ -274,11 +322,100 @@ MPoint MVGMoveManipulator::updateMouse(M3dView& view, DisplayData* data, short& 
 	return mousePointInCameraCoord;
 }
 
+void MVGMoveManipulator::drawIntersections(M3dView& view)
+{
+	std::map<std::string, MPointArray>& meshCache = MVGProjectWrapper::instance().getCacheMeshToPointArray();
+
+	if(meshCache.size() > 0) {
+		MVGManipulatorUtil::IntersectionData& intersectionData = _manipUtils.intersectionData();
+		MPointArray meshPoints = meshCache[intersectionData.meshName];
+
+		std::vector<EPointState>& movablePoints = MVGProjectWrapper::instance().getMeshMovablePoints(intersectionData.meshName);
+		MPoint pointViewCoord_0;
+		MPoint pointViewCoord_1;
+
+		switch(_manipUtils.intersectionState())
+		{
+			case MVGManipulatorUtil::eIntersectionPoint:
+			{
+				EPointState movableState = movablePoints[intersectionData.pointIndex];
+
+				switch(_manipUtils.getContext()->getKeyPressed())
+				{
+					case MVGContext::eKeyNone:
+						glColor4f(0.3f, 0.3f, 0.6f, 0.8f);	// Grey
+						break;
+					case MVGContext::eKeyCtrl:
+						if(movableState >= eMovableInSamePlane)
+							glColor3f(0.f, 1.f, 0.f);
+						else
+							glColor3f(1.f, 0.f, 0.f);
+						break;
+					case MVGContext::eKeyShift:
+						if(movableState == eMovableRecompute)
+							glColor4f(0.f, 1.f, 1.f, 0.8f);
+						else
+							glColor3f(1.f, 0.f, 0.f);
+						break;	
+				}
+
+				pointViewCoord_0 = MVGGeometryUtil::worldToView(view, meshPoints[intersectionData.pointIndex]);
+
+				MVGDrawUtil::drawCircle(pointViewCoord_0.x, pointViewCoord_0.y, POINT_RADIUS, 30);
+				break;
+			}
+			case MVGManipulatorUtil::eIntersectionEdge:	
+				std::vector<EPointState> movableStates;
+				movableStates.push_back(movablePoints[intersectionData.edgePointIndexes[0]]);
+				movableStates.push_back(movablePoints[intersectionData.edgePointIndexes[1]]);
+
+				switch(_manipUtils.getContext()->getKeyPressed())
+				{
+					case MVGContext::eKeyNone:
+						glColor4f(0.3f, 0.3f, 0.6f, 0.8f);	// Grey
+						break;
+					case MVGContext::eKeyCtrl:
+						if((movableStates[0] >= eMovableInSamePlane)
+							&& (movableStates[1] >= eMovableInSamePlane))
+						{
+							glColor3f(0.f, 1.f, 0.f);
+						}
+						else
+						{
+							glColor3f(1.f, 0.f, 0.f);
+						}
+						break;
+					case MVGContext::eKeyShift:
+						if((movableStates[0] >= eMovableInSamePlane)
+							&& (movableStates[1] >= eMovableInSamePlane))
+						{
+							glColor4f(0.f, 1.f, 1.f, 0.8f);
+						}
+						else
+						{
+							glColor3f(1.f, 0.f, 0.f);
+						}
+						break;	
+				}
+
+				pointViewCoord_0 = MVGGeometryUtil::worldToView(view, meshPoints[intersectionData.edgePointIndexes[0]]);
+				pointViewCoord_1 = MVGGeometryUtil::worldToView(view, meshPoints[intersectionData.edgePointIndexes[1]]);
+				glBegin(GL_LINES);
+					glVertex2f(pointViewCoord_0.x, pointViewCoord_0.y);
+					glVertex2f(pointViewCoord_1.x, pointViewCoord_1.y);
+				glEnd();	
+				break;
+		}	
+	}
+}
+
 void MVGMoveManipulator::computeTmpFaceOnMovePoint(M3dView& view, DisplayData* data, MPoint& mousePoint, bool recompute)
 {
-	MPointArray& meshPoints = MVGProjectWrapper::instance().getMeshPoints(_manipUtils.intersectionData().meshName);
+	MVGManipulatorUtil::IntersectionData& intersectionData = _manipUtils.intersectionData();
+	MPointArray& meshPoints = MVGProjectWrapper::instance().getMeshPoints(intersectionData.meshName);
 
-	MIntArray verticesId = _manipUtils.intersectionData().facePointIndexes;
+	MIntArray verticesId = intersectionData.facePointIndexes;
+	MPointArray& previewFace3D = _manipUtils.previewFace3D();
 
 	if(recompute)
 	{
@@ -286,7 +423,7 @@ void MVGMoveManipulator::computeTmpFaceOnMovePoint(M3dView& view, DisplayData* d
 		MPoint wpos;
 		for(int i = 0; i < verticesId.length(); ++i)
 		{
-			if(_manipUtils.intersectionData().pointIndex == verticesId[i])
+			if(intersectionData.pointIndex == verticesId[i])
 			{
 				previewPoints2D.append(mousePoint);
 			}
@@ -299,8 +436,8 @@ void MVGMoveManipulator::computeTmpFaceOnMovePoint(M3dView& view, DisplayData* d
 		}
 		
 		// Compute face		
-		_manipUtils.previewFace3D().clear();
-		MVGGeometryUtil::projectFace2D(view, _manipUtils.previewFace3D(), data->camera, previewPoints2D);
+		previewFace3D.clear();
+		MVGGeometryUtil::projectFace2D(view, previewFace3D, data->camera, previewPoints2D);
 	}
 	else {
 		// Fill previewFace3D
@@ -315,56 +452,113 @@ void MVGMoveManipulator::computeTmpFaceOnMovePoint(M3dView& view, DisplayData* d
 		MVGGeometryUtil::computePlane(facePoints3D, model);
 		MVGGeometryUtil::projectPointOnPlane(mousePoint, view, model, data->camera, movedPoint);
 
-		_manipUtils.previewFace3D().setLength(4);
+		previewFace3D.clear();
+		previewFace3D.setLength(4);
 		for(int i = 0; i < verticesId.length(); ++i)
 		{
-			if(_manipUtils.intersectionData().pointIndex == verticesId[i])
-				_manipUtils.previewFace3D()[i] = movedPoint;
+			if(intersectionData.pointIndex == verticesId[i])
+				previewFace3D[i] = movedPoint;
 			else
-				_manipUtils.previewFace3D()[i] = facePoints3D[i];
+				previewFace3D[i] = facePoints3D[i];
 		}		
 	}
-
-		
 }
 
-void MVGMoveManipulator::computeTmpFaceOnMoveEdge(M3dView& view, DisplayData* data, MPoint& mousePoint)
+void MVGMoveManipulator::computeTmpFaceOnMoveEdge(M3dView& view, DisplayData* data, MPoint& mousePoint, bool recompute)
 {
+	MVGManipulatorUtil::IntersectionData& intersectionData = _manipUtils.intersectionData();
+	MPointArray& meshPoints = MVGProjectWrapper::instance().getMeshPoints(intersectionData.meshName);
+	MPointArray& previewFace3D = _manipUtils.previewFace3D();
+	MIntArray verticesId = intersectionData.facePointIndexes;
+	MIntArray edgeVerticesId = intersectionData.edgePointIndexes;
+	MIntArray fixedVerticesId;
+	for(int i = 0; i < verticesId.length(); ++i)
+	{
+		int found = false;
+		for(int j = 0; j < edgeVerticesId.length(); ++j)
+		{
+			if(verticesId[i] == edgeVerticesId[j])
+				found = true;
+		}
 
-//	MPointArray& meshPoints = MVGProjectWrapper::instance().getMeshPoints(_manipUtils.intersectionData().meshName);
-//
-//	MIntArray verticesId = _manipUtils.intersectionData().facePointIndexes;
-//	
-//	MIntArray verticesId = mesh.getFaceVertices(_connectedFacesId[0]);	
-//	MPointArray meshPoints;
-//	mesh.getPoints(meshPoints);
-//
-//	MIntArray edgeVerticesId = mesh.getEdgeVertices(_intersectedEdgeId);
-//	MIntArray fixedVerticesId;
-//	for(int i = 0; i < verticesId.length(); ++i)
-//	{
-//		int found = false;
-//		for(int j = 0; j < edgeVerticesId.length(); ++j)
-//		{
-//			if(verticesId[i] == edgeVerticesId[j])
-//				found = true;
-//		}
-//
-//		if(!found)
-//			fixedVerticesId.append(verticesId[i]);
-//	}
-//
-//	// Switch order if necessary
-//	if(fixedVerticesId[0] == verticesId[0]
-//		&& fixedVerticesId[1] == verticesId[verticesId.length() - 1])
-//	{
-//		MIntArray tmp = fixedVerticesId;
-//		fixedVerticesId[0] = tmp[1];
-//		fixedVerticesId[1] = tmp[0];
-//	}
-	// Same plane
-	
-	// Recompute
+		if(!found)
+			fixedVerticesId.append(verticesId[i]);
+	}
+
+	// Switch order if necessary
+	if(fixedVerticesId[0] == verticesId[0]
+		&& fixedVerticesId[1] == verticesId[verticesId.length() - 1])
+	{
+		MIntArray tmp = fixedVerticesId;
+		fixedVerticesId[0] = tmp[1];
+		fixedVerticesId[1] = tmp[0];
+	}
+		
+	if(recompute)
+	{
+		MPointArray previewPoints2D;
+		MPoint point;
+
+		// First : fixed points
+		MVGGeometryUtil::worldToCamera(view, data->camera, meshPoints[fixedVerticesId[0]], point);
+		previewPoints2D.append(point);
+		MVGGeometryUtil::worldToCamera(view, data->camera, meshPoints[fixedVerticesId[1]], point);
+		previewPoints2D.append(point);
+
+		// Then : mousePoints computed with egdeHeight and ratio							
+		MPoint P3 = mousePoint + intersectionData.edgeRatio * intersectionData.edgeHeight2D;
+		previewPoints2D.append(P3);
+		MPoint P4 = mousePoint  - (1 - intersectionData.edgeRatio) * intersectionData.edgeHeight3D;
+		previewPoints2D.append(P4);
+		
+
+		// Only set the new points to keep a connected face
+		previewFace3D.clear();
+		MVGGeometryUtil::projectFace2D(view, previewFace3D, data->camera, previewPoints2D, true, -intersectionData.edgeHeight3D);
+
+		// Check points order	
+		MVector AD =  previewFace3D[3] - previewFace3D[0];
+		MVector BC =  previewFace3D[2] - previewFace3D[1];
+
+		if(edgesIntersection(previewFace3D[0], previewFace3D[1], AD, BC))
+		{
+			MPointArray tmp = previewFace3D;
+			previewFace3D[3] = tmp[2];
+			previewFace3D[2] = tmp[3];
+		}
+	}
+	else {
+		
+		// Fill previewFace3D
+		MPointArray facePoints3D;
+		for(int i = 0; i < verticesId.length(); ++i)
+		{
+			facePoints3D.append(meshPoints[verticesId[i]]);
+		}
+
+		// Compute plane with old face points
+		MPoint movedPoint;
+		PlaneKernel::Model model;
+		MVGGeometryUtil::computePlane(facePoints3D, model);
+
+		previewFace3D.clear();
+		previewFace3D.setLength(4);		
+		previewFace3D[0] = meshPoints[fixedVerticesId[0]];
+		previewFace3D[1] = meshPoints[fixedVerticesId[1]];
+
+		// Project new points on plane			
+		MPoint P3 = mousePoint + _manipUtils.intersectionData().edgeRatio * _manipUtils.intersectionData().edgeHeight2D;
+		MVGGeometryUtil::projectPointOnPlane(P3, view, model, data->camera, movedPoint);
+		previewFace3D[3] = movedPoint;
+
+		// Keep 3D length
+		MPoint lastPoint3D = movedPoint - _manipUtils.intersectionData().edgeHeight3D;
+		MPoint lastPoint2D;
+		MVGGeometryUtil::worldToCamera(view, data->camera, lastPoint3D, lastPoint2D);
+		MVGGeometryUtil::projectPointOnPlane(lastPoint2D, view, model, data->camera, movedPoint);
+		previewFace3D[2] = movedPoint;
+
+	}
 }
 
 void MVGMoveManipulator::drawUI(MHWRender::MUIDrawManager& drawManager, const MHWRender::MFrameContext&) const

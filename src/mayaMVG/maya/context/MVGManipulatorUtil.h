@@ -40,8 +40,6 @@ class MVGManipulatorUtil {
 			double edgeRatio;
 			// Indexes of the points of the first face connected to intersected point or edge
 			MIntArray facePointIndexes;
-			// Indicate if the face is connected to other face
-			bool connectedFace;
 
 		};
 
@@ -63,10 +61,11 @@ class MVGManipulatorUtil {
 		bool intersectPoint(M3dView& view, DisplayData* displayData, const short&x, const short& y);
 		bool intersectEdge(M3dView& view, DisplayData* displayData, const short&x, const short& y);
 		void updateIntersectionState(M3dView& view, DisplayData* data, double mousex, double mousey);	
+		void computeEdgeIntersectionData(M3dView& view, DisplayData* data, const MPoint& mousePointInCameraCoord);
 		void clearIntersectionData();
 		
 		// Draw
-		void drawIntersections(M3dView& view, DisplayData* data);
+		//void drawIntersections(M3dView& view, DisplayData* data);
 		void drawPreview3D();
 	//	static void drawCameraPoints(M3dView& view, DisplayData* data);
 		

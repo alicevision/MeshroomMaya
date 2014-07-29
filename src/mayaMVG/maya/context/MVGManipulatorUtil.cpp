@@ -136,43 +136,54 @@ void MVGManipulatorUtil::updateIntersectionState(M3dView& view, DisplayData* dat
 		_intersectionState = MVGManipulatorUtil::eIntersectionNone;
 	}
 }
-	
-void MVGManipulatorUtil::clearIntersectionData()
+void MVGManipulatorUtil::computeEdgeIntersectionData(M3dView& view, DisplayData* data, const MPoint& mousePointInCameraCoord)
 {
-	_intersectionData.connectedFace = false;
-	//_intersectionData.edgePointIndexes.clear();
-	_intersectionData.facePointIndexes.clear();
-	//_intersectionData.pointIndex = -1;
-}
+	MPointArray& meshPoints = MVGProjectWrapper::instance().getMeshPoints(_intersectionData.meshName);
+	
+	// Compute height and ratio 2D
+	MPoint edgePoint3D_0 = meshPoints[_intersectionData.edgePointIndexes[0]];
+	MPoint edgePoint3D_1 = meshPoints[_intersectionData.edgePointIndexes[1]];
+	MPoint edgePoint0, edgePoint1;
 
-void MVGManipulatorUtil::drawIntersections(M3dView& view, DisplayData* data)
-{
-	std::map<std::string, MPointArray>& meshCache = MVGProjectWrapper::instance().getCacheMeshToPointArray();
-	if(meshCache.size() > 0) {
-		MPoint pointViewCoord_0;
-		MPoint pointViewCoord_1;
-		
-		switch(_intersectionState)
-		{
-			case MVGManipulatorUtil::eIntersectionPoint:
-				glColor3f(0.f, 1.f, 0.f);
-				pointViewCoord_0 = MVGGeometryUtil::worldToView(view, meshCache.at(_intersectionData.meshName)[_intersectionData.pointIndex]);
-	
-				MVGDrawUtil::drawCircle(pointViewCoord_0.x, pointViewCoord_0.y, POINT_RADIUS, 30);
-				break;
-			case MVGManipulatorUtil::eIntersectionEdge:				
-				glColor3f(0.f, 1.f, 0.f);
-				
-				pointViewCoord_0 = MVGGeometryUtil::worldToView(view, meshCache.at(_intersectionData.meshName)[_intersectionData.edgePointIndexes[0]]);
-				pointViewCoord_1 = MVGGeometryUtil::worldToView(view, meshCache.at(_intersectionData.meshName)[_intersectionData.edgePointIndexes[1]]);
-				glBegin(GL_LINES);
-					glVertex2f(pointViewCoord_0.x, pointViewCoord_0.y);
-					glVertex2f(pointViewCoord_1.x, pointViewCoord_1.y);
-				glEnd();	
-				break;
-		}	
-	}
+	MVGGeometryUtil::worldToCamera(view, data->camera, edgePoint3D_0, edgePoint0);
+	MVGGeometryUtil::worldToCamera(view, data->camera, edgePoint3D_1, edgePoint1);
+
+	MVector ratioVector2D = edgePoint1 - mousePointInCameraCoord;
+	_intersectionData.edgeHeight2D =  edgePoint1 - edgePoint0;
+	_intersectionData.edgeRatio = ratioVector2D.length() / _intersectionData.edgeHeight2D.length();
+
+	// Compute height 3D
+	_intersectionData.edgeHeight3D = edgePoint3D_1 - edgePoint3D_0;
 }
+	
+//void MVGManipulatorUtil::drawIntersections(M3dView& view, DisplayData* data)
+//{
+//	std::map<std::string, MPointArray>& meshCache = MVGProjectWrapper::instance().getCacheMeshToPointArray();
+//	if(meshCache.size() > 0) {
+//		MPoint pointViewCoord_0;
+//		MPoint pointViewCoord_1;
+//		
+//		switch(_intersectionState)
+//		{
+//			case MVGManipulatorUtil::eIntersectionPoint:
+//				glColor3f(0.f, 1.f, 0.f);
+//				pointViewCoord_0 = MVGGeometryUtil::worldToView(view, meshCache.at(_intersectionData.meshName)[_intersectionData.pointIndex]);
+//	
+//				MVGDrawUtil::drawCircle(pointViewCoord_0.x, pointViewCoord_0.y, POINT_RADIUS, 30);
+//				break;
+//			case MVGManipulatorUtil::eIntersectionEdge:				
+//				glColor3f(0.f, 1.f, 0.f);
+//				
+//				pointViewCoord_0 = MVGGeometryUtil::worldToView(view, meshCache.at(_intersectionData.meshName)[_intersectionData.edgePointIndexes[0]]);
+//				pointViewCoord_1 = MVGGeometryUtil::worldToView(view, meshCache.at(_intersectionData.meshName)[_intersectionData.edgePointIndexes[1]]);
+//				glBegin(GL_LINES);
+//					glVertex2f(pointViewCoord_0.x, pointViewCoord_0.y);
+//					glVertex2f(pointViewCoord_1.x, pointViewCoord_1.y);
+//				glEnd();	
+//				break;
+//		}	
+//	}
+//}
 
 void MVGManipulatorUtil::drawPreview3D()
 {
@@ -218,8 +229,8 @@ bool MVGManipulatorUtil::addCreateFaceCommand(MVGEditCmd* cmd, MDagPath& meshPat
 
 bool MVGManipulatorUtil::addUpdateFaceCommand(MVGEditCmd* cmd, MDagPath& meshPath, const MPointArray& newFacePoints3D, const MIntArray& verticesIndexes)
 {
-	if(newFacePoints3D.length() < 4)
-		return false;
+//	if(newFacePoints3D.length() < 4)
+//		return false;
 	
 	if(newFacePoints3D.length() != verticesIndexes.length())
 	{
