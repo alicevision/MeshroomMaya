@@ -62,7 +62,6 @@ class MVGManipulatorUtil {
 		bool intersectEdge(M3dView& view, DisplayData* displayData, const short&x, const short& y);
 		void updateIntersectionState(M3dView& view, DisplayData* data, double mousex, double mousey);	
 		void computeEdgeIntersectionData(M3dView& view, DisplayData* data, const MPoint& mousePointInCameraCoord);
-		void clearIntersectionData();
 		
 		// Draw
 		//void drawIntersections(M3dView& view, DisplayData* data);

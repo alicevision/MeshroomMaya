@@ -90,11 +90,19 @@ bool MVGContext::eventFilter(QObject *obj, QEvent *e, void* eventData)
 				updateManipulators();
 				break;
 			case Qt::Key_Control:
+			{
 				_keyPressed = eKeyCtrl;
+				M3dView view = M3dView::active3dView();
+				view.refresh(true, true);
 				break;
+			}
 			case Qt::Key_Shift:
+			{
 				_keyPressed = eKeyShift;
+				M3dView view = M3dView::active3dView();
+				view.refresh(true, true);
 				break;
+			}
 			case Qt::Key_Escape:
 			{
 				M3dView view = M3dView::active3dView();
@@ -117,17 +125,25 @@ bool MVGContext::eventFilter(QObject *obj, QEvent *e, void* eventData)
 		 
 		switch(keyevent->key()) {
 			case Qt::Key_Control:
+			{
 				if(!(modifiers & Qt::ShiftModifier))
 					_keyPressed = eKeyNone;
 				else
 					_keyPressed = eKeyShift;
+				M3dView view = M3dView::active3dView();
+				view.refresh(true, true);
 				break;
+			}
 			case Qt::Key_Shift:
+			{
 				if(!(modifiers & Qt::ControlModifier))
 					_keyPressed = eKeyNone;
 				else
 					_keyPressed = eKeyCtrl;
+				M3dView view = M3dView::active3dView();
+				view.refresh(true, true);
 				break;
+			}
 		}
 	}
 	// mouse button pressed
