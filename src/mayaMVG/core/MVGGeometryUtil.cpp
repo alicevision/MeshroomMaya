@@ -74,9 +74,11 @@ MPoint MVGGeometryUtil::viewToWorld(M3dView& view, const MPoint& screen)
 	return wpoint;
 }
 
-void MVGGeometryUtil::viewToCamera(M3dView& view, const MVGCamera& camera, const short x, const short y, MPoint& point)
+void MVGGeometryUtil::viewToCamera(M3dView& view, const short x, const short y, MPoint& point)
 {
-	MFnCamera fnCamera(camera.dagPath().node()); 
+	MDagPath dagPath;
+	view.getCamera(dagPath);
+	MFnCamera fnCamera(dagPath.node()); 
 	point.x = ((float)x / view.portWidth()) - 0.5;
 	point.y = ((float)y / view.portWidth()) - 0.5 - 0.5 * ((view.portHeight() / (float)view.portWidth()) - 1.0 );
 	point.z = 0.f;
@@ -87,16 +89,18 @@ void MVGGeometryUtil::viewToCamera(M3dView& view, const MVGCamera& camera, const
 	point.y += fnCamera.verticalPan();
 }
 
-void MVGGeometryUtil::worldToCamera(M3dView& view, const MVGCamera& camera, const MPoint& worldPoint, MPoint& point)
+ void MVGGeometryUtil::worldToCamera(M3dView& view, const MPoint& worldPoint, MPoint& point)
 {
 	short x, y;
 	view.worldToView(worldPoint, x, y);
-	viewToCamera(view, camera,  x, y, point);
+	viewToCamera(view, x, y, point);
 }
 
-void MVGGeometryUtil::cameraToView(M3dView& view, const MVGCamera& camera, const MPoint& point, short& x, short& y)
+void MVGGeometryUtil::cameraToView(M3dView& view, const MPoint& point, short& x, short& y)
 {
-	MFnCamera fnCamera(camera.dagPath().node()); 
+	MDagPath dagPath;
+	view.getCamera(dagPath);
+	MFnCamera fnCamera(dagPath.node()); 
 	float newX = point.x;
 	float newY = point.y;
 	// pan
@@ -142,10 +146,10 @@ bool MVGGeometryUtil::projectFace2D(M3dView& view, MPointArray& face3DPoints, co
 	short x, y;
 	for(size_t i = 0; i < face2DPoints.length(); ++i)
 	{
-		cameraToView(view, camera, face2DPoints[i], x, y);
+		cameraToView(view, face2DPoints[i], x, y);
 		facePoints_view.push_back(MPoint(x, y));
 	}
-	cameraToView(view, camera, face2DPoints[0], x, y);	// Extra point
+	cameraToView(view, face2DPoints[0], x, y);	// Extra point
 	facePoints_view.push_back(MPoint(x, y));
 	
 	// Get selected points in pointCloud
@@ -231,7 +235,7 @@ void MVGGeometryUtil::projectPointOnPlane(const MPoint& point, M3dView& view, Pl
 	MPoint cameraCenter = AS_MPOINT(camera.pinholeCamera()._C);
 	short x, y;
 	MVector dir;
-	cameraToView(view, camera, point, x, y);
+	cameraToView(view, point, x, y);
 	MPoint worldPoint;
 	view.viewToWorld(x, y, worldPoint, dir);
 	plane_line_intersect(model, cameraCenter, worldPoint, projectedPoint);

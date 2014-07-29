@@ -232,7 +232,7 @@ void MVGProjectWrapper::rebuildCacheFromMaya()
 					MVGPoint2D mvgPoint;;
 					mvgPoint.point3D = points3D[i];
 					MPoint point2D;
-					MVGGeometryUtil::worldToCamera(view, c, points3D[i], point2D);
+					MVGGeometryUtil::worldToCamera(view, points3D[i], point2D);
 					mvgPoint.projectedPoint3D = point2D;
 					mvgPoint.movableState = _cacheMeshToMovablePoint[it->first].at(i);
 					

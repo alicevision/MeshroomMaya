@@ -26,7 +26,7 @@ bool MVGManipulatorUtil::intersectPoint(M3dView& view, DisplayData* displayData,
 	
 	double threshold = (2*POINT_RADIUS*displayData->camera.getZoom())/view.portHeight();
 	MPoint mousePoint;
-	MVGGeometryUtil::viewToCamera(view, displayData->camera, x, y, mousePoint);
+	MVGGeometryUtil::viewToCamera(view, x, y, mousePoint);
 	
 	// DISPLAY DATA
 	std::map<std::string, std::vector<MVGPoint2D> >& meshMap = displayData->allPoints2D;
@@ -79,7 +79,7 @@ bool MVGManipulatorUtil::intersectEdge(M3dView& view, DisplayData* displayData, 
 		return false;
 	
 	MPoint mousePoint;
-	MVGGeometryUtil::viewToCamera(view, displayData->camera, x, y, mousePoint);
+	MVGGeometryUtil::viewToCamera(view, x, y, mousePoint);
 	
 	double minDistanceFound = -1.0;
 	double tolerance = 0.001 * displayData->camera.getZoom() * 30;

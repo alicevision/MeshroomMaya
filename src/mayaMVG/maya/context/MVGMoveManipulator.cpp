@@ -317,7 +317,7 @@ MPoint MVGMoveManipulator::updateMouse(M3dView& view, DisplayData* data, short& 
 {
 	mousePosition(mousex, mousey);
 	MPoint mousePointInCameraCoord;
-	MVGGeometryUtil::viewToCamera(view, data->camera, mousex, mousey, mousePointInCameraCoord);
+	MVGGeometryUtil::viewToCamera(view, mousex, mousey, mousePointInCameraCoord);
 	
 	return mousePointInCameraCoord;
 }
@@ -361,7 +361,7 @@ void MVGMoveManipulator::drawIntersections(M3dView& view)
 					break;	
 			}
 
-			MVGGeometryUtil::cameraToView(view, data->camera, meshPoints[intersectionData.pointIndex].projectedPoint3D, x, y);
+			MVGGeometryUtil::cameraToView(view, meshPoints[intersectionData.pointIndex].projectedPoint3D, x, y);
 			MVGDrawUtil::drawCircle(x, y, POINT_RADIUS, 30);
 			break;
 		}
@@ -400,9 +400,9 @@ void MVGMoveManipulator::drawIntersections(M3dView& view)
 			}
 
 			glBegin(GL_LINES);
-				MVGGeometryUtil::cameraToView(view, data->camera, meshPoints[intersectionData.edgePointIndexes[0]].projectedPoint3D, x, y);
+				MVGGeometryUtil::cameraToView(view, meshPoints[intersectionData.edgePointIndexes[0]].projectedPoint3D, x, y);
 				glVertex2f(x, y);
-				MVGGeometryUtil::cameraToView(view, data->camera, meshPoints[intersectionData.edgePointIndexes[1]].projectedPoint3D, x, y);
+				MVGGeometryUtil::cameraToView(view, meshPoints[intersectionData.edgePointIndexes[1]].projectedPoint3D, x, y);
 				glVertex2f(x, y);
 			glEnd();	
 			break;
@@ -635,7 +635,7 @@ void MVGMoveManipulator::computeTmpFaceOnMoveEdge(M3dView& view, DisplayData* da
 		// Keep 3D length
 		MPoint lastPoint3D = movedPoint - _manipUtils.intersectionData().edgeHeight3D;
 		MPoint lastPoint2D;
-		MVGGeometryUtil::worldToCamera(view, data->camera, lastPoint3D, lastPoint2D);
+		MVGGeometryUtil::worldToCamera(view, lastPoint3D, lastPoint2D);
 		MVGGeometryUtil::projectPointOnPlane(lastPoint2D, view, model, data->camera, movedPoint);
 		previewFace3D[2] = movedPoint;
 
