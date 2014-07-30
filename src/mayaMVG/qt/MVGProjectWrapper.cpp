@@ -146,14 +146,6 @@ DisplayData* MVGProjectWrapper::getCachedDisplayData(M3dView& view)
 	if(it == _cacheCameraToDisplayData.end())
 	{	
 		return NULL;
-//		// TODO : return NULL when we will use associations
-//		MVGCamera c(cameraPath);
-//		if(c.isValid()) {
-//			DisplayData data;
-//			data.camera = c;
-//			_cacheCameraToDisplayData[cameraPath.fullPathName().asChar()] = data;
-//			return &_cacheCameraToDisplayData[cameraPath.fullPathName().asChar()];			
-//		}
 	}
 	else {
 		return &(it->second);
@@ -174,7 +166,6 @@ void MVGProjectWrapper::reloadProjectFromMaya()
 	emit cameraModelChanged();
 	
 	// TODO : Camera selection
-	//rebuildCacheFromMaya();
 }
 
 void MVGProjectWrapper::rebuildCacheFromMaya() 
@@ -191,6 +182,7 @@ void MVGProjectWrapper::rebuildCacheFromMaya()
 			
 		MDagPath cameraPath;
 		view.getCamera(cameraPath);
+		view.updateViewingParameters();
 		MVGCamera c(cameraPath);
 		if(c.isValid()) {
 			DisplayData data;

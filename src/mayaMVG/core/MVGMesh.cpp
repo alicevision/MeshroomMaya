@@ -104,9 +104,9 @@ void MVGMesh::getPoints(MPointArray& pointArray) const
 {
 	MStatus status;
 	MFnMesh fnMesh(_dagpath.node(), &status);
-	
-	fnMesh.getPoints(pointArray, MSpace::kPostTransform);
 	CHECK(status);
+	fnMesh.getPoints(pointArray);
+	
 }
 
 int MVGMesh::getVerticesCount() const
