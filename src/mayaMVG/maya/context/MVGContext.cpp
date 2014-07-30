@@ -210,9 +210,16 @@ bool MVGContext::eventFilter(QObject *obj, QEvent *e, void* eventData)
 	}
 	// mouse enters widget's boundaries
 	else if (e->type() == QEvent::Enter) {
+		// Check if we are entering the MVGWindow
+//		QVariant window = obj->property("mvg_window");
+//		if(window.type() != QVariant::Invalid)
+//		{
+//			MVGProjectWrapper::instance().rebuildCacheFromMaya();
+//			return false;
+//		}
 		// check if we are entering an MVG panel
 		QVariant panelName = obj->property("mvg_panel");
-		if(panelName.type()==QVariant::Invalid)
+		if(panelName.type()== QVariant::Invalid)
 			return false;
 		// find & register the associated camera path
 		EventData* data = static_cast<EventData*>(eventData);

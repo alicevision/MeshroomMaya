@@ -66,6 +66,7 @@ MStatus MVGCmd::doIt(const MArgList& args) {
 		return status;
 	}
 	QWidget* mayaWindow = MVGMayaUtil::getMVGWindow();
+	mayaWindow->setProperty("mvg_window", QString("MVGWindow"));
 	QWidget* menuLayout = MVGMayaUtil::getMVGMenuLayout();
 	if(!mayaWindow || !menuLayout) {
 		LOG_ERROR("Unable to retrieve MVGWindow.")
