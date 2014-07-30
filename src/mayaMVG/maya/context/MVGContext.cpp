@@ -214,6 +214,7 @@ bool MVGContext::eventFilter(QObject *obj, QEvent *e, void* eventData)
 //		QVariant window = obj->property("mvg_window");
 //		if(window.type() != QVariant::Invalid)
 //		{
+//			MVGProjectWrapper::instance().rebuildAllMeshesCacheFromMaya();
 //			MVGProjectWrapper::instance().rebuildCacheFromMaya();
 //			return false;
 //		}

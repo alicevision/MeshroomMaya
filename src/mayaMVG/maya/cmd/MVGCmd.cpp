@@ -86,7 +86,7 @@ MStatus MVGCmd::doIt(const MArgList& args) {
 	
 	// Reload project from Maya
 	MVGProjectWrapper::instance().reloadProjectFromMaya();
-	// TODO : MVGProjectWrapper::instance().rebuildCacheFromMaya();
+	MVGProjectWrapper::instance().rebuildAllMeshesCacheFromMaya();
 
 	// install mouse event filter on maya viewports
 	const QString& leftPanel = MVGProjectWrapper::instance().panelModel().at(0);

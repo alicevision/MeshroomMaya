@@ -130,7 +130,6 @@ void MVGProjectWrapper::setCameraToView(QObject* camera, const QString& viewName
     cam->setInView(viewName, true);
     _project.setCameraInView(cam->camera(), viewName.toStdString());
 	
-	//_panelToCamera[viewName.toStdString()] = cam->camera().dagPath().fullPathName().asChar();
 	// TODO
 	//rebuildCacheFromMaya();
 }
@@ -179,7 +178,7 @@ void MVGProjectWrapper::reloadProjectFromMaya()
 }
 
 void MVGProjectWrapper::rebuildCacheFromMaya() 
-{		
+{	
 	_cacheCameraToDisplayData.clear();
 	// Rebuild for temporary cache
 	// TODO: remove to use directly data from Maya
@@ -191,7 +190,7 @@ void MVGProjectWrapper::rebuildCacheFromMaya()
 		CHECK(status);
 			
 		MDagPath cameraPath;
-		view.getCamera(cameraPath);			
+		view.getCamera(cameraPath);
 		MVGCamera c(cameraPath);
 		if(c.isValid()) {
 			DisplayData data;
@@ -234,7 +233,6 @@ MStatus MVGProjectWrapper::rebuildAllMeshesCacheFromMaya()
 	for(; !it.isDone(); it.next()) {
 		MFnDependencyNode fn(it.thisNode());
 		MDagPath::getAPathTo(fn.object(), path);
-		
 		status = rebuildMeshCacheFromMaya(path);
 	}
 	
