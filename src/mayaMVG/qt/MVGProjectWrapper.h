@@ -11,10 +11,6 @@
 
 namespace mayaMVG {
 	
-//typedef std::pair<std::string, MPoint> PairStringToPoint;
-//typedef std::map<std::pair<std::string, MPoint>, std::pair<std::string, MPoint> > Map2Dto3D;
-//typedef std::map<std::pair<std::string, MPoint>, std::vector<std::pair<std::string, MPoint> > > Map3Dto2D;
-	
 enum EPointState {
 	eUnMovable = 0
 	, eMovableInSamePlane = 1
@@ -41,7 +37,6 @@ struct DisplayData {
 	MVGCamera camera;
 	/// Temporary points in Camera before having 3D information
 	MPointArray buildPoints2D;
-	//std::vector<MVGPoint2D> allPoints2D;
 	/// Map mesh to MVGPoints2D
 	std::map<std::string, std::vector<MVGPoint2D> > allPoints2D;
 };
@@ -77,16 +72,8 @@ public:
     Q_INVOKABLE void loadProject(const QString& projectDirectoryPath);
     void selectItems(const QList<QString>& cameraNames);
     Q_INVOKABLE void setCameraToView(QObject* camera, const QString& viewName);
-	
-	// TODO
-//	Map3Dto2D& getMap3Dto2D() { return _map3Dto2D; }
-//	Map2Dto3D& getMap2Dto3D() { return _map2Dto3D; }
-	
+		
 	DisplayData* getCachedDisplayData(M3dView& view);
-	//inline std::map<std::string, MPointArray>& getCacheMeshToPointArray() { return _cacheMeshToPointArray; }
-	//inline MPointArray& getMeshPoints(std::string meshName) { return _cacheMeshToPointArray[meshName]; }
-	//inline std::map<std::string, std::vector<EPointState> >& getCacheMeshToMovablePoint() { return _cacheMeshToMovablePoint; }
-	//inline std::vector<EPointState>& getMeshMovablePoints(std::string meshName) { return _cacheMeshToMovablePoint[meshName]; }
 	inline std::map<std::string, std::vector<MIntArray> >& getCacheMeshToEdgeArray() { return _cacheMeshToEdgeArray; }
 	inline std::vector<MIntArray>& getMeshEdges(std::string meshName) { return _cacheMeshToEdgeArray[meshName]; }
 	Q_INVOKABLE void reloadProjectFromMaya();
@@ -107,35 +94,19 @@ private:
     QObjectListModel _cameraList;
     MVGProject _project;
     QString _logText;
-	
-	// TODO
-//	Map2Dto3D _map2Dto3D;
-//	Map3Dto2D _map3Dto2D;
-	
+		
 	std::map<std::string, DisplayData> _cacheCameraToDisplayData;	
 	/// Map from meshName to mesh points
 	std::map<std::string, MPointArray> _cacheMeshToPointArray;	// Temporary
 	/// Map from meshName to numConnectedFace by point
-	std::map<std::string, std::vector<EPointState> >	_cacheMeshToMovablePoint;	// Temporary
+	std::map<std::string, std::vector<EPointState> > _cacheMeshToMovablePoint;	// Temporary
 	/// Map from meshName to edge points ID
 	std::map<std::string, std::vector<MIntArray> > _cacheMeshToEdgeArray;	// Temporary
 
 	QStringList _allPanelNames;
 	QStringList _visiblePanelNames;
-	std::map<std::string, std::string> _panelToCamera;
+	//std::map<std::string, std::string> _panelToCamera;
 	
 };
 
 } // mayaMVG
-
-//namespace std {
-//	inline bool operator<(const mayaMVG::PairStringToPoint& pair_a, const mayaMVG::PairStringToPoint& pair_b) { 
-//		if(pair_a.first != pair_b.first)
-//			return (pair_a.first < pair_b.first);
-//		
-//		if(pair_a.second.x != pair_b.second.x)
-//			return pair_a.second.x < pair_b.second.x;
-//		
-//		return pair_a.second.y < pair_b.second.y;
-//	}
-//}	// std

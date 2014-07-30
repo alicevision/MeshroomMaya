@@ -109,7 +109,7 @@ MStatus MVGCreateManipulator::doPress(M3dView& view)
 			if(!_manipUtils.addCreateFaceCommand(cmd, emptyPath, facePoints3D))
 				return MS::kFailure;
 	
-			data->buildPoints2D.clear();
+			//data->buildPoints2D.clear();
 			break;
 		}
 		case MVGManipulatorUtil::eIntersectionPoint:

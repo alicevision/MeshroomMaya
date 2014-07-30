@@ -113,6 +113,7 @@ void MVGProjectWrapper::loadProject(const QString& projectDirectoryPath)
 		setCameraToView(cameras[0], _visiblePanelNames[0]);
 		setCameraToView(cameras[1], _visiblePanelNames[1]);
 	}
+	rebuildCacheFromMaya();
 }
 
 void MVGProjectWrapper::selectItems(const QList<QString>& cameraNames)
@@ -129,9 +130,9 @@ void MVGProjectWrapper::setCameraToView(QObject* camera, const QString& viewName
     cam->setInView(viewName, true);
     _project.setCameraInView(cam->camera(), viewName.toStdString());
 	
-	_panelToCamera[viewName.toStdString()] = cam->camera().dagPath().fullPathName().asChar();
+	//_panelToCamera[viewName.toStdString()] = cam->camera().dagPath().fullPathName().asChar();
 	// TODO
-	rebuildCacheFromMaya();
+	//rebuildCacheFromMaya();
 }
 
 
@@ -174,51 +175,27 @@ void MVGProjectWrapper::reloadProjectFromMaya()
 	emit cameraModelChanged();
 	
 	// TODO : Camera selection
-	
-	MVGProjectWrapper::instance().rebuildAllMeshesCacheFromMaya();
-	MVGProjectWrapper::instance().rebuildCacheFromMaya();
+	//rebuildCacheFromMaya();
 }
 
 void MVGProjectWrapper::rebuildCacheFromMaya() 
-{
-	// Remove unused camera
-	std::map<std::string, DisplayData>::iterator cacheIt = _cacheCameraToDisplayData.begin();
-	while(cacheIt != _cacheCameraToDisplayData.end())
+{		
+	_cacheCameraToDisplayData.clear();
+	// Rebuild for temporary cache
+	// TODO: remove to use directly data from Maya
+	for(QStringList::iterator panelIt = _visiblePanelNames.begin(); panelIt!= _visiblePanelNames.end(); ++panelIt)
 	{
-		bool isInView = false;
-		for(std::map<std::string, std::string>::iterator camIt = _panelToCamera.begin(); camIt != _panelToCamera.end(); ++camIt)
-		{
-			if(cacheIt->first == camIt->second)
-			{
-				isInView = true;
-				break;
-			}
-		}
-		
-		if(!isInView)
-		{
-			_cacheCameraToDisplayData.erase(cacheIt++);
-		} 
-		else
-		{
-			++cacheIt;
-		}
-	}
-	
-	M3dView view = M3dView::active3dView();
-	// Rebuild cache
-	for(std::map<std::string, std::string>::iterator camIt = _panelToCamera.begin(); camIt != _panelToCamera.end(); ++camIt)
-	{
+		M3dView view;
+		MStatus status;
+		status = M3dView::getM3dViewFromModelPanel(panelIt->toStdString().c_str(), view);
+		CHECK(status);
+			
 		MDagPath cameraPath;
-		MVGMayaUtil::getDagPathByName(camIt->second.c_str(), cameraPath);
-	
+		view.getCamera(cameraPath);			
 		MVGCamera c(cameraPath);
 		if(c.isValid()) {
 			DisplayData data;
 			data.camera = c;
-			
-			// Rebuild for temporary cache
-			// TODO: remove to use directly data from Maya
 			
 			// Browse meshes
 			std::map<std::string, std::vector<MVGPoint2D> > newMap;
@@ -242,17 +219,10 @@ void MVGProjectWrapper::rebuildCacheFromMaya()
 				newMap[it->first] = points2D;
 			}
 			
-			data.allPoints2D = newMap;
-			
+			data.allPoints2D = newMap;		
 			_cacheCameraToDisplayData[cameraPath.fullPathName().asChar()] = data;
-			LOG_INFO("map size = " << data.allPoints2D.size());
-			if(data.allPoints2D.size() > 0)
-				LOG_INFO("vector size = " << data.allPoints2D.begin()->second.size());
 		}
 	}
-	
-	// TODO : Rebuild maps
-
 }
 
 MStatus MVGProjectWrapper::rebuildAllMeshesCacheFromMaya()
