@@ -45,7 +45,7 @@ class MVGProjectWrapper : public QObject, public Singleton<MVGProjectWrapper>
 {
     Q_OBJECT
 
-    Q_PROPERTY(QString projectDirectory READ projectDirectory NOTIFY projectDirectoryChanged);
+    Q_PROPERTY(QString projectDirectory READ projectDirectory WRITE setProjectDirectory NOTIFY projectDirectoryChanged);
     Q_PROPERTY(QString cameraDirectory READ cameraDirectory NOTIFY cameraDirectoryChanged);
     Q_PROPERTY(QString imageDirectory READ imageDirectory NOTIFY imageDirectoryChanged);
     Q_PROPERTY(QString pointCloudFile READ pointCloudFile NOTIFY pointCloudFileChanged);
@@ -54,23 +54,35 @@ class MVGProjectWrapper : public QObject, public Singleton<MVGProjectWrapper>
     Q_PROPERTY(QString logText READ logText WRITE setLogText NOTIFY logTextChanged);
     MAKE_SINGLETON_WITHCONSTRUCTORS(MVGProjectWrapper)
 
+public slots:
+	const QString projectDirectory() const;
+	void setProjectDirectory(const QString& directory);
+	const QString cameraDirectory() const;
+	const QString imageDirectory() const;
+    const QString pointCloudFile() const;
+	QObjectListModel* cameraModel() {return &_cameraList;}
+    QStringList panelModel() {return _visiblePanelNames;}
+	const QString logText() const;
+    void setLogText(const QString);
+	
+signals:
+    void projectDirectoryChanged();
+    void cameraDirectoryChanged();
+    void imageDirectoryChanged();
+    void pointCloudFileChanged();
+    void cameraModelChanged();
+	void panelModelChanged();
+    void logTextChanged();
+	
 public:
-    Q_INVOKABLE const QString moduleDirectory() const;
-    Q_INVOKABLE const QString projectDirectory() const;
-    Q_INVOKABLE const QString cameraDirectory() const;
-    Q_INVOKABLE const QString imageDirectory() const;
-    Q_INVOKABLE const QString pointCloudFile() const;
-    Q_INVOKABLE QObjectListModel* cameraModel() {return &_cameraList;}
-    Q_INVOKABLE QStringList panelModel() {return _visiblePanelNames;}
-    Q_INVOKABLE void setProjectDirectory(const QString& directory);
-    Q_INVOKABLE const QString logText() const;
-    Q_INVOKABLE void setLogText(const QString);
-    void appendLogText(const QString);
+	void appendLogText(const QString);
+	void selectItems(const QList<QString>& cameraNames);
+	
+    Q_INVOKABLE const QString moduleDirectory() const;   
     Q_INVOKABLE QString openFileDialog() const;
     Q_INVOKABLE void onSelectContextButtonClicked();
     Q_INVOKABLE void onPlaceContextButtonClicked();
     Q_INVOKABLE void loadProject(const QString& projectDirectoryPath);
-    void selectItems(const QList<QString>& cameraNames);
     Q_INVOKABLE void setCameraToView(QObject* camera, const QString& viewName);
 		
 	DisplayData* getCachedDisplayData(M3dView& view);
@@ -82,15 +94,6 @@ public:
 	Q_INVOKABLE void rebuildCacheFromMaya();
 	MStatus rebuildAllMeshesCacheFromMaya();	// Temporary
 	MStatus rebuildMeshCacheFromMaya(MDagPath& meshPath);	// Temporary
-
-signals:
-    void projectDirectoryChanged();
-    void cameraDirectoryChanged();
-    void imageDirectoryChanged();
-    void pointCloudFileChanged();
-    void cameraModelChanged();
-	void panelModelChanged();
-    void logTextChanged();
 
 private:
     QObjectListModel _cameraList;

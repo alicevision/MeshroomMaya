@@ -28,14 +28,11 @@ bool MVGManipulatorUtil::intersectPoint(M3dView& view, DisplayData* displayData,
 	double threshold = (2*POINT_RADIUS*displayData->camera.getZoom())/view.portHeight();
 	MPoint mousePoint;
 	MVGGeometryUtil::viewToCamera(view, x, y, mousePoint);
-	
-	// DISPLAY DATA
+
 	std::map<std::string, std::vector<MVGPoint2D> >& meshMap = displayData->allPoints2D;
 	for(std::map<std::string, std::vector<MVGPoint2D> >::iterator it = meshMap.begin(); it != meshMap.end(); ++it)
 	{
 		std::vector<MVGPoint2D>& meshPoints = it->second;
-		//MPointArray& meshPoints = it->second;	// Points 3D
-		//MPoint pointCameraCoord;
 		for(int i = 0; i < meshPoints.size(); ++i)
 		{
 			//MVGGeometryUtil::worldToCamera(view, displayData->camera, meshPoints[i], pointCameraCoord);
@@ -49,27 +46,7 @@ bool MVGManipulatorUtil::intersectPoint(M3dView& view, DisplayData* displayData,
 			}
 		}
 	}
-	
-	// Browse meshes - Caches version
-//	std::map<std::string, MPointArray>& meshMap= MVGProjectWrapper::instance().getCacheMeshToPointArray();
-//	for(std::map<std::string, MPointArray>::iterator it = meshMap.begin(); it != meshMap.end(); ++it)
-//	{
-//		MPointArray& meshPoints = it->second;	// Points 3D
-//		MPoint pointCameraCoord;
-//		for(int i = 0; i < meshPoints.length(); ++i)
-//		{
-//			MVGGeometryUtil::worldToCamera(view, displayData->camera, meshPoints[i], pointCameraCoord);
-//			if(pointCameraCoord.x <= mousePoint.x + threshold && pointCameraCoord.x >= mousePoint.x - threshold
-//			&& pointCameraCoord.y <= mousePoint.y + threshold && pointCameraCoord.y >= mousePoint.y - threshold)
-//			{
-//				_intersectionData.pointIndex = i;
-//				_intersectionData.meshName =  it->first;
-//
-//				return true;
-//			}
-//		}
-//	}
-	
+		
 	_intersectionData.pointIndex = -1;
 	return false;
 }
@@ -158,9 +135,7 @@ void MVGManipulatorUtil::updateIntersectionState(M3dView& view, DisplayData* dat
 	}
 }
 void MVGManipulatorUtil::computeEdgeIntersectionData(M3dView& view, DisplayData* data, const MPoint& mousePointInCameraCoord)
-{
-	//MPointArray& meshPoints = MVGProjectWrapper::instance().getMeshPoints(_intersectionData.meshName);
-	
+{	
 	std::vector<MVGPoint2D>& mvgPoints = data->allPoints2D[_intersectionData.meshName];
 	
 	// Compute height and ratio 2D

@@ -131,7 +131,6 @@ void MVGGeometryUtil::cameraToImage(const MVGCamera& camera, const MPoint& point
 	
 	const double verticalMargin = (width - height) / 2.0;
 	x = (pointCenteredNorm.x + 0.5 ) * width;
-	//y = height - ((point.y + 0.5) * height);
 	y = (-pointCenteredNorm.y + 0.5) * width - verticalMargin;
 }
 
@@ -183,7 +182,6 @@ bool MVGGeometryUtil::projectFace2D(M3dView& view, MPointArray& face3DPoints, co
 	// Retrieve Face3D vertices from this model
 	MPoint P;
 	MPoint cameraCenter = AS_MPOINT(camera.pinholeCamera()._C);
-	//std::vector<MPoint> face3DPoints;
 	MPoint worldPoint;
 	
 	if(compute) {	
