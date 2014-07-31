@@ -207,13 +207,13 @@ bool MVGContext::eventFilter(QObject *obj, QEvent *e)
 	// mouse enters widget's boundaries
 	else if (e->type() == QEvent::Enter) {
 		// Check if we are entering the MVGWindow
-//		QVariant window = obj->property("mvg_window");
-//		if(window.type() != QVariant::Invalid)
-//		{
-//			MVGProjectWrapper::instance().rebuildAllMeshesCacheFromMaya();
-//			MVGProjectWrapper::instance().rebuildCacheFromMaya();
-//			return false;
-//		}
+		QVariant window = obj->property("mvg_window");
+		if(window.type() != QVariant::Invalid)
+		{
+			MVGProjectWrapper::instance().rebuildAllMeshesCacheFromMaya();
+			MVGProjectWrapper::instance().rebuildCacheFromMaya();
+			return false;
+		}
 		// check if we are entering an MVG panel
 		QVariant panelName = obj->property("mvg_panel");
 		if(panelName.type()== QVariant::Invalid)

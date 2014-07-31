@@ -105,7 +105,7 @@ void MVGMesh::getPoints(MPointArray& pointArray) const
 	MStatus status;
 	MFnMesh fnMesh(_dagpath.node(), &status);
 	CHECK(status);
-	fnMesh.getPoints(pointArray);
+	fnMesh.getPoints(pointArray, MSpace::kWorld);
 	
 }
 
@@ -217,8 +217,8 @@ MIntArray MVGMesh::getEdgeVertices(int edgeId)
 void MVGMesh::setPoint(int vertexId, MPoint& point)
 {
 	MStatus status;
-	MFnMesh fnMesh(_dagpath.node(), &status);
-	fnMesh.setPoint(vertexId, point);
+	MFnMesh fnMesh(_dagpath, &status);
+	status = fnMesh.setPoint(vertexId, point, MSpace::kWorld);
 	CHECK(status);
 }
 			

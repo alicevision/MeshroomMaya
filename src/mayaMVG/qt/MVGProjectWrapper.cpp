@@ -239,7 +239,7 @@ MStatus MVGProjectWrapper::rebuildMeshCacheFromMaya(MDagPath& meshPath)
 	std::vector<MIntArray> meshEdges;
 	
 	// Mesh points
-	if(!fnMesh.getPoints(meshPoints))
+	if(!fnMesh.getPoints(meshPoints, MSpace::kWorld))
 		return MS::kFailure;
 	
 	_cacheMeshToPointArray[meshPath.fullPathName().asChar()] = meshPoints;

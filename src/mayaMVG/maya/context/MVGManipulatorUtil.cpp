@@ -5,6 +5,7 @@
 #include "mayaMVG/maya/cmd/MVGEditCmd.h"
 #include "mayaMVG/maya/context/MVGDrawUtil.h"
 #include "mayaMVG/core/MVGLog.h"
+#include <maya/MMatrix.h>
 
 namespace mayaMVG {
 	
@@ -237,8 +238,16 @@ bool MVGManipulatorUtil::addCreateFaceCommand(MVGEditCmd* cmd, MDagPath& meshPat
 	  return false;
 	}
 
+	// FIX ME - Convert to KObject space
+	MPointArray objectPoints;
+	for(int i = 0; i < facePoints3D.length(); ++i)
+	{
+		MPoint objPoint = facePoints3D[i] * meshPath.inclusiveMatrixInverse();	
+		objectPoints.append(objPoint);
+	}
+	
 	// Create face
-	cmd->doAddPolygon(meshPath, facePoints3D);
+	cmd->doAddPolygon(meshPath, objectPoints);
 	if(cmd->redoIt())
 		cmd->finalize();
 	
@@ -247,8 +256,6 @@ bool MVGManipulatorUtil::addCreateFaceCommand(MVGEditCmd* cmd, MDagPath& meshPat
 
 bool MVGManipulatorUtil::addUpdateFaceCommand(MVGEditCmd* cmd, MDagPath& meshPath, const MPointArray& newFacePoints3D, const MIntArray& verticesIndexes)
 {
-//	if(newFacePoints3D.length() < 4)
-//		return false;
 	
 	if(newFacePoints3D.length() != verticesIndexes.length())
 	{
