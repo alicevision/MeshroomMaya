@@ -88,10 +88,11 @@ MStatus MVGCreateManipulator::doPress(M3dView& view)
 	}
 	
 	short mousex, mousey;
+	short x, y;
 	mousePosition(mousex, mousey);
 	MPoint mousePoint;
 	MVGGeometryUtil::viewToCamera(view, mousex, mousey, mousePoint);
-	
+
 	switch(_manipUtils.intersectionState()) {
 		case MVGManipulatorUtil::eIntersectionNone: {			
 			
@@ -108,7 +109,7 @@ MStatus MVGCreateManipulator::doPress(M3dView& view)
 			MDagPath emptyPath = MDagPath();
 			if(!_manipUtils.addCreateFaceCommand(cmd, emptyPath, facePoints3D))
 				return MS::kFailure;
-	
+					
 			break;
 		}
 		case MVGManipulatorUtil::eIntersectionPoint:
@@ -142,9 +143,8 @@ MStatus MVGCreateManipulator::doRelease(M3dView& view)
 		case MVGManipulatorUtil::eIntersectionNone:
 		case MVGManipulatorUtil::eIntersectionPoint:	
 			break;
-		case MVGManipulatorUtil::eIntersectionEdge: {
-			//LOG_INFO("CREATE POLYGON W/ TMP EDGE")
-			
+		case MVGManipulatorUtil::eIntersectionEdge: 
+		{			
 			MDagPath meshPath;
 			MVGMayaUtil::getDagPathByName(_manipUtils.intersectionData().meshName.c_str(), meshPath);
 			if(!_manipUtils.addCreateFaceCommand(cmd, meshPath, _manipUtils.previewFace3D()))
@@ -162,9 +162,6 @@ MStatus MVGCreateManipulator::doMove(M3dView& view, bool& refresh)
 	DisplayData* data = MVGProjectWrapper::instance().getCachedDisplayData(view);
 	if(!data)
 		return MS::kFailure;
-	//Needed ? 
-//	if(data->buildPoints2D.length() == 0 && MVGProjectWrapper::instance().getCacheMeshToPointArray().size() == 0)
-//		return MS::kSuccess;
 	
 	short mousex, mousey;
 	mousePosition(mousex, mousey);
@@ -192,7 +189,6 @@ MStatus MVGCreateManipulator::doDrag(M3dView& view)
 			break;
 		case MVGManipulatorUtil::eIntersectionEdge: 
 		{
-			//LOG_INFO("MOVE TMP EDGE")
 			computeTmpFaceOnEdgeExtend(view, data, mousePoint);
 			break;
 		}
@@ -219,7 +215,6 @@ void MVGCreateManipulator::setContext(MVGContext* ctx)
 
 void MVGCreateManipulator::drawIntersections(M3dView& view)
 {
-	// DISPLAY DATA
 	DisplayData* data = MVGProjectWrapper::instance().getCachedDisplayData(view);
 	if(!data)
 		return;
@@ -232,55 +227,25 @@ void MVGCreateManipulator::drawIntersections(M3dView& view)
 	
 	short x, y;
 	switch(_manipUtils.intersectionState())
-		{
-			case MVGManipulatorUtil::eIntersectionPoint:
-				glColor4f(0.3f, 0.3f, 0.6f, 0.8f);	// Grey
-				
-				MVGGeometryUtil::cameraToView(view, meshPoints[intersectionData.pointIndex].projectedPoint3D, x, y);
-				MVGDrawUtil::drawCircle(x, y, POINT_RADIUS, 30);
-				
-				break;
-			case MVGManipulatorUtil::eIntersectionEdge:				
-				glColor4f(0.9f, 0.9f, 0.1f, 0.8f);
+	{
+		case MVGManipulatorUtil::eIntersectionPoint:
+			glColor4f(0.3f, 0.3f, 0.6f, 0.8f);	// Grey
 
-				glBegin(GL_LINES);
-					MVGGeometryUtil::cameraToView(view, meshPoints[intersectionData.edgePointIndexes[0]].projectedPoint3D, x, y);
-					glVertex2f(x, y);
-					MVGGeometryUtil::cameraToView(view, meshPoints[intersectionData.edgePointIndexes[1]].projectedPoint3D, x, y);
-					glVertex2f(x, y);
-				glEnd();	
-				break;
-		}	
-	
-	// Temporary caches
-//	std::map<std::string, MPointArray>& meshCache = MVGProjectWrapper::instance().getCacheMeshToPointArray();
-//	if(meshCache.size() > 0) 
-//	{
-//		MVGManipulatorUtil::IntersectionData& intersectionData = _manipUtils.intersectionData();
-//		MPointArray meshPoints = meshCache[intersectionData.meshName];
-//		MPoint pointViewCoord_0;
-//		MPoint pointViewCoord_1;
-//
-//		switch(_manipUtils.intersectionState())
-//		{
-//			case MVGManipulatorUtil::eIntersectionPoint:
-//				glColor4f(0.3f, 0.3f, 0.6f, 0.8f);	// Grey
-//				pointViewCoord_0 = MVGGeometryUtil::worldToView(view, meshPoints[intersectionData.pointIndex]);
-//
-//				MVGDrawUtil::drawCircle(pointViewCoord_0.x, pointViewCoord_0.y, POINT_RADIUS, 30);
-//				break;
-//			case MVGManipulatorUtil::eIntersectionEdge:				
-//				glColor4f(0.9f, 0.9f, 0.1f, 0.8f);
-//
-//				pointViewCoord_0 = MVGGeometryUtil::worldToView(view, meshPoints[intersectionData.edgePointIndexes[0]]);
-//				pointViewCoord_1 = MVGGeometryUtil::worldToView(view, meshPoints[intersectionData.edgePointIndexes[1]]);
-//				glBegin(GL_LINES);
-//					glVertex2f(pointViewCoord_0.x, pointViewCoord_0.y);
-//					glVertex2f(pointViewCoord_1.x, pointViewCoord_1.y);
-//				glEnd();	
-//				break;
-//		}	
-//	}
+			MVGGeometryUtil::cameraToView(view, meshPoints[intersectionData.pointIndex].projectedPoint3D, x, y);
+			MVGDrawUtil::drawCircle(x, y, POINT_RADIUS, 30);
+
+			break;
+		case MVGManipulatorUtil::eIntersectionEdge:				
+			glColor4f(0.9f, 0.9f, 0.1f, 0.8f);
+
+			glBegin(GL_LINES);
+				MVGGeometryUtil::cameraToView(view, meshPoints[intersectionData.edgePointIndexes[0]].projectedPoint3D, x, y);
+				glVertex2f(x, y);
+				MVGGeometryUtil::cameraToView(view, meshPoints[intersectionData.edgePointIndexes[1]].projectedPoint3D, x, y);
+				glVertex2f(x, y);
+			glEnd();	
+			break;
+	}	
 }
 
 void MVGCreateManipulator::drawPreview2D(M3dView& view, DisplayData* data)

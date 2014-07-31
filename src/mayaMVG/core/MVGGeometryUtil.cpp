@@ -9,6 +9,10 @@
 #include <vector>
 
 #include <maya/MPlug.h>
+#include "openMVG/multiview/triangulation_nview.hpp"
+#include "openMVG/multiview/triangulation.hpp"
+#include "openMVG/multiview/projection.hpp"
+
 using namespace mayaMVG;
 
 namespace { // empty namespace
@@ -239,4 +243,52 @@ void MVGGeometryUtil::projectPointOnPlane(const MPoint& point, M3dView& view, Pl
 	MPoint worldPoint;
 	view.viewToWorld(x, y, worldPoint, dir);
 	plane_line_intersect(model, cameraCenter, worldPoint, projectedPoint);
+}
+
+void MVGGeometryUtil::triangulatePoint(MPointArray& points2D, std::vector<MVGCamera>& cameras, MPoint& resultPoint3D)
+{
+	// Result
+	openMVG::Vec3 result;
+	short x, y;
+	
+	// N views
+//	openMVG::Mat2X A(2, points2D.length());
+//	
+//	for(size_t i = 0; i <points2D.length(); ++i)
+//	{
+//		MVGGeometryUtil::cameraToImage(cameras[i], points2D[i], x, y);
+//		A(0, i) = points2D[i].x;
+//		A(1, i) = points2D[i].y;
+//	}
+	
+	// Projective cameras
+//	std::vector<openMVG::Mat34> projectiveCameras;
+//	for(size_t i = 0; i <cameras.size(); ++i)
+//	{
+//		projectiveCameras.push_back(cameras[i].pinholeCamera()._P);
+//	}
+	
+	/// Compute a 3D position of a point from several images of it. In particular,
+	///  compute the projective point X in R^4 such that x = PX.
+	/// Algorithm is the standard DLT; for derivation see appendix of Keir's thesis.
+	//openMVG::TriangulateNView(A, projectiveCameras, &result4);
+	
+	// 2 views
+	openMVG::Vec2 xL_;
+	MVGGeometryUtil::cameraToImage(cameras[0], points2D[0], x, y);
+	xL_(0) = x;
+	xL_(1) = y;
+	openMVG::Vec2 xR_;
+	MVGGeometryUtil::cameraToImage(cameras[1], points2D[1], x, y);
+	xR_(0) = x;
+	xR_(1) = y;
+	
+	const openMVG::Mat34 PL = cameras[0].pinholeCamera()._P;
+	const openMVG::Mat34 PR = cameras[1].pinholeCamera()._P;
+		
+	openMVG::TriangulateDLT(PL, xL_, PR, xR_, &result);
+	
+	resultPoint3D.x = result(0);
+	resultPoint3D.y = result(1);
+	resultPoint3D.z = result(2);
 }

@@ -74,8 +74,10 @@ public:
     Q_INVOKABLE void setCameraToView(QObject* camera, const QString& viewName);
 		
 	DisplayData* getCachedDisplayData(M3dView& view);
+	std::map<std::string, DisplayData>& getDisplayDataCache() { return _cacheCameraToDisplayData;}
 	inline std::map<std::string, std::vector<MIntArray> >& getCacheMeshToEdgeArray() { return _cacheMeshToEdgeArray; }
 	inline std::vector<MIntArray>& getMeshEdges(std::string meshName) { return _cacheMeshToEdgeArray[meshName]; }
+	
 	Q_INVOKABLE void reloadProjectFromMaya();
 	Q_INVOKABLE void rebuildCacheFromMaya();
 	MStatus rebuildAllMeshesCacheFromMaya();	// Temporary
@@ -105,7 +107,6 @@ private:
 
 	QStringList _allPanelNames;
 	QStringList _visiblePanelNames;
-	//std::map<std::string, std::string> _panelToCamera;
 	
 };
 

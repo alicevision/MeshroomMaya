@@ -41,9 +41,11 @@ class MVGMoveManipulator: public MPxManipulatorNode
 		void drawIntersections(M3dView& view);
 			
 		// Compute
-		void computeTmpFaceOnMovePoint(M3dView& view, DisplayData* data, MPoint& mousePoint, bool recompute = false);
-		void computeTmpFaceOnMoveEdge(M3dView& view, DisplayData* data, MPoint& mousePoint, bool recompute = false);
-	public:
+		void computeTmpFaceOnMovePoint(M3dView& view, DisplayData* data, MPoint& mousePoint, bool recompute=false);
+		void computeTmpFaceOnMoveEdge(M3dView& view, DisplayData* data, MPoint& mousePoint, bool recompute=false);
+		bool triangulate(M3dView& view, MVGManipulatorUtil::IntersectionData& intersectionData, MPoint& mousePointInCameraCoord, MPoint& resultPoint3D);
+		
+public:
 		static MTypeId _id;
 		MVGManipulatorUtil _manipUtils;
 		EMoveState _moveState;
