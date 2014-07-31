@@ -12,9 +12,9 @@
 using namespace mayaMVG;
 
 MVGContext::MVGContext() 
-	: _filter((QObject*)MVGMayaUtil::getMVGWindow(), this, &_eventData)
-	, _filterLV((QObject*)MVGMayaUtil::getMVGViewportLayout(MVGProjectWrapper::instance().panelModel().at(0).toStdString().c_str()), this, &_eventData)
-	, _filterRV((QObject*)MVGMayaUtil::getMVGViewportLayout(MVGProjectWrapper::instance().panelModel().at(1).toStdString().c_str()), this, &_eventData)
+	: _filter((QObject*)MVGMayaUtil::getMVGWindow(), this)
+	, _filterLV((QObject*)MVGMayaUtil::getMVGViewportLayout(MVGProjectWrapper::instance().panelModel().at(0).toStdString().c_str()), this)
+	, _filterRV((QObject*)MVGMayaUtil::getMVGViewportLayout(MVGProjectWrapper::instance().panelModel().at(1).toStdString().c_str()), this)
 	, _editMode(eModeCreate)
 	, _keyPressed(eKeyNone)
 {
@@ -68,7 +68,7 @@ void MVGContext::updateManipulators()
 		addManipulator(manipObject);
 }
 
-bool MVGContext::eventFilter(QObject *obj, QEvent *e, void* eventData)
+bool MVGContext::eventFilter(QObject *obj, QEvent *e)
 {
 	// key pressed
 	if(e->type() == QEvent::KeyPress) {
@@ -151,46 +151,42 @@ bool MVGContext::eventFilter(QObject *obj, QEvent *e, void* eventData)
 		QMouseEvent * mouseevent = static_cast<QMouseEvent*>(e);
 		// middle button: initialize camera pan
 		if((mouseevent->button() & Qt::MidButton)) {
-			EventData* data = static_cast<EventData*>(eventData);
-			if(!data->cameraPath.isValid())
+			if(!_eventData.cameraPath.isValid())
 				return false;
-			MFnCamera fnCamera(data->cameraPath);
-			data->onPressMousePos = mouseevent->pos();
-			data->onPressCameraHPan = fnCamera.horizontalPan();
-			data->onPressCameraVPan = fnCamera.verticalPan();
-			data->isDragging = true;
+			MFnCamera fnCamera(_eventData.cameraPath);
+			_eventData.onPressMousePos = mouseevent->pos();
+			_eventData.onPressCameraHPan = fnCamera.horizontalPan();
+			_eventData.onPressCameraVPan = fnCamera.verticalPan();
+			_eventData.isDragging = true;
 		}
 	}
 	// mouse button moved
 	else if(e->type() == QEvent::MouseMove) {
-		EventData* data = static_cast<EventData*>(eventData);
-		if(!data->cameraPath.isValid())
+		if(!_eventData.cameraPath.isValid())
 			return false;
-		if(!data->isDragging)
+		if(!_eventData.isDragging)
 			return false;
-		MFnCamera camera(data->cameraPath);
+		MFnCamera camera(_eventData.cameraPath);
 		// compute pan offset
 		QMouseEvent* mouseevent = static_cast<QMouseEvent*>(e);
-		QPointF offset_screen = data->onPressMousePos - mouseevent->posF();
+		QPointF offset_screen = _eventData.onPressMousePos - mouseevent->posF();
 		const double viewport_width = qobject_cast<QWidget*>(obj)->width();
 		QPointF offset = (offset_screen / viewport_width) * camera.horizontalFilmAperture() * camera.zoom();
-		camera.setHorizontalPan(data->onPressCameraHPan + offset.x());
-		camera.setVerticalPan(data->onPressCameraVPan - offset.y());
+		camera.setHorizontalPan(_eventData.onPressCameraHPan + offset.x());
+		camera.setVerticalPan(_eventData.onPressCameraVPan - offset.y());
 	}
 	// mouse button released
 	else if(e->type() == QEvent::MouseButtonRelease) {
-		EventData* data = static_cast<EventData*>(eventData);
-		data->isDragging = false;
+		_eventData.isDragging = false;
 	}
 	// mouse wheel rolled
 	else if (e->type() == QEvent::Wheel) {
-		EventData* data = static_cast<EventData*>(eventData);
-		if(!data->cameraPath.isValid())
+		if(!_eventData.cameraPath.isValid())
 			return false;
 		// compute & set zoom value
 		QMouseEvent* mouseevent = static_cast<QMouseEvent*>(e);
 		QWheelEvent* wheelevent = static_cast<QWheelEvent*>(e);
-		MFnCamera camera(data->cameraPath);
+		MFnCamera camera(_eventData.cameraPath);
 		QWidget* widget = qobject_cast<QWidget*>(obj);
 		const double viewportWidth = widget->width();
 		const double viewportHeight = widget->height();
@@ -223,9 +219,8 @@ bool MVGContext::eventFilter(QObject *obj, QEvent *e, void* eventData)
 		if(panelName.type()== QVariant::Invalid)
 			return false;
 		// find & register the associated camera path
-		EventData* data = static_cast<EventData*>(eventData);
-		MVGMayaUtil::getCameraInView(data->cameraPath, MQtUtil::toMString(panelName.toString()));
-		if(!data->cameraPath.isValid())
+		MVGMayaUtil::getCameraInView(_eventData.cameraPath, MQtUtil::toMString(panelName.toString()));
+		if(!_eventData.cameraPath.isValid())
 			return false;
 		// automagically set focus on this MVG panel
 		MVGMayaUtil::setFocusOnView(MQtUtil::toMString(panelName.toString()));

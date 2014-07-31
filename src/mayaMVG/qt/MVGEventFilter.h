@@ -9,26 +9,24 @@ template<class T>
 class MVGEventFilter: public QObject {
 	
 	public:
-		MVGEventFilter(QObject* window, T* userObj, void* userData);
+		MVGEventFilter(QObject* window, T* userObj);
 		~MVGEventFilter();
-		
+	
 	protected:
 		bool eventFilter(QObject* obj, QEvent* e);
 
 	protected:
 		QObject* _window;
 		T* _userObj;
-		void* _userData;
 };
 
 } // namespace
 
 template<class T>
-mayaMVG::MVGEventFilter<T>::MVGEventFilter(QObject* window, T* userObj, void* userData)
+mayaMVG::MVGEventFilter<T>::MVGEventFilter(QObject* window, T* userObj)
 	: QObject(NULL) // no parent
 	, _window(window)
 	, _userObj(userObj)
-	, _userData(userData)
 {
 	if(_window)
 		_window->installEventFilter(this);
@@ -49,6 +47,6 @@ bool mayaMVG::MVGEventFilter<T>::eventFilter(QObject* obj, QEvent* e)
 		return false;
 	}
 	if(_userObj)
-		return _userObj->eventFilter(obj, e, _userData);
+		return _userObj->eventFilter(obj, e);
 	return QObject::eventFilter(obj, e);
 }
