@@ -39,6 +39,9 @@ void MVGCreateManipulator::draw(M3dView & view, const MDagPath & path,
 	DisplayData* data = MVGProjectWrapper::instance().getCachedDisplayData(view);
 	if(!data)
 		return;
+	
+	short mousex, mousey;
+	updateMouse(view, data, mousex, mousey);
 
 	view.beginGL();
 
@@ -58,11 +61,11 @@ void MVGCreateManipulator::draw(M3dView & view, const MDagPath & path,
 		// Draw only in active view
 		if(MVGMayaUtil::isActiveView(view))
 		{
+			drawCursor(mousex, mousey);
+			drawIntersections(view, mousex, mousey);
+			
 			glColor3f(1.f, 0.f, 0.f);
 			drawPreview2D(view, data);
-		
-			drawIntersections(view);
-			
 		}
 
 	MVGDrawUtil::end2DDrawing();
@@ -213,7 +216,31 @@ void MVGCreateManipulator::setContext(MVGContext* ctx)
 	_manipUtils.setContext(ctx);
 }
 
-void MVGCreateManipulator::drawIntersections(M3dView& view)
+MPoint MVGCreateManipulator::updateMouse(M3dView& view, DisplayData* data, short& mousex, short& mousey)
+{
+	mousePosition(mousex, mousey);
+	MPoint mousePointInCameraCoord;
+	MVGGeometryUtil::viewToCamera(view, mousex, mousey, mousePointInCameraCoord);
+	
+	return mousePointInCameraCoord;
+}
+
+void MVGCreateManipulator::drawCursor(float mousex, float mousey)
+{
+	glColor3f(0.f, 0.f, 0.f);
+	MVGDrawUtil::drawTargetCursor(mousex, mousey);
+	
+	if(_manipUtils.intersectionState() == MVGManipulatorUtil::eIntersectionEdge)
+		drawExtendCursor(mousex, mousey);
+}
+
+void MVGCreateManipulator::drawExtendCursor(float mousex, float mousey)
+{
+	glColor3f(0.9f, 0.9f, 0.1f);
+	MVGDrawUtil::drawExtendItem(mousex, mousey);
+}
+
+void MVGCreateManipulator::drawIntersections(M3dView& view, float mousex, float mousey)
 {
 	DisplayData* data = MVGProjectWrapper::instance().getCachedDisplayData(view);
 	if(!data)
@@ -238,6 +265,7 @@ void MVGCreateManipulator::drawIntersections(M3dView& view)
 		case MVGManipulatorUtil::eIntersectionEdge:				
 			glColor4f(0.9f, 0.9f, 0.1f, 0.8f);
 
+			glLineWidth(1.5f);
 			glBegin(GL_LINES);
 				MVGGeometryUtil::cameraToView(view, meshPoints[intersectionData.edgePointIndexes[0]].projectedPoint3D, x, y);
 				glVertex2f(x, y);
@@ -254,6 +282,7 @@ void MVGCreateManipulator::drawPreview2D(M3dView& view, DisplayData* data)
 	short mousex, mousey;
 	mousePosition(mousex, mousey);
 	
+	
 	MPointArray points = data->buildPoints2D;
 	if(points.length() > 0)
 	{
@@ -261,6 +290,7 @@ void MVGCreateManipulator::drawPreview2D(M3dView& view, DisplayData* data)
 			MVGGeometryUtil::cameraToView(view, points[i], x, y);
 			MVGDrawUtil::drawCircle(x, y, POINT_RADIUS, 30);
 			
+			glLineWidth(1.5f);
 			glBegin(GL_LINES);
 				MVGGeometryUtil::cameraToView(view, points[i], x, y);
 				glVertex2f(x, y);

@@ -27,9 +27,13 @@ class MVGCreateManipulator: public MPxManipulatorNode
 
 	public:
 		void setContext(MVGContext* ctx);
-	private:	
+	private:
+		MPoint updateMouse(M3dView& view, DisplayData* data, short& mousex, short& mousey);
+		
 		// Draw
-		void drawIntersections(M3dView& view);
+		void drawCursor(float mousex, float mousey);
+		void drawExtendCursor(float mousex, float mousey);
+		void drawIntersections(M3dView& view, float mousex, float mousey);
 		void drawPreview2D(M3dView& view, DisplayData* data);
 		
 		// Compute

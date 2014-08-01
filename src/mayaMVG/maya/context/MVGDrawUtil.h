@@ -68,6 +68,7 @@ struct MVGDrawUtil {
 		GLfloat width = 4;
 		GLfloat height = 4;
 		
+		glLineWidth(1.5f);
 		glBegin(GL_LINES);
 			glVertex2f(x - step, y);
 			glVertex2f(x + step, y);
@@ -98,6 +99,47 @@ struct MVGDrawUtil {
 			glVertex2f(x + height, y + step);
 			glVertex2f(x - height, y + step);
 			glVertex2f(x, y + step + width);
+		glEnd();
+	}
+	
+	static void drawTargetCursor(float x, float y)
+	{
+		GLfloat width = 8;
+		GLfloat space = 2;
+		
+		glLineWidth(1.5f);
+		glBegin(GL_LINES);
+			glVertex2f(x - width, y);
+			glVertex2f(x - space, y);
+		glEnd();
+		glBegin(GL_LINES);
+			glVertex2f(x + space, y);
+			glVertex2f(x + width, y);
+		glEnd();
+		glBegin(GL_LINES);
+			glVertex2f(x, y + width);
+			glVertex2f(x, y + space);
+		glEnd();
+		glBegin(GL_LINES);
+			glVertex2f(x, y - space);
+			glVertex2f(x, y - width);
+		glEnd();
+	}
+	
+	static void drawExtendItem(float x, float y)
+	{
+		GLfloat step = 10;
+		GLfloat width = 4;
+		
+		// Plus
+		glLineWidth(1.f);
+		glBegin(GL_LINES);
+			glVertex2f(x + step - width, y + step);
+			glVertex2f(x + step + width, y + step);
+		glEnd();
+		glBegin(GL_LINES);
+			glVertex2f(x + step, y + step - width);
+			glVertex2f(x + step, y + step + width);
 		glEnd();
 	}
 	

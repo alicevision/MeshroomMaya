@@ -77,7 +77,7 @@ void MVGMoveManipulator::draw(M3dView & view, const MDagPath & path,
 		return;
 	
 	short mousex, mousey;
-	MPoint mousePoint = updateMouse(view, data, mousex, mousey);
+	updateMouse(view, data, mousex, mousey);
 	
 	view.beginGL();
 
@@ -468,6 +468,7 @@ void MVGMoveManipulator::drawIntersections(M3dView& view)
 					break;	
 			}
 
+			glLineWidth(1.5f);
 			glBegin(GL_LINES);
 				MVGGeometryUtil::cameraToView(view, meshPoints[intersectionData.edgePointIndexes[0]].projectedPoint3D, x, y);
 				glVertex2f(x, y);
