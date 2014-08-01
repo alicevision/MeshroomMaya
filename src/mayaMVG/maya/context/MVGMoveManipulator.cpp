@@ -92,31 +92,28 @@ void MVGMoveManipulator::draw(M3dView & view, const MDagPath & path,
 	
 	// Draw	
 	MVGDrawUtil::begin2DDrawing(view);
-		MVGDrawUtil::drawCircle(0, 0, 1, 5); // needed - FIXME
-				
-		// Draw Camera points
-//		glColor3f(1.f, 0.5f, 0.f);
-//		MVGManipulatorUtil::drawCameraPoints(view, data);
-		
-		if(MVGMayaUtil::isActiveView(view))
-		{					
-			drawIntersections(view);
+	MVGDrawUtil::drawCircle(0, 0, 1, 5); // needed - FIXME
+						
+	if(MVGMayaUtil::isActiveView(view))
+	{			
+		drawCursor(mousex, mousey);
+		drawIntersections(view);
 
-			switch(_moveState)
-			{
-				case eMoveNone:
-					break;
-				case eMovePoint:
-					if(_manipUtils.getContext()->getKeyPressed() == MVGContext::eKeyNone)
-					{
-						glColor3f(0.9f, 0.5f, 0.4f);
-						MVGDrawUtil::drawFullCross(mousex, mousey);
-					}
-					break;
-				case eMoveEdge:
-					break;
-			}
+		switch(_moveState)
+		{
+			case eMoveNone:
+				break;
+			case eMovePoint:
+				if(_manipUtils.getContext()->getKeyPressed() == MVGContext::eKeyNone)
+				{
+//						glColor3f(0.9f, 0.5f, 0.4f);
+//						MVGDrawUtil::drawFullCross(mousex, mousey, 10, 2);
+				}
+				break;
+			case eMoveEdge:
+				break;
 		}
+	}
 		
 	MVGDrawUtil::end2DDrawing();
 	view.endGL();
@@ -356,6 +353,45 @@ MPoint MVGMoveManipulator::updateMouse(M3dView& view, DisplayData* data, short& 
 	return mousePointInCameraCoord;
 }
 
+void MVGMoveManipulator::drawCursor(float mousex, float mousey)
+{
+	glColor4f(0.f, 0.f, 0.f, 0.8f);
+	MVGDrawUtil::drawArrowsCursor(mousex, mousey);
+	
+	switch(_manipUtils.getContext()->getKeyPressed())
+	{
+		case MVGContext::eKeyNone:
+			drawTriangulateCursor(mousex, mousey);
+			break;
+		case MVGContext::eKeyCtrl:
+			drawMoveInPlaneCursor(mousex, mousey);
+			break;
+		case MVGContext::eKeyShift:
+			drawMoveRecomputePlaneCursor(mousex, mousey);
+			break;					
+	}
+}
+
+
+
+void MVGMoveManipulator::drawTriangulateCursor(float mousex, float mousey)
+{
+	glColor3f(0.9f, 0.5f, 0.4f);
+	MVGDrawUtil::drawFullCross(mousex + 10, mousey + 10, 5, 1);
+}
+
+void MVGMoveManipulator::drawMoveInPlaneCursor(float mousex, float mousey)
+{
+	glColor3f(0.f, 1.f, 0.f);
+	MVGDrawUtil::drawPlaneItem(mousex + 12, mousey + 10);
+}
+
+void MVGMoveManipulator::drawMoveRecomputePlaneCursor(float mousex, float mousey)
+{
+	glColor3f(0.f, 1.f, 1.f);
+	MVGDrawUtil::drawPointCloudItem(mousex + 10, mousey + 10);
+}
+		
 void MVGMoveManipulator::drawIntersections(M3dView& view)
 {
 	DisplayData* data = MVGProjectWrapper::instance().getCachedDisplayData(view);

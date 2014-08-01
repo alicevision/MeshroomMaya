@@ -38,6 +38,10 @@ class MVGMoveManipulator: public MPxManipulatorNode
 		MPoint updateMouse(M3dView& view, DisplayData* data, short& mousex, short& mousey);
 		
 		// Draw
+		void drawCursor(float mousex, float mousey);
+		void drawTriangulateCursor(float mousex, float mousey);
+		void drawMoveInPlaneCursor(float mousex, float mousey);
+		void drawMoveRecomputePlaneCursor(float mousex, float mousey);
 		void drawIntersections(M3dView& view);
 			
 		// Compute
