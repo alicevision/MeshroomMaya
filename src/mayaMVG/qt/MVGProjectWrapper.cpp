@@ -216,6 +216,9 @@ void MVGProjectWrapper::rebuildCacheFromMaya()
 MStatus MVGProjectWrapper::rebuildAllMeshesCacheFromMaya()
 {
 	MStatus status;
+	_cacheMeshToPointArray.clear();
+	_cacheMeshToMovablePoint.clear();
+	_cacheMeshToEdgeArray.clear();
 	// Retrieves all meshes
 	MDagPath path;
 	MItDependencyNodes it(MFn::kMesh);
@@ -229,7 +232,7 @@ MStatus MVGProjectWrapper::rebuildAllMeshesCacheFromMaya()
 }
 
 MStatus MVGProjectWrapper::rebuildMeshCacheFromMaya(MDagPath& meshPath)
-{
+{	
 	MStatus status;
 	MFnMesh fnMesh(meshPath);
 	MPointArray meshPoints;
