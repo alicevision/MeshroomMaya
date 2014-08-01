@@ -237,7 +237,7 @@ void MVGCreateManipulator::drawCursor(float mousex, float mousey)
 void MVGCreateManipulator::drawExtendCursor(float mousex, float mousey)
 {
 	glColor3f(0.9f, 0.9f, 0.1f);
-	MVGDrawUtil::drawExtendItem(mousex, mousey);
+	MVGDrawUtil::drawExtendItem(mousex + 10, mousey + 10);
 }
 
 void MVGCreateManipulator::drawIntersections(M3dView& view, float mousex, float mousey)
@@ -256,23 +256,25 @@ void MVGCreateManipulator::drawIntersections(M3dView& view, float mousex, float 
 	switch(_manipUtils.intersectionState())
 	{
 		case MVGManipulatorUtil::eIntersectionPoint:
-			glColor4f(0.3f, 0.3f, 0.6f, 0.8f);	// Grey
+        {
+            glColor4f(0.3f, 0.3f, 0.6f, 0.8f);	// Greym
 
-			MVGGeometryUtil::cameraToView(view, meshPoints[intersectionData.pointIndex].projectedPoint3D, x, y);
-			MVGDrawUtil::drawCircle(x, y, POINT_RADIUS, 30);
-
+            MPoint point = MVGGeometryUtil::worldToView(view, meshPoints[intersectionData.pointIndex].point3D);
+			MVGDrawUtil::drawCircle(point.x, point.y, POINT_RADIUS, 30);
 			break;
+        }
 		case MVGManipulatorUtil::eIntersectionEdge:				
-			glColor4f(0.9f, 0.9f, 0.1f, 0.8f);
-
+        {
+            glColor4f(0.9f, 0.9f, 0.1f, 0.8f);
 			glLineWidth(1.5f);
 			glBegin(GL_LINES);
-				MVGGeometryUtil::cameraToView(view, meshPoints[intersectionData.edgePointIndexes[0]].projectedPoint3D, x, y);
-				glVertex2f(x, y);
-				MVGGeometryUtil::cameraToView(view, meshPoints[intersectionData.edgePointIndexes[1]].projectedPoint3D, x, y);
-				glVertex2f(x, y);
+				MPoint point = MVGGeometryUtil::worldToView(view,  meshPoints[intersectionData.edgePointIndexes[0]].point3D);
+				glVertex2f(point.x, point.y);
+				point = MVGGeometryUtil::worldToView(view, meshPoints[intersectionData.edgePointIndexes[1]].point3D);
+				glVertex2f(point.x, point.y);
 			glEnd();	
 			break;
+        }
 	}	
 }
 

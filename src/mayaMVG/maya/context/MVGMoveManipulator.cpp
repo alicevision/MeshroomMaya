@@ -434,8 +434,8 @@ void MVGMoveManipulator::drawIntersections(M3dView& view)
 					break;	
 			}
 
-			MVGGeometryUtil::cameraToView(view, meshPoints[intersectionData.pointIndex].projectedPoint3D, x, y);
-			MVGDrawUtil::drawCircle(x, y, POINT_RADIUS, 30);
+			MPoint point = MVGGeometryUtil::worldToView(view, meshPoints[intersectionData.pointIndex].point3D);
+			MVGDrawUtil::drawCircle(point.x, point.y, POINT_RADIUS, 30);
 			break;
 		}
 		case MVGManipulatorUtil::eIntersectionEdge:	
@@ -474,10 +474,10 @@ void MVGMoveManipulator::drawIntersections(M3dView& view)
 
 			glLineWidth(1.5f);
 			glBegin(GL_LINES);
-				MVGGeometryUtil::cameraToView(view, meshPoints[intersectionData.edgePointIndexes[0]].projectedPoint3D, x, y);
-				glVertex2f(x, y);
-				MVGGeometryUtil::cameraToView(view, meshPoints[intersectionData.edgePointIndexes[1]].projectedPoint3D, x, y);
-				glVertex2f(x, y);
+				MPoint point = MVGGeometryUtil::worldToView(view,  meshPoints[intersectionData.edgePointIndexes[0]].point3D);
+				glVertex2f(point.x, point.y);
+				point = MVGGeometryUtil::worldToView(view, meshPoints[intersectionData.edgePointIndexes[1]].point3D);
+				glVertex2f(point.x, point.y);
 			glEnd();	
 			break;
 	}	

@@ -128,18 +128,17 @@ struct MVGDrawUtil {
 	
 	static void drawExtendItem(float x, float y)
 	{
-		GLfloat step = 10;
 		GLfloat width = 4;
 		
 		// Plus
 		glLineWidth(1.f);
 		glBegin(GL_LINES);
-			glVertex2f(x + step - width, y + step);
-			glVertex2f(x + step + width, y + step);
+			glVertex2f(x - width, y);
+			glVertex2f(x + width, y);
 		glEnd();
 		glBegin(GL_LINES);
-			glVertex2f(x + step, y + step - width);
-			glVertex2f(x + step, y + step + width);
+			glVertex2f(x, y - width);
+			glVertex2f(x, y + width);
 		glEnd();
 	}
 	
