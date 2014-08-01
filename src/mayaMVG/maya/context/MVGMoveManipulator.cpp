@@ -296,6 +296,8 @@ MStatus MVGMoveManipulator::doDrag(M3dView& view)
 			switch(_manipUtils.getContext()->getKeyPressed())
 			{
 				case MVGContext::eKeyNone:
+					_manipUtils.previewFace3D().clear();
+					_manipUtils.intersectionState() = MVGManipulatorUtil::eIntersectionNone;
 					break;
 				case MVGContext::eKeyCtrl:
 					if(meshPoints[intersectionData.pointIndex].movableState >= eMovableInSamePlane)
@@ -312,6 +314,8 @@ MStatus MVGMoveManipulator::doDrag(M3dView& view)
 			switch(_manipUtils.getContext()->getKeyPressed())
 			{
 				case MVGContext::eKeyNone:
+					_manipUtils.previewFace3D().clear();
+					_manipUtils.intersectionState() = MVGManipulatorUtil::eIntersectionNone;
 					break;
 				case MVGContext::eKeyCtrl:
 					if(meshPoints[intersectionData.edgePointIndexes[0]].movableState >= eMovableInSamePlane

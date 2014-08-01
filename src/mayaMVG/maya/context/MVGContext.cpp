@@ -80,12 +80,10 @@ bool MVGContext::eventFilter(QObject *obj, QEvent *e)
 				LOG_INFO("FIT")
 				break;
 			case Qt::Key_M:	
-				LOG_INFO("MOVE MODE")
 				_editMode = eModeMove;
 				updateManipulators();
 				break;
 			case Qt::Key_C:
-				LOG_INFO("CREATE MODE")
 				_editMode = eModeCreate;
 				updateManipulators();
 				break;
