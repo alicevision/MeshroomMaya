@@ -68,6 +68,16 @@ void MVGContext::updateManipulators()
 		addManipulator(manipObject);
 }
 
+void MVGContext::fitImage(M3dView& view)
+{
+    MDagPath cameraDPath;
+    view.getCamera(cameraDPath);
+    MVGCamera camera(cameraDPath);
+    camera.setZoom(1.f);
+    camera.setHorizontalPan(0.f);
+    camera.setVerticalPan(0.f);
+}
+
 bool MVGContext::eventFilter(QObject *obj, QEvent *e)
 {
 	// key pressed
@@ -77,8 +87,11 @@ bool MVGContext::eventFilter(QObject *obj, QEvent *e)
 			return false;
 		switch(keyevent->key()) {
 			case Qt::Key_F:
-				LOG_INFO("FIT")
+            {
+                M3dView view = M3dView::active3dView();
+                fitImage(view);
 				break;
+            }
 			case Qt::Key_M:	
 				_editMode = eModeMove;
 				updateManipulators();

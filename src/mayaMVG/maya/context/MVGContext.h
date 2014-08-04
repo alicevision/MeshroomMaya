@@ -4,8 +4,8 @@
 #include <maya/MDagPath.h>
 #include "mayaMVG/qt/MVGEventFilter.h"
 
-
 class MPxManipulatorNode;
+class M3dView;
 
 struct EventData {
 	EventData()
@@ -19,7 +19,6 @@ struct EventData {
     double onPressCameraVPan;
     bool isDragging;
 };
-
 
 namespace mayaMVG {
 
@@ -47,7 +46,8 @@ class MVGContext: public MPxContext {
         virtual void getClassName(MString & name) const;
     public:
         void updateManipulators();
-		inline EKeyPressed getKeyPressed() const { return _keyPressed; }
+        void fitImage(M3dView& view);
+        inline EKeyPressed getKeyPressed() const { return _keyPressed; }
         bool eventFilter(QObject *obj, QEvent *e);
         MVGEditCmd* newCmd();
     private:
