@@ -134,7 +134,7 @@ void MVGManipulatorUtil::updateIntersectionState(M3dView& view, DisplayData* dat
 		_intersectionState = MVGManipulatorUtil::eIntersectionNone;
 	}
 }
-void MVGManipulatorUtil::computeEdgeIntersectionData(M3dView& view, DisplayData* data, const MPoint& mousePointInCameraCoord)
+bool MVGManipulatorUtil::computeEdgeIntersectionData(M3dView& view, DisplayData* data, const MPoint& mousePointInCameraCoord)
 {	
 	std::vector<MVGPoint2D>& mvgPoints = data->allPoints2D[_intersectionData.meshName];
 	
@@ -148,6 +148,18 @@ void MVGManipulatorUtil::computeEdgeIntersectionData(M3dView& view, DisplayData*
 
 	// Compute height 3D
 	_intersectionData.edgeHeight3D = edgePoint3D_1 - edgePoint3D_0;
+    
+    // Update face informations
+    MVGMesh mesh(_intersectionData.meshName);
+   _intersectionData.facePointIndexes.clear();
+    MIntArray connectedFaceIndex = mesh.getConnectedFacesToVertex(_intersectionData.edgePointIndexes[0]);
+    if(connectedFaceIndex.length() > 0)
+    {
+       _intersectionData.facePointIndexes = mesh.getFaceVertices(connectedFaceIndex[0]);
+       return true;
+    }
+    
+    return false;
 }
 	
 

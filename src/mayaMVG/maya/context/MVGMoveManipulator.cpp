@@ -158,20 +158,10 @@ MStatus MVGMoveManipulator::doPress(M3dView& view)
 			_moveState = eMovePoint;
 			break;
 		}
-		case MVGManipulatorUtil::eIntersectionEdge:
-			
-			_manipUtils.computeEdgeIntersectionData(view, data, mousePoint);	
-			
-			// Update face informations
-			MVGMesh mesh(intersectionData.meshName);
-			intersectionData.facePointIndexes.clear();
-			MIntArray connectedFaceIndex = mesh.getConnectedFacesToVertex(intersectionData.edgePointIndexes[0]);
-			if(connectedFaceIndex.length() > 0)
-			{
-				intersectionData.facePointIndexes = mesh.getFaceVertices(connectedFaceIndex[0]);	
-				_moveState = eMoveEdge;
-			}
-			break;
+        case MVGManipulatorUtil::eIntersectionEdge:			
+            if(_manipUtils.computeEdgeIntersectionData(view, data, mousePoint))
+                _moveState = eMoveEdge;
+            break;
 	}
 	
 	return MPxManipulatorNode::doPress(view);

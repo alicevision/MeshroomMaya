@@ -123,6 +123,14 @@ MStatus MVGCreateManipulator::doPress(M3dView& view)
 			break;
 		case MVGManipulatorUtil::eIntersectionEdge:
 			_manipUtils.computeEdgeIntersectionData(view, data, mousePoint);
+            
+            // Update face informations
+//            MVGMesh mesh(_manipUtils.intersectionData().meshName);
+//			_manipUtils.intersectionData().facePointIndexes.clear();
+//			MIntArray connectedFaceIndex = mesh.getConnectedFacesToVertex(_manipUtils.intersectionData().edgePointIndexes[0]);
+//			if(connectedFaceIndex.length() > 0)
+//				_manipUtils.intersectionData().facePointIndexes = mesh.getFaceVertices(connectedFaceIndex[0]);	
+            
             _createState = eCreateExtend;
 			break;
 	}
@@ -359,14 +367,36 @@ void MVGCreateManipulator::computeTmpFaceOnEdgeExtend(M3dView& view, DisplayData
 
 	// Compute 3D face
 	_manipUtils.previewFace3D().clear();
-	if(MVGGeometryUtil::projectFace2D(view, _manipUtils.previewFace3D(), data->camera, previewPoints2D, true, intersectionData.edgeHeight3D))
-	{
-		// Keep the old first 2 points to have a connected face
-		_manipUtils.previewFace3D()[0] = edgePoint3D_1;
-		_manipUtils.previewFace3D()[1] = edgePoint3D_0;
+	if(!MVGGeometryUtil::projectFace2D(view, _manipUtils.previewFace3D(), data->camera, previewPoints2D, true, intersectionData.edgeHeight3D))
+	{ 
+        _manipUtils.previewFace3D().setLength(4);    
+        MVGMesh mesh(intersectionData.meshName);
+        if(!mesh.isValid())
+            return;
+        
+        // Compute plane with old face points
+        MPointArray faceVertices;
+        for(int i = 0; i < intersectionData.facePointIndexes.length(); ++i)
+        {
+            faceVertices.append(mvgPoints[intersectionData.facePointIndexes[i]].point3D);
+        }     
+        MPoint movedPoint;
+        PlaneKernel::Model model;
+        MVGGeometryUtil::computePlane(faceVertices, model);
+
+        // Project new points on plane		
+        MVGGeometryUtil::projectPointOnPlane(P3, view, model, data->camera, movedPoint);
+        _manipUtils.previewFace3D()[2] = movedPoint;
+
+        // Keep 3D length
+        MVGGeometryUtil::projectPointOnPlane(P4, view, model, data->camera, movedPoint);
+        _manipUtils.previewFace3D()[3] = movedPoint;		
 	}
-	
-	// TODO[1] : If compute failed, use the plan of the extended fae
-	// TODO[2] : compute plane with straight line constraint
+         
+    // Keep the old first 2 points to have a connected face
+    _manipUtils.previewFace3D()[0] = edgePoint3D_1;
+    _manipUtils.previewFace3D()[1] = edgePoint3D_0;
+   
+	// TODO : compute plane with straight line constraint
 }
 }	//mayaMVG
