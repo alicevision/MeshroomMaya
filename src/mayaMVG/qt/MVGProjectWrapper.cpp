@@ -242,6 +242,9 @@ MStatus MVGProjectWrapper::rebuildMeshCacheFromMaya(MDagPath& meshPath)
 	if(!fnMesh.getPoints(meshPoints, MSpace::kWorld))
 		return MS::kFailure;
 	
+    // FIX ME 
+    if(meshPoints.length() != fnMesh.numVertices())
+        return MS::kFailure;
 	_cacheMeshToPointArray[meshPath.fullPathName().asChar()] = meshPoints;
 	
 	// Connected face

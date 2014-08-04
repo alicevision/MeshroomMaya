@@ -96,9 +96,11 @@ MStatus MVGCreateManipulator::doPress(M3dView& view)
 	MPoint mousePoint;
 	MVGGeometryUtil::viewToCamera(view, mousex, mousey, mousePoint);
 
+    _manipUtils.updateIntersectionState(view, data, mousex, mousey);
 	switch(_manipUtils.intersectionState()) {
-		case MVGManipulatorUtil::eIntersectionNone: {			
-			
+		case MVGManipulatorUtil::eIntersectionNone: 
+        {		
+            _createState = eCreateNone;			
 			data->buildPoints2D.append(mousePoint);
 						
 			// Create face if enough points (4))
@@ -117,9 +119,11 @@ MStatus MVGCreateManipulator::doPress(M3dView& view)
 		}
 		case MVGManipulatorUtil::eIntersectionPoint:
 			LOG_INFO("SELECT POINT")
+            _createState = eCreateNone;
 			break;
 		case MVGManipulatorUtil::eIntersectionEdge:
-			_manipUtils.computeEdgeIntersectionData(view, data, mousePoint);		
+			_manipUtils.computeEdgeIntersectionData(view, data, mousePoint);
+            _createState = eCreateExtend;
 			break;
 	}
 
@@ -142,11 +146,10 @@ MStatus MVGCreateManipulator::doRelease(M3dView& view)
 	short mousex, mousey;
 	mousePosition(mousex, mousey);
 		
-	switch(_manipUtils.intersectionState()) {
-		case MVGManipulatorUtil::eIntersectionNone:
-		case MVGManipulatorUtil::eIntersectionPoint:	
+	switch(_createState) {
+		case eCreateNone:
 			break;
-		case MVGManipulatorUtil::eIntersectionEdge: 
+		case eCreateExtend: 
 		{			
 			MDagPath meshPath;
 			MVGMayaUtil::getDagPathByName(_manipUtils.intersectionData().meshName.c_str(), meshPath);
@@ -157,6 +160,8 @@ MStatus MVGCreateManipulator::doRelease(M3dView& view)
 			break;
 		}
 	}
+    _createState = eCreateNone;	
+    //_manipUtils.updateIntersectionState(view, data, mousex, mousey);
 	return MPxManipulatorNode::doRelease(view);
 }
 
@@ -186,11 +191,10 @@ MStatus MVGCreateManipulator::doDrag(M3dView& view)
 	MPoint mousePoint;
 	MVGGeometryUtil::viewToCamera(view, mousex, mousey, mousePoint);
 		
-	switch(_manipUtils.intersectionState()) {
-		case MVGManipulatorUtil::eIntersectionNone:
-		case MVGManipulatorUtil::eIntersectionPoint:
+	switch(_createState) {
+		case eCreateNone:
 			break;
-		case MVGManipulatorUtil::eIntersectionEdge: 
+		case eCreateExtend: 
 		{
 			computeTmpFaceOnEdgeExtend(view, data, mousePoint);
 			break;

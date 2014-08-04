@@ -7,6 +7,11 @@ namespace mayaMVG {
 
 class MVGCreateManipulator: public MPxManipulatorNode
 {
+    enum ECreateState {
+        eCreateNone = 0
+        , eCreateExtend
+    };
+    
 	public:
 		MVGCreateManipulator();
 		virtual ~MVGCreateManipulator();
@@ -43,6 +48,7 @@ class MVGCreateManipulator: public MPxManipulatorNode
 	public:
 		static MTypeId _id;
 		MVGManipulatorUtil _manipUtils;
+        ECreateState _createState;
 };
 
 
