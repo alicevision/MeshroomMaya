@@ -119,6 +119,16 @@ int MVGMesh::getVerticesCount() const
 	return count;
 }
 
+int MVGMesh::getPolygonsCount() const
+{
+    MStatus status;
+	MFnMesh fnMesh(_dagpath, &status);
+	CHECK(status);
+    int count = fnMesh.numPolygons(&status);
+    CHECK(status);
+    return count;
+}
+
 bool MVGMesh::intersect(MPoint& point, MVector& dir, MPointArray&points) const
 {
 	MStatus status;

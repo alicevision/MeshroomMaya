@@ -24,6 +24,7 @@ class MVGMesh : public MVGNodeWrapper  {
 		bool deletePolygon(const int index) const;
 		void getPoints(MPointArray& pointArray) const;
 		int getVerticesCount() const;
+        int getPolygonsCount() const;
 		bool intersect(MPoint& point, MVector& dir, MPointArray& points) const;
 		int getNumConnectedFacesToVertex(int vertexId) const;
 		int getNumConnectedFacesToEdge(int edgeId) const;

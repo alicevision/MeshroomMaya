@@ -34,6 +34,7 @@ class MVGEditCmd : public MPxToolCommand {
 	private:
 		size_t _flags;
 		MDagPath _meshPath;
+        MString _meshName;
 		MPointArray _points;
 		MPointArray _oldPoints;
 		MIntArray _indexes;

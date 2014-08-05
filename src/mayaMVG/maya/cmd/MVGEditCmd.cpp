@@ -3,6 +3,7 @@
 #include "mayaMVG/core/MVGLog.h"
 #include "mayaMVG/core/MVGMesh.h"
 #include "mayaMVG/core/MVGProject.h"
+#include "mayaMVG/maya/MVGMayaUtil.h"
 #include <maya/MSyntax.h>
 #include <maya/MArgList.h>
 #include <maya/MArgDatabase.h>
@@ -67,10 +68,13 @@ MStatus MVGEditCmd::redoIt()
 	// -create
 	if(_flags & CMD_CREATE) {		
 		// Retrieve mesh or create it
+        MStatus status;
+        status = MVGMayaUtil::getDagPathByName(_meshName, _meshPath);
 		MVGMesh mesh(_meshPath);
 		if(!mesh.isValid()) {
 			mesh = MVGMesh::create(MVGProject::_MESH);
-			_meshPath = mesh.dagPath();
+            _meshPath = mesh.dagPath();
+            _meshName = mesh.dagPath().fullPathName();		
 			if(!mesh.isValid())
 				return MS::kFailure;
 		}
@@ -83,6 +87,7 @@ MStatus MVGEditCmd::redoIt()
 	}
 	// -move
 	if(_flags & CMD_MOVE) {
+        MVGMayaUtil::getDagPathByName(_meshName, _meshPath);
 		MVGMesh mesh(_meshPath);
 		if(!mesh.isValid())
 			return MS::kFailure;
@@ -110,12 +115,23 @@ MStatus MVGEditCmd::undoIt()
 		MVGMesh mesh(_meshPath);
 		if(!mesh.isValid())
 			return MStatus::kFailure;
-		if(!mesh.deletePolygon(_indexes[0]))
-			return MS::kFailure;			
+        if(mesh.getPolygonsCount() > 1)
+        {
+            mesh.deletePolygon(_indexes[0]);
+        }
+        // Can't delete last face with deletePolygon())
+        // Delete directly the transform
+        else
+        {
+            // MeshPath is invalid after destruction of the shape, we store it as a MString to retrieve it in redo
+            _meshName = _meshPath.fullPathName();
+            MObject toto = _meshPath.transform();
+            MGlobal::deleteNode(toto);
+        }
 	}
 	// -move
 	if(_flags & CMD_MOVE) {
-		MVGMesh mesh(_meshPath);
+        MVGMesh mesh(_meshPath);
 		if(!mesh.isValid())
 			return MS::kFailure;
 		
@@ -124,7 +140,7 @@ MStatus MVGEditCmd::undoIt()
 			mesh.setPoint(_indexes[i], _oldPoints[i]);
 		}
 	}
-	MVGProjectWrapper::instance().rebuildMeshCacheFromMaya(_meshPath);
+	MVGProjectWrapper::instance().rebuildAllMeshesCacheFromMaya();
 	MVGProjectWrapper::instance().rebuildCacheFromMaya();
 	return status;
 }
@@ -153,6 +169,7 @@ void MVGEditCmd::doAddPolygon(const MDagPath& meshPath, const MPointArray& point
 {
 	_flags |= CMD_CREATE;
 	_meshPath = meshPath;
+    _meshName = _meshPath.fullPathName();
 	_points = points;
 }
 
@@ -160,6 +177,7 @@ void MVGEditCmd::doMove(const MDagPath& meshPath, const MPointArray& points, con
 {
 	_flags |= CMD_MOVE;
 	_meshPath = meshPath;
+    _meshName = _meshPath.fullPathName();
 	_points = points;
 	_indexes = verticesIndexes;
 }
