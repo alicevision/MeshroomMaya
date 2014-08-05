@@ -2,7 +2,7 @@
 #include "mayaMVG/core/MVGGeometryUtil.h"
 #include "mayaMVG/maya/context/MVGDrawUtil.h"
 #include "mayaMVG/maya/MVGMayaUtil.h"
-#include "mayaMVG/core/MVGLog.h"
+#include "mayaMVG/qt/MVGUserLog.h"
 #include "mayaMVG/maya/context/MVGContext.h"
 #include "openMVG/multiview/triangulation.hpp"
 
@@ -622,7 +622,14 @@ bool MVGMoveManipulator::triangulate(M3dView& view, MVGManipulatorUtil::Intersec
 	points2D.append(mousePointInCameraCoord);
 
 	std::map<std::string, DisplayData>& displayDataCache = MVGProjectWrapper::instance().getDisplayDataCache();
-	MDagPath cameraPath;
+    if(displayDataCache.size() == 1)
+    {
+        USER_WARNING("Can't triangulate with the same camera")
+        return false;
+    }
+        
+	
+    MDagPath cameraPath;
 	view.getCamera(cameraPath);
 	DisplayData* otherData;
 	for(std::map<std::string, DisplayData>::iterator it = displayDataCache.begin(); it != displayDataCache.end(); ++it)
@@ -641,7 +648,6 @@ bool MVGMoveManipulator::triangulate(M3dView& view, MVGManipulatorUtil::Intersec
 	 cameras.push_back(otherData->camera);
 
 	MVGGeometryUtil::triangulatePoint(points2D, cameras, resultPoint3D);
-
 	return true;
 }
 
