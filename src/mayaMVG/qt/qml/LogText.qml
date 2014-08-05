@@ -3,11 +3,15 @@ import QtDesktop 0.1
 
 Item
 {
-
     id: textBox
-    property string text: ""
-    property color textColor: "black"
-    property bool readOnly: true
+    property alias text: m.text
+
+    QtObject {
+        id: m
+        property string text: ""
+        property color textColor: "black"
+    }
+
     RowLayout {
         anchors.fill: parent
         spacing: 0
@@ -25,9 +29,9 @@ Item
                         id: textEdit
                         width: parent.width
                         selectByMouse: true
-                        readOnly: textBox.readOnly
-                        text: textBox.text
-                        color: textBox.textColor
+                        readOnly: true
+                        text: m.text
+                        color: m.textColor
                         onTextChanged: textBox.visible = true;
                     }
                 }
@@ -62,8 +66,7 @@ Item
                 }
             }
         }
-    }
-    
+    }    
 }
 
 

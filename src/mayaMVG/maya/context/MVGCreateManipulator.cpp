@@ -2,7 +2,7 @@
 #include "mayaMVG/core/MVGGeometryUtil.h"
 #include "mayaMVG/maya/context/MVGDrawUtil.h"
 #include "mayaMVG/maya/MVGMayaUtil.h"
-#include "mayaMVG/core/MVGLog.h"
+#include "mayaMVG/qt/MVGUserLog.h"
 #include "mayaMVG/core/MVGGeometryUtil.h"
 
 namespace mayaMVG {
@@ -118,7 +118,7 @@ MStatus MVGCreateManipulator::doPress(M3dView& view)
 			break;
 		}
 		case MVGManipulatorUtil::eIntersectionPoint:
-			LOG_INFO("SELECT POINT")
+			USER_INFO("SELECT POINT")
             _createState = eCreateNone;
 			break;
 		case MVGManipulatorUtil::eIntersectionEdge:
