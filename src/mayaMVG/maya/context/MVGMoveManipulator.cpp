@@ -218,6 +218,7 @@ MStatus MVGMoveManipulator::doRelease(M3dView& view)
 					break;
 				}
 				case MVGContext::eKeyCtrl:
+				// TODO : update only the point
 				case MVGContext::eKeyShift:
 				{
 					if(_manipUtils.previewFace3D().length() == 0)
@@ -506,7 +507,6 @@ void MVGMoveManipulator::computeTmpFaceOnMovePoint(M3dView& view, DisplayData* d
 	if(recompute)
 	{
 		MPointArray previewPoints2D;
-		MPoint wpos;
 		for(int i = 0; i < verticesId.length(); ++i)
 		{
 			if(intersectionData.pointIndex == verticesId[i])

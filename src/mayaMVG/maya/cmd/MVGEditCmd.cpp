@@ -65,8 +65,7 @@ MStatus MVGEditCmd::redoIt()
 {
 	MStatus status;
 	// -create
-	if(_flags & CMD_CREATE) {
-		
+	if(_flags & CMD_CREATE) {		
 		// Retrieve mesh or create it
 		MVGMesh mesh(_meshPath);
 		if(!mesh.isValid()) {
@@ -80,8 +79,7 @@ MStatus MVGEditCmd::redoIt()
 			return MS::kFailure;
 		
 		_indexes.clear();
-		_indexes.append(index);
-		
+		_indexes.append(index);		
 	}
 	// -move
 	if(_flags & CMD_MOVE) {
@@ -89,8 +87,12 @@ MStatus MVGEditCmd::redoIt()
 		if(!mesh.isValid())
 			return MS::kFailure;
 		
+		MPoint oldPoint;
+		_oldPoints.clear();
 		for(int i = 0; i < _points.length(); ++i)
 		{
+			mesh.getPoint(_indexes[i], oldPoint);
+			_oldPoints.append(oldPoint);
 			mesh.setPoint(_indexes[i], _points[i]);
 		}
 	}
@@ -104,28 +106,25 @@ MStatus MVGEditCmd::undoIt()
 { 
 	MStatus status;
 	// -create
-	if(_flags & CMD_CREATE) {			
+	if(_flags & CMD_CREATE) {
 		MVGMesh mesh(_meshPath);
 		if(!mesh.isValid())
 			return MStatus::kFailure;
 		if(!mesh.deletePolygon(_indexes[0]))
-			return MS::kFailure;	
-		
-		// TODO : remove points from all cameras
-		
+			return MS::kFailure;			
 	}
 	// -move
 	if(_flags & CMD_MOVE) {
-//		MVGMesh mesh(_meshPath);
-//		if(!mesh.isValid())
-//			return MS::kFailure;
-//		
-//		for(int i = 0; i < _points.length(); ++i)
-//		{
-//			mesh.setPoint(_indexes[i], _points[i]);
-//		}
+		MVGMesh mesh(_meshPath);
+		if(!mesh.isValid())
+			return MS::kFailure;
+		
+		for(int i = 0; i < _oldPoints.length(); ++i)
+		{
+			mesh.setPoint(_indexes[i], _oldPoints[i]);
+		}
 	}
-	MVGProjectWrapper::instance().rebuildAllMeshesCacheFromMaya();
+	MVGProjectWrapper::instance().rebuildMeshCacheFromMaya(_meshPath);
 	MVGProjectWrapper::instance().rebuildCacheFromMaya();
 	return status;
 }

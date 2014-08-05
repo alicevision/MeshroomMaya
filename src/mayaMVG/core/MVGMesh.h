@@ -6,8 +6,6 @@
 
 namespace mayaMVG {
 
-class MVGFace3D;
-
 class MVGMesh : public MVGNodeWrapper  {
 
 	public:
@@ -27,13 +25,14 @@ class MVGMesh : public MVGNodeWrapper  {
 		void getPoints(MPointArray& pointArray) const;
 		int getVerticesCount() const;
 		bool intersect(MPoint& point, MVector& dir, MPointArray& points) const;
-		int getNumConnectedFacesToVertex(int vertexId);
-		int getNumConnectedFacesToEdge(int edgeId);
-		MIntArray getConnectedFacesToVertex(int vertexId);
-		int getConnectedFacesToEdge(MIntArray& facesId, int edgeId);
-		MIntArray getFaceVertices(int faceId);
-		MIntArray getEdgeVertices(int edgeId);
-		void setPoint(int vertexId, MPoint& point);
+		int getNumConnectedFacesToVertex(int vertexId) const;
+		int getNumConnectedFacesToEdge(int edgeId) const;
+		const MIntArray getConnectedFacesToVertex(int vertexId) const;
+		int getConnectedFacesToEdge(MIntArray& facesId, int edgeId) const;
+		const MIntArray getFaceVertices(int faceId) const;
+		const MIntArray getEdgeVertices(int edgeId) const;
+		MStatus getPoint(int vertexId, MPoint& point) const;
+		MStatus setPoint(int vertexId, MPoint& point) const;
 };
 
 } // namespace

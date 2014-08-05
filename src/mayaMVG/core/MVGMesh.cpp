@@ -129,7 +129,7 @@ bool MVGMesh::intersect(MPoint& point, MVector& dir, MPointArray&points) const
 	return intersect;
 }
 
-int MVGMesh::getNumConnectedFacesToVertex(int vertexId)
+int MVGMesh::getNumConnectedFacesToVertex(int vertexId) const
 {
 	MStatus status;
 	MItMeshVertex verticesIter(_dagpath, MObject::kNullObj, &status);
@@ -142,7 +142,7 @@ int MVGMesh::getNumConnectedFacesToVertex(int vertexId)
 	return faceCount;
 }
 
-int MVGMesh::getNumConnectedFacesToEdge(int edgeId)
+int MVGMesh::getNumConnectedFacesToEdge(int edgeId) const
 {
 	MStatus status;
 	MItMeshEdge edgeIter(_dagpath, MObject::kNullObj, &status);
@@ -155,7 +155,7 @@ int MVGMesh::getNumConnectedFacesToEdge(int edgeId)
 	return faceCount;
 }
 
-MIntArray MVGMesh::getConnectedFacesToVertex(int vertexId)
+const MIntArray MVGMesh::getConnectedFacesToVertex(int vertexId) const
 {
 	MIntArray connectedFacesId;
 	MStatus status;
@@ -169,7 +169,7 @@ MIntArray MVGMesh::getConnectedFacesToVertex(int vertexId)
 	return connectedFacesId;
 }
 
-int MVGMesh::getConnectedFacesToEdge(MIntArray& facesId, int edgeId)
+int MVGMesh::getConnectedFacesToEdge(MIntArray& facesId, int edgeId) const
 {
 	MStatus status;
 	MItMeshEdge edgeIter(_dagpath, MObject::kNullObj, &status);
@@ -184,7 +184,7 @@ int MVGMesh::getConnectedFacesToEdge(MIntArray& facesId, int edgeId)
 }
 
 
-MIntArray MVGMesh::getFaceVertices(int faceId)
+const MIntArray MVGMesh::getFaceVertices(int faceId) const
 {
 	MStatus status;
 	MItMeshPolygon faceIter(_dagpath);
@@ -197,7 +197,7 @@ MIntArray MVGMesh::getFaceVertices(int faceId)
 	return vertices;
 }
 
-MIntArray MVGMesh::getEdgeVertices(int edgeId)
+const MIntArray MVGMesh::getEdgeVertices(int edgeId) const
 {
 	MStatus status;
 	MFnMesh fnMesh(_dagpath, &status);
@@ -211,7 +211,7 @@ MIntArray MVGMesh::getEdgeVertices(int edgeId)
 	return edgeVerticesArray;
 }
 
-void MVGMesh::setPoint(int vertexId, MPoint& point)
+MStatus MVGMesh::setPoint(int vertexId, MPoint& point) const
 {
 	MStatus status;
 	MFnMesh fnMesh(_dagpath, &status);
@@ -219,4 +219,14 @@ void MVGMesh::setPoint(int vertexId, MPoint& point)
 	status = fnMesh.setPoint(vertexId, point, MSpace::kWorld);
 	fnMesh.updateSurface();
 	CHECK(status);
+	return status;
+}
+
+MStatus MVGMesh::getPoint(int vertexId, MPoint& point) const
+{
+	MStatus status;
+	MFnMesh fnMesh(_dagpath, &status);
+	status = fnMesh.getPoint(vertexId, point, MSpace::kWorld);
+	CHECK(status);
+	return status;
 }

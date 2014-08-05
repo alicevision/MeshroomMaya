@@ -241,10 +241,6 @@ MStatus MVGProjectWrapper::rebuildMeshCacheFromMaya(MDagPath& meshPath)
 	// Mesh points
 	if(!fnMesh.getPoints(meshPoints, MSpace::kWorld))
 		return MS::kFailure;
-	
-    // FIX ME 
-    if(meshPoints.length() != fnMesh.numVertices())
-        return MS::kFailure;
 	_cacheMeshToPointArray[meshPath.fullPathName().asChar()] = meshPoints;
 	
 	// Connected face
@@ -284,13 +280,11 @@ MStatus MVGProjectWrapper::rebuildMeshCacheFromMaya(MDagPath& meshPath)
 					movableStates.push_back(eMovableInSamePlane);
 					check = true;
 					break;
-				}
-				
+				}		
 			}
 			if(!check)
 				movableStates.push_back(eMovableRecompute);
 		}
-
 		vertexIt.next();
 	}
 	_cacheMeshToMovablePoint[meshPath.fullPathName().asChar()] = movableStates;	
@@ -308,7 +302,6 @@ MStatus MVGProjectWrapper::rebuildMeshCacheFromMaya(MDagPath& meshPath)
 		meshEdges.push_back(pointIndexArray);
 		edgeIt.next();
 	}
-	_cacheMeshToEdgeArray[meshPath.fullPathName().asChar()] = meshEdges;
-	
+	_cacheMeshToEdgeArray[meshPath.fullPathName().asChar()] = meshEdges;	
 	return status;
 }
