@@ -43,6 +43,7 @@ class MVGMoveManipulator: public MPxManipulatorNode
 		void drawMoveInPlaneCursor(float mousex, float mousey);
 		void drawMoveRecomputePlaneCursor(float mousex, float mousey);
 		void drawIntersections(M3dView& view);
+        void drawTriangulationDisplay(M3dView& view, DisplayData* data, float mousex, float mousey);
 			
 		// Compute
 		void computeTmpFaceOnMovePoint(M3dView& view, DisplayData* data, MPoint& mousePoint, bool recompute=false);

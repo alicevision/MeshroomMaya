@@ -104,11 +104,19 @@ void MVGMoveManipulator::draw(M3dView & view, const MDagPath & path,
 			case eMoveNone:
 				break;
 			case eMovePoint:
-				if(_manipUtils.getContext()->getKeyPressed() == MVGContext::eKeyNone)
-				{
-//						glColor3f(0.9f, 0.5f, 0.4f);
-//						MVGDrawUtil::drawFullCross(mousex, mousey, 10, 2);
-				}
+                switch(_manipUtils.getContext()->getKeyPressed())
+                {
+                    case MVGContext::eKeyNone:
+                    {
+                        drawTriangulationDisplay(view, data, mousex, mousey);
+                        break;
+                    }
+                    case MVGContext::eKeyCtrl:
+                    case MVGContext::eKeyShift:
+                        break;
+                        
+
+                }
 				break;
 			case eMoveEdge:
 				break;
@@ -471,6 +479,20 @@ void MVGMoveManipulator::drawIntersections(M3dView& view)
 			glEnd();	
 			break;
 	}	
+}
+
+void MVGMoveManipulator::drawTriangulationDisplay(M3dView& view, DisplayData* data, float mousex, float mousey)
+{
+    glEnable(GL_LINE_STIPPLE);
+    glLineStipple(1.f, 0x5555);  
+    glColor3f(0.9f, 0.5f, 0.4f);
+    glBegin(GL_LINES);
+        MPoint& point3D = data->allPoints2D[_manipUtils.intersectionData().meshName].at(_manipUtils.intersectionData().pointIndex).point3D;
+        MPoint viewPoint = MVGGeometryUtil::worldToView(view, point3D);
+        glVertex2f(viewPoint.x, viewPoint.y);
+        // Mouse
+        glVertex2f(mousex, mousey);
+    glEnd();
 }
 
 void MVGMoveManipulator::computeTmpFaceOnMovePoint(M3dView& view, DisplayData* data, MPoint& mousePoint, bool recompute)

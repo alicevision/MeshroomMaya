@@ -122,15 +122,7 @@ MStatus MVGCreateManipulator::doPress(M3dView& view)
             _createState = eCreateNone;
 			break;
 		case MVGManipulatorUtil::eIntersectionEdge:
-			_manipUtils.computeEdgeIntersectionData(view, data, mousePoint);
-            
-            // Update face informations
-//            MVGMesh mesh(_manipUtils.intersectionData().meshName);
-//			_manipUtils.intersectionData().facePointIndexes.clear();
-//			MIntArray connectedFaceIndex = mesh.getConnectedFacesToVertex(_manipUtils.intersectionData().edgePointIndexes[0]);
-//			if(connectedFaceIndex.length() > 0)
-//				_manipUtils.intersectionData().facePointIndexes = mesh.getFaceVertices(connectedFaceIndex[0]);	
-            
+			_manipUtils.computeEdgeIntersectionData(view, data, mousePoint);            
             _createState = eCreateExtend;
 			break;
 	}
@@ -153,7 +145,7 @@ MStatus MVGCreateManipulator::doRelease(M3dView& view)
 	
 	short mousex, mousey;
 	mousePosition(mousex, mousey);
-		
+	
 	switch(_createState) {
 		case eCreateNone:
 			break;
@@ -163,13 +155,14 @@ MStatus MVGCreateManipulator::doRelease(M3dView& view)
 			MVGMayaUtil::getDagPathByName(_manipUtils.intersectionData().meshName.c_str(), meshPath);
 			if(!_manipUtils.addCreateFaceCommand(cmd, meshPath, _manipUtils.previewFace3D()))
 				return MS::kFailure;
-			
 			_manipUtils.previewFace3D().clear();
 			break;
 		}
 	}
-    _createState = eCreateNone;	
+    
+    // FIX ME : error with view if called after addCreateFaceCommand()
     //_manipUtils.updateIntersectionState(view, data, mousex, mousey);
+    _createState = eCreateNone;	
 	return MPxManipulatorNode::doRelease(view);
 }
 
@@ -268,13 +261,7 @@ void MVGCreateManipulator::drawIntersections(M3dView& view, float mousex, float 
 	switch(_manipUtils.intersectionState())
 	{
 		case MVGManipulatorUtil::eIntersectionPoint:
-        {
-            glColor4f(0.3f, 0.3f, 0.6f, 0.8f);	// Greym
-
-            MPoint point = MVGGeometryUtil::worldToView(view, meshPoints[intersectionData.pointIndex].point3D);
-			MVGDrawUtil::drawCircle(point.x, point.y, POINT_RADIUS, 30);
 			break;
-        }
 		case MVGManipulatorUtil::eIntersectionEdge:				
         {
             glColor4f(0.9f, 0.9f, 0.1f, 0.8f);
