@@ -99,6 +99,7 @@ MStatus MVGCreateManipulator::doPress(M3dView& view)
     _manipUtils.updateIntersectionState(view, data, mousex, mousey);
 	switch(_manipUtils.intersectionState()) {
 		case MVGManipulatorUtil::eIntersectionNone: 
+        case MVGManipulatorUtil::eIntersectionPoint:
         {		
             _createState = eCreateNone;			
 			data->buildPoints2D.append(mousePoint);
@@ -113,13 +114,9 @@ MStatus MVGCreateManipulator::doPress(M3dView& view)
 
 			MDagPath emptyPath = MDagPath();
 			if(!_manipUtils.addCreateFaceCommand(cmd, emptyPath, facePoints3D))
-				return MS::kFailure;
-					
+				return MS::kFailure;					
 			break;
 		}
-		case MVGManipulatorUtil::eIntersectionPoint:
-			USER_INFO("SELECT POINT")
-            _createState = eCreateNone;
 			break;
 		case MVGManipulatorUtil::eIntersectionEdge:
 			_manipUtils.computeEdgeIntersectionData(view, data, mousePoint);            

@@ -15,7 +15,7 @@ MVGContext::MVGContext()
 	: _filter((QObject*)MVGMayaUtil::getMVGWindow(), this)
 	, _filterLV((QObject*)MVGMayaUtil::getMVGViewportLayout(MVGProjectWrapper::instance().panelModel().at(0).toStdString().c_str()), this)
 	, _filterRV((QObject*)MVGMayaUtil::getMVGViewportLayout(MVGProjectWrapper::instance().panelModel().at(1).toStdString().c_str()), this)
-	, _editMode(eModeCreate)
+	, _editMode(eModeMove)
 	, _keyPressed(eKeyNone)
 {
 	setTitleString("MVG tool");
@@ -92,10 +92,10 @@ bool MVGContext::eventFilter(QObject *obj, QEvent *e)
                 fitImage(view);
 				break;
             }
-			case Qt::Key_M:	
-				_editMode = eModeMove;
-				updateManipulators();
-				break;
+//			case Qt::Key_M:	
+//				_editMode = eModeMove;
+//				updateManipulators();
+//				break;
 			case Qt::Key_C:
 				_editMode = eModeCreate;
 				updateManipulators();
@@ -135,6 +135,10 @@ bool MVGContext::eventFilter(QObject *obj, QEvent *e)
 		 	return false;
 		 
 		switch(keyevent->key()) {
+            case Qt::Key_C:
+				_editMode = eModeMove;
+				updateManipulators();
+				break;
 			case Qt::Key_Control:
 			{
 				if(!(modifiers & Qt::ShiftModifier))
