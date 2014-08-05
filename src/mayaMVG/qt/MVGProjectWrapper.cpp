@@ -94,6 +94,8 @@ void MVGProjectWrapper::onSelectContextButtonClicked() {
 void MVGProjectWrapper::onPlaceContextButtonClicked() 
 {
 	MVGMayaUtil::activeContext();
+    rebuildAllMeshesCacheFromMaya();
+    rebuildCacheFromMaya();
 }
 
 void MVGProjectWrapper::loadProject(const QString& projectDirectoryPath)
