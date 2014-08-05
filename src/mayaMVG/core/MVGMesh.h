@@ -1,7 +1,6 @@
 #pragma once
 
 #include "mayaMVG/core/MVGNodeWrapper.h"
-
 #include <maya/MPointArray.h>
 #include <maya/MIntArray.h>
 
@@ -27,7 +26,7 @@ class MVGMesh : public MVGNodeWrapper  {
 		bool deletePolygon(const int index) const;
 		void getPoints(MPointArray& pointArray) const;
 		int getVerticesCount() const;
-		bool intersect(MPoint& point, MVector& dir, MPointArray&points) const;
+		bool intersect(MPoint& point, MVector& dir, MPointArray& points) const;
 		int getNumConnectedFacesToVertex(int vertexId);
 		int getNumConnectedFacesToEdge(int edgeId);
 		MIntArray getConnectedFacesToVertex(int vertexId);
@@ -37,4 +36,4 @@ class MVGMesh : public MVGNodeWrapper  {
 		void setPoint(int vertexId, MPoint& point);
 };
 
-} // mayaMVG
+} // namespace
