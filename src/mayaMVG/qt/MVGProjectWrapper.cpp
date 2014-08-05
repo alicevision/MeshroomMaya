@@ -87,7 +87,6 @@ QString MVGProjectWrapper::openFileDialog() const
 }
 
 void MVGProjectWrapper::onSelectContextButtonClicked() {
-	appendLogText("SelectContextButton clicked");
 	MVGMayaUtil::activeSelectionContext();
 }
 

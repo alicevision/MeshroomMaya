@@ -77,7 +77,7 @@ void MVGMoveManipulator::draw(M3dView & view, const MDagPath & path,
 		return;
 	
 	short mousex, mousey;
-	updateMouse(view, data, mousex, mousey);
+	MPoint mousePoint = updateMouse(view, data, mousex, mousey);
 	
 	view.beginGL();
 
@@ -119,6 +119,19 @@ void MVGMoveManipulator::draw(M3dView & view, const MDagPath & path,
                 }
 				break;
 			case eMoveEdge:
+                if(_manipUtils.getContext()->getKeyPressed() == MVGContext::eKeyNone)
+                {
+                    short x, y;
+                    MPoint P1 = mousePoint + _manipUtils.intersectionData().edgeRatio * _manipUtils.intersectionData().edgeHeight2D;
+                    MPoint P0 = mousePoint  - (1 - _manipUtils.intersectionData().edgeRatio) * _manipUtils.intersectionData().edgeHeight2D;
+                    
+                    glBegin(GL_LINES);
+                        MVGGeometryUtil::cameraToView(view, P1, x, y);
+                        glVertex2f(x, y);
+                        MVGGeometryUtil::cameraToView(view, P0, x, y);
+                        glVertex2f(x, y);
+                    glEnd();
+                }
 				break;
 		}
 	}
@@ -238,7 +251,16 @@ MStatus MVGMoveManipulator::doRelease(M3dView& view)
 		case eMoveEdge: 
 		{
 			if(_manipUtils.getContext()->getKeyPressed() ==  MVGContext::eKeyNone)
-				break;			
+            {
+                MPointArray triangulatedPoints;
+                triangulateEdge(view, intersectionData, mousePoint, triangulatedPoints);
+                MDagPath meshPath;
+                MVGMayaUtil::getDagPathByName(intersectionData.meshName.c_str(), meshPath);
+                _manipUtils.addUpdateFaceCommand(cmd, meshPath, triangulatedPoints, intersectionData.edgePointIndexes);
+                intersectionData.facePointIndexes.clear();
+                break;	
+            }
+		
 			if(_manipUtils.previewFace3D().length() == 0)
 				break;
 			
@@ -585,7 +607,7 @@ void MVGMoveManipulator::computeTmpFaceOnMoveEdge(M3dView& view, DisplayData* da
 		// Then : mousePoints computed with egdeHeight and ratio							
 		MPoint P3 = mousePoint + intersectionData.edgeRatio * intersectionData.edgeHeight2D;
 		previewPoints2D.append(P3);
-		MPoint P4 = mousePoint  - (1 - intersectionData.edgeRatio) * intersectionData.edgeHeight3D;
+		MPoint P4 = mousePoint  - (1 - intersectionData.edgeRatio) * intersectionData.edgeHeight2D;
 		previewPoints2D.append(P4);
 		
 		// Only set the new points to keep a connected face
@@ -649,8 +671,7 @@ bool MVGMoveManipulator::triangulate(M3dView& view, MVGManipulatorUtil::Intersec
         USER_WARNING("Can't triangulate with the same camera")
         return false;
     }
-        
-	
+
     MDagPath cameraPath;
 	view.getCamera(cameraPath);
 	DisplayData* otherData;
@@ -670,6 +691,54 @@ bool MVGMoveManipulator::triangulate(M3dView& view, MVGManipulatorUtil::Intersec
 	 cameras.push_back(otherData->camera);
 
 	MVGGeometryUtil::triangulatePoint(points2D, cameras, resultPoint3D);
+	return true;
+}
+
+
+bool MVGMoveManipulator::triangulateEdge(M3dView& view, MVGManipulatorUtil::IntersectionData& intersectionData, MPoint& mousePointInCameraCoord, MPointArray& resultPoint3D)
+{
+    
+    // Edge points (moved)
+    MPointArray array0, array1;
+    MPoint P1 = mousePointInCameraCoord + intersectionData.edgeRatio * intersectionData.edgeHeight2D;
+    array1.append(P1);
+    MPoint P0 = mousePointInCameraCoord  - (1 - intersectionData.edgeRatio) * intersectionData.edgeHeight2D;
+    array0.append(P0);
+    
+	std::map<std::string, DisplayData>& displayDataCache = MVGProjectWrapper::instance().getDisplayDataCache();
+    if(displayDataCache.size() == 1)
+    {
+        USER_WARNING("Can't triangulate with the same camera")
+        return false;
+    }
+
+    MDagPath cameraPath;
+	view.getCamera(cameraPath);
+	DisplayData* otherData;
+	for(std::map<std::string, DisplayData>::iterator it = displayDataCache.begin(); it != displayDataCache.end(); ++it)
+	{
+		if(it->first != cameraPath.fullPathName().asChar())
+			otherData = (&it->second);
+	}
+	if(!otherData)
+		return false;
+    
+    // Edge points
+	std::vector<MVGPoint2D>& mvgPoints = otherData->allPoints2D[intersectionData.meshName];
+    array0.append(mvgPoints[intersectionData.edgePointIndexes[0]].projectedPoint3D);
+    array1.append(mvgPoints[intersectionData.edgePointIndexes[1]].projectedPoint3D);
+    
+	// MVGCameras
+    std::vector<MVGCamera> cameras;
+    cameras.push_back(MVGCamera(cameraPath));
+    cameras.push_back(otherData->camera);
+        
+    MPoint result;
+	MVGGeometryUtil::triangulatePoint(array0, cameras, result);
+    resultPoint3D.append(result);
+	MVGGeometryUtil::triangulatePoint(array1, cameras, result);
+    resultPoint3D.append(result);
+
 	return true;
 }
 
