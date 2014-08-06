@@ -25,6 +25,11 @@ MVGProjectWrapper::MVGProjectWrapper()
 		_project = MVGProject::create(MVGProject::_PROJECT);
 		LOG_INFO("New OpenMVG Project.")
 	}
+    
+    // Initialize currentContext
+    MString context;
+    MVGMayaUtil::getCurrentContext(context);
+    _currentContext = context.asChar();
 }
 
 MVGProjectWrapper::~MVGProjectWrapper()
@@ -61,13 +66,24 @@ const QString MVGProjectWrapper::logText() const
 	return _logText;
 }
 
-void MVGProjectWrapper::setLogText(const QString text)
+void MVGProjectWrapper::setLogText(const QString& text)
 {
 	_logText = text;
 	emit logTextChanged();
 }
 
-void MVGProjectWrapper::appendLogText(const QString text)
+const QString MVGProjectWrapper::currentContext() const
+{
+    return _currentContext;
+}
+
+void MVGProjectWrapper::setCurrentContext(const QString& context)
+{
+    _currentContext = context;
+    Q_EMIT currentContextChanged();
+}
+
+void MVGProjectWrapper::appendLogText(const QString& text)
 {
 	_logText.append(text + "\n");
 	emit logTextChanged();
@@ -86,11 +102,11 @@ QString MVGProjectWrapper::openFileDialog() const
     return MQtUtil::toQString(directoryPath);
 }
 
-void MVGProjectWrapper::onSelectContextButtonClicked() {
+void MVGProjectWrapper::activeSelectionContext() {
 	MVGMayaUtil::activeSelectionContext();
 }
 
-void MVGProjectWrapper::onPlaceContextButtonClicked() 
+void MVGProjectWrapper::activeMVGContext() 
 {
 	MVGMayaUtil::activeContext();
     rebuildAllMeshesCacheFromMaya();

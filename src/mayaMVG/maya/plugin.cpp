@@ -44,6 +44,9 @@ MStatus uninitializePlugin(MObject obj) {
 	MVGMayaUtil::deleteMVGContext();
 	MVGMayaUtil::deleteMVGWindow();
 
+     // Remove callbacks
+    status = MMessage::removeCallbacks(MVGCmd::_callbackIDs);
+    
 	// deregister commands
 	status = plugin.deregisterCommand("MVGCmd");
 	// deregister context
@@ -51,7 +54,7 @@ MStatus uninitializePlugin(MObject obj) {
 	// deregister nodes
 	status = plugin.deregisterNode(MVGCreateManipulator::_id);
 	status = plugin.deregisterNode(MVGMoveManipulator::_id);
-
+    
 	MVGMayaUtil::deleteMVGContext();
 
 	if (!status)

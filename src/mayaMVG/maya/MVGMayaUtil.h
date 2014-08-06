@@ -34,6 +34,7 @@ struct MVGMayaUtil {
 	static MStatus deleteMVGContext();
 	static MStatus activeContext(); 
 	static MStatus activeSelectionContext();
+    static MStatus getCurrentContext(MString& context);
 	// cameras
 	static MStatus setCameraInView(const MVGCamera& camera, const MString& viewName);
 	static MStatus getCameraInView(MDagPath& path, const MString& viewName);

@@ -7,7 +7,8 @@
 #include <mayaMVG/qt/MVGProjectWrapper.h>
 #include <maya/MQtUtil.h>
 #include <maya/MGlobal.h>
-
+#include <maya/MEventMessage.h>
+#include <maya/MMessage.h>
 
 using namespace mayaMVG;
 
@@ -17,8 +18,22 @@ namespace {
 	static const char * helpFlagLong = "-help";
 	static const char * projectPathFlag = "-p";
 	static const char * projectPathFlagLong = "-project";
-
+    
+    void currentContextChanged(void* userData) 
+    {
+        if(!userData)
+            return;
+        
+        MString context;
+        MStatus status;
+        status = MVGMayaUtil::getCurrentContext(context);
+        CHECK(status)
+        
+        MVGProjectWrapper::instance().setCurrentContext(QString(context.asChar()));
+    }
 }
+
+MCallbackIdArray MVGCmd::_callbackIDs; // = MCallbackIdArray(); // FIXME /!\ 
 
 MVGCmd::MVGCmd() {
 }
@@ -45,10 +60,6 @@ MStatus MVGCmd::doIt(const MArgList& args) {
 	// parsing ARGS
 	MSyntax syntax = MVGCmd::newSyntax();
 	MArgDatabase argData(syntax, args);
-
-	MString nodeName;
-	MString attributeName;
-	MString uiName;
 
 	// -h
 	if (argData.isFlagSet(helpFlag)) {
@@ -101,6 +112,9 @@ MStatus MVGCmd::doIt(const MArgList& args) {
 
 	leftViewport->setProperty("mvg_panel", leftPanel);
 	rightViewport->setProperty("mvg_panel", rightPanel);
+    
+    //Maya callbacks
+	_callbackIDs.append(MEventMessage::addEventCallback("PostToolChanged", currentContextChanged, mayaWindow));
 
 	// -p
 	if(argData.isFlagSet(projectPathFlag)) {

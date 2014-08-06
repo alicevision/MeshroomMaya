@@ -102,6 +102,12 @@ MStatus MVGMayaUtil::activeSelectionContext()
 		"cmds.setToolTo('selectSuperContext')\n");
 }
 
+MStatus MVGMayaUtil::getCurrentContext(MString& context)
+{
+    MGlobal::executePythonCommand("import maya.cmds as cmds\n");
+    return MGlobal::executePythonCommand("cmds.currentCtx()\n", context);
+}
+
 MStatus MVGMayaUtil::setCameraInView(const MVGCamera& camera, const MString& viewName)
 {
 	MGlobal::executePythonCommand("import maya.cmds as cmds");

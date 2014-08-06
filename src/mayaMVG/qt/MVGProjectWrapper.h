@@ -52,6 +52,7 @@ class MVGProjectWrapper : public QObject, public Singleton<MVGProjectWrapper>
     Q_PROPERTY(QObjectListModel* cameraModel READ cameraModel NOTIFY cameraModelChanged);
 	Q_PROPERTY(QStringList panelModel READ panelModel NOTIFY panelModelChanged);
     Q_PROPERTY(QString logText READ logText WRITE setLogText NOTIFY logTextChanged);
+    Q_PROPERTY(QString currentContext READ currentContext WRITE setCurrentContext NOTIFY currentContextChanged);
     MAKE_SINGLETON_WITHCONSTRUCTORS(MVGProjectWrapper)
 
 public slots:
@@ -63,7 +64,9 @@ public slots:
 	QObjectListModel* cameraModel() {return &_cameraList;}
     QStringList panelModel() {return _visiblePanelNames;}
 	const QString logText() const;
-    void setLogText(const QString);
+    void setLogText(const QString&);
+    const QString currentContext() const;
+    void setCurrentContext(const QString&);
 	
 signals:
     void projectDirectoryChanged();
@@ -73,15 +76,16 @@ signals:
     void cameraModelChanged();
 	void panelModelChanged();
     void logTextChanged();
+    void currentContextChanged();
 	
 public:
-	void appendLogText(const QString);
+	void appendLogText(const QString&);
 	void selectItems(const QList<QString>& cameraNames);
 	
     Q_INVOKABLE const QString moduleDirectory() const;   
     Q_INVOKABLE QString openFileDialog() const;
-    Q_INVOKABLE void onSelectContextButtonClicked();
-    Q_INVOKABLE void onPlaceContextButtonClicked();
+    Q_INVOKABLE void activeSelectionContext();
+    Q_INVOKABLE void activeMVGContext();
     Q_INVOKABLE void loadProject(const QString& projectDirectoryPath);
     Q_INVOKABLE void setCameraToView(QObject* camera, const QString& viewName);
 		
@@ -99,6 +103,7 @@ private:
     QObjectListModel _cameraList;
     MVGProject _project;
     QString _logText;
+    QString _currentContext;
 		
 	std::map<std::string, DisplayData> _cacheCameraToDisplayData;	
 	/// Map from meshName to mesh points
