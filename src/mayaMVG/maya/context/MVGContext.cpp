@@ -92,10 +92,6 @@ bool MVGContext::eventFilter(QObject *obj, QEvent *e)
                 fitImage(view);
 				break;
             }
-//			case Qt::Key_M:	
-//				_editMode = eModeMove;
-//				updateManipulators();
-//				break;
 			case Qt::Key_C:
 				_editMode = eModeCreate;
 				updateManipulators();
@@ -117,7 +113,6 @@ bool MVGContext::eventFilter(QObject *obj, QEvent *e)
 			case Qt::Key_Escape:
 			{
 				M3dView view = M3dView::active3dView();
-
 				DisplayData* data = MVGProjectWrapper::instance().getCachedDisplayData(view);
 				data->buildPoints2D.clear();
 				view.refresh(true, true);
@@ -136,9 +131,14 @@ bool MVGContext::eventFilter(QObject *obj, QEvent *e)
 		 
 		switch(keyevent->key()) {
             case Qt::Key_C:
+            {
 				_editMode = eModeMove;
+                M3dView view = M3dView::active3dView();
+				DisplayData* data = MVGProjectWrapper::instance().getCachedDisplayData(view);
+				data->buildPoints2D.clear();
 				updateManipulators();
 				break;
+            }
 			case Qt::Key_Control:
 			{
 				if(!(modifiers & Qt::ShiftModifier))

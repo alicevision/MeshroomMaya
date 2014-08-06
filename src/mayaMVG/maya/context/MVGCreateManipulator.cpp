@@ -110,7 +110,12 @@ MStatus MVGCreateManipulator::doPress(M3dView& view)
 			
 			// Compute 3D face
 			MPointArray facePoints3D;	
-			MVGGeometryUtil::projectFace2D(view, facePoints3D, data->camera, data->buildPoints2D);
+			if(!MVGGeometryUtil::projectFace2D(view, facePoints3D, data->camera, data->buildPoints2D))
+            {
+                data->buildPoints2D.remove(data->buildPoints2D.length() - 1);
+                USER_ERROR("Can't find a 3D face with these points")
+                break;
+            }
 
 			MDagPath emptyPath = MDagPath();
 			if(!_manipUtils.addCreateFaceCommand(cmd, emptyPath, facePoints3D))
