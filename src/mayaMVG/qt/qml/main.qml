@@ -11,6 +11,7 @@ Item {
             implicitHeight: 35
             implicitWidth: parent.width
             project: _project
+            settingsVisibility: (_project.projectDirectory === "")
         }
         ProjectSettings {
             id: settings
@@ -20,6 +21,7 @@ Item {
             Layout.verticalSizePolicy: Layout.Expanding
             isOpen: contextBar.settingsVisibility
             project: _project
+            onSettingProjectLoaded: contextBar.settingsVisibility = false
         }
         // PointCloudItem {
         //     implicitWidth: parent.width
