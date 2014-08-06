@@ -1,6 +1,7 @@
 #include "mayaMVG/qt/MVGMainWidget.h"
 #include "mayaMVG/qt/QmlInstantCoding.h"
 #include "mayaMVG/qt/MVGProjectWrapper.h"
+#include "mayaMVG/qt/QWheelArea.h"
 #include <QtDeclarative/qdeclarativecontext.h>
 #include <QGraphicsObject>
 
@@ -11,6 +12,7 @@ MVGMainWidget::MVGMainWidget(QWidget * parent)
 {
     qmlRegisterType<MVGCameraWrapper>();
     qmlRegisterType<QObjectListModel>();
+    qmlRegisterType<QWheelArea>("MyTools", 1, 0, "CustomWheelArea");
 
 	_view = new QDeclarativeView(parent);
 	

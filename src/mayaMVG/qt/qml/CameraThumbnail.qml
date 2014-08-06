@@ -30,6 +30,7 @@ Rectangle {
             sourceSize.width: 400  // Use proxy buffer at smaller resolution
             source: m.camera ? m.camera.imagePath : m.source
             asynchronous: true
+            //fillMode: Image.PreserveAspectFit
         }
         ListView {
             id: viewList

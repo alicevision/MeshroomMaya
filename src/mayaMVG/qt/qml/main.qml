@@ -1,4 +1,5 @@
 import QtQuick 1.1
+import MyTools 1.0
 import QtDesktop 0.1
 
 Item {
@@ -21,6 +22,8 @@ Item {
             Layout.verticalSizePolicy: Layout.Expanding
             isOpen: contextBar.settingsVisibility
             project: _project
+            sliderMinValue: 90
+            sliderMaxValue: 180
             onSettingProjectLoaded: contextBar.settingsVisibility = false
         }
         // PointCloudItem {
@@ -72,6 +75,34 @@ Item {
             iconSource: "img/up_left_arrow.png"
             tooltip: "Open error log"
             onClicked: logText.visible = true
+        }
+    }
+
+    CustomWheelArea {
+        id: wheelArea
+        anchors.fill: parent
+
+        QtObject {
+            id: m
+            property int step: 5
+        }
+
+        onVerticalWheel: {
+            if(modifier & Qt.ControlModifier)
+            {
+                if(delta > 0 && settings.thumbSize < settings.sliderMaxValue)
+                {
+                   settings.thumbSize += m.step;
+                }
+                else if (delta < 0 && settings.thumbSize > settings.sliderMinValue){
+                    settings.thumbSize -= m.step;
+                }
+                wheelArea.eventAccept()
+            }
+            else
+            {
+                wheelArea.eventIgnore()
+            }
         }
     }
 }
