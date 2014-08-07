@@ -49,7 +49,10 @@ class MVGCamera : public MVGNodeWrapper {
 		void setHorizontalPan(const double pan) const;
 		double getVerticalPan() const;
 		void setVerticalPan(const double pan) const;
+        void setPan(const double hpan, const double vpan) const;
+        double getHorizontalFilmAperture() const;
         
+        void resetZoomAndPan() const;
         void setInView(const std::string& viewName) const;
 
 	private:

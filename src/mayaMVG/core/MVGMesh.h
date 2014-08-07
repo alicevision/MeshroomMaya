@@ -23,7 +23,7 @@ class MVGMesh : public MVGNodeWrapper  {
 	public:
 		bool addPolygon(const MPointArray& pointArray, int& index) const;
 		bool deletePolygon(const int index) const;
-		void getPoints(MPointArray& pointArray) const;
+		MStatus getPoints(MPointArray& pointArray) const;
         int getPolygonsCount() const;
 		const MIntArray getConnectedFacesToVertex(int vertexId) const;
 		const MIntArray getFaceVertices(int faceId) const;

@@ -7,9 +7,8 @@
 #include "mayaMVG/qt/MVGEventFilter.h"
 #include "mayaMVG/qt/MVGQt.h"
 #include <maya/MQtUtil.h>
-#include <maya/MFnCamera.h>
 
-using namespace mayaMVG;
+namespace mayaMVG {
 
 MVGContext::MVGContext() 
 	: _filter((QObject*)MVGMayaUtil::getMVGWindow(), this)
@@ -67,16 +66,6 @@ void MVGContext::updateManipulators()
 		addManipulator(manipObject);
 }
 
-void MVGContext::fitImage(M3dView& view)
-{
-    MDagPath cameraDPath;
-    view.getCamera(cameraDPath);
-    MVGCamera camera(cameraDPath);
-    camera.setZoom(1.f);
-    camera.setHorizontalPan(0.f);
-    camera.setVerticalPan(0.f);
-}
-
 bool MVGContext::eventFilter(QObject *obj, QEvent *e)
 {
 	// key pressed
@@ -88,7 +77,10 @@ bool MVGContext::eventFilter(QObject *obj, QEvent *e)
 			case Qt::Key_F:
             {
                 M3dView view = M3dView::active3dView();
-                fitImage(view);
+                MDagPath cameraDPath;
+                view.getCamera(cameraDPath);
+                MVGCamera camera(cameraDPath);
+                camera.resetZoomAndPan();
 				break;
             }
 			case Qt::Key_C:
@@ -147,10 +139,10 @@ bool MVGContext::eventFilter(QObject *obj, QEvent *e)
 		if((mouseevent->button() & Qt::MidButton)) {
 			if(!_eventData.cameraPath.isValid())
 				return false;
-			MFnCamera fnCamera(_eventData.cameraPath);
+            MVGCamera camera(_eventData.cameraPath);
 			_eventData.onPressMousePos = mouseevent->pos();
-			_eventData.onPressCameraHPan = fnCamera.horizontalPan();
-			_eventData.onPressCameraVPan = fnCamera.verticalPan();
+			_eventData.onPressCameraHPan = camera.getHorizontalPan();
+			_eventData.onPressCameraVPan = camera.getVerticalPan();
 			_eventData.isDragging = true;
 		}
 	}
@@ -160,14 +152,13 @@ bool MVGContext::eventFilter(QObject *obj, QEvent *e)
 			return false;
 		if(!_eventData.isDragging)
 			return false;
-		MFnCamera camera(_eventData.cameraPath);
+        MVGCamera camera(_eventData.cameraPath);
 		// compute pan offset
 		QMouseEvent* mouseevent = static_cast<QMouseEvent*>(e);
 		QPointF offset_screen = _eventData.onPressMousePos - mouseevent->posF();
 		const double viewport_width = qobject_cast<QWidget*>(obj)->width();
-		QPointF offset = (offset_screen / viewport_width) * camera.horizontalFilmAperture() * camera.zoom();
-		camera.setHorizontalPan(_eventData.onPressCameraHPan + offset.x());
-		camera.setVerticalPan(_eventData.onPressCameraVPan - offset.y());
+        QPointF offset = (offset_screen / viewport_width) * camera.getHorizontalFilmAperture() * camera.getZoom();
+        camera.setPan(_eventData.onPressCameraHPan + offset.x(), _eventData.onPressCameraVPan - offset.y());
 	}
 	// mouse button released
 	else if(e->type() == QEvent::MouseButtonRelease) {
@@ -180,23 +171,22 @@ bool MVGContext::eventFilter(QObject *obj, QEvent *e)
 		// compute & set zoom value
 		QMouseEvent* mouseevent = static_cast<QMouseEvent*>(e);
 		QWheelEvent* wheelevent = static_cast<QWheelEvent*>(e);
-		MFnCamera camera(_eventData.cameraPath);
+		MVGCamera camera(_eventData.cameraPath);
 		QWidget* widget = qobject_cast<QWidget*>(obj);
 		const double viewportWidth = widget->width();
 		const double viewportHeight = widget->height();
 		static const double wheelStep = 1.15;
-		const double previousZoom = camera.zoom();
+		const double previousZoom = camera.getZoom();
 		double newZoom = wheelevent->delta() > 0 ? previousZoom / wheelStep : previousZoom * wheelStep;
 		camera.setZoom(std::max(newZoom, 0.0001));
 		const double scaleRatio = newZoom / previousZoom;
 		// compute & set pan offset
 		QPointF center_ratio(0.5, 0.5 * viewportHeight / viewportWidth);
 		QPointF mouse_ratio_center = (center_ratio - (mouseevent->posF() / viewportWidth));
-		QPointF mouse_maya_center = mouse_ratio_center * camera.horizontalFilmAperture() * previousZoom;
+		QPointF mouse_maya_center = mouse_ratio_center * camera.getHorizontalFilmAperture() * previousZoom;
 		QPointF mouseAfterZoo_maya_center = mouse_maya_center * scaleRatio;
 		QPointF offset = mouse_maya_center - mouseAfterZoo_maya_center;
-		camera.setHorizontalPan(camera.horizontalPan() - offset.x());
-		camera.setVerticalPan(camera.verticalPan() + offset.y());
+        camera.setPan(camera.getHorizontalPan() - offset.x(), camera.getVerticalPan() + offset.y());
 	}
 	// mouse enters widget's boundaries
 	else if (e->type() == QEvent::Enter) {
@@ -226,3 +216,5 @@ MVGEditCmd* MVGContext::newCmd()
 {
 	return (MVGEditCmd *)newToolCommand();
 }
+
+} // namespace

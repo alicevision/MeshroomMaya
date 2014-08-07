@@ -130,7 +130,6 @@ MVGCamera MVGCamera::create(const std::string& name)
 std::vector<MVGCamera> MVGCamera::list()
 {
 	std::vector<MVGCamera> list;
-	MStatus status;
 	MDagPath path;
 	MItDependencyNodes it(MFn::kCamera);
 	for (; !it.isDone(); it.next()) {
@@ -334,6 +333,27 @@ void MVGCamera::setVerticalPan(const double pan) const
 {
 	MFnCamera fnCamera(dagPath());
 	fnCamera.setVerticalPan(pan);
+}
+
+void MVGCamera::setPan(const double hpan, const double vpan) const
+{
+    MFnCamera fnCamera(dagPath());
+    fnCamera.setHorizontalPan(hpan);
+    fnCamera.setVerticalPan(vpan);
+}
+
+double MVGCamera::getHorizontalFilmAperture() const
+{
+    MFnCamera fnCamera(dagPath());
+    fnCamera.horizontalFilmAperture();
+}
+
+void MVGCamera::resetZoomAndPan() const
+{
+    MFnCamera fnCamera(dagPath());
+    fnCamera.setZoom(1.f);
+    fnCamera.setHorizontalPan(0.f);
+    fnCamera.setVerticalPan(0.f);
 }
 
 void MVGCamera::setInView(const std::string& viewName) const

@@ -45,7 +45,6 @@ class MVGContext: public MPxContext {
         virtual void getClassName(MString & name) const;
     public:
         void updateManipulators();
-        void fitImage(M3dView& view);
         bool eventFilter(QObject *obj, QEvent *e);
         MVGEditCmd* newCmd();
     private:

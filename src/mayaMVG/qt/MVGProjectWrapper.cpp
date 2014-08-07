@@ -5,7 +5,6 @@
 #include <maya/MQtUtil.h>
 #include <maya/MItDependencyNodes.h>
 #include <maya/MFnDependencyNode.h>
-#include <maya/MFnMesh.h>
 #include <maya/MItMeshEdge.h>
 #include <maya/MItMeshVertex.h>
 #include <maya/MItMeshPolygon.h>
@@ -249,12 +248,12 @@ MStatus MVGProjectWrapper::rebuildAllMeshesCacheFromMaya()
 MStatus MVGProjectWrapper::rebuildMeshCacheFromMaya(MDagPath& meshPath)
 {	
 	MStatus status;
-	MFnMesh fnMesh(meshPath);
+    MVGMesh mesh(meshPath);
 	MPointArray meshPoints;
 	std::vector<MIntArray> meshEdges;
 	
 	// Mesh points
-	if(!fnMesh.getPoints(meshPoints, MSpace::kWorld))
+	if(!mesh.getPoints(meshPoints))
 		return MS::kFailure;
 	_cacheMeshToPointArray[meshPath.fullPathName().asChar()] = meshPoints;
 	

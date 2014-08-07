@@ -105,13 +105,14 @@ bool MVGMesh::deletePolygon(const int index) const
 	return status ? true : false;
 }
 
-void MVGMesh::getPoints(MPointArray& pointArray) const
+MStatus MVGMesh::getPoints(MPointArray& pointArray) const
 {
 	MStatus status;
 	MFnMesh fnMesh(_dagpath, &status);
 	CHECK(status);
 	fnMesh.getPoints(pointArray, MSpace::kWorld);
 	CHECK(status);
+    return status;
 }
 
 int MVGMesh::getPolygonsCount() const

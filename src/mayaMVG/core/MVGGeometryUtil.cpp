@@ -8,8 +8,8 @@
 #include <openMVG/multiview/projection.hpp>
 #include <maya/MPointArray.h>
 #include <maya/MVectorArray.h>
-#include <maya/MFnCamera.h>
 #include <maya/MPlug.h>
+#include <maya/MFnDagNode.h>
 #include <vector>
 
 using namespace mayaMVG;
@@ -81,15 +81,15 @@ void MVGGeometryUtil::viewToCamera(M3dView& view, const short x, const short y, 
 {
 	MDagPath dagPath;
 	view.getCamera(dagPath);
-	MFnCamera fnCamera(dagPath.node()); 
+    MVGCamera camera(dagPath);
 	point.x = ((float)x / view.portWidth()) - 0.5;
 	point.y = ((float)y / view.portWidth()) - 0.5 - 0.5 * ((view.portHeight() / (float)view.portWidth()) - 1.0 );
 	point.z = 0.f;
-	// zoom
-	point =  point * fnCamera.horizontalFilmAperture() * fnCamera.zoom();
+	// zoom  
+	point =  point * camera.getHorizontalFilmAperture() * camera.getZoom();
 	// pan
-	point.x += fnCamera.horizontalPan();
-	point.y += fnCamera.verticalPan();
+	point.x += camera.getHorizontalPan();
+	point.y += camera.getVerticalPan();
 }
 
  void MVGGeometryUtil::worldToCamera(M3dView& view, const MPoint& worldPoint, MPoint& point)
@@ -103,30 +103,28 @@ void MVGGeometryUtil::cameraToView(M3dView& view, const MPoint& point, short& x,
 {
 	MDagPath dagPath;
 	view.getCamera(dagPath);
-	MFnCamera fnCamera(dagPath.node()); 
+	MVGCamera camera(dagPath);
 	float newX = point.x;
 	float newY = point.y;
 	// pan
-	newX -= fnCamera.horizontalPan();
-	newY -= fnCamera.verticalPan();
+	newX -= camera.getHorizontalPan();
+	newY -= camera.getVerticalPan();
 	// zoom
-	newX /= (fnCamera.horizontalFilmAperture() * fnCamera.zoom());
-	newY /= (fnCamera.horizontalFilmAperture() * fnCamera.zoom());
+	newX /= (camera.getHorizontalFilmAperture() * camera.getZoom());
+	newY /= (camera.getHorizontalFilmAperture() * camera.getZoom());
 	// center	
 	x = round((newX + 0.5) * view.portWidth());
 	y = round((newY + 0.5 + 0.5 * (view.portHeight() / (float)view.portWidth() - 1.0)) * view.portWidth());	
 }
 
 void MVGGeometryUtil::cameraToImage(const MVGCamera& camera, const MPoint& point, short& x, short& y)
-{
-	MFnCamera fnCamera(camera.dagPath().node()); 	
-	
+{	
 	// Get image size 
 	MFnDagNode fnImage(camera.imagePath());
 	const double width = fnImage.findPlug("coverageX").asDouble();
 	const double height = fnImage.findPlug("coverageY").asDouble();
 
-	MPoint pointCenteredNorm = point / fnCamera.horizontalFilmAperture();
+	MPoint pointCenteredNorm = point / camera.getHorizontalFilmAperture();
 	
 	const double verticalMargin = (width - height) / 2.0;
 	x = (pointCenteredNorm.x + 0.5 ) * width;
