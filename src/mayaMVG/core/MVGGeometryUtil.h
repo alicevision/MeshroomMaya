@@ -82,7 +82,6 @@ struct MVGGeometryUtil {
 	static bool projectFace2D(M3dView& view, MPointArray& face3DPoints, const MVGCamera& camera, const MPointArray& face2DPoints, bool compute = false, MVector height = MVector(0, 0, 0));
 	static bool computePlane(MPointArray& facePoints3D, PlaneKernel::Model& model);
 	static void projectPointOnPlane(const MPoint& point, M3dView& view, PlaneKernel::Model& model, const MVGCamera&,  MPoint& projectedPoint);
-	
 	static void triangulatePoint(MPointArray& points2D, std::vector<MVGCamera>& cameras, MPoint& resultPoint3D);
 };
 

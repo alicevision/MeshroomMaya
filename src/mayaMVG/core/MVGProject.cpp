@@ -11,7 +11,6 @@ namespace mayaMVG {
 
 std::string MVGProject::_CLOUD = "mvgPointCloud";
 std::string MVGProject::_MESH = "mvgMesh";
-std::string MVGProject::_PREVIEW_MESH = "previewMesh";
 std::string MVGProject::_PROJECT = "mayaMVG";
 
 MVGProject::MVGProject(const std::string& name)
@@ -68,6 +67,7 @@ bool MVGProject::load()
 		return false;
 	if(!loadPointCloud())
 		return false;
+    
 	return true;
 }
 
@@ -79,12 +79,6 @@ bool MVGProject::loadCameras()
 bool MVGProject::loadPointCloud()
 {
 	return readPointCloud(pointCloudFile());
-}
-
-void MVGProject::setCameraInView(const MVGCamera& camera, const std::string& viewName) const
-{
-	camera.loadImagePlane();
-	MVGMayaUtil::setCameraInView(camera, viewName.c_str());
 }
 
 std::string MVGProject::moduleDirectory() const

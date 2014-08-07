@@ -19,6 +19,15 @@ MVGNodeWrapper::MVGNodeWrapper(const std::string& name)
 		_dagpath.extendToShape();
 }
 
+MVGNodeWrapper::MVGNodeWrapper(const MString& name)
+{
+	if(name.length() == 0)
+		return;
+	MVGMayaUtil::getDagPathByName(name, _dagpath);
+	if(_dagpath.apiType() == MFn::kTransform)
+		_dagpath.extendToShape();
+}
+
 MVGNodeWrapper::MVGNodeWrapper(const MDagPath& dagPath)
 	: _dagpath(dagPath)
 {

@@ -27,6 +27,8 @@ void MVGCameraWrapper::setInView(const QString& viewName, const bool value)
             _views.push_back(viewName);
             Q_EMIT viewsChanged();
         }
+        
+        _camera.setInView(viewName.toStdString());
         return;
     }
     if(_views.removeOne(viewName))

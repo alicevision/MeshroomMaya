@@ -3,15 +3,14 @@
 #include "mayaMVG/core/MVGCamera.h"
 #include "mayaMVG/core/MVGLog.h"
 #include <openMVG/robust_estimation/robust_estimator_LMeds.hpp>
+#include <openMVG/multiview/triangulation_nview.hpp>
+#include <openMVG/multiview/triangulation.hpp>
+#include <openMVG/multiview/projection.hpp>
 #include <maya/MPointArray.h>
 #include <maya/MVectorArray.h>
 #include <maya/MFnCamera.h>
-#include <vector>
-
 #include <maya/MPlug.h>
-#include "openMVG/multiview/triangulation_nview.hpp"
-#include "openMVG/multiview/triangulation.hpp"
-#include "openMVG/multiview/projection.hpp"
+#include <vector>
 
 using namespace mayaMVG;
 

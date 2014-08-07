@@ -49,22 +49,15 @@ class MVGCamera : public MVGNodeWrapper {
 		void setHorizontalPan(const double pan) const;
 		double getVerticalPan() const;
 		void setVerticalPan(const double pan) const;
-		
-		MPointArray getClickedPoints() const;
-		void setClickedPoints(const MPointArray& points) const;
-		void addClickedPoint(const MPoint& point) const;
-		void clearClickedPoints() const;
-		MPoint getClickedtPointAtIndex(int i) const;
-		void setClickedtPointAtIndex(int i, const MPoint& point) const;
-		int getClickedPointsCount() const;
-		
+        
+        void setInView(const std::string& viewName) const;
+
 	private:
 		// dynamic attributes
 		static MString _ID;
 		static MString _PINHOLE;
 		static MString _ITEMS;
 		static MString _DEFERRED;
-		static MString _POINTS;
 };
 
 } // namespace

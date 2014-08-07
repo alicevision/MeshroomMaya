@@ -145,7 +145,6 @@ void MVGProjectWrapper::setCameraToView(QObject* camera, const QString& viewName
         c->setInView(viewName, false);
     MVGCameraWrapper*cam = qobject_cast<MVGCameraWrapper*>(camera);
     cam->setInView(viewName, true);
-    _project.setCameraInView(cam->camera(), viewName.toStdString());
 }
 
 

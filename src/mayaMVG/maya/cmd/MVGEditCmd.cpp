@@ -65,43 +65,33 @@ MStatus MVGEditCmd::doIt(const MArgList& args)
 MStatus MVGEditCmd::redoIt()
 {
 	MStatus status;
+    MVGMesh mesh(_meshName);
 	// -create
 	if(_flags & CMD_CREATE) {		
-		// Retrieve mesh or create it
-        MStatus status;
-        status = MVGMayaUtil::getDagPathByName(_meshName, _meshPath);
-		MVGMesh mesh(_meshPath);
-		if(!mesh.isValid()) {
+		if(!mesh.isValid()) { // Retrieve mesh or create it
 			mesh = MVGMesh::create(MVGProject::_MESH);
-            _meshPath = mesh.dagPath();
-            _meshName = mesh.dagPath().fullPathName();		
 			if(!mesh.isValid())
 				return MS::kFailure;
+            _meshPath = mesh.dagPath();
+            _meshName = mesh.dagPath().fullPathName();
 		}
-		int index;
+		int index; 
 		if(!mesh.addPolygon(_points, index))
 			return MS::kFailure;
-		
 		_indexes.clear();
 		_indexes.append(index);		
 	}
 	// -move
 	if(_flags & CMD_MOVE) {
-        MVGMayaUtil::getDagPathByName(_meshName, _meshPath);
-		MVGMesh mesh(_meshPath);
 		if(!mesh.isValid())
 			return MS::kFailure;
-		
 		MPoint oldPoint;
-		_oldPoints.clear();
-		for(int i = 0; i < _points.length(); ++i)
-		{
+		for(int i = 0; i < _points.length(); ++i) {
 			mesh.getPoint(_indexes[i], oldPoint);
-			_oldPoints.append(oldPoint);
 			mesh.setPoint(_indexes[i], _points[i]);
+            _points[i] = oldPoint;
 		}
 	}
-	
 	MVGProjectWrapper::instance().rebuildMeshCacheFromMaya(_meshPath);
 	MVGProjectWrapper::instance().rebuildCacheFromMaya();
 	return status;
@@ -110,34 +100,32 @@ MStatus MVGEditCmd::redoIt()
 MStatus MVGEditCmd::undoIt()
 { 
 	MStatus status;
+    MVGMesh mesh(_meshPath);
 	// -create
 	if(_flags & CMD_CREATE) {
-		MVGMesh mesh(_meshPath);
 		if(!mesh.isValid())
 			return MStatus::kFailure;
         if(mesh.getPolygonsCount() > 1)
-        {
             mesh.deletePolygon(_indexes[0]);
-        }
-        // Can't delete last face with deletePolygon())
-        // Delete directly the transform
         else
         {
+            // Can't delete last face with deletePolygon())
+            // Delete directly the transform
             // MeshPath is invalid after destruction of the shape, we store it as a MString to retrieve it in redo
             _meshName = _meshPath.fullPathName();
-            MObject toto = _meshPath.transform();
-            MGlobal::deleteNode(toto);
+            MObject transform = _meshPath.transform();
+            MGlobal::deleteNode(transform);
         }
 	}
 	// -move
 	if(_flags & CMD_MOVE) {
-        MVGMesh mesh(_meshPath);
 		if(!mesh.isValid())
 			return MS::kFailure;
-		
-		for(int i = 0; i < _oldPoints.length(); ++i)
-		{
-			mesh.setPoint(_indexes[i], _oldPoints[i]);
+		MPoint oldPoint;
+		for(int i = 0; i < _points.length(); ++i) {
+			mesh.getPoint(_indexes[i], oldPoint);
+            mesh.setPoint(_indexes[i], _points[i]);
+            _points[i] = oldPoint;
 		}
 	}
 	MVGProjectWrapper::instance().rebuildAllMeshesCacheFromMaya();
@@ -180,11 +168,6 @@ void MVGEditCmd::doMove(const MDagPath& meshPath, const MPointArray& points, con
     _meshName = _meshPath.fullPathName();
 	_points = points;
 	_indexes = verticesIndexes;
-}
-
-void MVGEditCmd::doDelete()
-{
-	_flags |= CMD_DELETE;
 }
 
 } //mayaMVG

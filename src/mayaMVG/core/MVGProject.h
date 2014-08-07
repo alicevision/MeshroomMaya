@@ -27,8 +27,6 @@ class MVGProject : public MVGNodeWrapper {
 		bool loadPointCloud();
 	
 	public:
-		// views
-		void setCameraInView(const MVGCamera& camera, const std::string& viewName) const;
 		// filesystem
 		std::string moduleDirectory() const;
 		std::string projectDirectory() const;
@@ -46,7 +44,6 @@ class MVGProject : public MVGNodeWrapper {
 		// openMVG node names
 		static std::string _CLOUD;
 		static std::string _MESH;
-		static std::string _PREVIEW_MESH;
 		static std::string _PROJECT;
 };
 

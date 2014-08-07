@@ -20,6 +20,11 @@ MVGMesh::MVGMesh(const std::string& name)
 {
 }
 
+MVGMesh::MVGMesh(const MString& name)
+    : MVGNodeWrapper(name)
+{   
+}
+
 MVGMesh::MVGMesh(const MDagPath& dagPath)
 	: MVGNodeWrapper(dagPath)
 {
@@ -109,16 +114,6 @@ void MVGMesh::getPoints(MPointArray& pointArray) const
 	CHECK(status);
 }
 
-int MVGMesh::getVerticesCount() const
-{
-	MStatus status;
-	MFnMesh fnMesh(_dagpath, &status);
-	CHECK(status);
-	int count = fnMesh.numVertices(&status);
-	CHECK(status);
-	return count;
-}
-
 int MVGMesh::getPolygonsCount() const
 {
     MStatus status;
@@ -127,42 +122,6 @@ int MVGMesh::getPolygonsCount() const
     int count = fnMesh.numPolygons(&status);
     CHECK(status);
     return count;
-}
-
-bool MVGMesh::intersect(MPoint& point, MVector& dir, MPointArray&points) const
-{
-	MStatus status;
-	MFnMesh fnMesh(_dagpath, &status);
-	CHECK(status);
-	bool intersect = fnMesh.intersect(point, dir, points, status);
-	CHECK(status);
-	return intersect;
-}
-
-int MVGMesh::getNumConnectedFacesToVertex(int vertexId) const
-{
-	MStatus status;
-	MItMeshVertex verticesIter(_dagpath, MObject::kNullObj, &status);
-	CHECK(status);
-	int prev;
-	status = verticesIter.setIndex(vertexId, prev);
-	int faceCount;
-	status = verticesIter.numConnectedFaces(faceCount);
-	CHECK(status);
-	return faceCount;
-}
-
-int MVGMesh::getNumConnectedFacesToEdge(int edgeId) const
-{
-	MStatus status;
-	MItMeshEdge edgeIter(_dagpath, MObject::kNullObj, &status);
-	CHECK(status);
-	int prev;
-	status = edgeIter.setIndex(edgeId, prev);
-	int faceCount;
-	status = edgeIter.numConnectedFaces(faceCount);
-	CHECK(status);
-	return faceCount;
 }
 
 const MIntArray MVGMesh::getConnectedFacesToVertex(int vertexId) const
@@ -179,21 +138,6 @@ const MIntArray MVGMesh::getConnectedFacesToVertex(int vertexId) const
 	return connectedFacesId;
 }
 
-int MVGMesh::getConnectedFacesToEdge(MIntArray& facesId, int edgeId) const
-{
-	MStatus status;
-	MItMeshEdge edgeIter(_dagpath, MObject::kNullObj, &status);
-	CHECK(status);
-	int prev;
-	status = edgeIter.setIndex(edgeId, prev);
-	CHECK(status);
-	int faceCount;
-	faceCount = edgeIter.getConnectedFaces(facesId, &status);
-	CHECK(status);
-	return faceCount;
-}
-
-
 const MIntArray MVGMesh::getFaceVertices(int faceId) const
 {
 	MStatus status;
@@ -205,20 +149,6 @@ const MIntArray MVGMesh::getFaceVertices(int faceId) const
 	status = faceIter.getVertices(vertices);
 	CHECK(status);
 	return vertices;
-}
-
-const MIntArray MVGMesh::getEdgeVertices(int edgeId) const
-{
-	MStatus status;
-	MFnMesh fnMesh(_dagpath, &status);
-	CHECK(status);
-	int2 edgeVertices;
-	status = fnMesh.getEdgeVertices(edgeId, edgeVertices);
-	CHECK(status);
-	MIntArray edgeVerticesArray;
-	edgeVerticesArray.append(edgeVertices[0]);
-	edgeVerticesArray.append(edgeVertices[1]);
-	return edgeVerticesArray;
 }
 
 MStatus MVGMesh::setPoint(int vertexId, MPoint& point) const

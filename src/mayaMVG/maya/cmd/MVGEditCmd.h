@@ -10,8 +10,7 @@ class MVGEditCmd : public MPxToolCommand {
 
 	enum CMD_FLAG {
 		CMD_CREATE = 1 << 0,
-		CMD_MOVE = 1 << 1,
-		CMD_DELETE = 1 << 2
+		CMD_MOVE = 1 << 1
 	};
 	public:
 		MVGEditCmd();
@@ -28,7 +27,6 @@ class MVGEditCmd : public MPxToolCommand {
 	public:
 		void doAddPolygon(const MDagPath& meshPath, const MPointArray& points);
 		void doMove(const MDagPath& meshPath, const MPointArray& points, const MIntArray& verticesIndexes);
-		void doDelete();
 	public:
 		static MString name;
 	private:
@@ -36,7 +34,6 @@ class MVGEditCmd : public MPxToolCommand {
 		MDagPath _meshPath;
         MString _meshName;
 		MPointArray _points;
-		MPointArray _oldPoints;
 		MIntArray _indexes;
 };
 
