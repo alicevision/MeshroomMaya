@@ -3,7 +3,6 @@
 #include "mayaMVG/maya/MVGMayaUtil.h"
 #include "mayaMVG/core/MVGLog.h"
 #include <maya/MQtUtil.h>
-
 #include <maya/MItDependencyNodes.h>
 #include <maya/MFnDependencyNode.h>
 #include <maya/MFnMesh.h>

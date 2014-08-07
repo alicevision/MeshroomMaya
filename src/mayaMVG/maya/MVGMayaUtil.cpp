@@ -61,8 +61,8 @@ MStatus MVGMayaUtil::setFocusOnView(const MString& viewName)
 
 bool MVGMayaUtil::isMVGView(const M3dView & view)
 {
-	QWidget* leftViewport = MVGMayaUtil::getMVGViewportLayout(MVGProjectWrapper::instance().panelModel().at(0).toStdString().c_str());
-	QWidget* rightViewport = MVGMayaUtil::getMVGViewportLayout(MVGProjectWrapper::instance().panelModel().at(1).toStdString().c_str());
+	QWidget* leftViewport = MVGMayaUtil::getMVGViewportLayout(MVGProjectWrapper::instance().getVisiblePanelNames().at(0).toStdString().c_str());
+	QWidget* rightViewport = MVGMayaUtil::getMVGViewportLayout(MVGProjectWrapper::instance().getVisiblePanelNames().at(1).toStdString().c_str());
 	if(!leftViewport || !rightViewport)
 		return false;
 	return ((view.widget() == leftViewport) || (view.widget() == rightViewport));

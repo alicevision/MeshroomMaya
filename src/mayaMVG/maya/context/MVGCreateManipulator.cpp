@@ -63,7 +63,6 @@ void MVGCreateManipulator::draw(M3dView & view, const MDagPath & path,
 		{
 			drawCursor(mousex, mousey);
 			drawIntersections(view, mousex, mousey);
-			
 			glColor3f(1.f, 0.f, 0.f);
 			drawPreview2D(view, data);
 		}
@@ -91,10 +90,8 @@ MStatus MVGCreateManipulator::doPress(M3dView& view)
 	}
 	
 	short mousex, mousey;
-	short x, y;
-	mousePosition(mousex, mousey);
 	MPoint mousePoint;
-	MVGGeometryUtil::viewToCamera(view, mousex, mousey, mousePoint);
+	mousePoint = updateMouse(view, data, mousex, mousey);
 
     _manipUtils.updateIntersectionState(view, data, mousex, mousey);
 	switch(_manipUtils.intersectionState()) {
@@ -117,7 +114,7 @@ MStatus MVGCreateManipulator::doPress(M3dView& view)
                 break;
             }
 
-			MDagPath emptyPath = MDagPath();
+			MDagPath emptyPath;
 			if(!_manipUtils.addCreateFaceCommand(cmd, emptyPath, facePoints3D))
 				return MS::kFailure;					
 			break;
@@ -144,9 +141,6 @@ MStatus MVGCreateManipulator::doRelease(M3dView& view)
 	   LOG_ERROR("invalid context object.")
 	   return MS::kFailure;
 	}
-	
-	short mousex, mousey;
-	mousePosition(mousex, mousey);
 	
 	switch(_createState) {
 		case eCreateNone:
@@ -190,9 +184,8 @@ MStatus MVGCreateManipulator::doDrag(M3dView& view)
 		return MS::kFailure;
 	
 	short mousex, mousey;
-	mousePosition(mousex, mousey);
 	MPoint mousePoint;
-	MVGGeometryUtil::viewToCamera(view, mousex, mousey, mousePoint);
+	mousePoint = updateMouse(view, data, mousex, mousey);
 		
 	switch(_createState) {
 		case eCreateNone:

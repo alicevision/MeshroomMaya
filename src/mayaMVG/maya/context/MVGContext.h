@@ -9,10 +9,9 @@ class M3dView;
 
 struct EventData {
 	EventData()
-    : onPressCameraHPan(0)
-    , onPressCameraVPan(0)
-    , isDragging(false)
-	{}
+        : onPressCameraHPan(0)
+        , onPressCameraVPan(0)
+        , isDragging(false) {}
     MDagPath cameraPath;
     QPoint onPressMousePos;
     double onPressCameraHPan;
@@ -47,7 +46,6 @@ class MVGContext: public MPxContext {
     public:
         void updateManipulators();
         void fitImage(M3dView& view);
-        inline EKeyPressed getKeyPressed() const { return _keyPressed; }
         bool eventFilter(QObject *obj, QEvent *e);
         MVGEditCmd* newCmd();
     private:
@@ -56,7 +54,6 @@ class MVGContext: public MPxContext {
         MVGEventFilter<MVGContext> _filterLV;
         MVGEventFilter<MVGContext> _filterRV;
         EditMode _editMode;
-		EKeyPressed _keyPressed;
 };
 
 } // namespace

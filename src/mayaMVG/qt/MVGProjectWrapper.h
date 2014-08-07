@@ -49,8 +49,8 @@ class MVGProjectWrapper : public QObject, public Singleton<MVGProjectWrapper>
     Q_PROPERTY(QString cameraDirectory READ cameraDirectory NOTIFY cameraDirectoryChanged);
     Q_PROPERTY(QString imageDirectory READ imageDirectory NOTIFY imageDirectoryChanged);
     Q_PROPERTY(QString pointCloudFile READ pointCloudFile NOTIFY pointCloudFileChanged);
-    Q_PROPERTY(QObjectListModel* cameraModel READ cameraModel NOTIFY cameraModelChanged);
-	Q_PROPERTY(QStringList panelModel READ panelModel NOTIFY panelModelChanged);
+    Q_PROPERTY(QObjectListModel* cameraModel READ getCameraModel NOTIFY cameraModelChanged);
+	Q_PROPERTY(QStringList visiblePanelNames READ getVisiblePanelNames NOTIFY panelModelChanged);
     Q_PROPERTY(QString logText READ logText WRITE setLogText NOTIFY logTextChanged);
     Q_PROPERTY(QString currentContext READ currentContext WRITE setCurrentContext NOTIFY currentContextChanged);
     MAKE_SINGLETON_WITHCONSTRUCTORS(MVGProjectWrapper)
@@ -61,8 +61,8 @@ public slots:
 	const QString cameraDirectory() const;
 	const QString imageDirectory() const;
     const QString pointCloudFile() const;
-	QObjectListModel* cameraModel() {return &_cameraList;}
-    QStringList panelModel() {return _visiblePanelNames;}
+	QObjectListModel* getCameraModel() { return &_cameraList; }
+    const QStringList& getVisiblePanelNames() const { return _visiblePanelNames; }
 	const QString logText() const;
     void setLogText(const QString&);
     const QString currentContext() const;

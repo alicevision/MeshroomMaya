@@ -10,14 +10,7 @@ namespace mayaMVG {
 class MVGContext;
 class MVGEditCmd;
 
-namespace { // empty namespace
-	double crossProduct2D(MVector& A, MVector& B) {
-		return A.x*B.y - A.y*B.x;
-	}
-} // empty namespace
-	
-
-	#define POINT_RADIUS 10
+#define POINT_RADIUS 10
 
 class MVGManipulatorUtil {
 
@@ -45,8 +38,6 @@ class MVGManipulatorUtil {
 
 	public: 
 		MVGManipulatorUtil();
-		~MVGManipulatorUtil();
-
 	
 	public:
 		// Getters & Setters
@@ -61,18 +52,10 @@ class MVGManipulatorUtil {
 		bool intersectPoint(M3dView& view, DisplayData* displayData, const short&x, const short& y);
 		bool intersectEdge(M3dView& view, DisplayData* displayData, const short&x, const short& y);
 		void updateIntersectionState(M3dView& view, DisplayData* data, double mousex, double mousey);
-        /**
-         * 
-         * @param view
-         * @param data
-         * @param mousePointInCameraCoord
-         * @return True if the edge is connected to a face
-         */
         bool computeEdgeIntersectionData(M3dView& view, DisplayData* data, const MPoint& mousePointInCameraCoord);
 		
 		// Draw
 		void drawPreview3D();
-	//	static void drawCameraPoints(M3dView& view, DisplayData* data);
 		
 		// Commands
 		bool addCreateFaceCommand(MVGEditCmd* cmd, MDagPath& meshPath, const MPointArray& facePoints3D);
@@ -82,7 +65,7 @@ class MVGManipulatorUtil {
 		MVGContext* _ctx;
 		IntersectionState _intersectionState;
 		IntersectionData _intersectionData;		
-		MPointArray _previewFace3D;	
+		MPointArray _previewFace3D;
 };
 
 } // mayaMVG

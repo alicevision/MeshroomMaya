@@ -1,9 +1,9 @@
 #include "mayaMVG/maya/context/MVGManipulatorUtil.h"
-#include "mayaMVG/core/MVGGeometryUtil.h"
 #include "mayaMVG/maya/MVGMayaUtil.h"
 #include "mayaMVG/maya/context/MVGContext.h"
 #include "mayaMVG/maya/cmd/MVGEditCmd.h"
 #include "mayaMVG/maya/context/MVGDrawUtil.h"
+#include "mayaMVG/core/MVGGeometryUtil.h"
 #include "mayaMVG/core/MVGLog.h"
 #include <maya/MMatrix.h>
 
@@ -14,10 +14,6 @@ MVGManipulatorUtil::MVGManipulatorUtil()
 	, _ctx(NULL)
 {
 	_intersectionData.pointIndex = -1;
-}
-		
-MVGManipulatorUtil::~MVGManipulatorUtil()
-{
 }
 
 bool MVGManipulatorUtil::intersectPoint(M3dView& view, DisplayData* displayData, const short&x, const short& y)
@@ -92,7 +88,7 @@ bool MVGManipulatorUtil::intersectEdge(M3dView& view, DisplayData* displayData, 
 			if(sign1 != sign2)
 				continue;
 			// Lenght of orthogonal projection on edge
-			double s = crossProduct2D(AB, PA) / (AB.length()*AB.length());
+			double s = MVGGeometryUtil::crossProduct2D(AB, PA) / (AB.length()*AB.length());
 			if(s < 0)
 				s *= -1;
 			distance = s * AB.length();
@@ -233,55 +229,5 @@ bool MVGManipulatorUtil::addUpdateFaceCommand(MVGEditCmd* cmd, MDagPath& meshPat
 	if(cmd->redoIt())
 		cmd->finalize();
 }
-//void MVGManipulatorUtil::drawCameraPoints(M3dView& view, DisplayData* data)
-//{
-//	short x, y;
-//	MPoint wPoint;
-//	MVector wdir;
-//	
-//	// To test reloadProjectFromMaya (since map are not reload for the moment)
-////	const MPointArray& points = data->cameraPoints2D;
-////	for(int i = 0; i < points.length(); ++i)
-////	{
-////		MVGGeometryUtil::cameraToView(view, data->camera, points[i], x, y);
-////		MVGDrawUtil::drawFullCross(x, y);
-////	}
-////	
-//	for(Map3Dto2D::iterator mapIt = MVGProjectWrapper::instance().getMap3Dto2D().begin(); mapIt != MVGProjectWrapper::instance().getMap3Dto2D().end(); ++mapIt)
-//	{
-//		for(std::vector<PairStringToPoint>::iterator vecIt = mapIt->second.begin(); vecIt != mapIt->second.end(); ++vecIt)
-//		{
-//			if(data->camera.name() == vecIt->first)
-//			{
-//				// Draw full cross
-//				MVGGeometryUtil::cameraToView(view, data->camera, vecIt->second, x, y);
-//				MVGDrawUtil::drawFullCross(x, y);
-//				
-//				// Line toward 3D point
-//				MPoint point3D_view = MVGGeometryUtil::worldToView(view, mapIt->first.second);	
-//				glEnable(GL_LINE_STIPPLE);
-//				glLineStipple(1.f, 0x5555);
-//				glBegin(GL_LINES);
-//					glVertex2f(x, y);
-//					glVertex2f(point3D_view.x, point3D_view.y);
-//				glEnd();
-//				glDisable(GL_LINE_STIPPLE);
-//				
-//				view.viewToWorld(x + 5, y - 15, wPoint, wdir);
-//			}
-//			else
-//			{
-//				MPoint point3D_view =  MVGGeometryUtil::worldToView(view, mapIt->first.second);
-//				MVGDrawUtil::drawEmptyCross(point3D_view.x, point3D_view.y);
-//				
-//				view.viewToWorld(point3D_view.x + 5, point3D_view.y - 15, wPoint, wdir);
-//			}
-//				
-//			// Text
-//			MString str;
-//			str += (int)mapIt->second.size();
-//			view.drawText(str, wPoint);			
-//		}
-//	}
-//}
+
 }	// mayaMVG

@@ -13,10 +13,9 @@ using namespace mayaMVG;
 
 MVGContext::MVGContext() 
 	: _filter((QObject*)MVGMayaUtil::getMVGWindow(), this)
-	, _filterLV((QObject*)MVGMayaUtil::getMVGViewportLayout(MVGProjectWrapper::instance().panelModel().at(0).toStdString().c_str()), this)
-	, _filterRV((QObject*)MVGMayaUtil::getMVGViewportLayout(MVGProjectWrapper::instance().panelModel().at(1).toStdString().c_str()), this)
+	, _filterLV((QObject*)MVGMayaUtil::getMVGViewportLayout(MVGProjectWrapper::instance().getVisiblePanelNames().at(0).toStdString().c_str()), this)
+	, _filterRV((QObject*)MVGMayaUtil::getMVGViewportLayout(MVGProjectWrapper::instance().getVisiblePanelNames().at(1).toStdString().c_str()), this)
 	, _editMode(eModeMove)
-	, _keyPressed(eKeyNone)
 {
 	setTitleString("MVG tool");
 }
@@ -97,15 +96,8 @@ bool MVGContext::eventFilter(QObject *obj, QEvent *e)
 				updateManipulators();
 				break;
 			case Qt::Key_Control:
-			{
-				_keyPressed = eKeyCtrl;
-				M3dView view = M3dView::active3dView();
-				view.refresh(true, true);
-				break;
-			}
 			case Qt::Key_Shift:
 			{
-				_keyPressed = eKeyShift;
 				M3dView view = M3dView::active3dView();
 				view.refresh(true, true);
 				break;
@@ -125,8 +117,8 @@ bool MVGContext::eventFilter(QObject *obj, QEvent *e)
 	// key released
 	else if(e->type() == QEvent::KeyRelease) {
 		Qt::KeyboardModifiers modifiers = QApplication::keyboardModifiers();
-		 QKeyEvent * keyevent = static_cast<QKeyEvent*>(e);
-		 if (keyevent->isAutoRepeat())
+		QKeyEvent * keyevent = static_cast<QKeyEvent*>(e);
+		if (keyevent->isAutoRepeat())
 		 	return false;
 		 
 		switch(keyevent->key()) {
@@ -140,21 +132,8 @@ bool MVGContext::eventFilter(QObject *obj, QEvent *e)
 				break;
             }
 			case Qt::Key_Control:
+            case Qt::Key_Shift:
 			{
-				if(!(modifiers & Qt::ShiftModifier))
-					_keyPressed = eKeyNone;
-				else
-					_keyPressed = eKeyShift;
-				M3dView view = M3dView::active3dView();
-				view.refresh(true, true);
-				break;
-			}
-			case Qt::Key_Shift:
-			{
-				if(!(modifiers & Qt::ControlModifier))
-					_keyPressed = eKeyNone;
-				else
-					_keyPressed = eKeyCtrl;
 				M3dView view = M3dView::active3dView();
 				view.refresh(true, true);
 				break;

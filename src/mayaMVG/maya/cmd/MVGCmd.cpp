@@ -67,7 +67,7 @@ MStatus MVGCmd::doIt(const MArgList& args) {
 	}
 	
 	// create maya window
-	const QStringList& qlist = MVGProjectWrapper::instance().panelModel();
+	const QStringList& qlist = MVGProjectWrapper::instance().getVisiblePanelNames();
 	std::vector<MString> mlist;
 	mlist.push_back(qlist[0].toStdString().c_str());
 	mlist.push_back(qlist[1].toStdString().c_str());
@@ -81,37 +81,36 @@ MStatus MVGCmd::doIt(const MArgList& args) {
 	QWidget* menuLayout = MVGMayaUtil::getMVGMenuLayout();
 	if(!mayaWindow || !menuLayout) {
 		LOG_ERROR("Unable to retrieve MVGWindow.")
-		return status;
+		return MS::kFailure;
 	}
-
-	// create MVG menu
-	MVGMainWidget* mainWidget = new MVGMainWidget(menuLayout);
-	MQtUtil::addWidgetToMayaLayout(mainWidget->view(), menuLayout);
-			
+	
 	// create maya MVGContext
 	status = MVGMayaUtil::createMVGContext();
 	if(!status) {
 		LOG_ERROR("Unable to create MVGContext.")
 		return status;
 	}
+
+	const QString& leftPanelName = MVGProjectWrapper::instance().getVisiblePanelNames().at(0);
+	const QString& rightPanelName = MVGProjectWrapper::instance().getVisiblePanelNames().at(1);
+	
+	QWidget* leftViewport = MVGMayaUtil::getMVGViewportLayout(leftPanelName.toStdString().c_str());
+	QWidget* rightViewport = MVGMayaUtil::getMVGViewportLayout(rightPanelName.toStdString().c_str());
+	if(!leftViewport || !rightViewport) {
+		LOG_ERROR("Unable to retrieve maya viewport layouts.");
+		return MS::kFailure;
+	}
+	leftViewport->setProperty("mvg_panel", leftPanelName);
+	rightViewport->setProperty("mvg_panel", rightPanelName);
+
+	// create MVG menu
+	MVGMainWidget* mainWidget = new MVGMainWidget(menuLayout);
+	MQtUtil::addWidgetToMayaLayout(mainWidget->view(), menuLayout);
 	
 	// Reload project from Maya
 	MVGProjectWrapper::instance().reloadProjectFromMaya();
 	MVGProjectWrapper::instance().rebuildAllMeshesCacheFromMaya();
 
-	// install mouse event filter on maya viewports
-	const QString& leftPanel = MVGProjectWrapper::instance().panelModel().at(0);
-	const QString& rightPanel = MVGProjectWrapper::instance().panelModel().at(1);
-	
-	QWidget* leftViewport = MVGMayaUtil::getMVGViewportLayout(leftPanel.toStdString().c_str());
-	QWidget* rightViewport = MVGMayaUtil::getMVGViewportLayout(rightPanel.toStdString().c_str());
-	if(!leftViewport || !rightViewport) {
-		LOG_ERROR("Unable to retrieve maya viewport layouts.");
-		return MS::kFailure;
-	}
-
-	leftViewport->setProperty("mvg_panel", leftPanel);
-	rightViewport->setProperty("mvg_panel", rightPanel);
     
     //Maya callbacks
 	_callbackIDs.append(MEventMessage::addEventCallback("PostToolChanged", currentContextChanged, mayaWindow));

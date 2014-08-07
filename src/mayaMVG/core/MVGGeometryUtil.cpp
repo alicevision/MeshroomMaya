@@ -289,3 +289,34 @@ void MVGGeometryUtil::triangulatePoint(MPointArray& points2D, std::vector<MVGCam
 	resultPoint3D.y = result(1);
 	resultPoint3D.z = result(2);
 }
+
+double MVGGeometryUtil::crossProduct2D(MVector& A, MVector& B) {
+    return A.x*B.y - A.y*B.x;
+}
+
+double MVGGeometryUtil::dotProduct2D(MVector& A, MVector& B) {
+    return A.x*B.x - A.y*B.y;
+}
+
+bool MVGGeometryUtil::edgesIntersection(MPoint A, MPoint B, MVector AD,  MVector BC)
+{		
+    // r x s = 0
+    double cross = crossProduct2D(AD, BC);
+    double eps = 0.00001;
+    if(cross < eps && cross > -eps)
+        return false;
+
+    MVector AB = B - A;
+
+    double x =  crossProduct2D(AB, BC) / crossProduct2D(AD, BC);
+    double y = crossProduct2D(AB, AD) / crossProduct2D(AD, BC);
+
+    if( x >= 0 
+        && x <= 1 
+        && y >= 0 
+        && y <= 1)
+    {
+        return true;
+    }
+    return false;
+}

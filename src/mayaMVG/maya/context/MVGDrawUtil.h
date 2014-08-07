@@ -129,8 +129,7 @@ struct MVGDrawUtil {
 	static void drawExtendItem(float x, float y)
 	{
 		GLfloat width = 4;
-		
-		// Plus
+		// Cross shape
 		glLineWidth(1.f);
 		glBegin(GL_LINES);
 			glVertex2f(x - width, y);
@@ -167,7 +166,6 @@ struct MVGDrawUtil {
 			glVertex2f(x - width, y + height);
 			glVertex2f(x - width - step, y - height);
 			glVertex2f(x + width, y - height);
-
 		glEnd();
 	}
 };

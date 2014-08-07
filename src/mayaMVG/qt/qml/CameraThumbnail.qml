@@ -34,10 +34,10 @@ Rectangle {
         }
         ListView {
             id: viewList
-            model: m.project.panelModel
+            model: m.project.visiblePanelNames
             anchors.fill: parent
             orientation: ListView.Horizontal
-            property int itemWidth: (parent.width - spacing) / m.project.panelModel.length
+            property int itemWidth: (parent.width - spacing) / m.project.visiblePanelNames.length
             spacing: 2
             delegate: Rectangle {
                 id: cameraSelection

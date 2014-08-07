@@ -7,39 +7,6 @@
 #include "openMVG/multiview/triangulation.hpp"
 
 namespace mayaMVG {
-	
-namespace {
-	double crossProduct2d(MVector& A, MVector& B) {
-		return A.x*B.y - A.y*B.x;
-	}
-
-	double dotProduct2d(MVector& A, MVector& B) {
-		return A.x*B.x - A.y*B.y;
-	}
-	
-	bool edgesIntersection(MPoint A, MPoint B, MVector AD,  MVector BC)
-	{		
-		// r x s = 0
-		double cross = crossProduct2d(AD, BC);
-		double eps = 0.00001;
-		if(cross < eps && cross > -eps)
-			return false;
-
-		MVector AB = B - A;
-
-		double x =  crossProduct2d(AB, BC) / crossProduct2d(AD, BC);
-		double y = crossProduct2d(AB, AD) / crossProduct2d(AD, BC);
-
-		if( x >= 0 
-			&& x <= 1 
-			&& y >= 0 
-			&& y <= 1)
-		{
-			return true;
-		}
-		return false;
-	}
-}
 
 MTypeId MVGMoveManipulator::_id(0x99222); // FIXME /!\ 
 
@@ -99,41 +66,28 @@ void MVGMoveManipulator::draw(M3dView & view, const MDagPath & path,
 		drawCursor(mousex, mousey);
 		drawIntersections(view);
 
-		switch(_moveState)
-		{
-			case eMoveNone:
-				break;
-			case eMovePoint:
-                switch(_manipUtils.getContext()->getKeyPressed())
-                {
-                    case MVGContext::eKeyNone:
-                    {
-                        drawTriangulationDisplay(view, data, mousex, mousey);
-                        break;
-                    }
-                    case MVGContext::eKeyCtrl:
-                    case MVGContext::eKeyShift:
-                        break;
-                        
-
-                }
-				break;
-			case eMoveEdge:
-                if(_manipUtils.getContext()->getKeyPressed() == MVGContext::eKeyNone)
-                {
+        Qt::KeyboardModifiers modifiers = QApplication::keyboardModifiers();
+        if(modifiers & Qt::NoModifier) {
+            switch(_moveState)
+            {
+                case eMoveNone:
+                    break;
+                case eMovePoint:
+                    drawTriangulationDisplay(view, data, mousex, mousey);
+                    break;
+                case eMoveEdge:
                     short x, y;
                     MPoint P1 = mousePoint + _manipUtils.intersectionData().edgeRatio * _manipUtils.intersectionData().edgeHeight2D;
                     MPoint P0 = mousePoint  - (1 - _manipUtils.intersectionData().edgeRatio) * _manipUtils.intersectionData().edgeHeight2D;
-                    
                     glBegin(GL_LINES);
                         MVGGeometryUtil::cameraToView(view, P1, x, y);
                         glVertex2f(x, y);
                         MVGGeometryUtil::cameraToView(view, P0, x, y);
                         glVertex2f(x, y);
                     glEnd();
-                }
-				break;
-		}
+                    break;
+            }
+        }
 	}
 		
 	MVGDrawUtil::end2DDrawing();
@@ -148,34 +102,31 @@ MStatus MVGMoveManipulator::doPress(M3dView& view)
 		return MS::kFailure;
 
 	DisplayData* data = MVGProjectWrapper::instance().getCachedDisplayData(view);
+    if(!data)
+		return MS::kFailure;
+    
 	short mousex, mousey;
 	MPoint mousePoint = updateMouse(view, data, mousex, mousey);
 	
 	MVGManipulatorUtil::IntersectionData& intersectionData = _manipUtils.intersectionData();	
-	
-	_manipUtils.updateIntersectionState(view, data, mousex, mousey);	
+	_manipUtils.updateIntersectionState(view, data, mousex, mousey);
+    
+    Qt::KeyboardModifiers modifiers = QApplication::keyboardModifiers();
 	switch(_manipUtils.intersectionState())
 	{
 		case MVGManipulatorUtil::eIntersectionNone:
 			break;
 		case MVGManipulatorUtil::eIntersectionPoint:
 		{	
-			switch(_manipUtils.getContext()->getKeyPressed())
+			if((modifiers & Qt::ShiftModifier) || (modifiers & Qt::ControlModifier))
 			{
-				case MVGContext::eKeyNone:
-					break;
-				case MVGContext::eKeyCtrl:
-				case MVGContext::eKeyShift:
-					// Update face informations
-					MVGMesh mesh(intersectionData.meshName);
-					intersectionData.facePointIndexes.clear();
-					MIntArray connectedFaceIndex = mesh.getConnectedFacesToVertex(intersectionData.pointIndex);
-					if(connectedFaceIndex.length() > 0)
-						intersectionData.facePointIndexes = mesh.getFaceVertices(connectedFaceIndex[0]);				
-
-					break;					
+                // Update face informations
+                MVGMesh mesh(intersectionData.meshName);
+                intersectionData.facePointIndexes.clear();
+                MIntArray connectedFaceIndex = mesh.getConnectedFacesToVertex(intersectionData.pointIndex);
+                if(connectedFaceIndex.length() > 0)
+                    intersectionData.facePointIndexes = mesh.getFaceVertices(connectedFaceIndex[0]);						
 			}
-
 			_moveState = eMovePoint;
 			break;
 		}
@@ -205,74 +156,67 @@ MStatus MVGMoveManipulator::doRelease(M3dView& view)
 	MPoint mousePoint = updateMouse(view, data, mousex, mousey);
 	
 	MVGManipulatorUtil::IntersectionData& intersectionData = _manipUtils.intersectionData();
+    Qt::KeyboardModifiers modifiers = QApplication::keyboardModifiers();
 	switch(_moveState) {
 		case eMoveNone:
 			break;
 		case eMovePoint:
 		{
-			switch(_manipUtils.getContext()->getKeyPressed())
-			{
-				case MVGContext::eKeyNone:
-				{
-					MPoint triangulatedPoint;
-					if(!triangulate(view, intersectionData, mousePoint, triangulatedPoint))
-						break;
-					
-					MDagPath meshPath;
-					MVGMayaUtil::getDagPathByName(intersectionData.meshName.c_str(), meshPath);
+			if((modifiers & Qt::ShiftModifier) || (modifiers & Qt::ControlModifier))
+			{           
+                if(_manipUtils.previewFace3D().length() == 0)
+                    break;
 
-					MPointArray newPoints;
-					newPoints.append(triangulatedPoint);
-					MIntArray indexes;
-					indexes.append(intersectionData.pointIndex);
+                MDagPath meshPath;
+                MVGMayaUtil::getDagPathByName(intersectionData.meshName.c_str(), meshPath);
 
-					_manipUtils.addUpdateFaceCommand(cmd, meshPath, newPoints, indexes);
-					intersectionData.facePointIndexes.clear();
-					break;
-				}
-				case MVGContext::eKeyCtrl:
-				// TODO : update only the point
-				case MVGContext::eKeyShift:
-				{
-					if(_manipUtils.previewFace3D().length() == 0)
-						break;
+                _manipUtils.addUpdateFaceCommand(cmd, meshPath, _manipUtils.previewFace3D(), intersectionData.facePointIndexes);
+                _manipUtils.previewFace3D().clear();
+                intersectionData.facePointIndexes.clear();
+            }
+            else {
+                MPoint triangulatedPoint;
+                if(!triangulate(view, intersectionData, mousePoint, triangulatedPoint))
+                    break;
 
-					MDagPath meshPath;
-					MVGMayaUtil::getDagPathByName(intersectionData.meshName.c_str(), meshPath);
+                MDagPath meshPath;
+                MVGMayaUtil::getDagPathByName(intersectionData.meshName.c_str(), meshPath);
 
-					_manipUtils.addUpdateFaceCommand(cmd, meshPath, _manipUtils.previewFace3D(), intersectionData.facePointIndexes);
-					_manipUtils.previewFace3D().clear();
-					intersectionData.facePointIndexes.clear();
-					break;		
-				}
-			}
+                MPointArray newPoints;
+                newPoints.append(triangulatedPoint);
+                MIntArray indexes;
+                indexes.append(intersectionData.pointIndex);
+
+                _manipUtils.addUpdateFaceCommand(cmd, meshPath, newPoints, indexes);
+                intersectionData.facePointIndexes.clear();
+            }
 			break;
 		}		
 		case eMoveEdge: 
 		{
-			if(_manipUtils.getContext()->getKeyPressed() ==  MVGContext::eKeyNone)
-            {
+            if((modifiers & Qt::ShiftModifier) || (modifiers & Qt::ControlModifier))
+			{ 
+                if(_manipUtils.previewFace3D().length() == 0)
+                    break;
+
+                MDagPath meshPath;
+                MVGMayaUtil::getDagPathByName(intersectionData.meshName.c_str(), meshPath);
+
+                MPointArray edgePoints;
+                edgePoints.append(_manipUtils.previewFace3D()[2]);
+                edgePoints.append(_manipUtils.previewFace3D()[3]);
+                _manipUtils.addUpdateFaceCommand(cmd, meshPath, edgePoints, intersectionData.edgePointIndexes);
+                _manipUtils.previewFace3D().clear();
+                intersectionData.facePointIndexes.clear();
+            }
+			else {
                 MPointArray triangulatedPoints;
                 triangulateEdge(view, intersectionData, mousePoint, triangulatedPoints);
                 MDagPath meshPath;
                 MVGMayaUtil::getDagPathByName(intersectionData.meshName.c_str(), meshPath);
                 _manipUtils.addUpdateFaceCommand(cmd, meshPath, triangulatedPoints, intersectionData.edgePointIndexes);
                 intersectionData.facePointIndexes.clear();
-                break;	
             }
-		
-			if(_manipUtils.previewFace3D().length() == 0)
-				break;
-			
-			MDagPath meshPath;
-			MVGMayaUtil::getDagPathByName(intersectionData.meshName.c_str(), meshPath);
-			
-			MPointArray edgePoints;
-			edgePoints.append(_manipUtils.previewFace3D()[2]);
-			edgePoints.append(_manipUtils.previewFace3D()[3]);
-			_manipUtils.addUpdateFaceCommand(cmd, meshPath, edgePoints, intersectionData.edgePointIndexes);
-			_manipUtils.previewFace3D().clear();
-			intersectionData.facePointIndexes.clear();
 			break;
 		}
 	}
@@ -310,49 +254,49 @@ MStatus MVGMoveManipulator::doDrag(M3dView& view)
 	
 	MVGManipulatorUtil::IntersectionData& intersectionData = _manipUtils.intersectionData();
 	std::vector<MVGPoint2D>& meshPoints = data->allPoints2D[intersectionData.meshName];
+    
+    Qt::KeyboardModifiers modifiers = QApplication::keyboardModifiers();
 	switch(_moveState) {
 		case eMoveNone:
 			break;
 		case eMovePoint:
-			switch(_manipUtils.getContext()->getKeyPressed())
-			{
-				case MVGContext::eKeyNone:
-					_manipUtils.previewFace3D().clear();
-					_manipUtils.intersectionState() = MVGManipulatorUtil::eIntersectionNone;
-					break;
-				case MVGContext::eKeyCtrl:
-					if(meshPoints[intersectionData.pointIndex].movableState >= eMovableInSamePlane)
-						computeTmpFaceOnMovePoint(view, data, mousePoint);
-					break;
-				case MVGContext::eKeyShift:
-					if(meshPoints[intersectionData.pointIndex].movableState == eMovableRecompute)
-						computeTmpFaceOnMovePoint(view, data, mousePoint, true);
-					break;					
-			}
+            if(modifiers & Qt::ControlModifier)
+            {
+                if(meshPoints[intersectionData.pointIndex].movableState >= eMovableInSamePlane)
+                    computeTmpFaceOnMovePoint(view, data, mousePoint);
+            }
+            else if(modifiers & Qt::ShiftModifier)
+            {
+                if(meshPoints[intersectionData.pointIndex].movableState == eMovableRecompute)
+                    computeTmpFaceOnMovePoint(view, data, mousePoint, true);
+            }
+            else {
+                _manipUtils.previewFace3D().clear();
+                _manipUtils.intersectionState() = MVGManipulatorUtil::eIntersectionNone;
+            }
 			break;
 		case eMoveEdge: 
 		{
-			switch(_manipUtils.getContext()->getKeyPressed())
-			{
-				case MVGContext::eKeyNone:
-					_manipUtils.previewFace3D().clear();
-					_manipUtils.intersectionState() = MVGManipulatorUtil::eIntersectionNone;
-					break;
-				case MVGContext::eKeyCtrl:
-					if(meshPoints[intersectionData.edgePointIndexes[0]].movableState >= eMovableInSamePlane
-						&& meshPoints[intersectionData.edgePointIndexes[1]].movableState >= eMovableInSamePlane)
-					{
-						computeTmpFaceOnMoveEdge(view, data, mousePoint);
-					}	
-					break;
-				case MVGContext::eKeyShift:
-					if(meshPoints[intersectionData.edgePointIndexes[0]].movableState >= eMovableInSamePlane
-						&& meshPoints[intersectionData.edgePointIndexes[1]].movableState >= eMovableInSamePlane)
-					{
-						computeTmpFaceOnMoveEdge(view, data, mousePoint, true);
-					}
-					break;					
-			}
+            if(modifiers & Qt::ControlModifier)
+            {
+                if(meshPoints[intersectionData.edgePointIndexes[0]].movableState >= eMovableInSamePlane
+                    && meshPoints[intersectionData.edgePointIndexes[1]].movableState >= eMovableInSamePlane)
+                {
+                    computeTmpFaceOnMoveEdge(view, data, mousePoint);
+                }	 
+            }
+            else if(modifiers & Qt::ShiftModifier)
+            {
+                if(meshPoints[intersectionData.edgePointIndexes[0]].movableState >= eMovableInSamePlane
+                    && meshPoints[intersectionData.edgePointIndexes[1]].movableState >= eMovableInSamePlane)
+                {
+                    computeTmpFaceOnMoveEdge(view, data, mousePoint, true);
+                }
+            }
+            else {
+                _manipUtils.previewFace3D().clear();
+                _manipUtils.intersectionState() = MVGManipulatorUtil::eIntersectionNone;
+            }
 			break;
 		}
 	}
@@ -383,18 +327,13 @@ void MVGMoveManipulator::drawCursor(float mousex, float mousey)
 	glColor4f(0.f, 0.f, 0.f, 0.8f);
 	MVGDrawUtil::drawArrowsCursor(mousex, mousey);
 	
-	switch(_manipUtils.getContext()->getKeyPressed())
-	{
-		case MVGContext::eKeyNone:
-			drawTriangulateCursor(mousex, mousey);
-			break;
-		case MVGContext::eKeyCtrl:
-			drawMoveInPlaneCursor(mousex, mousey);
-			break;
-		case MVGContext::eKeyShift:
-			drawMoveRecomputePlaneCursor(mousex, mousey);
-			break;					
-	}
+    Qt::KeyboardModifiers modifiers = QApplication::keyboardModifiers();
+    if(modifiers & Qt::ControlModifier)
+        drawMoveInPlaneCursor(mousex, mousey);
+    else if(modifiers & Qt::ShiftModifier)
+        drawMoveRecomputePlaneCursor(mousex, mousey);
+    else
+        drawTriangulateCursor(mousex, mousey);
 }
 
 
@@ -420,40 +359,37 @@ void MVGMoveManipulator::drawMoveRecomputePlaneCursor(float mousex, float mousey
 void MVGMoveManipulator::drawIntersections(M3dView& view)
 {
 	DisplayData* data = MVGProjectWrapper::instance().getCachedDisplayData(view);
-	if(!data)
+	if(!data || data->allPoints2D.empty())
 		return;
-	
-	if(data->allPoints2D.size() == 0)
-		return;
-	
+
 	MVGManipulatorUtil::IntersectionData& intersectionData = _manipUtils.intersectionData();
 	std::vector<MVGPoint2D>& meshPoints = data->allPoints2D[intersectionData.meshName];
-	short x, y;
 	
+    Qt::KeyboardModifiers modifiers = QApplication::keyboardModifiers();
 	switch(_manipUtils.intersectionState())
 	{
 		case MVGManipulatorUtil::eIntersectionPoint:
 		{
 			EPointState movableState = meshPoints[intersectionData.pointIndex].movableState;
 
-			switch(_manipUtils.getContext()->getKeyPressed())
-			{
-				case MVGContext::eKeyNone:
-					glColor4f(0.3f, 0.3f, 0.6f, 0.8f);	// Grey
-					break;
-				case MVGContext::eKeyCtrl:
-					if(movableState >= eMovableInSamePlane)
-						glColor3f(0.f, 1.f, 0.f);
-					else
-						glColor3f(1.f, 0.f, 0.f);
-					break;
-				case MVGContext::eKeyShift:
-					if(movableState == eMovableRecompute)
-						glColor4f(0.f, 1.f, 1.f, 0.8f);
-					else
-						glColor3f(1.f, 0.f, 0.f);
-					break;	
-			}
+            if(modifiers & Qt::ControlModifier)
+            {
+                if(movableState >= eMovableInSamePlane)
+                    glColor3f(0.f, 1.f, 0.f);
+                else
+                    glColor3f(1.f, 0.f, 0.f);
+            }
+            else if(modifiers & Qt::ShiftModifier)
+            {
+                if(movableState == eMovableRecompute)
+                    glColor4f(0.f, 1.f, 1.f, 0.8f);
+                else
+                    glColor3f(1.f, 0.f, 0.f);
+            }
+            else
+            {
+                glColor4f(0.3f, 0.3f, 0.6f, 0.8f);
+            }
 
 			MPoint point = MVGGeometryUtil::worldToView(view, meshPoints[intersectionData.pointIndex].point3D);
 			MVGDrawUtil::drawCircle(point.x, point.y, POINT_RADIUS, 30);
@@ -464,34 +400,34 @@ void MVGMoveManipulator::drawIntersections(M3dView& view)
 			movableStates.push_back(meshPoints[intersectionData.edgePointIndexes[0]].movableState);
 			movableStates.push_back(meshPoints[intersectionData.edgePointIndexes[1]].movableState);
 
-			switch(_manipUtils.getContext()->getKeyPressed())
-			{
-				case MVGContext::eKeyNone:
-					glColor4f(0.3f, 0.3f, 0.6f, 0.8f);	// Grey
-					break;
-				case MVGContext::eKeyCtrl:
-					if((movableStates[0] >= eMovableInSamePlane)
-						&& (movableStates[1] >= eMovableInSamePlane))
-					{
-						glColor3f(0.f, 1.f, 0.f);
-					}
-					else
-					{
-						glColor3f(1.f, 0.f, 0.f);
-					}
-					break;
-				case MVGContext::eKeyShift:
-					if((movableStates[0] >= eMovableInSamePlane)
-						&& (movableStates[1] >= eMovableInSamePlane))
-					{
-						glColor4f(0.f, 1.f, 1.f, 0.8f);
-					}
-					else
-					{
-						glColor3f(1.f, 0.f, 0.f);
-					}
-					break;	
-			}
+            if(modifiers & Qt::ControlModifier)
+            {
+                if((movableStates[0] >= eMovableInSamePlane)
+                    && (movableStates[1] >= eMovableInSamePlane))
+                {
+                    glColor3f(0.f, 1.f, 0.f);
+                }
+                else
+                {
+                    glColor3f(1.f, 0.f, 0.f);
+                }
+            }
+            else if(modifiers & Qt::ShiftModifier)
+            {
+                if((movableStates[0] >= eMovableInSamePlane)
+                    && (movableStates[1] >= eMovableInSamePlane))
+                {
+                    glColor4f(0.f, 1.f, 1.f, 0.8f);
+                }
+                else
+                {
+                    glColor3f(1.f, 0.f, 0.f);
+                }
+            }
+            else
+            {
+                glColor4f(0.3f, 0.3f, 0.6f, 0.8f);
+            }
 
 			glLineWidth(1.5f);
 			glBegin(GL_LINES);
@@ -618,7 +554,7 @@ void MVGMoveManipulator::computeTmpFaceOnMoveEdge(M3dView& view, DisplayData* da
 		MVector AD =  previewFace3D[3] - previewFace3D[0];
 		MVector BC =  previewFace3D[2] - previewFace3D[1];
 
-		if(edgesIntersection(previewFace3D[0], previewFace3D[1], AD, BC))
+		if(MVGGeometryUtil::edgesIntersection(previewFace3D[0], previewFace3D[1], AD, BC))
 		{
 			MPointArray tmp = previewFace3D;
 			previewFace3D[3] = tmp[2];
@@ -749,4 +685,5 @@ void MVGMoveManipulator::drawUI(MHWRender::MUIDrawManager& drawManager, const MH
 	// TODO
 	drawManager.endDrawable();
 }
-}	//mayaMVG
+
+} // namespace

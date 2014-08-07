@@ -73,18 +73,24 @@ class MVGPointCloud;
 class MVGCamera;
 
 struct MVGGeometryUtil {
+    // 
 	static MPoint worldToView(M3dView&, const MPoint&);
 	static MPoint viewToWorld(M3dView&, const MPoint&);
 	static void viewToCamera(M3dView& view, const short x, const short y, MPoint& point);
 	static void worldToCamera(M3dView& view, const MPoint& worldPoint, MPoint& point);
 	static void cameraToView(M3dView& view, const MPoint& point, short& x, short& y);
 	static void cameraToImage(const MVGCamera& camera, const MPoint& point, short& , short& y);
+    
+    // 
 	static bool projectFace2D(M3dView& view, MPointArray& face3DPoints, const MVGCamera& camera, const MPointArray& face2DPoints, bool compute = false, MVector height = MVector(0, 0, 0));
 	static bool computePlane(MPointArray& facePoints3D, PlaneKernel::Model& model);
 	static void projectPointOnPlane(const MPoint& point, M3dView& view, PlaneKernel::Model& model, const MVGCamera&,  MPoint& projectedPoint);
 	static void triangulatePoint(MPointArray& points2D, std::vector<MVGCamera>& cameras, MPoint& resultPoint3D);
+    
+    // math
+    static double crossProduct2D(MVector& A, MVector& B);
+	static double dotProduct2D(MVector& A, MVector& B);
+	static bool edgesIntersection(MPoint A, MPoint B, MVector AD,  MVector BC);
 };
-
-
 
 } // mayaMVG
