@@ -8,13 +8,14 @@
 #include "mayaMVG/qt/MVGQt.h"
 #include <maya/MQtUtil.h>
 
-namespace mayaMVG {
+using namespace mayaMVG;
 
 MVGContext::MVGContext() 
 	: _filter((QObject*)MVGMayaUtil::getMVGWindow(), this)
-	, _filterLV((QObject*)MVGMayaUtil::getMVGViewportLayout(MVGProjectWrapper::instance().getVisiblePanelNames().at(0).toStdString().c_str()), this)
-	, _filterRV((QObject*)MVGMayaUtil::getMVGViewportLayout(MVGProjectWrapper::instance().getVisiblePanelNames().at(1).toStdString().c_str()), this)
+	, _filterLV((QObject*)MVGMayaUtil::getMVGViewportLayout("mvgLPanel"), this)
+	, _filterRV((QObject*)MVGMayaUtil::getMVGViewportLayout("mvgRPanel"), this)
 	, _editMode(eModeMove)
+	, _manipUtil(this)
 {
 	setTitleString("MVG tool");
 }
@@ -46,17 +47,34 @@ void MVGContext::updateManipulators()
 		case eModeCreate: {
 			MVGCreateManipulator* manip = static_cast<MVGCreateManipulator*>(
 				MPxManipulatorNode::newManipulator("MVGCreateManipulator", manipObject, &status));
-			if(status && !manip)
+			if(!status || !manip)
 				return;
-			manip->setContext(this);
+			
+			_manipUtil.rebuildAllMeshesCacheFromMaya();
+			_manipUtil.rebuildCacheFromMaya();
+			M3dView view = M3dView::active3dView();
+			MVGManipulatorUtil::DisplayData* data = _manipUtil.getCachedDisplayData(view);
+			if(data)
+				data->buildPoints2D.clear();
+			
+			// set
+			manip->setManipUtil(&_manipUtil);
 			break;
 		}
 		case eModeMove: {
 			MVGMoveManipulator* manip = static_cast<MVGMoveManipulator*>(
 				MPxManipulatorNode::newManipulator("MVGMoveManipulator", manipObject, &status));
-			if(status && !manip)
+			if(!status || !manip)
 				return;
-			manip->setContext(this);
+
+			_manipUtil.rebuildAllMeshesCacheFromMaya();
+			_manipUtil.rebuildCacheFromMaya();
+			M3dView view = M3dView::active3dView();
+			MVGManipulatorUtil::DisplayData* data = _manipUtil.getCachedDisplayData(view);
+			if(data)
+				data->buildPoints2D.clear();
+
+			manip->setManipUtil(&_manipUtil);
 			break;
 		}
 		default:
@@ -89,47 +107,61 @@ bool MVGContext::eventFilter(QObject *obj, QEvent *e)
 				break;
 			case Qt::Key_Control:
 			case Qt::Key_Shift:
-			{
-				M3dView view = M3dView::active3dView();
-				view.refresh(true, true);
-				break;
-			}
 			case Qt::Key_Escape:
-			{
-				M3dView view = M3dView::active3dView();
-				DisplayData* data = MVGProjectWrapper::instance().getCachedDisplayData(view);
-				data->buildPoints2D.clear();
-				view.refresh(true, true);
+				updateManipulators();
 				break;
-			}
+			// case Qt::Key_Control:
+			// case Qt::Key_Shift:
+			// {
+			// 	M3dView view = M3dView::active3dView();
+			// 	view.refresh(true, true);
+			// 	break;
+			// }
+			// case Qt::Key_Escape:
+			// {
+			// 	M3dView view = M3dView::active3dView();
+			// 	MVGManipulatorUtil::DisplayData* data = _manipUtil.getCachedDisplayData(view);
+			// 	data->buildPoints2D.clear();
+			// 	view.refresh(true, true);
+			// 	break;
+			// }
 			default:
 				return false;
 		}
 	}
 	// key released
 	else if(e->type() == QEvent::KeyRelease) {
-		Qt::KeyboardModifiers modifiers = QApplication::keyboardModifiers();
 		QKeyEvent * keyevent = static_cast<QKeyEvent*>(e);
 		if (keyevent->isAutoRepeat())
 		 	return false;
-		 
 		switch(keyevent->key()) {
-            case Qt::Key_C:
-            {
+			case Qt::Key_C:
 				_editMode = eModeMove;
-                M3dView view = M3dView::active3dView();
-				DisplayData* data = MVGProjectWrapper::instance().getCachedDisplayData(view);
-				data->buildPoints2D.clear();
 				updateManipulators();
 				break;
-            }
 			case Qt::Key_Control:
-            case Qt::Key_Shift:
-			{
-				M3dView view = M3dView::active3dView();
-				view.refresh(true, true);
+			case Qt::Key_Shift:
+			case Qt::Key_Escape:
+				updateManipulators();
 				break;
-			}
+			// case Qt::Key_C:
+			// {
+			// 	_editMode = eModeMove;
+			// 	M3dView view = M3dView::active3dView();
+			// 	MVGManipulatorUtil::DisplayData* data = _manipUtil.getCachedDisplayData(view);
+			// 	data->buildPoints2D.clear();
+			// 	updateManipulators();
+			// 	break;
+			// }
+			// case Qt::Key_Control:
+			// case Qt::Key_Shift:
+			// {
+			// 	M3dView view = M3dView::active3dView();
+			// 	view.refresh(true, true);
+			// 	break;
+			// }
+			default:
+				return false;
 		}
 	}
 	// mouse button pressed
@@ -190,14 +222,14 @@ bool MVGContext::eventFilter(QObject *obj, QEvent *e)
 	}
 	// mouse enters widget's boundaries
 	else if (e->type() == QEvent::Enter) {
-		// Check if we are entering the MVGWindow
-		QVariant window = obj->property("mvg_window");
-		if(window.type() != QVariant::Invalid)
-		{
-			MVGProjectWrapper::instance().rebuildAllMeshesCacheFromMaya();
-			MVGProjectWrapper::instance().rebuildCacheFromMaya();
-			return false;
-		}
+		// // Check if we are entering the MVGWindow
+		// QVariant window = obj->property("mvg_window");
+		// if(window.type() != QVariant::Invalid)
+		// {
+		// 	_manipUtil.rebuildAllMeshesCacheFromMaya();
+		// 	_manipUtil.rebuildCacheFromMaya();
+		// 	return false;
+		// }
 		// check if we are entering an MVG panel
 		QVariant panelName = obj->property("mvg_panel");
 		if(panelName.type()== QVariant::Invalid)
@@ -216,5 +248,3 @@ MVGEditCmd* MVGContext::newCmd()
 {
 	return (MVGEditCmd *)newToolCommand();
 }
-
-} // namespace

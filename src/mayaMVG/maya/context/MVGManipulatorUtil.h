@@ -23,49 +23,74 @@ class MVGManipulatorUtil {
 
 		struct IntersectionData {
 			std::string meshName;
-			// Index of the intersected point
-			int	pointIndex;
-			// Indexes of the points of the intersected edge
-			MIntArray edgePointIndexes;
-			// Heights (2D and 3D) and ratio of the intersected edge
-			MVector edgeHeight3D;
-			MVector edgeHeight2D;
-			double edgeRatio;
-			// Indexes of the points of the first face connected to intersected point or edge
-			MIntArray facePointIndexes;
+			int	pointIndex; // Index of the intersected point
+			MIntArray edgePointIndexes; // Indexes of the points of the intersected edge
+			MVector edgeHeight3D; // Height (2D) of the intersected edge
+			MVector edgeHeight2D; // Height (3D) of the intersected edge
+			double edgeRatio; // Ratio of the intersected edge
+			MIntArray facePointIndexes; // Indexes of the points of the first face connected to intersected point or edge
+		};
+
+		enum EPointState {
+			eUnMovable = 0
+			, eMovableInSamePlane = 1
+			, eMovableRecompute = 2
+		};
+
+		struct	MVGPoint2D {
+			MPoint projectedPoint3D; // Position in camera coord of the projected associated point 3D
+			MPoint point3D; // Position 3D
+			EPointState movableState; // How the point is movable 
 
 		};
 
+		struct DisplayData {
+			MVGCamera camera;
+			MPointArray buildPoints2D; // Temporary points in Camera before having 3D information
+			std::map<std::string, std::vector<MVGPoint2D> > allPoints2D; // Map mesh to MVGPoints2D
+		};
+
 	public: 
-		MVGManipulatorUtil();
+		MVGManipulatorUtil(MVGContext*);
 	
 	public:
-		// Getters & Setters
+		// getters & setters
 		IntersectionState& intersectionState() { return _intersectionState; }		
 		IntersectionData& intersectionData() { return _intersectionData; }
 		MPointArray& previewFace3D() { return _previewFace3D; }
+		const MVGContext* getContext() const { return _context; }
 		
-		const MVGContext* getContext() const { return _ctx; }
-		void setContext(MVGContext* context) { _ctx = context; }
-		
-		// Intersections
+		// intersections
 		bool intersectPoint(M3dView& view, DisplayData* displayData, const short&x, const short& y);
 		bool intersectEdge(M3dView& view, DisplayData* displayData, const short&x, const short& y);
 		void updateIntersectionState(M3dView& view, DisplayData* data, double mousex, double mousey);
         bool computeEdgeIntersectionData(M3dView& view, DisplayData* data, const MPoint& mousePointInCameraCoord);
 		
-		// Draw
+		// draw
 		void drawPreview3D();
 		
-		// Commands
-		bool addCreateFaceCommand(MVGEditCmd* cmd, MDagPath& meshPath, const MPointArray& facePoints3D);
-		bool addUpdateFaceCommand(MVGEditCmd* cmd, MDagPath& meshPath, const MPointArray& newFacePoints3D, const MIntArray& verticesIndexes);
+		// commands
+		bool addCreateFaceCommand(MDagPath& meshPath, const MPointArray& facePoints3D);
+		bool addUpdateFaceCommand(MDagPath& meshPath, const MPointArray& newFacePoints3D, const MIntArray& verticesIndexes);
+		
+		// cache
+		MStatus rebuildAllMeshesCacheFromMaya(); // Temporary
+		MStatus rebuildMeshCacheFromMaya(MDagPath& meshPath); // Temporary
+		DisplayData* getCachedDisplayData(M3dView& view);
+		std::map<std::string, DisplayData>& getDisplayDataCache() { return _cacheCameraToDisplayData;}
+		std::map<std::string, std::vector<MIntArray> >& getCacheMeshToEdgeArray() { return _cacheMeshToEdgeArray; }
+		std::vector<MIntArray>& getMeshEdges(std::string meshName) { return _cacheMeshToEdgeArray[meshName]; }
+		void rebuildCacheFromMaya();
 		
 	private:
-		MVGContext* _ctx;
+		MVGContext* _context;
 		IntersectionState _intersectionState;
 		IntersectionData _intersectionData;		
 		MPointArray _previewFace3D;
+		std::map<std::string, DisplayData> _cacheCameraToDisplayData;	
+		std::map<std::string, MPointArray> _cacheMeshToPointArray; // Map from meshName to mesh points (Temporary)
+		std::map<std::string, std::vector<EPointState> > _cacheMeshToMovablePoint; // Map from meshName to numConnectedFace by point (Temporary)
+		std::map<std::string, std::vector<MIntArray> > _cacheMeshToEdgeArray; // Map from meshName to edge points ID (Temporary)
 };
 
 } // mayaMVG

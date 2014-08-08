@@ -14,23 +14,20 @@ using namespace mayaMVG;
 
 namespace {
 
-	static const char * helpFlag = "-h";
-	static const char * helpFlagLong = "-help";
 	static const char * projectPathFlag = "-p";
 	static const char * projectPathFlagLong = "-project";
     
-    void currentContextChanged(void* userData) 
-    {
-        if(!userData)
-            return;
-        
-        MString context;
-        MStatus status;
-        status = MVGMayaUtil::getCurrentContext(context);
-        CHECK(status)
-        
-        MVGProjectWrapper::instance().setCurrentContext(QString(context.asChar()));
-    }
+    // void currentContextChanged(void* userData) 
+    // {
+    //     if(!userData)
+    //         return;
+    //     MString context;
+    //     MStatus status;
+    //     status = MVGMayaUtil::getCurrentContext(context);
+    //     CHECK(status)
+    //     MVGProjectWrapper::instance().setCurrentContext(QString(context.asChar()));
+    // }
+    
 }
 
 MCallbackIdArray MVGCmd::_callbackIDs; // = MCallbackIdArray(); // FIXME /!\ 
@@ -47,7 +44,6 @@ void * MVGCmd::creator() {
 
 MSyntax MVGCmd::newSyntax() {
 	MSyntax s;
-	s.addFlag(helpFlag, helpFlagLong);
 	s.addFlag(projectPathFlag, projectPathFlagLong, MSyntax::kString);
 	s.enableEdit(false);
 	s.enableQuery(false);
@@ -61,29 +57,20 @@ MStatus MVGCmd::doIt(const MArgList& args) {
 	MSyntax syntax = MVGCmd::newSyntax();
 	MArgDatabase argData(syntax, args);
 
-	// -h
-	if (argData.isFlagSet(helpFlag)) {
-		// TODO
-	}
-	
 	// create maya window
-	const QStringList& qlist = MVGProjectWrapper::instance().getVisiblePanelNames();
-	std::vector<MString> mlist;
-	mlist.push_back(qlist[0].toStdString().c_str());
-	mlist.push_back(qlist[1].toStdString().c_str());
 	status = MVGMayaUtil::createMVGWindow();
 	if(!status) {
-		LOG_ERROR("Unable to create MVGContext.")
+		LOG_ERROR("Unable to create MVGWindow.")
 		return status;
 	}
-	QWidget* mayaWindow = MVGMayaUtil::getMVGWindow();
-	mayaWindow->setProperty("mvg_window", QString("MVGWindow"));
+
+	// get layout from
 	QWidget* menuLayout = MVGMayaUtil::getMVGMenuLayout();
-	if(!mayaWindow || !menuLayout) {
-		LOG_ERROR("Unable to retrieve MVGWindow.")
+	if(!menuLayout) {
+		LOG_ERROR("Unable to retrieve MVGMenuLayout.")
 		return MS::kFailure;
 	}
-	
+
 	// create maya MVGContext
 	status = MVGMayaUtil::createMVGContext();
 	if(!status) {
@@ -91,13 +78,21 @@ MStatus MVGCmd::doIt(const MArgList& args) {
 		return status;
 	}
 
-	const QString& leftPanelName = MVGProjectWrapper::instance().getVisiblePanelNames().at(0);
-	const QString& rightPanelName = MVGProjectWrapper::instance().getVisiblePanelNames().at(1);
-	
+	// set window properties
+	QWidget* mayaWindow = MVGMayaUtil::getMVGWindow();
+	if(!mayaWindow) {
+		LOG_ERROR("Unable to retrieve MVGWindow.")
+		return MS::kFailure;
+	}
+	mayaWindow->setProperty("mvg_window", QString("MVGWindow"));
+
+	// set layout properties
+	const QString& leftPanelName = "mvgLPanel";
+	const QString& rightPanelName = "mvgRPanel";
 	QWidget* leftViewport = MVGMayaUtil::getMVGViewportLayout(leftPanelName.toStdString().c_str());
 	QWidget* rightViewport = MVGMayaUtil::getMVGViewportLayout(rightPanelName.toStdString().c_str());
 	if(!leftViewport || !rightViewport) {
-		LOG_ERROR("Unable to retrieve maya viewport layouts.");
+		LOG_ERROR("Unable to retrieve MVG panels.");
 		return MS::kFailure;
 	}
 	leftViewport->setProperty("mvg_panel", leftPanelName);
@@ -107,20 +102,19 @@ MStatus MVGCmd::doIt(const MArgList& args) {
 	MVGMainWidget* mainWidget = new MVGMainWidget(menuLayout);
 	MQtUtil::addWidgetToMayaLayout(mainWidget->view(), menuLayout);
 	
-	// Reload project from Maya
-	MVGProjectWrapper::instance().reloadProjectFromMaya();
-	MVGProjectWrapper::instance().rebuildAllMeshesCacheFromMaya();
+	// // Reload project from Maya
+	// MVGProjectWrapper::instance().reloadProjectFromMaya();
+	// MVGProjectWrapper::instance().rebuildAllMeshesCacheFromMaya();
 
-    
-    //Maya callbacks
-	_callbackIDs.append(MEventMessage::addEventCallback("PostToolChanged", currentContextChanged, mayaWindow));
+	//Maya callbacks
+	// _callbackIDs.append(MEventMessage::addEventCallback("PostToolChanged", currentContextChanged, mayaWindow));
 
 	// -p
-	if(argData.isFlagSet(projectPathFlag)) {
-		MString projectPath;
-		argData.getFlagArgument(projectPathFlag, 0, projectPath);
-		MVGProjectWrapper::instance().loadProject(MQtUtil::toQString(projectPath));
-	}
+	// if(argData.isFlagSet(projectPathFlag)) {
+	// 	MString projectPath;
+	// 	argData.getFlagArgument(projectPathFlag, 0, projectPath);
+	// 	MVGProjectWrapper::instance().loadProject(MQtUtil::toQString(projectPath));
+	// }
 
 	return status;
 }

@@ -9,18 +9,18 @@
 #include <maya/MArgDatabase.h>
 #include <maya/MGlobal.h>
 
-namespace mayaMVG {
-
-MString MVGEditCmd::name("MVGEditCmd");
-
-namespace { // empty namespace
+namespace { // empty
 
 	static const char* createFlag = "-cr";
 	static const char* createFlagLong = "-create";
 	static const char* moveFlag = "-mv";
 	static const char* moveFlagLong = "-move";
 
-} // empty namespace
+} // empty
+
+using namespace mayaMVG;
+
+MString MVGEditCmd::name("MVGEditCmd");
 
 MVGEditCmd::MVGEditCmd() 
 	: _flags(0)
@@ -92,8 +92,8 @@ MStatus MVGEditCmd::redoIt()
             _points[i] = oldPoint;
 		}
 	}
-	MVGProjectWrapper::instance().rebuildMeshCacheFromMaya(_meshPath);
-	MVGProjectWrapper::instance().rebuildCacheFromMaya();
+	// MVGProjectWrapper::instance().rebuildMeshCacheFromMaya(_meshPath);
+	// MVGProjectWrapper::instance().rebuildCacheFromMaya();
 	return status;
 }
 
@@ -128,8 +128,8 @@ MStatus MVGEditCmd::undoIt()
             _points[i] = oldPoint;
 		}
 	}
-	MVGProjectWrapper::instance().rebuildAllMeshesCacheFromMaya();
-	MVGProjectWrapper::instance().rebuildCacheFromMaya();
+	// MVGProjectWrapper::instance().rebuildAllMeshesCacheFromMaya();
+	// MVGProjectWrapper::instance().rebuildCacheFromMaya();
 	return status;
 }
 
@@ -169,5 +169,3 @@ void MVGEditCmd::doMove(const MDagPath& meshPath, const MPointArray& points, con
 	_points = points;
 	_indexes = verticesIndexes;
 }
-
-} //mayaMVG

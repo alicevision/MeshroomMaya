@@ -1,8 +1,9 @@
 #pragma once
 
+#include "mayaMVG/maya/context/MVGManipulatorUtil.h"
+#include "mayaMVG/qt/MVGEventFilter.h"
 #include <maya/MPxContext.h>
 #include <maya/MDagPath.h>
-#include "mayaMVG/qt/MVGEventFilter.h"
 
 class MPxManipulatorNode;
 class M3dView;
@@ -53,6 +54,7 @@ class MVGContext: public MPxContext {
         MVGEventFilter<MVGContext> _filterLV;
         MVGEventFilter<MVGContext> _filterRV;
         EditMode _editMode;
+        MVGManipulatorUtil _manipUtil;
 };
 
 } // namespace

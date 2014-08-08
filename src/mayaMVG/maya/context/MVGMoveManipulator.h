@@ -32,10 +32,10 @@ class MVGMoveManipulator: public MPxManipulatorNode
 		virtual void drawUI(MHWRender::MUIDrawManager&,	const MHWRender::MFrameContext&) const;
 
 	public:
-		void setContext(MVGContext* ctx);
-		
+		void setManipUtil(MVGManipulatorUtil* m) { _manipUtil = m; }
+
 	private:
-		MPoint updateMouse(M3dView& view, DisplayData* data, short& mousex, short& mousey);
+		MPoint updateMouse(M3dView& view, MVGManipulatorUtil::DisplayData* data, short& mousex, short& mousey);
 		
 		// Draw
 		void drawCursor(float mousex, float mousey);
@@ -43,19 +43,18 @@ class MVGMoveManipulator: public MPxManipulatorNode
 		void drawMoveInPlaneCursor(float mousex, float mousey);
 		void drawMoveRecomputePlaneCursor(float mousex, float mousey);
 		void drawIntersections(M3dView& view);
-        void drawTriangulationDisplay(M3dView& view, DisplayData* data, float mousex, float mousey);
+        void drawTriangulationDisplay(M3dView& view, MVGManipulatorUtil::DisplayData* data, float mousex, float mousey);
 			
 		// Compute
-		void computeTmpFaceOnMovePoint(M3dView& view, DisplayData* data, MPoint& mousePoint, bool recompute=false);
-		void computeTmpFaceOnMoveEdge(M3dView& view, DisplayData* data, MPoint& mousePoint, bool recompute=false);
+		void computeTmpFaceOnMovePoint(M3dView& view, MVGManipulatorUtil::DisplayData* data, MPoint& mousePoint, bool recompute=false);
+		void computeTmpFaceOnMoveEdge(M3dView& view, MVGManipulatorUtil::DisplayData* data, MPoint& mousePoint, bool recompute=false);
 		bool triangulate(M3dView& view, MVGManipulatorUtil::IntersectionData& intersectionData, MPoint& mousePointInCameraCoord, MPoint& resultPoint3D);
 		bool triangulateEdge(M3dView& view, MVGManipulatorUtil::IntersectionData& intersectionData, MPoint& mousePointInCameraCoord, MPointArray& resultPoint3D);
         
 public:
 		static MTypeId _id;
-		MVGManipulatorUtil _manipUtils;
 		EMoveState _moveState;
-
+		MVGManipulatorUtil* _manipUtil;
 };
 
 } // namespace

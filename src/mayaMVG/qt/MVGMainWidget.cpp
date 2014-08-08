@@ -1,6 +1,5 @@
 #include "mayaMVG/qt/MVGMainWidget.h"
 #include "mayaMVG/qt/QmlInstantCoding.h"
-#include "mayaMVG/qt/MVGProjectWrapper.h"
 #include "mayaMVG/qt/QWheelArea.h"
 #include <QtDeclarative/qdeclarativecontext.h>
 #include <QGraphicsObject>
@@ -16,8 +15,7 @@ MVGMainWidget::MVGMainWidget(QWidget * parent)
 
 	_view = new QDeclarativeView(parent);
 	
-	MVGProjectWrapper& project = MVGProjectWrapper::instance();
-	QString importDirectory = project.moduleDirectory()+"/qml";
+	QString importDirectory = _projectWrapper.moduleDirectory()+"/qml";
 	QString sourceDirectory = importDirectory+"/mvg/main.qml";
 
 	// QtDesktop Components
@@ -25,7 +23,7 @@ MVGMainWidget::MVGMainWidget(QWidget * parent)
 	_view->engine()->addImportPath(importDirectory);
 
 	// Expose Project to QML
-	_view->rootContext()->setContextProperty("_project", &project);
+	_view->rootContext()->setContextProperty("_project", &_projectWrapper);
 
 	// Qml source
 	_view->setSource(QUrl::fromLocalFile(sourceDirectory));
