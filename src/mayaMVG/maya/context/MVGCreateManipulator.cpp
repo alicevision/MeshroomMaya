@@ -45,29 +45,35 @@ void MVGCreateManipulator::draw(M3dView & view, const MDagPath & path,
 
 	view.beginGL();
 
-	// enable gl picking
-	// will call manipulator::doPress/doRelease 
-	MGLuint glPickableItem;
-	glFirstHandle(glPickableItem);
-	colorAndName(view, glPickableItem, true, mainColor());
+    // CLEAN the input maya OpenGL State
+    glDisable(GL_POLYGON_STIPPLE);
+    glDisable(GL_LINE_STIPPLE);
+    
+    {
+        // enable gl picking
+        // will call manipulator::doPress/doRelease 
+        MGLuint glPickableItem;
+        glFirstHandle(glPickableItem);
+        colorAndName(view, glPickableItem, true, mainColor());
 
-	// Preview 3D (while extending edge)
-	_manipUtils.drawPreview3D();
-	
-	// Draw	
-	MVGDrawUtil::begin2DDrawing(view);
-		MVGDrawUtil::drawCircle(0, 0, 1, 5); // needed - FIXME
-		
-		// Draw only in active view
-		if(MVGMayaUtil::isActiveView(view))
-		{
-			drawCursor(mousex, mousey);
-			drawIntersections(view, mousex, mousey);
-			glColor3f(1.f, 0.f, 0.f);
-			drawPreview2D(view, data);
-		}
+        // Preview 3D (while extending edge)
+        _manipUtils.drawPreview3D();
 
-	MVGDrawUtil::end2DDrawing();
+        // Draw	
+        MVGDrawUtil::begin2DDrawing(view);
+            MVGDrawUtil::drawCircle(0, 0, 1, 5); // needed - FIXME
+
+            // Draw only in active view
+            if(MVGMayaUtil::isActiveView(view))
+            {
+                drawCursor(mousex, mousey);
+                drawIntersections(view, mousex, mousey);
+                glColor3f(1.f, 0.f, 0.f);
+                drawPreview2D(view, data);
+            }
+
+        MVGDrawUtil::end2DDrawing();
+    }
 	view.endGL();
 }
 

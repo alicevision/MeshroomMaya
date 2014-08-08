@@ -45,53 +45,60 @@ void MVGMoveManipulator::draw(M3dView & view, const MDagPath & path,
 	
 	short mousex, mousey;
 	MPoint mousePoint = updateMouse(view, data, mousex, mousey);
-	
+    
 	view.beginGL();
+    
+    // CLEAN the input maya OpenGL State
+    glDisable(GL_POLYGON_STIPPLE);
+    glDisable(GL_LINE_STIPPLE);
+    
+    {
+        // Enable gl picking
+        // Will call manipulator::doPress/doRelease 
+        MGLuint glPickableItem;
+        glFirstHandle(glPickableItem);
+        colorAndName(view, glPickableItem, true, mainColor());
 
-	// Enable gl picking
-	// Will call manipulator::doPress/doRelease 
-	MGLuint glPickableItem;
-	glFirstHandle(glPickableItem);
-	colorAndName(view, glPickableItem, true, mainColor());
-		
-	// Preview 3D 
-	_manipUtils.drawPreview3D();
-	
-	// Draw	
-	MVGDrawUtil::begin2DDrawing(view);
-	MVGDrawUtil::drawCircle(0, 0, 1, 5); // needed - FIXME
-						
-	if(MVGMayaUtil::isActiveView(view))
-	{			
-		drawCursor(mousex, mousey);
-		drawIntersections(view);
+        // Preview 3D 
+        _manipUtils.drawPreview3D();
 
-        Qt::KeyboardModifiers modifiers = QApplication::keyboardModifiers();
-        if(modifiers & Qt::NoModifier) {
-            switch(_moveState)
-            {
-                case eMoveNone:
-                    break;
-                case eMovePoint:
-                    drawTriangulationDisplay(view, data, mousex, mousey);
-                    break;
-                case eMoveEdge:
-                    short x, y;
-                    MPoint P1 = mousePoint + _manipUtils.intersectionData().edgeRatio * _manipUtils.intersectionData().edgeHeight2D;
-                    MPoint P0 = mousePoint  - (1 - _manipUtils.intersectionData().edgeRatio) * _manipUtils.intersectionData().edgeHeight2D;
-                    glBegin(GL_LINES);
-                        MVGGeometryUtil::cameraToView(view, P1, x, y);
-                        glVertex2f(x, y);
-                        MVGGeometryUtil::cameraToView(view, P0, x, y);
-                        glVertex2f(x, y);
-                    glEnd();
-                    break;
+        // Draw	
+        MVGDrawUtil::begin2DDrawing(view);
+        MVGDrawUtil::drawCircle(0, 0, 1, 5); // needed - FIXME
+
+        if(MVGMayaUtil::isActiveView(view))
+        {		
+            drawCursor(mousex, mousey);
+            drawIntersections(view);
+
+            Qt::KeyboardModifiers modifiers = QApplication::keyboardModifiers();
+            //if(modifiers & Qt::NoModifier) { // Does not work
+            if(!(modifiers & Qt::ControlModifier) && !(modifiers & Qt::ShiftModifier)) {
+                switch(_moveState)
+                {
+                    case eMoveNone:
+                        break;
+                    case eMovePoint:
+                        drawTriangulationDisplay(view, data, mousex, mousey);
+                        break;
+                    case eMoveEdge:
+                        short x, y;
+                        MPoint P1 = mousePoint + _manipUtils.intersectionData().edgeRatio * _manipUtils.intersectionData().edgeHeight2D;
+                        MPoint P0 = mousePoint  - (1 - _manipUtils.intersectionData().edgeRatio) * _manipUtils.intersectionData().edgeHeight2D;
+                        glBegin(GL_LINES);
+                            MVGGeometryUtil::cameraToView(view, P1, x, y);
+                            glVertex2f(x, y);
+                            MVGGeometryUtil::cameraToView(view, P0, x, y);
+                            glVertex2f(x, y);
+                        glEnd();
+                        break;
+                }
             }
         }
-	}
-		
-	MVGDrawUtil::end2DDrawing();
-	view.endGL();
+
+        MVGDrawUtil::end2DDrawing();
+    }   
+    view.endGL();
 }
 
 MStatus MVGMoveManipulator::doPress(M3dView& view)
@@ -264,11 +271,15 @@ MStatus MVGMoveManipulator::doDrag(M3dView& view)
             {
                 if(meshPoints[intersectionData.pointIndex].movableState >= eMovableInSamePlane)
                     computeTmpFaceOnMovePoint(view, data, mousePoint);
+                else
+                    USER_WARNING("Can't move this point")
             }
             else if(modifiers & Qt::ShiftModifier)
             {
                 if(meshPoints[intersectionData.pointIndex].movableState == eMovableRecompute)
                     computeTmpFaceOnMovePoint(view, data, mousePoint, true);
+                else
+                    USER_WARNING("Can't move this point")
             }
             else {
                 _manipUtils.previewFace3D().clear();
@@ -437,7 +448,7 @@ void MVGMoveManipulator::drawIntersections(M3dView& view)
 				glVertex2f(point.x, point.y);
 			glEnd();	
 			break;
-	}	
+	}
 }
 
 void MVGMoveManipulator::drawTriangulationDisplay(M3dView& view, DisplayData* data, float mousex, float mousey)
@@ -452,6 +463,7 @@ void MVGMoveManipulator::drawTriangulationDisplay(M3dView& view, DisplayData* da
         // Mouse
         glVertex2f(mousex, mousey);
     glEnd();
+    glDisable(GL_LINE_STIPPLE);
 }
 
 void MVGMoveManipulator::computeTmpFaceOnMovePoint(M3dView& view, DisplayData* data, MPoint& mousePoint, bool recompute)

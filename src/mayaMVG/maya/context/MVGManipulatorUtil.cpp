@@ -171,7 +171,6 @@ void MVGManipulatorUtil::drawPreview3D()
 			glVertex3f(_previewFace3D[3].x, _previewFace3D[3].y, _previewFace3D[3].z);
 		glEnd();
 		glLineWidth(1.f);
-		glDisable(GL_LINE_STIPPLE);
 			glColor4f(1.f, 1.f, 1.f, 0.6f);
 			glBegin(GL_POLYGON);
 				glVertex3f(_previewFace3D[0].x, _previewFace3D[0].y, _previewFace3D[0].z);
