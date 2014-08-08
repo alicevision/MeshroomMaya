@@ -49,15 +49,6 @@ void MVGContext::updateManipulators()
 				MPxManipulatorNode::newManipulator("MVGCreateManipulator", manipObject, &status));
 			if(!status || !manip)
 				return;
-			
-			_manipUtil.rebuildAllMeshesCacheFromMaya();
-			_manipUtil.rebuildCacheFromMaya();
-			M3dView view = M3dView::active3dView();
-			MVGManipulatorUtil::DisplayData* data = _manipUtil.getCachedDisplayData(view);
-			if(data)
-				data->buildPoints2D.clear();
-			
-			// set
 			manip->setManipUtil(&_manipUtil);
 			break;
 		}
@@ -66,14 +57,6 @@ void MVGContext::updateManipulators()
 				MPxManipulatorNode::newManipulator("MVGMoveManipulator", manipObject, &status));
 			if(!status || !manip)
 				return;
-
-			_manipUtil.rebuildAllMeshesCacheFromMaya();
-			_manipUtil.rebuildCacheFromMaya();
-			M3dView view = M3dView::active3dView();
-			MVGManipulatorUtil::DisplayData* data = _manipUtil.getCachedDisplayData(view);
-			if(data)
-				data->buildPoints2D.clear();
-
 			manip->setManipUtil(&_manipUtil);
 			break;
 		}

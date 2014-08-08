@@ -55,7 +55,7 @@ void MVGMoveManipulator::draw(M3dView & view, const MDagPath & path,
 	// retrieve display data
 	MVGManipulatorUtil::DisplayData* data = NULL;
 	if(_manipUtil)
-		data = _manipUtil->getCachedDisplayData(view);
+		data = _manipUtil->getDisplayData(view);
 	
 	// stop drawing in case of no data or not the active view
 	if(!data || !MVGMayaUtil::isActiveView(view)) {
@@ -66,7 +66,7 @@ void MVGMoveManipulator::draw(M3dView & view, const MDagPath & path,
 	
 	// update mouse coordinates & get it in camera space
 	short mousex, mousey;
-	MPoint mousePoint = updateMouse(view, data, mousex, mousey);
+	MPoint mousePoint = updateMouse(view, mousex, mousey);
 
 	// draw 
 	drawCursor(mousex, mousey);
@@ -104,12 +104,12 @@ MStatus MVGMoveManipulator::doPress(M3dView& view)
 
 	MVGManipulatorUtil::DisplayData* data = NULL;
 	if(_manipUtil)
-		data = _manipUtil->getCachedDisplayData(view);
+		data = _manipUtil->getDisplayData(view);
 	if(!data)
 		return MS::kFailure;
     
 	short mousex, mousey;
-	MPoint mousePoint = updateMouse(view, data, mousex, mousey);
+	MPoint mousePoint = updateMouse(view, mousex, mousey);
 	MVGManipulatorUtil::IntersectionData& intersectionData = _manipUtil->intersectionData();	
 	_manipUtil->updateIntersectionState(view, data, mousex, mousey);
     
@@ -145,18 +145,12 @@ MStatus MVGMoveManipulator::doRelease(M3dView& view)
 {	
 	MVGManipulatorUtil::DisplayData* data = NULL;
 	if(_manipUtil)
-		data = _manipUtil->getCachedDisplayData(view);
+		data = _manipUtil->getDisplayData(view);
 	if(!data)
 		return MS::kFailure;
 	
-	// Undo/Redo
-	if(!_manipUtil->getContext()) {
-	   LOG_ERROR("invalid context object.")
-	   return MS::kFailure;
-	}
-	
 	short mousex, mousey;
-	MPoint mousePoint = updateMouse(view, data, mousex, mousey);
+	MPoint mousePoint = updateMouse(view, mousex, mousey);
 	
 	MVGManipulatorUtil::IntersectionData& intersectionData = _manipUtil->intersectionData();
     Qt::KeyboardModifiers modifiers = QApplication::keyboardModifiers();
@@ -229,7 +223,7 @@ MStatus MVGMoveManipulator::doMove(M3dView& view, bool& refresh)
 	
 	MVGManipulatorUtil::DisplayData* data = NULL;
 	if(_manipUtil)
-		data = _manipUtil->getCachedDisplayData(view);
+		data = _manipUtil->getDisplayData(view);
 	if(!data)
 		return MS::kFailure;
 
@@ -245,12 +239,12 @@ MStatus MVGMoveManipulator::doDrag(M3dView& view)
 {		
 	MVGManipulatorUtil::DisplayData* data = NULL;
 	if(_manipUtil)
-		data = _manipUtil->getCachedDisplayData(view);
+		data = _manipUtil->getDisplayData(view);
 	if(!data)
 		return MS::kFailure;
 	
 	short mousex, mousey;
-	MPoint mousePoint = updateMouse(view, data, mousex, mousey);
+	MPoint mousePoint = updateMouse(view, mousex, mousey);
 	
 	MVGManipulatorUtil::IntersectionData& intersectionData = _manipUtil->intersectionData();
 	std::vector<MVGManipulatorUtil::MVGPoint2D>& meshPoints = data->allPoints2D[intersectionData.meshName];
@@ -298,7 +292,7 @@ void MVGMoveManipulator::preDrawUI(const M3dView& view)
 {
 }
 
-MPoint MVGMoveManipulator::updateMouse(M3dView& view, MVGManipulatorUtil::DisplayData* data, short& mousex, short& mousey)
+MPoint MVGMoveManipulator::updateMouse(M3dView& view, short& mousex, short& mousey)
 {
 	mousePosition(mousex, mousey);
 	MPoint mousePointInCameraCoord;
@@ -339,7 +333,7 @@ void MVGMoveManipulator::drawMoveRecomputePlaneCursor(float mousex, float mousey
 		
 void MVGMoveManipulator::drawIntersections(M3dView& view)
 {
-	MVGManipulatorUtil::DisplayData* data = _manipUtil->getCachedDisplayData(view);
+	MVGManipulatorUtil::DisplayData* data = _manipUtil->getDisplayData(view);
 	if(!data || data->allPoints2D.empty())
 		return;
 
@@ -555,30 +549,34 @@ bool MVGMoveManipulator::triangulate(M3dView& view, MVGManipulatorUtil::Intersec
 	MPointArray points2D;
 	points2D.append(mousePointInCameraCoord);
 
-	std::map<std::string, MVGManipulatorUtil::DisplayData>& displayDataCache = _manipUtil->getDisplayDataCache();
-    if(displayDataCache.size() == 1)
-    {
-        USER_WARNING("Can't triangulate with the same camera")
-        return false;
-    }
+	// std::map<std::string, MVGManipulatorUtil::DisplayData>& displayDataCache = _manipUtil->getDisplayDataCache();
+ //    if(displayDataCache.size() == 1)
+ //    {
+ //        USER_WARNING("Can't triangulate with the same camera")
+ //        return false;
+ //    }
 
     MDagPath cameraPath;
 	view.getCamera(cameraPath);
-	MVGManipulatorUtil::DisplayData* otherData;
-	for(std::map<std::string, MVGManipulatorUtil::DisplayData>::iterator it = displayDataCache.begin(); it != displayDataCache.end(); ++it)
-	{
-		if(it->first != cameraPath.fullPathName().asChar())
-			otherData = (&it->second);
-	}
-	if(!otherData)
+	// MVGManipulatorUtil::DisplayData* otherData;
+	// for(std::map<std::string, MVGManipulatorUtil::DisplayData>::iterator it = displayDataCache.begin(); it != displayDataCache.end(); ++it)
+	// {
+	// 	if(it->first != cameraPath.fullPathName().asChar())
+	// 		otherData = (&it->second);
+	// }
+	// if(!otherData)
+	// 	return false;
+
+	MVGManipulatorUtil::DisplayData* complementaryData = _manipUtil->getComplementaryDisplayData(view);
+	if(!complementaryData)
 		return false;
-	std::vector<MVGManipulatorUtil::MVGPoint2D>& mvgPoints = otherData->allPoints2D[intersectionData.meshName];
+
+	std::vector<MVGManipulatorUtil::MVGPoint2D>& mvgPoints = complementaryData->allPoints2D[intersectionData.meshName];
 	points2D.append(mvgPoints[intersectionData.pointIndex].projectedPoint3D);
 
-	// MVGCameras
 	std::vector<MVGCamera> cameras;
 	cameras.push_back(MVGCamera(cameraPath));
-	cameras.push_back(otherData->camera);
+	cameras.push_back(complementaryData->camera);
 
 	MVGGeometryUtil::triangulatePoint(points2D, cameras, resultPoint3D);
 	return true;
@@ -593,33 +591,37 @@ bool MVGMoveManipulator::triangulateEdge(M3dView& view, MVGManipulatorUtil::Inte
     MPoint P0 = mousePointInCameraCoord - (1 - intersectionData.edgeRatio) * intersectionData.edgeHeight2D;
     array0.append(P0);
     
-	std::map<std::string, MVGManipulatorUtil::DisplayData>& displayDataCache = _manipUtil->getDisplayDataCache();
-    if(displayDataCache.size() == 1)
-    {
-        USER_WARNING("Can't triangulate with the same camera")
-        return false;
-    }
+	// std::map<std::string, MVGManipulatorUtil::DisplayData>& displayDataCache = _manipUtil->getDisplayDataCache();
+ //    if(displayDataCache.size() == 1)
+ //    {
+ //        USER_WARNING("Can't triangulate with the same camera")
+ //        return false;
+ //    }
 
     MDagPath cameraPath;
 	view.getCamera(cameraPath);
-	MVGManipulatorUtil::DisplayData* otherData;
-	for(std::map<std::string, MVGManipulatorUtil::DisplayData>::iterator it = displayDataCache.begin(); it != displayDataCache.end(); ++it)
-	{
-		if(it->first != cameraPath.fullPathName().asChar())
-			otherData = (&it->second);
-	}
-	if(!otherData)
-		return false;
+	// MVGManipulatorUtil::DisplayData* otherData;
+	// for(std::map<std::string, MVGManipulatorUtil::DisplayData>::iterator it = displayDataCache.begin(); it != displayDataCache.end(); ++it)
+	// {
+	// 	if(it->first != cameraPath.fullPathName().asChar())
+	// 		otherData = (&it->second);
+	// }
+	// if(!otherData)
+	// 	return false;
     
+    MVGManipulatorUtil::DisplayData* complementaryData = _manipUtil->getComplementaryDisplayData(view);
+	if(!complementaryData)
+		return false;
+
     // Edge points
-	std::vector<MVGManipulatorUtil::MVGPoint2D>& mvgPoints = otherData->allPoints2D[intersectionData.meshName];
+	std::vector<MVGManipulatorUtil::MVGPoint2D>& mvgPoints = complementaryData->allPoints2D[intersectionData.meshName];
     array0.append(mvgPoints[intersectionData.edgePointIndexes[0]].projectedPoint3D);
     array1.append(mvgPoints[intersectionData.edgePointIndexes[1]].projectedPoint3D);
     
 	// MVGCameras
     std::vector<MVGCamera> cameras;
     cameras.push_back(MVGCamera(cameraPath));
-    cameras.push_back(otherData->camera);
+    cameras.push_back(complementaryData->camera);
         
     MPoint result;
 	MVGGeometryUtil::triangulatePoint(array0, cameras, result);

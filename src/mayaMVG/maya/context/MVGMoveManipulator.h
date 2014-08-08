@@ -35,7 +35,7 @@ class MVGMoveManipulator: public MPxManipulatorNode
 		void setManipUtil(MVGManipulatorUtil* m) { _manipUtil = m; }
 
 	private:
-		MPoint updateMouse(M3dView& view, MVGManipulatorUtil::DisplayData* data, short& mousex, short& mousey);
+		MPoint updateMouse(M3dView& view, short& mousex, short& mousey);
 		
 		// Draw
 		void drawCursor(float mousex, float mousey);

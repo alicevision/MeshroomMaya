@@ -231,22 +231,15 @@ bool MVGManipulatorUtil::addUpdateFaceCommand(MDagPath& meshPath, const MPointAr
 		cmd->finalize();
 }
 
-
-MVGManipulatorUtil::DisplayData* MVGManipulatorUtil::getCachedDisplayData(M3dView& view)
-{		
-	if(!MVGMayaUtil::isMVGView(view))
-		return NULL;
-	MDagPath cameraPath;
-	view.getCamera(cameraPath);
-	std::map<std::string, DisplayData>::iterator it = _cacheCameraToDisplayData.find(cameraPath.fullPathName().asChar());
-	if(it != _cacheCameraToDisplayData.end())
-		return &(it->second);
-	return NULL;
+void MVGManipulatorUtil::reset()
+{
+	rebuildAllMeshesCacheFromMaya();
+	rebuild();
 }
 
-void MVGManipulatorUtil::rebuildCacheFromMaya() 
+void MVGManipulatorUtil::rebuild() 
 {	
-	LOG_INFO("MVGManipulatorUtil::rebuildCacheFromMaya")
+	LOG_INFO("MVGManipulatorUtil::rebuild")
 	_cacheCameraToDisplayData.clear();
 	// Rebuild for temporary cache
 	// TODO: remove to use directly data from Maya
@@ -299,7 +292,9 @@ MStatus MVGManipulatorUtil::rebuildAllMeshesCacheFromMaya()
 	_cacheMeshToPointArray.clear();
 	_cacheMeshToMovablePoint.clear();
 	_cacheMeshToEdgeArray.clear();
+	
 	// Retrieves all meshes
+	// TODO Use MVGMesh::list()
 	MDagPath path;
 	MItDependencyNodes it(MFn::kMesh);
 	for(; !it.isDone(); it.next()) {
@@ -307,7 +302,6 @@ MStatus MVGManipulatorUtil::rebuildAllMeshesCacheFromMaya()
 		MDagPath::getAPathTo(fn.object(), path);
 		status = rebuildMeshCacheFromMaya(path);
 	}
-	
 	return status;
 }
 
@@ -368,12 +362,10 @@ MStatus MVGManipulatorUtil::rebuildMeshCacheFromMaya(MDagPath& meshPath)
 		vertexIt.next();
 	}
 	_cacheMeshToMovablePoint[meshPath.fullPathName().asChar()] = movableStates;	
-	
 	// Mesh edges
 	MItMeshEdge edgeIt(meshPath, MObject::kNullObj, &status);
 	if(!status)
 		return MS::kFailure;
-	
 	while(!edgeIt.isDone())
 	{
 		MIntArray pointIndexArray;
@@ -384,4 +376,27 @@ MStatus MVGManipulatorUtil::rebuildMeshCacheFromMaya(MDagPath& meshPath)
 	}
 	_cacheMeshToEdgeArray[meshPath.fullPathName().asChar()] = meshEdges;	
 	return status;
+}
+
+MVGManipulatorUtil::DisplayData* MVGManipulatorUtil::getDisplayData(M3dView& view)
+{		
+	MDagPath path;
+	view.getCamera(path);
+	std::map<std::string, DisplayData>::iterator it = _cacheCameraToDisplayData.find(path.fullPathName().asChar());
+	if(it != _cacheCameraToDisplayData.end())
+		return &(it->second);
+	return NULL;
+}
+
+MVGManipulatorUtil::DisplayData* MVGManipulatorUtil::getComplementaryDisplayData(M3dView& view)
+{		
+	MDagPath path;
+	view.getCamera(path);
+	std::map<std::string, MVGManipulatorUtil::DisplayData>::iterator it = _cacheCameraToDisplayData.begin();
+	for(;it != _cacheCameraToDisplayData.end(); ++it) {
+		if(it->first != path.fullPathName().asChar()) {
+			return &(it->second);
+		}
+	}
+	return NULL;
 }

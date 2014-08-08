@@ -52,7 +52,7 @@ void MVGCreateManipulator::draw(M3dView & view, const MDagPath & path,
 	// retrieve display data
 	MVGManipulatorUtil::DisplayData* data = NULL;
 	if(_manipUtil)
-		data = _manipUtil->getCachedDisplayData(view);
+		data = _manipUtil->getDisplayData(view);
 	
 	// stop drawing in case of no data or not the active view
 	if(!data || !MVGMayaUtil::isActiveView(view)) {
@@ -63,7 +63,7 @@ void MVGCreateManipulator::draw(M3dView & view, const MDagPath & path,
 	
 	// update mouse coordinates & get it in camera space
 	short mousex, mousey;
-	updateMouse(view, data, mousex, mousey);
+	updateMouse(view, mousex, mousey);
 
 	// draw 
 	drawCursor(mousex, mousey);
@@ -82,20 +82,13 @@ MStatus MVGCreateManipulator::doPress(M3dView& view)
 	
 	MVGManipulatorUtil::DisplayData* data = NULL;
 	if(_manipUtil)
-		data = _manipUtil->getCachedDisplayData(view);
+		data = _manipUtil->getDisplayData(view);
 	if(!data)
 		return MS::kFailure;
-	LOG_INFO("MVGCreateManipulator::doPress")
-	
-	// Undo/Redo
-	if(!_manipUtil->getContext()) {
-	   LOG_ERROR("invalid context object.")
-	   return MS::kFailure;
-	}
 	
 	short mousex, mousey;
 	MPoint mousePoint;
-	mousePoint = updateMouse(view, data, mousex, mousey);
+	mousePoint = updateMouse(view, mousex, mousey);
 
     _manipUtil->updateIntersectionState(view, data, mousex, mousey);
 	switch(_manipUtil->intersectionState()) {
@@ -132,15 +125,9 @@ MStatus MVGCreateManipulator::doRelease(M3dView& view)
 {	
 	MVGManipulatorUtil::DisplayData* data = NULL;
 	if(_manipUtil)
-		data = _manipUtil->getCachedDisplayData(view);
+		data = _manipUtil->getDisplayData(view);
 	if(!data)
 		return MS::kFailure;
-	
-	// Undo/Redo
-	if(!_manipUtil->getContext()) {
-	   LOG_ERROR("invalid context object.")
-	   return MS::kFailure;
-	}
 	
 	switch(_createState) {
 		case eCreateNone:
@@ -166,7 +153,7 @@ MStatus MVGCreateManipulator::doMove(M3dView& view, bool& refresh)
 {	
 	MVGManipulatorUtil::DisplayData* data = NULL;
 	if(_manipUtil)
-		data = _manipUtil->getCachedDisplayData(view);
+		data = _manipUtil->getDisplayData(view);
 	if(!data)
 		return MS::kFailure;
 	
@@ -183,13 +170,13 @@ MStatus MVGCreateManipulator::doDrag(M3dView& view)
 {
 	MVGManipulatorUtil::DisplayData* data = NULL;
 	if(_manipUtil)
-		data = _manipUtil->getCachedDisplayData(view);
+		data = _manipUtil->getDisplayData(view);
 	if(!data)
 		return MS::kFailure;
 	
 	short mousex, mousey;
 	MPoint mousePoint;
-	mousePoint = updateMouse(view, data, mousex, mousey);
+	mousePoint = updateMouse(view, mousex, mousey);
 		
 	switch(_createState) {
 		case eCreateNone:
@@ -215,12 +202,11 @@ void MVGCreateManipulator::drawUI(MHWRender::MUIDrawManager& drawManager, const 
 	drawManager.endDrawable();
 }
 
-MPoint MVGCreateManipulator::updateMouse(M3dView& view, MVGManipulatorUtil::DisplayData* data, short& mousex, short& mousey)
+MPoint MVGCreateManipulator::updateMouse(M3dView& view, short& mousex, short& mousey)
 {
 	mousePosition(mousex, mousey);
 	MPoint mousePointInCameraCoord;
 	MVGGeometryUtil::viewToCamera(view, mousex, mousey, mousePointInCameraCoord);
-	
 	return mousePointInCameraCoord;
 }
 
@@ -243,7 +229,7 @@ void MVGCreateManipulator::drawIntersections(M3dView& view, float mousex, float 
 {
 	MVGManipulatorUtil::DisplayData* data = NULL;
 	if(_manipUtil)
-		data = _manipUtil->getCachedDisplayData(view);
+		data = _manipUtil->getDisplayData(view);
 	if(!data || data->allPoints2D.empty())
 		return;
 	

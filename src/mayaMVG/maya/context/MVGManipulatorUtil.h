@@ -37,11 +37,10 @@ class MVGManipulatorUtil {
 			, eMovableRecompute = 2
 		};
 
-		struct	MVGPoint2D {
+		struct MVGPoint2D {
 			MPoint projectedPoint3D; // Position in camera coord of the projected associated point 3D
 			MPoint point3D; // Position 3D
 			EPointState movableState; // How the point is movable 
-
 		};
 
 		struct DisplayData {
@@ -54,11 +53,11 @@ class MVGManipulatorUtil {
 		MVGManipulatorUtil(MVGContext*);
 	
 	public:
+		
 		// getters & setters
 		IntersectionState& intersectionState() { return _intersectionState; }		
 		IntersectionData& intersectionData() { return _intersectionData; }
 		MPointArray& previewFace3D() { return _previewFace3D; }
-		const MVGContext* getContext() const { return _context; }
 		
 		// intersections
 		bool intersectPoint(M3dView& view, DisplayData* displayData, const short&x, const short& y);
@@ -76,12 +75,13 @@ class MVGManipulatorUtil {
 		// cache
 		MStatus rebuildAllMeshesCacheFromMaya(); // Temporary
 		MStatus rebuildMeshCacheFromMaya(MDagPath& meshPath); // Temporary
-		DisplayData* getCachedDisplayData(M3dView& view);
-		std::map<std::string, DisplayData>& getDisplayDataCache() { return _cacheCameraToDisplayData;}
-		std::map<std::string, std::vector<MIntArray> >& getCacheMeshToEdgeArray() { return _cacheMeshToEdgeArray; }
-		std::vector<MIntArray>& getMeshEdges(std::string meshName) { return _cacheMeshToEdgeArray[meshName]; }
-		void rebuildCacheFromMaya();
+		void reset();
+		void rebuild();
+		DisplayData* getDisplayData(M3dView& view);
+		DisplayData* getComplementaryDisplayData(M3dView& view);
 		
+	private:
+
 	private:
 		MVGContext* _context;
 		IntersectionState _intersectionState;
