@@ -66,6 +66,7 @@ MStatus MVGEditCmd::redoIt()
 {
 	MStatus status;
     MVGMesh mesh(_meshName);
+    _meshPath = mesh.dagPath();
 	// -create
 	if(_flags & CMD_CREATE) {		
 		if(!mesh.isValid()) { // Retrieve mesh or create it
