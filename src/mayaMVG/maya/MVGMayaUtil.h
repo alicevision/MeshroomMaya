@@ -52,6 +52,8 @@ struct MVGMayaUtil {
 	static MStatus setPointArrayAttribute(const MObject&, const MString&, const MPointArray&, bool=false);
 	static MStatus getPointInArrayAttribute(const MObject&, const MString&, MPoint&, int, bool=false);
 	static MStatus getPointArrayAttributeSize(const MObject&, const MString&, int&, bool=false);
+    static MStatus getStringAttribute(const MObject&, const MString&, MString&, bool = false);
+    static MStatus setStringAttribute(const MObject&, const MString&, const MString&, bool=false);
 	static MStatus findConnectedNodes(const MObject&, const MString&, std::vector<MObject>&);
 	// nodes
 	static MStatus getObjectByName(const MString&, MObject&);

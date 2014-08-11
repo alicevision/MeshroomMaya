@@ -46,9 +46,6 @@ class MVGProjectWrapper : public QObject, public Singleton<MVGProjectWrapper>
     Q_OBJECT
 
     Q_PROPERTY(QString projectDirectory READ projectDirectory WRITE setProjectDirectory NOTIFY projectDirectoryChanged);
-    Q_PROPERTY(QString cameraDirectory READ cameraDirectory NOTIFY cameraDirectoryChanged);
-    Q_PROPERTY(QString imageDirectory READ imageDirectory NOTIFY imageDirectoryChanged);
-    Q_PROPERTY(QString pointCloudFile READ pointCloudFile NOTIFY pointCloudFileChanged);
     Q_PROPERTY(QObjectListModel* cameraModel READ getCameraModel NOTIFY cameraModelChanged);
 	Q_PROPERTY(QStringList visiblePanelNames READ getVisiblePanelNames NOTIFY panelModelChanged);
     Q_PROPERTY(QString logText READ logText WRITE setLogText NOTIFY logTextChanged);
@@ -58,9 +55,6 @@ class MVGProjectWrapper : public QObject, public Singleton<MVGProjectWrapper>
 public slots:
 	const QString projectDirectory() const;
 	void setProjectDirectory(const QString& directory);
-	const QString cameraDirectory() const;
-	const QString imageDirectory() const;
-    const QString pointCloudFile() const;
 	QObjectListModel* getCameraModel() { return &_cameraList; }
     const QStringList& getVisiblePanelNames() const { return _visiblePanelNames; }
 	const QString logText() const;
@@ -70,9 +64,6 @@ public slots:
 	
 signals:
     void projectDirectoryChanged();
-    void cameraDirectoryChanged();
-    void imageDirectoryChanged();
-    void pointCloudFileChanged();
     void cameraModelChanged();
 	void panelModelChanged();
     void logTextChanged();
@@ -94,8 +85,9 @@ public:
 	inline std::map<std::string, std::vector<MIntArray> >& getCacheMeshToEdgeArray() { return _cacheMeshToEdgeArray; }
 	inline std::vector<MIntArray>& getMeshEdges(std::string meshName) { return _cacheMeshToEdgeArray[meshName]; }
 	
-	Q_INVOKABLE void reloadProjectFromMaya();
+	Q_INVOKABLE void reloadMVGCamerasFromMaya();
 	Q_INVOKABLE void rebuildCacheFromMaya();
+    void clear();
 	MStatus rebuildAllMeshesCacheFromMaya();	// Temporary
 	MStatus rebuildMeshCacheFromMaya(MDagPath& meshPath);	// Temporary
 

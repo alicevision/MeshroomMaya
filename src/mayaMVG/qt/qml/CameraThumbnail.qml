@@ -12,7 +12,7 @@ Rectangle {
         property variant project
         property variant camera
         property string source: "img/Folder.png"
-        property color selectedColor: "orangered"
+        property color selectedColor: "#fec04c"
         property color hoverColor: "white"
         property color normalColor: "transparent"
     }

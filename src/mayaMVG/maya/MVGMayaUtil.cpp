@@ -286,6 +286,27 @@ MStatus MVGMayaUtil::getPointArrayAttributeSize(const MObject& object, const MSt
 	return status;
 }
 
+MStatus MVGMayaUtil::getStringAttribute(const MObject& object, const MString& param, MString& string, bool networked)
+{
+	MStatus status;
+	MFnDependencyNode fn(object, &status);
+	CHECK_RETURN_STATUS(status);
+	MPlug plug(fn.findPlug(param, networked, &status));
+	CHECK_RETURN_STATUS(status);
+	string = plug.asString();
+	return status;
+}
+MStatus MVGMayaUtil::setStringAttribute(const MObject& object, const MString& param, const MString& string, bool networked)
+{
+	MStatus status;
+	MFnDependencyNode fn(object, &status);
+	CHECK_RETURN_STATUS(status);
+	MPlug plug(fn.findPlug(param, networked, &status));
+	CHECK_RETURN_STATUS(status);
+	plug.setString(string);
+	return status;
+}
+
 MStatus MVGMayaUtil::getPointInArrayAttribute(const MObject& object, const MString& param, MPoint& point, int index, bool networked)
 {
 	MStatus status;

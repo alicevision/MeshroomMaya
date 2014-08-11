@@ -44,21 +44,6 @@ const QString MVGProjectWrapper::projectDirectory() const
 	return QString(_project.projectDirectory().c_str());
 }
 
-const QString MVGProjectWrapper::cameraDirectory() const
-{
-	return QString(_project.cameraDirectory().c_str());
-}
-
-const QString MVGProjectWrapper::imageDirectory() const
-{
-	return QString(_project.imageDirectory().c_str());
-}
-
-const QString MVGProjectWrapper::pointCloudFile() const
-{
-	return QString(_project.pointCloudFile().c_str());
-}
-
 const QString MVGProjectWrapper::logText() const
 {
 	return _logText;
@@ -113,21 +98,24 @@ void MVGProjectWrapper::activeMVGContext()
 
 void MVGProjectWrapper::loadProject(const QString& projectDirectoryPath)
 {	
-	_project.setProjectDirectory(projectDirectoryPath.toStdString());
-	if(!_project.load()) {
+    if(projectDirectoryPath.isEmpty())
+        return;
+	if(!_project.load(projectDirectoryPath.toStdString())) {
 		LOG_ERROR("An error occured when loading project.");
 		appendLogText(QString("An error occured when loading project."));
+        return;
 	}
+	_project.setProjectDirectory(projectDirectoryPath.toStdString());
 	Q_EMIT projectDirectoryChanged();
 	
-	reloadProjectFromMaya();
-	
+	reloadMVGCamerasFromMaya();
 	// Select the two first cameras for the views
 	if(_cameraList.size() > 1) {
 		QList<MVGCameraWrapper*>& cameras = _cameraList.asQList<MVGCameraWrapper>();
 		setCameraToView(cameras[0], _visiblePanelNames[0]);
 		setCameraToView(cameras[1], _visiblePanelNames[1]);
 	}
+    rebuildAllMeshesCacheFromMaya();
 	rebuildCacheFromMaya();
 }
 
@@ -165,8 +153,9 @@ DisplayData* MVGProjectWrapper::getCachedDisplayData(M3dView& view)
 	return NULL;
 }
 
-void MVGProjectWrapper::reloadProjectFromMaya()
+void MVGProjectWrapper::reloadMVGCamerasFromMaya()
 {
+    Q_EMIT projectDirectoryChanged();
 	// Cameras
 	const std::vector<MVGCamera>& cameraList = _project.cameras();
 	std::vector<MVGCamera>::const_iterator it = cameraList.begin();
@@ -190,7 +179,7 @@ void MVGProjectWrapper::rebuildCacheFromMaya()
 		MStatus status;
 		status = M3dView::getM3dViewFromModelPanel(panelIt->toStdString().c_str(), view);
 		CHECK(status);
-			
+        
 		MDagPath cameraPath;
 		view.getCamera(cameraPath);
 		view.updateViewingParameters();
@@ -225,6 +214,17 @@ void MVGProjectWrapper::rebuildCacheFromMaya()
 			_cacheCameraToDisplayData[cameraPath.fullPathName().asChar()] = data;
 		}
 	}
+}
+
+void MVGProjectWrapper::clear()
+{
+    _cacheCameraToDisplayData.clear();
+    _cacheMeshToEdgeArray.clear();
+    _cacheMeshToMovablePoint.clear();
+    _cacheMeshToPointArray.clear();
+    _cameraList.clear();
+    
+    Q_EMIT projectDirectoryChanged();
 }
 
 MStatus MVGProjectWrapper::rebuildAllMeshesCacheFromMaya()
