@@ -31,9 +31,31 @@ namespace {
         
         MVGProjectWrapper::instance().setCurrentContext(QString(context.asChar()));
     }
+    
+    void sceneChanged(void* userData)
+    {
+        if(!userData)
+            return;
+        // TODO : check project validity
+        MDagPath path;
+        if(!MVGMayaUtil::getDagPathByName(MVGProject::_PROJECT.c_str(), path))
+        {
+            LOG_ERROR("Scene is not valid")
+            MVGProjectWrapper::instance().clear();
+            MStatus status;
+            status = MVGMayaUtil::deleteMVGContext();
+            status = MVGMayaUtil::deleteMVGWindow();
+            CHECK(status)
+            return;
+        }
+        
+        MVGProjectWrapper::instance().reloadMVGCamerasFromMaya();       
+        MVGProjectWrapper::instance().rebuildAllMeshesCacheFromMaya();
+        MVGProjectWrapper::instance().rebuildCacheFromMaya();
+    }
 }
 
-MCallbackIdArray MVGCmd::_callbackIDs; // = MCallbackIdArray(); // FIXME /!\ 
+MCallbackIdArray MVGCmd::_callbackIDs;
 
 MVGCmd::MVGCmd() {
 }
@@ -66,11 +88,7 @@ MStatus MVGCmd::doIt(const MArgList& args) {
 		// TODO
 	}
 	
-	// create maya window
-	const QStringList& qlist = MVGProjectWrapper::instance().getVisiblePanelNames();
-	std::vector<MString> mlist;
-	mlist.push_back(qlist[0].toStdString().c_str());
-	mlist.push_back(qlist[1].toStdString().c_str());
+	// create maya window	
 	status = MVGMayaUtil::createMVGWindow();
 	if(!status) {
 		LOG_ERROR("Unable to create MVGContext.")
@@ -91,8 +109,9 @@ MStatus MVGCmd::doIt(const MArgList& args) {
 		return status;
 	}
 
-	const QString& leftPanelName = MVGProjectWrapper::instance().getVisiblePanelNames().at(0);
-	const QString& rightPanelName = MVGProjectWrapper::instance().getVisiblePanelNames().at(1);
+    const QStringList& qlist = MVGProjectWrapper::instance().getVisiblePanelNames();
+	const QString& leftPanelName = qlist[0];
+	const QString& rightPanelName = qlist[1];
 	
 	QWidget* leftViewport = MVGMayaUtil::getMVGViewportLayout(leftPanelName.toStdString().c_str());
 	QWidget* rightViewport = MVGMayaUtil::getMVGViewportLayout(rightPanelName.toStdString().c_str());
@@ -108,13 +127,15 @@ MStatus MVGCmd::doIt(const MArgList& args) {
 	MQtUtil::addWidgetToMayaLayout(mainWidget->view(), menuLayout);
 	
 	// Reload project from Maya
-	MVGProjectWrapper::instance().reloadProjectFromMaya();
+	MVGProjectWrapper::instance().reloadMVGCamerasFromMaya();
 	MVGProjectWrapper::instance().rebuildAllMeshesCacheFromMaya();
 
     
     //Maya callbacks
 	_callbackIDs.append(MEventMessage::addEventCallback("PostToolChanged", currentContextChanged, mayaWindow));
-
+	_callbackIDs.append(MEventMessage::addEventCallback("NewSceneOpened", sceneChanged, mayaWindow));
+	_callbackIDs.append(MEventMessage::addEventCallback("SceneOpened", sceneChanged, mayaWindow));
+    
 	// -p
 	if(argData.isFlagSet(projectPathFlag)) {
 		MString projectPath;

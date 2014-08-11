@@ -71,7 +71,7 @@ bool MVGContext::eventFilter(QObject *obj, QEvent *e)
 	// key pressed
 	if(e->type() == QEvent::KeyPress) {
 		QKeyEvent* keyevent = static_cast<QKeyEvent*>(e);
-		if (keyevent->isAutoRepeat())
+		if(keyevent->isAutoRepeat())
 			return false;
 		switch(keyevent->key()) {
 			case Qt::Key_F:
@@ -110,9 +110,8 @@ bool MVGContext::eventFilter(QObject *obj, QEvent *e)
 	else if(e->type() == QEvent::KeyRelease) {
 		Qt::KeyboardModifiers modifiers = QApplication::keyboardModifiers();
 		QKeyEvent * keyevent = static_cast<QKeyEvent*>(e);
-		if (keyevent->isAutoRepeat())
+		if(keyevent->isAutoRepeat())
 		 	return false;
-		 
 		switch(keyevent->key()) {
             case Qt::Key_C:
             {
@@ -194,6 +193,9 @@ bool MVGContext::eventFilter(QObject *obj, QEvent *e)
 		QVariant window = obj->property("mvg_window");
 		if(window.type() != QVariant::Invalid)
 		{
+            MDagPath path;
+            if(!MVGMayaUtil::getDagPathByName(MVGProject::_PROJECT.c_str(), path))
+                return false;
 			MVGProjectWrapper::instance().rebuildAllMeshesCacheFromMaya();
 			MVGProjectWrapper::instance().rebuildCacheFromMaya();
 			return false;
