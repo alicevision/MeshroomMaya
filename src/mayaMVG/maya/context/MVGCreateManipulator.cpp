@@ -1,16 +1,20 @@
 #include "mayaMVG/maya/context/MVGCreateManipulator.h"
-#include "mayaMVG/core/MVGGeometryUtil.h"
+#include "mayaMVG/maya/context/MVGContext.h"
 #include "mayaMVG/maya/context/MVGDrawUtil.h"
+#include "mayaMVG/maya/cmd/MVGEditCmd.h"
 #include "mayaMVG/maya/MVGMayaUtil.h"
-#include "mayaMVG/qt/MVGUserLog.h"
 #include "mayaMVG/core/MVGGeometryUtil.h"
+#include "mayaMVG/qt/MVGUserLog.h"
 
 namespace mayaMVG {
 
-MTypeId MVGCreateManipulator::_id(0x99111); // FIXME /!\ 
+class MVGContext;
+
+MTypeId MVGCreateManipulator::_id(0x99111); // FIXME /!\
 
 MVGCreateManipulator::MVGCreateManipulator()
-    : _createColor(0.f, 0.f, 1.f)
+    : _ctx(NULL)
+    , _createColor(0.f, 0.f, 1.f)
     , _extendColor(0.9f, 0.9f, 0.1f)
     , _faceColor(1.f, 1.f, 1.f)
     , _cursorColor(0.f, 0.f, 0.f)
@@ -52,10 +56,10 @@ void MVGCreateManipulator::draw(M3dView & view, const MDagPath & path,
     // CLEAN the input maya OpenGL State
     glDisable(GL_POLYGON_STIPPLE);
     glDisable(GL_LINE_STIPPLE);
-    
+
     {
         // enable gl picking
-        // will call manipulator::doPress/doRelease 
+        // will call manipulator::doPress/doRelease
         MGLuint glPickableItem;
         glFirstHandle(glPickableItem);
         colorAndName(view, glPickableItem, true, mainColor());
@@ -79,6 +83,7 @@ void MVGCreateManipulator::draw(M3dView & view, const MDagPath & path,
 
         MVGDrawUtil::end2DDrawing();
     }
+    
 	view.endGL();
 }
 
@@ -92,10 +97,10 @@ MStatus MVGCreateManipulator::doPress(M3dView& view)
 	DisplayData* data = MVGProjectWrapper::instance().getCachedDisplayData(view);
 	if(!data)
 		return MS::kFailure;
-	
+
 	// Undo/Redo
 	MVGEditCmd* cmd = NULL;
-	if(!_manipUtils.getContext()) {
+	if(!_ctx) {
 	   LOG_ERROR("invalid context object.")
 	   return MS::kFailure;
 	}
@@ -126,8 +131,8 @@ MStatus MVGCreateManipulator::doPress(M3dView& view)
             }
 
 			MDagPath emptyPath;
-			if(!_manipUtils.addCreateFaceCommand(cmd, emptyPath, facePoints3D))
-				return MS::kFailure;					
+			if(!addCreateFaceCommand(cmd, emptyPath, facePoints3D))
+				return MS::kFailure;
 			break;
 		}
 			break;
@@ -145,10 +150,10 @@ MStatus MVGCreateManipulator::doRelease(M3dView& view)
 	DisplayData* data = MVGProjectWrapper::instance().getCachedDisplayData(view);
 	if(!data)
 		return MS::kFailure;
-	
+
 	// Undo/Redo
 	MVGEditCmd* cmd = NULL;
-	if(!_manipUtils.getContext()) {
+	if(!_ctx) {
 	   LOG_ERROR("invalid context object.")
 	   return MS::kFailure;
 	}
@@ -156,11 +161,11 @@ MStatus MVGCreateManipulator::doRelease(M3dView& view)
 	switch(_createState) {
 		case eCreateNone:
 			break;
-		case eCreateExtend: 
-		{			
+		case eCreateExtend:
+		{
 			MDagPath meshPath;
 			MVGMayaUtil::getDagPathByName(_manipUtils.intersectionData().meshName.c_str(), meshPath);
-			if(!_manipUtils.addCreateFaceCommand(cmd, meshPath, _manipUtils.previewFace3D()))
+			if(!addCreateFaceCommand(cmd, meshPath, _manipUtils.previewFace3D()))
 				return MS::kFailure;
 			_manipUtils.previewFace3D().clear();
 			break;
@@ -224,7 +229,7 @@ void MVGCreateManipulator::drawUI(MHWRender::MUIDrawManager& drawManager, const 
 
 void MVGCreateManipulator::setContext(MVGContext* ctx)
 {
-	_manipUtils.setContext(ctx);
+	_ctx = ctx;
 }
 
 MPoint MVGCreateManipulator::updateMouse(M3dView& view, DisplayData* data, short& mousex, short& mousey)
@@ -334,7 +339,7 @@ void MVGCreateManipulator::computeTmpFaceOnEdgeExtend(M3dView& view, DisplayData
         MVGMesh mesh(intersectionData.meshName);
         if(!mesh.isValid())
             return;
-        
+
         // Compute plane with old face points
         MPointArray faceVertices;
         for(int i = 0; i < intersectionData.facePointIndexes.length(); ++i)
@@ -357,7 +362,37 @@ void MVGCreateManipulator::computeTmpFaceOnEdgeExtend(M3dView& view, DisplayData
     // Keep the old first 2 points to have a connected face
     _manipUtils.previewFace3D()[0] = edgePoint3D_1;
     _manipUtils.previewFace3D()[1] = edgePoint3D_0;
-   
+
 	// TODO : compute plane with straight line constraint
+}
+
+bool MVGCreateManipulator::addCreateFaceCommand(MVGEditCmd* cmd, MDagPath& meshPath, const MPointArray& facePoints3D)
+{
+	// Undo/redo
+	if(facePoints3D.length() < 4)
+		return false;
+	cmd = (MVGEditCmd *)_ctx->newCmd();
+	if(!cmd) {
+	  LOG_ERROR("invalid command object.")
+	  return false;
+	}
+
+	// FIX ME - Convert to KObject space
+	MPointArray objectPoints;
+	for(int i = 0; i < facePoints3D.length(); ++i)
+	{
+		MPoint objPoint = facePoints3D[i] * meshPath.inclusiveMatrixInverse();	
+		objectPoints.append(objPoint);
+	}
+	
+	// Create face
+	cmd->doAddPolygon(meshPath, objectPoints);
+	if(cmd->redoIt())
+		cmd->finalize();
+    
+    MVGProjectWrapper::instance().rebuildAllMeshesCacheFromMaya();
+	MVGProjectWrapper::instance().rebuildCacheFromMaya();
+	
+	return true;
 }
 }	//mayaMVG

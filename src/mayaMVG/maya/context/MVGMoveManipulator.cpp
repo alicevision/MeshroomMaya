@@ -1,15 +1,15 @@
 #include "mayaMVG/maya/context/MVGMoveManipulator.h"
-#include "mayaMVG/core/MVGGeometryUtil.h"
-#include "mayaMVG/maya/context/MVGDrawUtil.h"
-#include "mayaMVG/maya/MVGMayaUtil.h"
-#include "mayaMVG/qt/MVGUserLog.h"
 #include "mayaMVG/maya/context/MVGContext.h"
+#include "mayaMVG/maya/context/MVGDrawUtil.h"
+#include "mayaMVG/maya/cmd/MVGEditCmd.h"
+#include "mayaMVG/maya/MVGMayaUtil.h"
+#include "mayaMVG/core/MVGGeometryUtil.h"
+#include "mayaMVG/qt/MVGUserLog.h"
 #include "openMVG/multiview/triangulation.hpp"
 
 namespace mayaMVG {
 
-MTypeId MVGMoveManipulator::_id(0x99222); // FIXME /!\ 
-
+MTypeId MVGMoveManipulator::_id(0x99222); // FIXME /!\
 
 MVGMoveManipulator::MVGMoveManipulator()
     : _moveState(eMoveNone)
@@ -59,10 +59,10 @@ void MVGMoveManipulator::draw(M3dView & view, const MDagPath & path,
     // CLEAN the input maya OpenGL State
     glDisable(GL_POLYGON_STIPPLE);
     glDisable(GL_LINE_STIPPLE);
-    
+
     {
         // Enable gl picking
-        // Will call manipulator::doPress/doRelease 
+        // Will call manipulator::doPress/doRelease
         MGLuint glPickableItem;
         glFirstHandle(glPickableItem);
         colorAndName(view, glPickableItem, true, mainColor());
@@ -110,9 +110,8 @@ void MVGMoveManipulator::draw(M3dView & view, const MDagPath & path,
                 }
             }
         }
-
         MVGDrawUtil::end2DDrawing();
-    }   
+    }
     view.endGL();
 }
 
@@ -166,10 +165,10 @@ MStatus MVGMoveManipulator::doRelease(M3dView& view)
 	DisplayData* data = MVGProjectWrapper::instance().getCachedDisplayData(view);
 	if(!data)
 		return MS::kFailure;
-	
+
 	// Undo/Redo
 	MVGEditCmd* cmd = NULL;
-	if(!_manipUtils.getContext()) {
+	if(!_ctx) {
 	   LOG_ERROR("invalid context object.")
 	   return MS::kFailure;
 	}
@@ -192,7 +191,7 @@ MStatus MVGMoveManipulator::doRelease(M3dView& view)
                 MDagPath meshPath;
                 MVGMayaUtil::getDagPathByName(intersectionData.meshName.c_str(), meshPath);
 
-                _manipUtils.addUpdateFaceCommand(cmd, meshPath, _manipUtils.previewFace3D(), intersectionData.facePointIndexes);
+                addUpdateFaceCommand(cmd, meshPath, _manipUtils.previewFace3D(), intersectionData.facePointIndexes);
                 _manipUtils.previewFace3D().clear();
                 intersectionData.facePointIndexes.clear();
             }
@@ -209,7 +208,7 @@ MStatus MVGMoveManipulator::doRelease(M3dView& view)
                 MIntArray indexes;
                 indexes.append(intersectionData.pointIndex);
 
-                _manipUtils.addUpdateFaceCommand(cmd, meshPath, newPoints, indexes);
+                addUpdateFaceCommand(cmd, meshPath, newPoints, indexes);
                 intersectionData.facePointIndexes.clear();
             }
 			break;
@@ -227,7 +226,7 @@ MStatus MVGMoveManipulator::doRelease(M3dView& view)
                 MPointArray edgePoints;
                 edgePoints.append(_manipUtils.previewFace3D()[2]);
                 edgePoints.append(_manipUtils.previewFace3D()[3]);
-                _manipUtils.addUpdateFaceCommand(cmd, meshPath, edgePoints, intersectionData.edgePointIndexes);
+                addUpdateFaceCommand(cmd, meshPath, edgePoints, intersectionData.edgePointIndexes);
                 _manipUtils.previewFace3D().clear();
                 intersectionData.facePointIndexes.clear();
             }
@@ -236,7 +235,7 @@ MStatus MVGMoveManipulator::doRelease(M3dView& view)
                 triangulateEdge(view, intersectionData, mousePoint, triangulatedPoints);
                 MDagPath meshPath;
                 MVGMayaUtil::getDagPathByName(intersectionData.meshName.c_str(), meshPath);
-                _manipUtils.addUpdateFaceCommand(cmd, meshPath, triangulatedPoints, intersectionData.edgePointIndexes);
+                addUpdateFaceCommand(cmd, meshPath, triangulatedPoints, intersectionData.edgePointIndexes);
                 intersectionData.facePointIndexes.clear();
             }
 			break;
@@ -336,7 +335,7 @@ void MVGMoveManipulator::preDrawUI(const M3dView& view)
 
 void MVGMoveManipulator::setContext(MVGContext* ctx)
 {
-	_manipUtils.setContext(ctx);
+	_ctx = ctx;
 }
 
 MPoint MVGMoveManipulator::updateMouse(M3dView& view, DisplayData* data, short& mousex, short& mousey)
@@ -649,6 +648,30 @@ bool MVGMoveManipulator::triangulateEdge(M3dView& view, MVGManipulatorUtil::Inte
     resultPoint3D.append(result);
 
 	return true;
+}
+
+bool MVGMoveManipulator::addUpdateFaceCommand(MVGEditCmd* cmd, MDagPath& meshPath, const MPointArray& newFacePoints3D, const MIntArray& verticesIndexes)
+{
+	
+	if(newFacePoints3D.length() != verticesIndexes.length())
+	{
+		LOG_ERROR("Need an ID per point")
+		return false;
+	}
+	
+	// Undo/redo
+	cmd = (MVGEditCmd *)_ctx->newCmd();
+	if(!cmd) {
+	  LOG_ERROR("invalid command object.")
+	  return false;
+	}
+	
+	cmd->doMove(meshPath, newFacePoints3D, verticesIndexes);
+	if(cmd->redoIt())
+		cmd->finalize();
+    
+    MVGProjectWrapper::instance().rebuildMeshCacheFromMaya(meshPath);
+	MVGProjectWrapper::instance().rebuildCacheFromMaya();
 }
 
 void MVGMoveManipulator::drawUI(MHWRender::MUIDrawManager& drawManager, const MHWRender::MFrameContext&) const

@@ -63,6 +63,9 @@ struct MVGMayaUtil {
 	static MString getModulePath();
 	// filedialog
 	static MStatus openFileDialog(MString& directory);
+    // undo/redo
+    static MStatus getUndoName(MString& undoName);
+    static MStatus getRedoName(MString& redoName);
 };
 
 } // mayaMVG

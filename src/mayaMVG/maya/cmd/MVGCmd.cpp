@@ -53,6 +53,42 @@ namespace {
         MVGProjectWrapper::instance().rebuildAllMeshesCacheFromMaya();
         MVGProjectWrapper::instance().rebuildCacheFromMaya();
     }
+    
+    void undo(void * userData)
+    {
+        if(!userData)
+           return;
+         
+        // TODO : rebuild only the mesh modified
+        // TODO : don't rebuild on action that don't modify any mesh
+        MString redoName;
+        MVGMayaUtil::getRedoName(redoName);        
+        // Don't rebuild if selection action
+        int spaceIndex = redoName.index(' ');
+        MString cmdName = redoName.substring(0, spaceIndex - 1);
+        if(cmdName != "select" && cmdName != "miCreateDefaultPresets")
+        {
+            MVGProjectWrapper::instance().rebuildAllMeshesCacheFromMaya();
+            MVGProjectWrapper::instance().rebuildCacheFromMaya();   
+        }
+    }
+    
+    void redo(void * userData)
+    {
+        if(!userData)
+           return;
+         
+        MString undoName;
+        MVGMayaUtil::getUndoName(undoName);
+        // Don't rebuild if selection action
+        int spaceIndex = undoName.index(' ');
+        MString cmdName = undoName.substring(0, spaceIndex - 1);
+        if(cmdName != "select" && cmdName != "miCreateDefaultPresets")
+        {
+            MVGProjectWrapper::instance().rebuildAllMeshesCacheFromMaya();
+            MVGProjectWrapper::instance().rebuildCacheFromMaya();
+        }
+    }
 }
 
 MCallbackIdArray MVGCmd::_callbackIDs;
@@ -135,7 +171,9 @@ MStatus MVGCmd::doIt(const MArgList& args) {
 	_callbackIDs.append(MEventMessage::addEventCallback("PostToolChanged", currentContextChanged, mayaWindow));
 	_callbackIDs.append(MEventMessage::addEventCallback("NewSceneOpened", sceneChanged, mayaWindow));
 	_callbackIDs.append(MEventMessage::addEventCallback("SceneOpened", sceneChanged, mayaWindow));
-    
+	_callbackIDs.append(MEventMessage::addEventCallback("Undo", undo, mayaWindow));
+	_callbackIDs.append(MEventMessage::addEventCallback("Redo", redo, mayaWindow));
+
 	// -p
 	if(argData.isFlagSet(projectPathFlag)) {
 		MString projectPath;

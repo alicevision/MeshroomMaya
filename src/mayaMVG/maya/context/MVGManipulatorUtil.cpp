@@ -1,17 +1,11 @@
 #include "mayaMVG/maya/context/MVGManipulatorUtil.h"
-#include "mayaMVG/maya/MVGMayaUtil.h"
-#include "mayaMVG/maya/context/MVGContext.h"
-#include "mayaMVG/maya/cmd/MVGEditCmd.h"
 #include "mayaMVG/maya/context/MVGDrawUtil.h"
 #include "mayaMVG/core/MVGGeometryUtil.h"
-#include "mayaMVG/core/MVGLog.h"
-#include <maya/MMatrix.h>
 
 namespace mayaMVG {
-	
+
 MVGManipulatorUtil::MVGManipulatorUtil()
 	: _intersectionState(eIntersectionNone)
-	, _ctx(NULL)
 {
 	_intersectionData.pointIndex = -1;
 }
@@ -31,7 +25,6 @@ bool MVGManipulatorUtil::intersectPoint(M3dView& view, DisplayData* displayData,
 		std::vector<MVGPoint2D>& meshPoints = it->second;
 		for(int i = 0; i < meshPoints.size(); ++i)
 		{
-			//MVGGeometryUtil::worldToCamera(view, displayData->camera, meshPoints[i], pointCameraCoord);
 			if(meshPoints[i].projectedPoint3D.x <= mousePoint.x + threshold && meshPoints[i].projectedPoint3D.x >= mousePoint.x - threshold
 			&& meshPoints[i].projectedPoint3D.y <= mousePoint.y + threshold && meshPoints[i].projectedPoint3D.y >= mousePoint.y - threshold)
 			{
@@ -169,53 +162,4 @@ void MVGManipulatorUtil::drawPreview3D()
         MVGDrawUtil::drawPolygon3D(_previewFace3D, color, 0.6f);
 	}
 }
-
-bool MVGManipulatorUtil::addCreateFaceCommand(MVGEditCmd* cmd, MDagPath& meshPath, const MPointArray& facePoints3D)
-{
-	// Undo/redo
-	if(facePoints3D.length() < 4)
-		return false;
-	cmd = (MVGEditCmd *)_ctx->newCmd();
-	if(!cmd) {
-	  LOG_ERROR("invalid command object.")
-	  return false;
-	}
-
-	// FIX ME - Convert to KObject space
-	MPointArray objectPoints;
-	for(int i = 0; i < facePoints3D.length(); ++i)
-	{
-		MPoint objPoint = facePoints3D[i] * meshPath.inclusiveMatrixInverse();	
-		objectPoints.append(objPoint);
-	}
-	
-	// Create face
-	cmd->doAddPolygon(meshPath, objectPoints);
-	if(cmd->redoIt())
-		cmd->finalize();
-	
-	return true;
-}
-
-bool MVGManipulatorUtil::addUpdateFaceCommand(MVGEditCmd* cmd, MDagPath& meshPath, const MPointArray& newFacePoints3D, const MIntArray& verticesIndexes)
-{
-	
-	if(newFacePoints3D.length() != verticesIndexes.length())
-	{
-		LOG_ERROR("Need an ID per point")
-		return false;
-	}
-	
-	// Undo/redo
-	cmd = (MVGEditCmd *)_ctx->newCmd();
-	if(!cmd) {
-	  LOG_ERROR("invalid command object.")
-	  return false;
-	}
-	
-	cmd->doMove(meshPath, newFacePoints3D, verticesIndexes);
-	if(cmd->redoIt())
-		cmd->finalize();
-}
-
-}	// mayaMVG
+}	// namespace

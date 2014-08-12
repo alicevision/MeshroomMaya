@@ -7,9 +7,6 @@
 
 namespace mayaMVG {
 
-class MVGContext;
-class MVGEditCmd;
-
 #define POINT_RADIUS 10
 
 class MVGManipulatorUtil {
@@ -45,9 +42,6 @@ class MVGManipulatorUtil {
 		IntersectionData& intersectionData() { return _intersectionData; }
 		MPointArray& previewFace3D() { return _previewFace3D; }
 		
-		const MVGContext* getContext() const { return _ctx; }
-		void setContext(MVGContext* context) { _ctx = context; }
-		
 		// Intersections
 		bool intersectPoint(M3dView& view, DisplayData* displayData, const short&x, const short& y);
 		bool intersectEdge(M3dView& view, DisplayData* displayData, const short&x, const short& y);
@@ -57,12 +51,7 @@ class MVGManipulatorUtil {
 		// Draw
 		void drawPreview3D();
 		
-		// Commands
-		bool addCreateFaceCommand(MVGEditCmd* cmd, MDagPath& meshPath, const MPointArray& facePoints3D);
-		bool addUpdateFaceCommand(MVGEditCmd* cmd, MDagPath& meshPath, const MPointArray& newFacePoints3D, const MIntArray& verticesIndexes);
-		
 	private:
-		MVGContext* _ctx;
 		IntersectionState _intersectionState;
 		IntersectionData _intersectionData;		
 		MPointArray _previewFace3D;

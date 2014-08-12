@@ -5,6 +5,9 @@
 
 namespace mayaMVG {
 
+class MVGEditCmd;
+class MVGContext;
+
 class MVGCreateManipulator: public MPxManipulatorNode
 {
     enum ECreateState {
@@ -39,22 +42,22 @@ class MVGCreateManipulator: public MPxManipulatorNode
 		void drawCursor(float mousex, float mousey);
 		void drawIntersections(M3dView& view, float mousex, float mousey);
 		void drawPreview2D(M3dView& view, DisplayData* data);
-		
+
 		// Compute
 		void computeTmpFaceOnEdgeExtend(M3dView& view, DisplayData* data, const MPoint& mousePointInCameraCoord);
-		
+        
+        // Command
+        bool addCreateFaceCommand(MVGEditCmd* cmd, MDagPath& meshPath, const MPointArray& facePoints3D);
 
 	public:
 		static MTypeId _id;
+        MVGContext* _ctx;
 		MVGManipulatorUtil _manipUtils;
         ECreateState _createState;
-        
+
         MVector _createColor;
         MVector _extendColor;
         MVector _faceColor;
         MVector _cursorColor;
 };
-
-
-
 } // namespace

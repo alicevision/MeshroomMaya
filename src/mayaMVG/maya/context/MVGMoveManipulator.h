@@ -5,8 +5,11 @@
 
 namespace mayaMVG {
 
+class MVGEditCmd;
+class MVGContext;
+
 class MVGMoveManipulator: public MPxManipulatorNode
-{	
+{
 	enum EMoveState {
         eMoveNone = 0
         , eMovePoint
@@ -46,12 +49,15 @@ class MVGMoveManipulator: public MPxManipulatorNode
 		void computeTmpFaceOnMoveEdge(M3dView& view, DisplayData* data, MPoint& mousePoint, bool recompute=false);
 		bool triangulate(M3dView& view, MVGManipulatorUtil::IntersectionData& intersectionData, MPoint& mousePointInCameraCoord, MPoint& resultPoint3D);
 		bool triangulateEdge(M3dView& view, MVGManipulatorUtil::IntersectionData& intersectionData, MPoint& mousePointInCameraCoord, MPointArray& resultPoint3D);
-        
+
+        // Command
+        bool addUpdateFaceCommand(MVGEditCmd* cmd, MDagPath& meshPath, const MPointArray& newFacePoints3D, const MIntArray& verticesIndexes);
 public:
 		static MTypeId _id;
+        MVGContext* _ctx;
 		MVGManipulatorUtil _manipUtils;
 		EMoveState _moveState;
-        
+
         MVector _moveInPlaneColor;
         MVector _moveRecomputeColor;
         MVector _triangulateColor;
