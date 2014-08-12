@@ -1,6 +1,7 @@
 #include "mayaMVG/qt/MVGProjectWrapper.h"
 #include "mayaMVG/maya/cmd/MVGEditCmd.h"
 #include "mayaMVG/core/MVGLog.h"
+#include "mayaMVG/qt/MVGUserLog.h"
 #include "mayaMVG/core/MVGMesh.h"
 #include "mayaMVG/core/MVGProject.h"
 #include "mayaMVG/maya/MVGMayaUtil.h"
@@ -65,16 +66,19 @@ MStatus MVGEditCmd::doIt(const MArgList& args)
 MStatus MVGEditCmd::redoIt()
 {
 	MStatus status;
-    MVGMesh mesh(_meshName);
-    _meshPath = mesh.dagPath();
+    MVGMesh mesh(_meshPath);
+//    MVGMesh mesh(_meshName);
+//    _meshPath = mesh.dagPath();
 	// -create
 	if(_flags & CMD_CREATE) {		
 		if(!mesh.isValid()) { // Retrieve mesh or create it
 			mesh = MVGMesh::create(MVGProject::_MESH);
+            USER_WARNING("Action is no stacked in undo/redo")
+            status =  MS::kFailure;
 			if(!mesh.isValid())
 				return MS::kFailure;
             _meshPath = mesh.dagPath();
-            _meshName = mesh.dagPath().fullPathName();
+//            _meshName = mesh.dagPath().fullPathName();
 		}
 		int index; 
 		if(!mesh.addPolygon(_points, index))
@@ -110,12 +114,15 @@ MStatus MVGEditCmd::undoIt()
             mesh.deletePolygon(_indexes[0]);
         else
         {
+            // TODO
+            USER_ERROR("Can't delete last face")
+            return MS::kFailure;
             // Can't delete last face with deletePolygon())
             // Delete directly the transform
             // MeshPath is invalid after destruction of the shape, we store it as a MString to retrieve it in redo
-            _meshName = _meshPath.fullPathName();
-            MObject transform = _meshPath.transform();
-            MGlobal::deleteNode(transform);
+//            _meshName = _meshPath.fullPathName();
+//            MObject transform = _meshPath.transform();
+//            MGlobal::deleteNode(transform);
         }
 	}
 	// -move
@@ -158,7 +165,7 @@ void MVGEditCmd::doAddPolygon(const MDagPath& meshPath, const MPointArray& point
 {
 	_flags |= CMD_CREATE;
 	_meshPath = meshPath;
-    _meshName = _meshPath.fullPathName();
+    //_meshName = _meshPath.fullPathName();
 	_points = points;
 }
 
@@ -166,7 +173,7 @@ void MVGEditCmd::doMove(const MDagPath& meshPath, const MPointArray& points, con
 {
 	_flags |= CMD_MOVE;
 	_meshPath = meshPath;
-    _meshName = _meshPath.fullPathName();
+    //_meshName = _meshPath.fullPathName();
 	_points = points;
 	_indexes = verticesIndexes;
 }
