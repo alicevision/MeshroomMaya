@@ -14,10 +14,10 @@ MTypeId MVGCreateManipulator::_id(0x99111); // FIXME /!\
 
 MVGCreateManipulator::MVGCreateManipulator()
     : _ctx(NULL)
-    , _createColor(0.f, 0.f, 1.f)
-    , _extendColor(0.9f, 0.9f, 0.1f)
-    , _faceColor(1.f, 1.f, 1.f)
-    , _cursorColor(0.f, 0.f, 0.f)
+    , _createColor(0.f, 1.f, 0.f)       // Green
+    , _extendColor(0.9f, 0.9f, 0.1f)    // Yellow
+    , _faceColor(1.f, 1.f, 1.f)         // White
+    , _cursorColor(0.f, 0.f, 0.f)       // Black
 {
 	_manipUtils.intersectionData().pointIndex = -1;
 }
@@ -57,6 +57,10 @@ void MVGCreateManipulator::draw(M3dView & view, const MDagPath & path,
     glDisable(GL_POLYGON_STIPPLE);
     glDisable(GL_LINE_STIPPLE);
 
+    // Enable Alpha
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
+
     {
         // enable gl picking
         // will call manipulator::doPress/doRelease
@@ -83,7 +87,8 @@ void MVGCreateManipulator::draw(M3dView & view, const MDagPath & path,
 
         MVGDrawUtil::end2DDrawing();
     }
-    
+
+    glDisable(GL_BLEND);
 	view.endGL();
 }
 

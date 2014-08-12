@@ -13,15 +13,15 @@ MTypeId MVGMoveManipulator::_id(0x99222); // FIXME /!\
 
 MVGMoveManipulator::MVGMoveManipulator()
     : _moveState(eMoveNone)
-    , _moveInPlaneColor(0.f, 1.f, 0.f)
-    , _moveRecomputeColor(0.f, 1.f, 1.f)
-    , _triangulateColor(0.9f, 0.5f, 0.4f)
-    , _faceColor(1.f, 1.f, 1.f)
-    , _noMoveColor(1.f, 0.f, 0.f)
-    , _neutralColor(0.3f, 0.3f, 0.6f)
-    , _cursorColor(0.f, 0.f, 0.f)
+    , _moveInPlaneColor(0.f, 0.f, 1.f)      // Blue
+    , _moveRecomputeColor(0.f, 1.f, 1.f)    // Cyan
+    , _triangulateColor(0.9f, 0.5f, 0.4f)   // Orange
+    , _faceColor(1.f, 1.f, 1.f)             // White
+    , _noMoveColor(1.f, 0.f, 0.f)           // Red
+    , _neutralColor(0.3f, 0.3f, 0.6f)       // Dark blue
+    , _cursorColor(0.f, 0.f, 0.f)           // Black
 
-{	
+{
 	_manipUtils.intersectionData().pointIndex = -1;
 }
 
@@ -59,6 +59,10 @@ void MVGMoveManipulator::draw(M3dView & view, const MDagPath & path,
     // CLEAN the input maya OpenGL State
     glDisable(GL_POLYGON_STIPPLE);
     glDisable(GL_LINE_STIPPLE);
+
+    // Enable Alpha
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
 
     {
         // Enable gl picking
@@ -112,6 +116,7 @@ void MVGMoveManipulator::draw(M3dView & view, const MDagPath & path,
         }
         MVGDrawUtil::end2DDrawing();
     }
+    glDisable(GL_BLEND);
     view.endGL();
 }
 
