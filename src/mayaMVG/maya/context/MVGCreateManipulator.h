@@ -37,17 +37,18 @@ class MVGCreateManipulator: public MPxManipulatorNode
 		void setContext(MVGContext* ctx);
 	private:
 		MPoint updateMouse(M3dView& view, DisplayData* data, short& mousex, short& mousey);
-		
+
 		// Draw
-		void drawCursor(float mousex, float mousey);
-		void drawIntersections(M3dView& view, float mousex, float mousey);
-		void drawPreview2D(M3dView& view, DisplayData* data);
+		void drawCursor(const float mousex, const float mousey);
+		void drawIntersections(M3dView& view, const float mousex, const float mousey);
+		void drawPreview2D(M3dView& view, const DisplayData* data);
+        void drawOtherPreview2D(M3dView& view, const DisplayData* data);
 
 		// Compute
 		void computeTmpFaceOnEdgeExtend(M3dView& view, DisplayData* data, const MPoint& mousePointInCameraCoord);
-        
+
         // Command
-        bool addCreateFaceCommand(MVGEditCmd* cmd, MDagPath& meshPath, const MPointArray& facePoints3D);
+        bool addCreateFaceCommand(MVGEditCmd* cmd, MDagPath& meshPath, const MPointArray& facePoints3D) const;
 
 	public:
 		static MTypeId _id;
@@ -56,6 +57,7 @@ class MVGCreateManipulator: public MPxManipulatorNode
         ECreateState _createState;
 
         MVector _createColor;
+        MVector _neutralCreateColor;
         MVector _extendColor;
         MVector _faceColor;
         MVector _cursorColor;

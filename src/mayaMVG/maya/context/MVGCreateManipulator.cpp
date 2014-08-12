@@ -14,10 +14,11 @@ MTypeId MVGCreateManipulator::_id(0x99111); // FIXME /!\
 
 MVGCreateManipulator::MVGCreateManipulator()
     : _ctx(NULL)
-    , _createColor(0.f, 1.f, 0.f)       // Green
-    , _extendColor(0.9f, 0.9f, 0.1f)    // Yellow
-    , _faceColor(1.f, 1.f, 1.f)         // White
-    , _cursorColor(0.f, 0.f, 0.f)       // Black
+    , _createColor(0.f, 1.f, 0.f)           // Green
+    , _neutralCreateColor(0.7f, 0.7f, 0.7f) // Grey
+    , _extendColor(0.9f, 0.9f, 0.1f)        // Yellow
+    , _faceColor(1.f, 1.f, 1.f)             // White
+    , _cursorColor(0.f, 0.f, 0.f)           // Black
 {
 	_manipUtils.intersectionData().pointIndex = -1;
 }
@@ -76,6 +77,10 @@ void MVGCreateManipulator::draw(M3dView & view, const MDagPath & path,
             MPoint center(0, 0);
             MVGDrawUtil::drawCircle2D(center, _cursorColor, 1, 5); // needed - FIXME
 
+            // Other view preview
+            if(MVGMayaUtil::isMVGView(view) && !MVGMayaUtil::isActiveView(view))
+                drawOtherPreview2D(view, data);         
+
             // Draw only in active view
             if(MVGMayaUtil::isActiveView(view))
             {
@@ -116,12 +121,26 @@ MStatus MVGCreateManipulator::doPress(M3dView& view)
 
     _manipUtils.updateIntersectionState(view, data, mousex, mousey);
 	switch(_manipUtils.intersectionState()) {
-		case MVGManipulatorUtil::eIntersectionNone: 
+		case MVGManipulatorUtil::eIntersectionNone:
         case MVGManipulatorUtil::eIntersectionPoint:
-        {		
-            _createState = eCreateNone;			
+        {
+             // Clear buildPoint of the other view
+            if(data->buildPoints2D.length() == 0)
+            {
+                std::map<std::string, DisplayData>& cache = MVGProjectWrapper::instance().getDisplayDataCache();
+                for(std::map<std::string, DisplayData>::iterator it = cache.begin(); it != cache.end(); ++it)
+                {
+                    if(&(it->second) != data)
+                    {
+                        it->second.buildPoints2D.clear();
+                        break;
+                    }
+                }
+            }
+
+            _createState = eCreateNone;
 			data->buildPoints2D.append(mousePoint);
-						
+
 			// Create face if enough points (4))
 			if(data->buildPoints2D.length() < 4)
 				break;
@@ -246,26 +265,26 @@ MPoint MVGCreateManipulator::updateMouse(M3dView& view, DisplayData* data, short
 	return mousePointInCameraCoord;
 }
 
-void MVGCreateManipulator::drawCursor(float mousex, float mousey)
+void MVGCreateManipulator::drawCursor(const float mousex, const float mousey)
 {
 	MVGDrawUtil::drawTargetCursor(mousex, mousey, _cursorColor);
-	
+
 	if(_manipUtils.intersectionState() == MVGManipulatorUtil::eIntersectionEdge)
 		MVGDrawUtil::drawExtendItem(mousex + 10, mousey + 10, _extendColor);
 }
 
-void MVGCreateManipulator::drawIntersections(M3dView& view, float mousex, float mousey)
+void MVGCreateManipulator::drawIntersections(M3dView& view, const float mousex, const float mousey)
 {
 	DisplayData* data = MVGProjectWrapper::instance().getCachedDisplayData(view);
 	if(!data)
 		return;
-	
+
 	if(data->allPoints2D.size() == 0)
 		return;
-	
+
 	MVGManipulatorUtil::IntersectionData& intersectionData = _manipUtils.intersectionData();
 	std::vector<MVGPoint2D>& meshPoints = data->allPoints2D[intersectionData.meshName];
-	
+
 	short x, y;
 	switch(_manipUtils.intersectionState())
 	{
@@ -278,43 +297,90 @@ void MVGCreateManipulator::drawIntersections(M3dView& view, float mousex, float 
             MVGDrawUtil::drawLine2D(A, B, _extendColor);
 			break;
         }
-	}	
+	}
 }
 
-void MVGCreateManipulator::drawPreview2D(M3dView& view, DisplayData* data)
+void MVGCreateManipulator::drawPreview2D(M3dView& view, const DisplayData* data)
 {
+    if(!data)
+        return;
+    
 	short mousex, mousey;
 	mousePosition(mousex, mousey);
-    MPoint viewPointA;
-    MPoint viewPointB;
-	
-	MPointArray points = data->buildPoints2D;
+    MPoint viewPoint;
+
+	const MPointArray& points = data->buildPoints2D;
 	if(points.length() > 0)
-	{
-		for(int i = 0; i < points.length() - 1; ++i) {
-			MVGGeometryUtil::cameraToView(view, points[i], viewPointA);
-            MVGGeometryUtil::cameraToView(view, points[i+1], viewPointB);
-			MVGDrawUtil::drawCircle2D(viewPointA, _createColor, POINT_RADIUS, 30);
-            MVGDrawUtil::drawLine2D(viewPointA, viewPointB, _createColor);
-		}
-		
-		// Last point to mouse
-		MVGGeometryUtil::cameraToView(view, points[points.length() - 1], viewPointA);
-		MVGDrawUtil::drawCircle2D(viewPointA, _createColor, POINT_RADIUS, 30);
-        MPoint mouseView(mousex, mousey);
-        MVGDrawUtil::drawLine2D(viewPointA, mouseView, _createColor);
-	}
-	if(points.length() > 2)
 	{
         MPointArray drawPoints;
         for(int i = 0; i < points.length(); ++i)
         {
-            MVGGeometryUtil::cameraToView(view, points[i], viewPointA);
-            drawPoints.append(viewPointA);
+			MVGGeometryUtil::cameraToView(view, points[i], viewPoint);
+            drawPoints.append(viewPoint);
+		}
+        
+        // Draw points
+        for(int i = 0; i < drawPoints.length(); ++i)
+            MVGDrawUtil::drawCircle2D(drawPoints[i], _createColor, POINT_RADIUS, 30);
+        
+        // Draw Poly
+        if(drawPoints.length() > 2)
+        {
+            drawPoints.append(MPoint(mousex, mousey));
+            MVGDrawUtil::drawLineLoop2D(drawPoints, _createColor);
+            MVGDrawUtil::drawPolygon2D(drawPoints, _faceColor, 0.6f);
         }
-        drawPoints.append(MPoint(mousex, mousey));
-        MVGDrawUtil::drawLineLoop2D(drawPoints, _createColor);
-        MVGDrawUtil::drawPolygon2D(drawPoints, _faceColor, 0.6f);
+        else
+        {
+            // Draw lines
+            for(int i = 0; i < drawPoints.length() - 1; ++i) {
+                MVGDrawUtil::drawCircle2D(drawPoints[i], _createColor, POINT_RADIUS, 30);
+                MVGDrawUtil::drawLine2D(drawPoints[i], drawPoints[i+1], _createColor);
+            }
+            // Last point to mouse
+            MPoint mouseView(mousex, mousey);
+            MVGDrawUtil::drawLine2D(drawPoints[drawPoints.length() - 1], mouseView, _createColor);
+        }
+	}
+}
+
+void MVGCreateManipulator::drawOtherPreview2D(M3dView& view, const DisplayData* data)
+{
+    if(!data)
+        return;
+    
+    short mousex, mousey;
+	mousePosition(mousex, mousey);
+    MPoint viewPoint;
+
+	const MPointArray& points = data->buildPoints2D;
+	if(points.length() > 0)
+	{
+        MPointArray drawPoints;
+        for(int i = 0; i < points.length(); ++i)
+        {
+			MVGGeometryUtil::cameraToView(view, points[i], viewPoint);
+            drawPoints.append(viewPoint);
+		}
+        
+        // Draw points
+        for(int i = 0; i < drawPoints.length(); ++i)
+            MVGDrawUtil::drawCircle2D(drawPoints[i], _neutralCreateColor, POINT_RADIUS, 30);
+        
+        // Draw Poly
+        if(drawPoints.length() > 2)
+        {
+            MVGDrawUtil::drawLineLoop2D(drawPoints, _neutralCreateColor);
+            MVGDrawUtil::drawPolygon2D(drawPoints, _faceColor, 0.6f);
+        }
+        else
+        {
+            // Draw lines
+            for(int i = 0; i < drawPoints.length() - 1; ++i) {
+                MVGDrawUtil::drawCircle2D(drawPoints[i], _neutralCreateColor, POINT_RADIUS, 30);
+                MVGDrawUtil::drawLine2D(drawPoints[i], drawPoints[i+1], _neutralCreateColor);
+            }
+        }
 	}
 }
 
@@ -371,7 +437,7 @@ void MVGCreateManipulator::computeTmpFaceOnEdgeExtend(M3dView& view, DisplayData
 	// TODO : compute plane with straight line constraint
 }
 
-bool MVGCreateManipulator::addCreateFaceCommand(MVGEditCmd* cmd, MDagPath& meshPath, const MPointArray& facePoints3D)
+bool MVGCreateManipulator::addCreateFaceCommand(MVGEditCmd* cmd, MDagPath& meshPath, const MPointArray& facePoints3D) const
 {
 	// Undo/redo
 	if(facePoints3D.length() < 4)

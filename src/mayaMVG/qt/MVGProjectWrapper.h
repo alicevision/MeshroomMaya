@@ -96,8 +96,9 @@ private:
     MVGProject _project;
     QString _logText;
     QString _currentContext;
-		
-	std::map<std::string, DisplayData> _cacheCameraToDisplayData;	
+	
+    /// Map from camera name to DisplayData
+	std::map<std::string, DisplayData> _cacheCameraToDisplayData;
 	/// Map from meshName to mesh points
 	std::map<std::string, MPointArray> _cacheMeshToPointArray;	// Temporary
 	/// Map from meshName to numConnectedFace by point
