@@ -11,8 +11,16 @@ namespace mayaMVG {
 MTypeId MVGMoveManipulator::_id(0x99222); // FIXME /!\ 
 
 
-MVGMoveManipulator::MVGMoveManipulator() :
-	_moveState(eMoveNone)
+MVGMoveManipulator::MVGMoveManipulator()
+    : _moveState(eMoveNone)
+    , _moveInPlaneColor(0.f, 1.f, 0.f)
+    , _moveRecomputeColor(0.f, 1.f, 1.f)
+    , _triangulateColor(0.9f, 0.5f, 0.4f)
+    , _faceColor(1.f, 1.f, 1.f)
+    , _noMoveColor(1.f, 0.f, 0.f)
+    , _neutralColor(0.3f, 0.3f, 0.6f)
+    , _cursorColor(0.f, 0.f, 0.f)
+
 {	
 	_manipUtils.intersectionData().pointIndex = -1;
 }
@@ -64,7 +72,8 @@ void MVGMoveManipulator::draw(M3dView & view, const MDagPath & path,
 
         // Draw	
         MVGDrawUtil::begin2DDrawing(view);
-        MVGDrawUtil::drawCircle(0, 0, 1, 5); // needed - FIXME
+        MPoint center(0, 0);
+        MVGDrawUtil::drawCircle2D(center, _cursorColor, 1, 5); // needed - FIXME
 
         if(MVGMayaUtil::isActiveView(view))
         {		
@@ -73,25 +82,31 @@ void MVGMoveManipulator::draw(M3dView & view, const MDagPath & path,
 
             Qt::KeyboardModifiers modifiers = QApplication::keyboardModifiers();
             //if(modifiers & Qt::NoModifier) { // Does not work
+            // Triangulation
             if(!(modifiers & Qt::ControlModifier) && !(modifiers & Qt::ShiftModifier)) {
                 switch(_moveState)
                 {
                     case eMoveNone:
                         break;
                     case eMovePoint:
-                        drawTriangulationDisplay(view, data, mousex, mousey);
+                    {
+                        MPoint& point3D = data->allPoints2D[_manipUtils.intersectionData().meshName].at(_manipUtils.intersectionData().pointIndex).point3D;
+                        MPoint viewPoint = MVGGeometryUtil::worldToView(view, point3D);
+                        MPoint mouseView(mousex, mousey);
+                        MVGDrawUtil::drawLine2D(viewPoint, mouseView, _triangulateColor, 1.5f, 1.f, true);
                         break;
+                    }
                     case eMoveEdge:
-                        short x, y;
+                    {
+                        MPoint viewPoint1;
+                        MPoint viewPoint2;
                         MPoint P1 = mousePoint + _manipUtils.intersectionData().edgeRatio * _manipUtils.intersectionData().edgeHeight2D;
                         MPoint P0 = mousePoint  - (1 - _manipUtils.intersectionData().edgeRatio) * _manipUtils.intersectionData().edgeHeight2D;
-                        glBegin(GL_LINES);
-                            MVGGeometryUtil::cameraToView(view, P1, x, y);
-                            glVertex2f(x, y);
-                            MVGGeometryUtil::cameraToView(view, P0, x, y);
-                            glVertex2f(x, y);
-                        glEnd();
+                        MVGGeometryUtil::cameraToView(view, P1, viewPoint1);
+                        MVGGeometryUtil::cameraToView(view, P0, viewPoint2);
+                        MVGDrawUtil::drawLine2D(viewPoint1, viewPoint2, _triangulateColor);
                         break;
+                    }
                 }
             }
         }
@@ -335,36 +350,15 @@ MPoint MVGMoveManipulator::updateMouse(M3dView& view, DisplayData* data, short& 
 
 void MVGMoveManipulator::drawCursor(float mousex, float mousey)
 {
-	glColor4f(0.f, 0.f, 0.f, 0.8f);
-	MVGDrawUtil::drawArrowsCursor(mousex, mousey);
+	MVGDrawUtil::drawArrowsCursor(mousex, mousey, _cursorColor);
 	
     Qt::KeyboardModifiers modifiers = QApplication::keyboardModifiers();
     if(modifiers & Qt::ControlModifier)
-        drawMoveInPlaneCursor(mousex, mousey);
+        MVGDrawUtil::drawPlaneItem(mousex + 12, mousey + 10, _moveInPlaneColor);
     else if(modifiers & Qt::ShiftModifier)
-        drawMoveRecomputePlaneCursor(mousex, mousey);
+        MVGDrawUtil::drawPointCloudItem(mousex + 10, mousey + 10, _moveRecomputeColor);
     else
-        drawTriangulateCursor(mousex, mousey);
-}
-
-
-
-void MVGMoveManipulator::drawTriangulateCursor(float mousex, float mousey)
-{
-	glColor3f(0.9f, 0.5f, 0.4f);
-	MVGDrawUtil::drawFullCross(mousex + 10, mousey + 10, 5, 1);
-}
-
-void MVGMoveManipulator::drawMoveInPlaneCursor(float mousex, float mousey)
-{
-	glColor3f(0.f, 1.f, 0.f);
-	MVGDrawUtil::drawPlaneItem(mousex + 12, mousey + 10);
-}
-
-void MVGMoveManipulator::drawMoveRecomputePlaneCursor(float mousex, float mousey)
-{
-	glColor3f(0.f, 1.f, 1.f);
-	MVGDrawUtil::drawPointCloudItem(mousex + 10, mousey + 10);
+        MVGDrawUtil::drawFullCross(mousex + 10, mousey + 10, 5, 1, _triangulateColor);
 }
 		
 void MVGMoveManipulator::drawIntersections(M3dView& view)
@@ -382,88 +376,55 @@ void MVGMoveManipulator::drawIntersections(M3dView& view)
 		case MVGManipulatorUtil::eIntersectionPoint:
 		{
 			EPointState movableState = meshPoints[intersectionData.pointIndex].movableState;
-
+            MPoint point = MVGGeometryUtil::worldToView(view, meshPoints[intersectionData.pointIndex].point3D);
+           
             if(modifiers & Qt::ControlModifier)
             {
                 if(movableState >= eMovableInSamePlane)
-                    glColor3f(0.f, 1.f, 0.f);
+                    MVGDrawUtil::drawCircle2D(point, _moveInPlaneColor, POINT_RADIUS, 30);
                 else
-                    glColor3f(1.f, 0.f, 0.f);
+                    MVGDrawUtil::drawCircle2D(point, _noMoveColor, POINT_RADIUS, 30);
             }
             else if(modifiers & Qt::ShiftModifier)
             {
                 if(movableState == eMovableRecompute)
-                    glColor4f(0.f, 1.f, 1.f, 0.8f);
+                    MVGDrawUtil::drawCircle2D(point, _moveRecomputeColor, POINT_RADIUS, 30);
                 else
-                    glColor3f(1.f, 0.f, 0.f);
+                    MVGDrawUtil::drawCircle2D(point, _noMoveColor, POINT_RADIUS, 30);
             }
             else
             {
-                glColor4f(0.3f, 0.3f, 0.6f, 0.8f);
+                MVGDrawUtil::drawCircle2D(point, _neutralColor, POINT_RADIUS, 30);
             }
-
-			MPoint point = MVGGeometryUtil::worldToView(view, meshPoints[intersectionData.pointIndex].point3D);
-			MVGDrawUtil::drawCircle(point.x, point.y, POINT_RADIUS, 30);
 			break;
 		}
 		case MVGManipulatorUtil::eIntersectionEdge:	
 			std::vector<EPointState> movableStates;
 			movableStates.push_back(meshPoints[intersectionData.edgePointIndexes[0]].movableState);
 			movableStates.push_back(meshPoints[intersectionData.edgePointIndexes[1]].movableState);
+            MPoint viewPoint1 = MVGGeometryUtil::worldToView(view,  meshPoints[intersectionData.edgePointIndexes[0]].point3D);
+            MPoint viewPoint2 = MVGGeometryUtil::worldToView(view, meshPoints[intersectionData.edgePointIndexes[1]].point3D);
 
             if(modifiers & Qt::ControlModifier)
             {
-                if((movableStates[0] >= eMovableInSamePlane)
-                    && (movableStates[1] >= eMovableInSamePlane))
-                {
-                    glColor3f(0.f, 1.f, 0.f);
-                }
+                if((movableStates[0] >= eMovableInSamePlane) && (movableStates[1] >= eMovableInSamePlane))
+                    MVGDrawUtil::drawLine2D(viewPoint1, viewPoint2, _moveInPlaneColor);
                 else
-                {
-                    glColor3f(1.f, 0.f, 0.f);
-                }
+                    MVGDrawUtil::drawLine2D(viewPoint1, viewPoint2, _noMoveColor);
             }
             else if(modifiers & Qt::ShiftModifier)
             {
-                if((movableStates[0] >= eMovableInSamePlane)
-                    && (movableStates[1] >= eMovableInSamePlane))
-                {
-                    glColor4f(0.f, 1.f, 1.f, 0.8f);
-                }
+                if((movableStates[0] >= eMovableInSamePlane) && (movableStates[1] >= eMovableInSamePlane))
+                    MVGDrawUtil::drawLine2D(viewPoint1, viewPoint2, _moveRecomputeColor);
                 else
-                {
-                    glColor3f(1.f, 0.f, 0.f);
-                }
+                    MVGDrawUtil::drawLine2D(viewPoint1, viewPoint2, _noMoveColor);
             }
             else
             {
-                glColor4f(0.3f, 0.3f, 0.6f, 0.8f);
+                MVGDrawUtil::drawLine2D(viewPoint1, viewPoint2, _neutralColor);
             }
-
-			glLineWidth(1.5f);
-			glBegin(GL_LINES);
-				MPoint point = MVGGeometryUtil::worldToView(view,  meshPoints[intersectionData.edgePointIndexes[0]].point3D);
-				glVertex2f(point.x, point.y);
-				point = MVGGeometryUtil::worldToView(view, meshPoints[intersectionData.edgePointIndexes[1]].point3D);
-				glVertex2f(point.x, point.y);
-			glEnd();	
 			break;
 	}
-}
-
-void MVGMoveManipulator::drawTriangulationDisplay(M3dView& view, DisplayData* data, float mousex, float mousey)
-{
-    glEnable(GL_LINE_STIPPLE);
-    glLineStipple(1.f, 0x5555);  
-    glColor3f(0.9f, 0.5f, 0.4f);
-    glBegin(GL_LINES);
-        MPoint& point3D = data->allPoints2D[_manipUtils.intersectionData().meshName].at(_manipUtils.intersectionData().pointIndex).point3D;
-        MPoint viewPoint = MVGGeometryUtil::worldToView(view, point3D);
-        glVertex2f(viewPoint.x, viewPoint.y);
-        // Mouse
-        glVertex2f(mousex, mousey);
-    glEnd();
-    glDisable(GL_LINE_STIPPLE);
 }
 
 void MVGMoveManipulator::computeTmpFaceOnMovePoint(M3dView& view, DisplayData* data, MPoint& mousePoint, bool recompute)

@@ -163,21 +163,10 @@ void MVGManipulatorUtil::drawPreview3D()
 {
 	if(_previewFace3D.length() > 0)
 	{
-		glLineWidth(1.5f);
-		glBegin(GL_LINE_LOOP);
-			glVertex3f(_previewFace3D[0].x, _previewFace3D[0].y, _previewFace3D[0].z);
-			glVertex3f(_previewFace3D[1].x, _previewFace3D[1].y, _previewFace3D[1].z);
-			glVertex3f(_previewFace3D[2].x, _previewFace3D[2].y, _previewFace3D[2].z);
-			glVertex3f(_previewFace3D[3].x, _previewFace3D[3].y, _previewFace3D[3].z);
-		glEnd();
-		glLineWidth(1.f);
-			glColor4f(1.f, 1.f, 1.f, 0.6f);
-			glBegin(GL_POLYGON);
-				glVertex3f(_previewFace3D[0].x, _previewFace3D[0].y, _previewFace3D[0].z);
-				glVertex3f(_previewFace3D[1].x, _previewFace3D[1].y, _previewFace3D[1].z);
-				glVertex3f(_previewFace3D[2].x, _previewFace3D[2].y, _previewFace3D[2].z);
-				glVertex3f(_previewFace3D[3].x, _previewFace3D[3].y, _previewFace3D[3].z);
-			glEnd();
+        MVector color(0.f, 0.f, 1.f);
+        MVGDrawUtil::drawLineLoop3D(_previewFace3D, color);
+        color = MVector(1.f, 1.f, 1.f);
+        MVGDrawUtil::drawPolygon3D(_previewFace3D, color, 0.6f);
 	}
 }
 

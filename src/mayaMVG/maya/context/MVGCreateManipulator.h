@@ -37,7 +37,6 @@ class MVGCreateManipulator: public MPxManipulatorNode
 		
 		// Draw
 		void drawCursor(float mousex, float mousey);
-		void drawExtendCursor(float mousex, float mousey);
 		void drawIntersections(M3dView& view, float mousex, float mousey);
 		void drawPreview2D(M3dView& view, DisplayData* data);
 		
@@ -49,6 +48,11 @@ class MVGCreateManipulator: public MPxManipulatorNode
 		static MTypeId _id;
 		MVGManipulatorUtil _manipUtils;
         ECreateState _createState;
+        
+        MVector _createColor;
+        MVector _extendColor;
+        MVector _faceColor;
+        MVector _cursorColor;
 };
 
 

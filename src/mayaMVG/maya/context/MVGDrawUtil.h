@@ -4,15 +4,6 @@ namespace mayaMVG {
 
 struct MVGDrawUtil {
 	
-	static void drawCircle(int x, int y, int r, int segments) {
-		glLineWidth(1.5f);
-		glBegin(GL_LINE_LOOP);
-			for( int n = 0; n <= segments; ++n ) {
-				float const t = 2*M_PI*(float)n/(float)segments;
-				glVertex2f(x + sin(t)*r, y + cos(t)*r);
-			}
-		glEnd();
-	}
 	static void begin2DDrawing(M3dView& view) {
 		glPushAttrib(GL_ALL_ATTRIB_BITS);
 		glMatrixMode(GL_PROJECTION);
@@ -27,9 +18,81 @@ struct MVGDrawUtil {
 		glPopMatrix();
 		glPopAttrib();
 	}
+    
+    static void drawLine2D(MPoint& A, MPoint& B, MVector& color, float lineWidth=1.5f, float alpha=1.f, bool stipple=false)
+    {
+        if(stipple)
+        {
+            glEnable(GL_LINE_STIPPLE);
+            glLineStipple(1.f, 0x5555);  
+        }
+        
+        glColor4f(color.x, color.y, color.z, alpha);
+        glLineWidth(lineWidth);
+        glBegin(GL_LINES);
+            glVertex2f(A.x, A.y);
+            glVertex2f(B.x, B.y);
+        glEnd();	
+        
+        if(stipple)
+            glDisable(GL_LINE_STIPPLE);
+    }
+
+    static void drawLineLoop2D(MPointArray& points, MVector& color, float lineWidth=1.f, float alpha=1.f)
+    {
+        glColor4f(color.x, color.y, color.z, alpha);
+        glLineWidth(lineWidth);
+		glBegin(GL_LINE_LOOP);
+			for(int i = 0; i < points.length(); ++i) {			
+				glVertex2f(points[i].x, points[i].y);
+			}
+		glEnd();
+    }
+    
+    static void drawPolygon2D(MPointArray& points, MVector& color, float alpha=1.f)
+    {
+        glColor4f(color.x, color.y, color.z, alpha);
+		glBegin(GL_POLYGON);
+			for(int i = 0; i < points.length(); ++i) {			
+				glVertex2f(points[i].x, points[i].y);
+			}
+		glEnd();
+    }
+    
+    static void drawLineLoop3D(MPointArray& points, MVector& color, float lineWidth=1.f, float alpha=1.f)
+    {
+        glColor4f(color.x, color.y, color.z, alpha);
+        glLineWidth(lineWidth);
+		glBegin(GL_LINE_LOOP);
+			for(int i = 0; i < points.length(); ++i) {			
+				glVertex3f(points[i].x, points[i].y, points[i].z);
+			}
+		glEnd();
+    }
+    
+    static void drawPolygon3D(MPointArray& points, MVector& color, float alpha=1.f)
+    {
+        glColor4f(color.x, color.y, color.z, alpha);
+		glBegin(GL_POLYGON);
+			for(int i = 0; i < points.length(); ++i) {			
+				glVertex3f(points[i].x, points[i].y, points[i].z);
+			}
+		glEnd();
+    }
+	static void drawCircle2D(MPoint& center, MVector& color, int r, int segments) {
+        glColor3f(color.x, color.y, color.z);
+		glLineWidth(1.5f);
+		glBegin(GL_LINE_LOOP);
+			for( int n = 0; n <= segments; ++n ) {
+				float const t = 2*M_PI*(float)n/(float)segments;
+				glVertex2f(center.x + sin(t)*r, center.y + cos(t)*r);
+			}
+		glEnd();
+	}
 	
-	static void drawEmptyCross(float x, float y, float width, float thickness)
+	static void drawEmptyCross(float x, float y, float width, float thickness, MVector& color)
 	{
+        glColor3f(color.x, color.y, color.z);
 		glBegin(GL_LINE_LOOP);
 			glVertex2f(x + width, y - thickness);
 			glVertex2f(x + width, y + thickness);
@@ -46,8 +109,9 @@ struct MVGDrawUtil {
 		glEnd();
 	}
 
-	static void drawFullCross(float x, float y, float width, float thickness)
+	static void drawFullCross(float x, float y, float width, float thickness, MVector& color)
 	{
+        glColor3f(color.x, color.y, color.z);
 		glBegin(GL_POLYGON);
 			glVertex2f(x + thickness, y - width);
 			glVertex2f(x + thickness, y + width);
@@ -62,8 +126,9 @@ struct MVGDrawUtil {
 		glEnd();
 	}
 	
-	static void drawArrowsCursor(float x, float y)
+	static void drawArrowsCursor(float x, float y, MVector& color)
 	{
+        glColor3f(color.x, color.y, color.z);
 		GLfloat step = 8;
 		GLfloat width = 4;
 		GLfloat height = 4;
@@ -102,8 +167,9 @@ struct MVGDrawUtil {
 		glEnd();
 	}
 	
-	static void drawTargetCursor(float x, float y)
+	static void drawTargetCursor(float x, float y, MVector& color)
 	{
+        glColor3f(color.x, color.y, color.z);
 		GLfloat width = 8;
 		GLfloat space = 2;
 		
@@ -126,8 +192,9 @@ struct MVGDrawUtil {
 		glEnd();
 	}
 	
-	static void drawExtendItem(float x, float y)
+	static void drawExtendItem(float x, float y, MVector& color)
 	{
+        glColor3f(color.x, color.y, color.z);
 		GLfloat width = 4;
 		// Cross shape
 		glLineWidth(1.f);
@@ -141,8 +208,9 @@ struct MVGDrawUtil {
 		glEnd();
 	}
 	
-	static void drawPointCloudItem(float x, float y)
+	static void drawPointCloudItem(float x, float y, MVector& color)
 	{
+        glColor3f(color.x, color.y, color.z);
 		glPointSize(2.f);
 		glBegin(GL_POINTS);		
 			glVertex2f(x, y);
@@ -155,8 +223,9 @@ struct MVGDrawUtil {
 		glEnd();
 	}
 	
-	static void drawPlaneItem(float x, float y)
+	static void drawPlaneItem(float x, float y, MVector& color)
 	{
+        glColor3f(color.x, color.y, color.z);
 		GLfloat width = 3;
 		GLfloat height = 3;
 		GLfloat step = 3;

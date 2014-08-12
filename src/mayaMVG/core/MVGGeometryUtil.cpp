@@ -99,7 +99,7 @@ void MVGGeometryUtil::viewToCamera(M3dView& view, const short x, const short y, 
 	viewToCamera(view, x, y, point);
 }
 
-void MVGGeometryUtil::cameraToView(M3dView& view, const MPoint& point, short& x, short& y)
+void MVGGeometryUtil::cameraToView(M3dView& view, const MPoint& point, MPoint& viewPoint)
 {
 	MDagPath dagPath;
 	view.getCamera(dagPath);
@@ -113,11 +113,11 @@ void MVGGeometryUtil::cameraToView(M3dView& view, const MPoint& point, short& x,
 	newX /= (camera.getHorizontalFilmAperture() * camera.getZoom());
 	newY /= (camera.getHorizontalFilmAperture() * camera.getZoom());
 	// center	
-	x = round((newX + 0.5) * view.portWidth());
-	y = round((newY + 0.5 + 0.5 * (view.portHeight() / (float)view.portWidth() - 1.0)) * view.portWidth());	
+	viewPoint.x = round((newX + 0.5) * view.portWidth());
+	viewPoint.y = round((newY + 0.5 + 0.5 * (view.portHeight() / (float)view.portWidth() - 1.0)) * view.portWidth());	
 }
 
-void MVGGeometryUtil::cameraToImage(const MVGCamera& camera, const MPoint& point, short& x, short& y)
+void MVGGeometryUtil::cameraToImage(const MVGCamera& camera, const MPoint& point, MPoint& image)
 {	
 	// Get image size 
 	MFnDagNode fnImage(camera.imagePath());
@@ -127,8 +127,8 @@ void MVGGeometryUtil::cameraToImage(const MVGCamera& camera, const MPoint& point
 	MPoint pointCenteredNorm = point / camera.getHorizontalFilmAperture();
 	
 	const double verticalMargin = (width - height) / 2.0;
-	x = (pointCenteredNorm.x + 0.5 ) * width;
-	y = (-pointCenteredNorm.y + 0.5) * width - verticalMargin;
+	image.x = (pointCenteredNorm.x + 0.5 ) * width;
+	image.y = (-pointCenteredNorm.y + 0.5) * width - verticalMargin;
 }
 
 bool MVGGeometryUtil::projectFace2D(M3dView& view, MPointArray& face3DPoints, const MVGCamera& camera, const MPointArray& face2DPoints, bool compute, MVector height)
@@ -143,14 +143,14 @@ bool MVGGeometryUtil::projectFace2D(M3dView& view, MPointArray& face3DPoints, co
 	std::vector<MPoint> facePoints_view;
 	
 	// Camera -> View
-	short x, y;
+	MPoint viewPoint;
 	for(size_t i = 0; i < face2DPoints.length(); ++i)
 	{
-		cameraToView(view, face2DPoints[i], x, y);
-		facePoints_view.push_back(MPoint(x, y));
+		cameraToView(view, face2DPoints[i], viewPoint);
+		facePoints_view.push_back(viewPoint);
 	}
-	cameraToView(view, face2DPoints[0], x, y);	// Extra point
-	facePoints_view.push_back(MPoint(x, y));
+	cameraToView(view, face2DPoints[0],viewPoint);	// Extra point
+	facePoints_view.push_back(viewPoint);
 	
 	// Get selected points in pointCloud
 	std::vector<MVGPointCloudItem> selectedItems;
@@ -232,11 +232,11 @@ bool MVGGeometryUtil::computePlane(MPointArray& facePoints3D, PlaneKernel::Model
 void MVGGeometryUtil::projectPointOnPlane(const MPoint& point, M3dView& view, PlaneKernel::Model& model, const MVGCamera& camera, MPoint& projectedPoint)
 {
 	MPoint cameraCenter = AS_MPOINT(camera.pinholeCamera()._C);
-	short x, y;
+    MPoint viewPoint;
 	MVector dir;
-	cameraToView(view, point, x, y);
+	cameraToView(view, point, viewPoint);
 	MPoint worldPoint;
-	view.viewToWorld(x, y, worldPoint, dir);
+	view.viewToWorld(viewPoint.x, viewPoint.y, worldPoint, dir);
 	plane_line_intersect(model, cameraCenter, worldPoint, projectedPoint);
 }
 
@@ -244,8 +244,7 @@ void MVGGeometryUtil::triangulatePoint(MPointArray& points2D, std::vector<MVGCam
 {
 	// Result
 	openMVG::Vec3 result;
-	short x, y;
-	
+    MPoint cameraPoint;
 	// N views
 //	openMVG::Mat2X A(2, points2D.length());
 //	
@@ -270,13 +269,13 @@ void MVGGeometryUtil::triangulatePoint(MPointArray& points2D, std::vector<MVGCam
 	
 	// 2 views
 	openMVG::Vec2 xL_;
-	MVGGeometryUtil::cameraToImage(cameras[0], points2D[0], x, y);
-	xL_(0) = x;
-	xL_(1) = y;
+	MVGGeometryUtil::cameraToImage(cameras[0], points2D[0], cameraPoint);
+	xL_(0) = cameraPoint.x;
+	xL_(1) = cameraPoint.y;
 	openMVG::Vec2 xR_;
-	MVGGeometryUtil::cameraToImage(cameras[1], points2D[1], x, y);
-	xR_(0) = x;
-	xR_(1) = y;
+	MVGGeometryUtil::cameraToImage(cameras[1], points2D[1], cameraPoint);
+	xR_(0) = cameraPoint.x;
+	xR_(1) = cameraPoint.y;
 	
 	const openMVG::Mat34 PL = cameras[0].pinholeCamera()._P;
 	const openMVG::Mat34 PR = cameras[1].pinholeCamera()._P;

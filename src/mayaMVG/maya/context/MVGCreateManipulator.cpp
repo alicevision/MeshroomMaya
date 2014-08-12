@@ -10,6 +10,10 @@ namespace mayaMVG {
 MTypeId MVGCreateManipulator::_id(0x99111); // FIXME /!\ 
 
 MVGCreateManipulator::MVGCreateManipulator()
+    : _createColor(0.f, 0.f, 1.f)
+    , _extendColor(0.9f, 0.9f, 0.1f)
+    , _faceColor(1.f, 1.f, 1.f)
+    , _cursorColor(0.f, 0.f, 0.f)
 {
 	_manipUtils.intersectionData().pointIndex = -1;
 }
@@ -61,7 +65,8 @@ void MVGCreateManipulator::draw(M3dView & view, const MDagPath & path,
 
         // Draw	
         MVGDrawUtil::begin2DDrawing(view);
-            MVGDrawUtil::drawCircle(0, 0, 1, 5); // needed - FIXME
+            MPoint center(0, 0);
+            MVGDrawUtil::drawCircle2D(center, _cursorColor, 1, 5); // needed - FIXME
 
             // Draw only in active view
             if(MVGMayaUtil::isActiveView(view))
@@ -233,17 +238,10 @@ MPoint MVGCreateManipulator::updateMouse(M3dView& view, DisplayData* data, short
 
 void MVGCreateManipulator::drawCursor(float mousex, float mousey)
 {
-	glColor3f(0.f, 0.f, 0.f);
-	MVGDrawUtil::drawTargetCursor(mousex, mousey);
+	MVGDrawUtil::drawTargetCursor(mousex, mousey, _cursorColor);
 	
 	if(_manipUtils.intersectionState() == MVGManipulatorUtil::eIntersectionEdge)
-		drawExtendCursor(mousex, mousey);
-}
-
-void MVGCreateManipulator::drawExtendCursor(float mousex, float mousey)
-{
-	glColor3f(0.9f, 0.9f, 0.1f);
-	MVGDrawUtil::drawExtendItem(mousex + 10, mousey + 10);
+		MVGDrawUtil::drawExtendItem(mousex + 10, mousey + 10, _extendColor);
 }
 
 void MVGCreateManipulator::drawIntersections(M3dView& view, float mousex, float mousey)
@@ -265,14 +263,9 @@ void MVGCreateManipulator::drawIntersections(M3dView& view, float mousex, float 
 			break;
 		case MVGManipulatorUtil::eIntersectionEdge:				
         {
-            glColor4f(0.9f, 0.9f, 0.1f, 0.8f);
-			glLineWidth(1.5f);
-			glBegin(GL_LINES);
-				MPoint point = MVGGeometryUtil::worldToView(view,  meshPoints[intersectionData.edgePointIndexes[0]].point3D);
-				glVertex2f(point.x, point.y);
-				point = MVGGeometryUtil::worldToView(view, meshPoints[intersectionData.edgePointIndexes[1]].point3D);
-				glVertex2f(point.x, point.y);
-			glEnd();	
+            MPoint A = MVGGeometryUtil::worldToView(view,  meshPoints[intersectionData.edgePointIndexes[0]].point3D);
+            MPoint B = MVGGeometryUtil::worldToView(view, meshPoints[intersectionData.edgePointIndexes[1]].point3D);
+            MVGDrawUtil::drawLine2D(A, B, _extendColor);
 			break;
         }
 	}	
@@ -280,58 +273,38 @@ void MVGCreateManipulator::drawIntersections(M3dView& view, float mousex, float 
 
 void MVGCreateManipulator::drawPreview2D(M3dView& view, DisplayData* data)
 {
-	short x, y;
 	short mousex, mousey;
 	mousePosition(mousex, mousey);
-	
+    MPoint viewPointA;
+    MPoint viewPointB;
 	
 	MPointArray points = data->buildPoints2D;
 	if(points.length() > 0)
 	{
 		for(int i = 0; i < points.length() - 1; ++i) {
-			MVGGeometryUtil::cameraToView(view, points[i], x, y);
-			MVGDrawUtil::drawCircle(x, y, POINT_RADIUS, 30);
-			
-			glLineWidth(1.5f);
-			glBegin(GL_LINES);
-				MVGGeometryUtil::cameraToView(view, points[i], x, y);
-				glVertex2f(x, y);
-				MVGGeometryUtil::cameraToView(view, points[i+1], x, y);
-				glVertex2f(x, y);
-			glEnd();
+			MVGGeometryUtil::cameraToView(view, points[i], viewPointA);
+            MVGGeometryUtil::cameraToView(view, points[i+1], viewPointB);
+			MVGDrawUtil::drawCircle2D(viewPointA, _createColor, POINT_RADIUS, 30);
+            MVGDrawUtil::drawLine2D(viewPointA, viewPointB, _createColor);
 		}
 		
 		// Last point to mouse
-		MVGGeometryUtil::cameraToView(view, points[points.length() - 1], x, y);
-		MVGDrawUtil::drawCircle(x, y, POINT_RADIUS, 30);
-		glBegin(GL_LINES);
-			MVGGeometryUtil::cameraToView(view, points[points.length() - 1], x, y);
-			glVertex2f(x, y);
-			glVertex2f(mousex, mousey);
-		glEnd();	
-		
-		
+		MVGGeometryUtil::cameraToView(view, points[points.length() - 1], viewPointA);
+		MVGDrawUtil::drawCircle2D(viewPointA, _createColor, POINT_RADIUS, 30);
+        MPoint mouseView(mousex, mousey);
+        MVGDrawUtil::drawLine2D(viewPointA, mouseView, _createColor);
 	}
 	if(points.length() > 2)
 	{
-		glColor4f(0.f, 0.f, 1.f, 0.8f);
-		glLineWidth(1.5f);
-		glBegin(GL_LINE_LOOP);
-			for(int i = 0; i < 3; ++i) {			
-				MVGGeometryUtil::cameraToView(view, points[i], x, y);
-				glVertex2f(x, y);
-			}
-			glVertex2f(mousex, mousey);
-		glEnd();
-		
-		glColor4f(1.f, 1.f, 1.f, 0.6f);
-		glBegin(GL_POLYGON);
-			for(int i = 0; i < 3; ++i) {			
-				MVGGeometryUtil::cameraToView(view, points[i], x, y);
-				glVertex2f(x, y);
-			}
-			glVertex2f(mousex, mousey);
-		glEnd();
+        MPointArray drawPoints;
+        for(int i = 0; i < points.length(); ++i)
+        {
+            MVGGeometryUtil::cameraToView(view, points[i], viewPointA);
+            drawPoints.append(viewPointA);
+        }
+        drawPoints.append(MPoint(mousex, mousey));
+        MVGDrawUtil::drawLineLoop2D(drawPoints, _createColor);
+        MVGDrawUtil::drawPolygon2D(drawPoints, _faceColor, 0.6f);
 	}
 }
 
