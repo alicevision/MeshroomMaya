@@ -37,6 +37,7 @@ Rectangle {
             model: m.project.visiblePanelNames
             anchors.fill: parent
             orientation: ListView.Horizontal
+            interactive: false;
             property int itemWidth: (parent.width - spacing) / m.project.visiblePanelNames.length
             spacing: 2
             delegate: Rectangle {

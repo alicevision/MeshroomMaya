@@ -9,6 +9,8 @@
 #include <maya/MGlobal.h>
 #include <maya/MEventMessage.h>
 #include <maya/MMessage.h>
+#include <maya/MSelectionList.h>
+#include <maya/MFnDependencyNode.h>
 
 using namespace mayaMVG;
 
@@ -18,8 +20,30 @@ namespace {
 	static const char * helpFlagLong = "-help";
 	static const char * projectPathFlag = "-p";
 	static const char * projectPathFlagLong = "-project";
-    
-    void currentContextChanged(void* userData) 
+
+    void selectionChangedCB(void* userData) {
+		if(!userData)
+			return;
+
+		MDagPath path;
+		MObject component;
+		MSelectionList list;
+		MGlobal::getActiveSelectionList(list);
+		QList<QString> selectedCameras;
+		for ( size_t i = 0; i < list.length(); i++) {
+			list.getDagPath(i, path, component);
+			path.extendToShape();
+			if(path.isValid() 
+				&& ((path.child(0).apiType() == MFn::kCamera) || (path.apiType() == MFn::kCamera))) {
+				MFnDependencyNode fn(path.transform());
+				selectedCameras.push_back(fn.name().asChar());
+			}
+		}
+		
+		MVGProjectWrapper::instance().selectItems(selectedCameras);
+	}
+
+    void currentContextChanged(void* userData)
     {
         if(!userData)
             return;
@@ -165,14 +189,14 @@ MStatus MVGCmd::doIt(const MArgList& args) {
 	// Reload project from Maya
 	MVGProjectWrapper::instance().reloadMVGCamerasFromMaya();
 	MVGProjectWrapper::instance().rebuildAllMeshesCacheFromMaya();
-
-    
+  
     //Maya callbacks
 	_callbackIDs.append(MEventMessage::addEventCallback("PostToolChanged", currentContextChanged, mayaWindow));
 	_callbackIDs.append(MEventMessage::addEventCallback("NewSceneOpened", sceneChanged, mayaWindow));
 	_callbackIDs.append(MEventMessage::addEventCallback("SceneOpened", sceneChanged, mayaWindow));
 	_callbackIDs.append(MEventMessage::addEventCallback("Undo", undo, mayaWindow));
 	_callbackIDs.append(MEventMessage::addEventCallback("Redo", redo, mayaWindow));
+    _callbackIDs.append(MEventMessage::addEventCallback("SelectionChanged", selectionChangedCB, mainWidget->view()));
 
 	// -p
 	if(argData.isFlagSet(projectPathFlag)) {

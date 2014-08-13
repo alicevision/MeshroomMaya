@@ -35,7 +35,8 @@ class MVGProject : public MVGNodeWrapper {
 		// nodes
 		std::vector<MVGCamera> cameras() const;
 		std::vector<MVGPointCloud> pointClouds() const;
-	
+        void selectCameras(std::vector<std::string> cameraNames) const;
+
 	public:
 		// openMVG node names
 		static std::string _CLOUD;

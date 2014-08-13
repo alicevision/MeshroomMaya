@@ -9,6 +9,8 @@ Rectangle {
     property alias camera: m.camera
     property alias project: m.project
     property alias baseHeight: m.baseHeight
+    signal multipleSelection(int index)
+    signal selection(int index)
     QtObject {
         id: m
         property variant camera
@@ -24,7 +26,7 @@ Rectangle {
                 name: "SELECTED"
                 when: m.camera.isSelected
                 PropertyChanges { target: cameraItem; height: m.baseHeight + 30; }
-                PropertyChanges { target: cameraItem; color: "lightsteelblue"; }
+                PropertyChanges { target: cameraItem; color: "#004161"; }
                 PropertyChanges { target: loader; sourceComponent: extraInformation; }
             }
         ]
@@ -82,7 +84,12 @@ Rectangle {
             MouseArea {
                 anchors.fill: parent
                 onClicked: {
-                    m.camera.select();
+                    if(mouse.modifiers & Qt.ShiftModifier)
+                        multipleSelection(index)
+                    else {
+                        m.camera.select();
+                        selection(index)
+                    }
                 }
             }
         }

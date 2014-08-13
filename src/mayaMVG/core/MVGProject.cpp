@@ -8,6 +8,7 @@
 #include <maya/MItDependencyNodes.h>
 #include <maya/MDagModifier.h>
 #include <maya/MFnTypedAttribute.h>
+#include <maya/MSelectionList.h>
 #include <third_party/stlplus3/filesystemSimplified/file_system.hpp>
 
 namespace mayaMVG {
@@ -213,6 +214,17 @@ std::vector<MVGPointCloud> MVGProject::pointClouds() const
 			list.push_back(cloud);
 	}
 	return list;
+}
+
+void MVGProject::selectCameras(std::vector<std::string> cameraNames) const
+{
+    MSelectionList list;
+    for(std::vector<std::string>::iterator it = cameraNames.begin(); it != cameraNames.end(); ++it)
+    {
+        MVGCamera camera(*it);
+        list.add(camera.dagPath());
+    }
+    MGlobal::setActiveSelectionList(list);
 }
 
 }	//mayaMVG

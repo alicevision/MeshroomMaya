@@ -85,7 +85,8 @@ QString MVGProjectWrapper::openFileDialog() const
     return MQtUtil::toQString(directoryPath);
 }
 
-void MVGProjectWrapper::activeSelectionContext() {
+void MVGProjectWrapper::activeSelectionContext() const
+{
 	MVGMayaUtil::activeSelectionContext();
 }
 
@@ -119,13 +120,22 @@ void MVGProjectWrapper::loadProject(const QString& projectDirectoryPath)
 	rebuildCacheFromMaya();
 }
 
-void MVGProjectWrapper::selectItems(const QList<QString>& cameraNames)
+void MVGProjectWrapper::selectItems(const QList<QString>& cameraNames) const
 {
     foreach(MVGCameraWrapper* camera, _cameraList.asQList<MVGCameraWrapper>())
         camera->setIsSelected(cameraNames.contains(camera->name()));
 }
 
-void MVGProjectWrapper::setCameraToView(QObject* camera, const QString& viewName)
+void MVGProjectWrapper::selectCameras(const QStringList& cameraNames) const
+{
+    std::vector<std::string> cameras;
+    for(QStringList::const_iterator it = cameraNames.begin(); it != cameraNames.end(); ++it)
+        cameras.push_back(it->toStdString());
+    
+    _project.selectCameras(cameras);
+}
+
+void MVGProjectWrapper::setCameraToView(QObject* camera, const QString& viewName) const
 {
     foreach(MVGCameraWrapper* c, _cameraList.asQList<MVGCameraWrapper>())
         c->setInView(viewName, false);
