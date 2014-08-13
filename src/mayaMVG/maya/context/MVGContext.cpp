@@ -99,6 +99,7 @@ bool MVGContext::eventFilter(QObject *obj, QEvent *e)
 				M3dView view = M3dView::active3dView();
 				DisplayData* data = MVGProjectWrapper::instance().getCachedDisplayData(view);
 				data->buildPoints2D.clear();
+                updateManipulators();
 				view.refresh(true, true);
 				break;
 			}
@@ -108,7 +109,6 @@ bool MVGContext::eventFilter(QObject *obj, QEvent *e)
 	}
 	// key released
 	else if(e->type() == QEvent::KeyRelease) {
-		Qt::KeyboardModifiers modifiers = QApplication::keyboardModifiers();
 		QKeyEvent * keyevent = static_cast<QKeyEvent*>(e);
 		if(keyevent->isAutoRepeat())
 		 	return false;

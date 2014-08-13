@@ -14,6 +14,7 @@ MTypeId MVGCreateManipulator::_id(0x99111); // FIXME /!\
 
 MVGCreateManipulator::MVGCreateManipulator()
     : _ctx(NULL)
+    , _createState(eCreateNone)
     , _createColor(0.f, 1.f, 0.f)           // Green
     , _neutralCreateColor(0.7f, 0.7f, 0.7f) // Grey
     , _extendColor(0.9f, 0.9f, 0.1f)        // Yellow
