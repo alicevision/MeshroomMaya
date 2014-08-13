@@ -286,26 +286,32 @@ MStatus MVGMoveManipulator::doDrag(M3dView& view)
 		case eMoveNone:
 			break;
 		case eMovePoint:
+        {
+            bool clear = true;
             if(modifiers & Qt::ControlModifier)
             {
                 if(meshPoints[intersectionData.pointIndex].movableState >= eMovableInSamePlane)
+                {
                     computeTmpFaceOnMovePoint(view, data, mousePoint);
-                else
-                    USER_WARNING("Can't move this point")
+                    clear = false;
+                }
             }
             else if(modifiers & Qt::ShiftModifier)
             {
                 if(meshPoints[intersectionData.pointIndex].movableState == eMovableRecompute)
+                {
                     computeTmpFaceOnMovePoint(view, data, mousePoint, true);
-                else
-                    USER_WARNING("Can't move this point")
+                    clear = false;
+                }
             }
-            else {
+            if(clear)
+            {
                 _manipUtils.previewFace3D().clear();
                 _manipUtils.intersectionState() = MVGManipulatorUtil::eIntersectionNone;
             }
 			break;
-		case eMoveEdge: 
+        }
+		case eMoveEdge:
 		{
             if(modifiers & Qt::ControlModifier)
             {
