@@ -12,9 +12,10 @@ class MVGCreateManipulator: public MPxManipulatorNode
 {
     enum ECreateState {
         eCreateNone = 0
+        , eCreateFace
         , eCreateExtend
     };
-    
+
 	public:
 		MVGCreateManipulator();
 		virtual ~MVGCreateManipulator();
@@ -46,6 +47,7 @@ class MVGCreateManipulator: public MPxManipulatorNode
 
 		// Compute
 		void computeTmpFaceOnEdgeExtend(M3dView& view, DisplayData* data, const MPoint& mousePointInCameraCoord);
+        bool createFace(M3dView& view, DisplayData* data, MVGEditCmd* cmd);
 
         // Command
         bool addCreateFaceCommand(MVGEditCmd* cmd, MDagPath& meshPath, const MPointArray& facePoints3D) const;

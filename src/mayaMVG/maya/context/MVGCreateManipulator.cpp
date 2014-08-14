@@ -121,52 +121,57 @@ MStatus MVGCreateManipulator::doPress(M3dView& view)
 	mousePoint = updateMouse(view, data, mousex, mousey);
 
     _manipUtils.updateIntersectionState(view, data, mousex, mousey);
-	switch(_manipUtils.intersectionState()) {
-		case MVGManipulatorUtil::eIntersectionNone:
-        case MVGManipulatorUtil::eIntersectionPoint:
+    
+    // Clear buildPoint of the other view
+    if(data->buildPoints2D.length() == 0)
+    {
+        std::map<std::string, DisplayData>& cache = MVGProjectWrapper::instance().getDisplayDataCache();
+        for(std::map<std::string, DisplayData>::iterator it = cache.begin(); it != cache.end(); ++it)
         {
-             // Clear buildPoint of the other view
-            if(data->buildPoints2D.length() == 0)
+            if(&(it->second) != data)
             {
-                std::map<std::string, DisplayData>& cache = MVGProjectWrapper::instance().getDisplayDataCache();
-                for(std::map<std::string, DisplayData>::iterator it = cache.begin(); it != cache.end(); ++it)
-                {
-                    if(&(it->second) != data)
-                    {
-                        it->second.buildPoints2D.clear();
-                        break;
-                    }
-                }
-            }
-
-            _createState = eCreateNone;
-			data->buildPoints2D.append(mousePoint);
-
-			// Create face if enough points (4))
-			if(data->buildPoints2D.length() < 4)
-				break;
-			
-			// Compute 3D face
-			MPointArray facePoints3D;	
-			if(!MVGGeometryUtil::projectFace2D(view, facePoints3D, data->camera, data->buildPoints2D))
-            {
-                data->buildPoints2D.remove(data->buildPoints2D.length() - 1);
-                USER_ERROR("Can't find a 3D face with these points")
+                it->second.buildPoints2D.clear();
                 break;
             }
+        }
+    }
+    
+    switch(_createState)
+    {
+        case eCreateNone:
+            if(_manipUtils.intersectionState() != MVGManipulatorUtil::eIntersectionEdge)
+            {
+                _createState = eCreateFace;
+                data->buildPoints2D.append(mousePoint);
 
-			MDagPath emptyPath;
-			if(!addCreateFaceCommand(cmd, emptyPath, facePoints3D))
-				return MS::kFailure;
-			break;
-		}
-			break;
-		case MVGManipulatorUtil::eIntersectionEdge:
-			_manipUtils.computeEdgeIntersectionData(view, data, mousePoint);            
+                if(data->buildPoints2D.length() < 4)
+                    break;
+                _createState = eCreateNone;              
+                if(!createFace(view, data, cmd))
+                    return MS::kFailure;
+
+            }
+            else
+            {
+                _manipUtils.computeEdgeIntersectionData(view, data, mousePoint);            
+                _createState = eCreateExtend;
+            }
+            break;
+        case eCreateFace:
+            data->buildPoints2D.append(mousePoint);
+
+            if(data->buildPoints2D.length() < 4)
+                break;
+            _createState = eCreateNone;
+            if(!createFace(view, data, cmd))
+                return MS::kFailure;
+            break;
+        case eCreateExtend:
+            _manipUtils.computeEdgeIntersectionData(view, data, mousePoint);            
             _createState = eCreateExtend;
-			break;
-	}
-
+            break;
+    }
+    
 	return MPxManipulatorNode::doPress(view);
 }
 
@@ -182,9 +187,10 @@ MStatus MVGCreateManipulator::doRelease(M3dView& view)
 	   LOG_ERROR("invalid context object.")
 	   return MS::kFailure;
 	}
-	
+
 	switch(_createState) {
 		case eCreateNone:
+        case eCreateFace:
 			break;
 		case eCreateExtend:
 		{
@@ -193,13 +199,13 @@ MStatus MVGCreateManipulator::doRelease(M3dView& view)
 			if(!addCreateFaceCommand(cmd, meshPath, _manipUtils.previewFace3D()))
 				return MS::kFailure;
 			_manipUtils.previewFace3D().clear();
+            _createState = eCreateNone;
 			break;
 		}
 	}
-    
+
     // FIX ME : error with view if called after addCreateFaceCommand()
-    //_manipUtils.updateIntersectionState(view, data, mousex, mousey);
-    _createState = eCreateNone;	
+    //_manipUtils.updateIntersectionState(view, data, mousex, mousey);  	
 	return MPxManipulatorNode::doRelease(view);
 }
 
@@ -227,11 +233,12 @@ MStatus MVGCreateManipulator::doDrag(M3dView& view)
 	short mousex, mousey;
 	MPoint mousePoint;
 	mousePoint = updateMouse(view, data, mousex, mousey);
-		
+	
 	switch(_createState) {
 		case eCreateNone:
+        case eCreateFace:
 			break;
-		case eCreateExtend: 
+		case eCreateExtend:
 		{
 			computeTmpFaceOnEdgeExtend(view, data, mousePoint);
 			break;
@@ -270,6 +277,9 @@ void MVGCreateManipulator::drawCursor(const float mousex, const float mousey)
 {
 	MVGDrawUtil::drawTargetCursor(mousex, mousey, _cursorColor);
 
+    if(_createState == eCreateFace)
+        return;
+    
 	if(_manipUtils.intersectionState() == MVGManipulatorUtil::eIntersectionEdge)
 		MVGDrawUtil::drawExtendItem(mousex + 10, mousey + 10, _extendColor);
 }
@@ -286,13 +296,14 @@ void MVGCreateManipulator::drawIntersections(M3dView& view, const float mousex, 
 	MVGManipulatorUtil::IntersectionData& intersectionData = _manipUtils.intersectionData();
 	std::vector<MVGPoint2D>& meshPoints = data->allPoints2D[intersectionData.meshName];
 
-	short x, y;
 	switch(_manipUtils.intersectionState())
 	{
 		case MVGManipulatorUtil::eIntersectionPoint:
 			break;
-		case MVGManipulatorUtil::eIntersectionEdge:				
+		case MVGManipulatorUtil::eIntersectionEdge:
         {
+            if(_createState == eCreateFace)
+                break;
             MPoint A = MVGGeometryUtil::worldToView(view,  meshPoints[intersectionData.edgePointIndexes[0]].point3D);
             MPoint B = MVGGeometryUtil::worldToView(view, meshPoints[intersectionData.edgePointIndexes[1]].point3D);
             MVGDrawUtil::drawLine2D(A, B, _extendColor);
@@ -436,6 +447,27 @@ void MVGCreateManipulator::computeTmpFaceOnEdgeExtend(M3dView& view, DisplayData
     _manipUtils.previewFace3D()[1] = edgePoint3D_0;
 
 	// TODO : compute plane with straight line constraint
+}
+
+bool MVGCreateManipulator::createFace(M3dView& view, DisplayData* data, MVGEditCmd* cmd)
+{
+    if(!data)
+        return false;
+    
+    // Compute 3D face
+    MPointArray facePoints3D;	
+    if(!MVGGeometryUtil::projectFace2D(view, facePoints3D, data->camera, data->buildPoints2D))
+    {
+        data->buildPoints2D.remove(data->buildPoints2D.length() - 1);
+        USER_ERROR("Can't find a 3D face with these points")
+        return false;
+    }
+
+    MDagPath emptyPath;
+    if(!addCreateFaceCommand(cmd, emptyPath, facePoints3D))
+        return false;
+    
+    return true;
 }
 
 bool MVGCreateManipulator::addCreateFaceCommand(MVGEditCmd* cmd, MDagPath& meshPath, const MPointArray& facePoints3D) const

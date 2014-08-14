@@ -37,6 +37,10 @@ void MVGContext::getClassName(MString & name) const
 
 void MVGContext::updateManipulators()
 {
+    MString currentContext;
+    MVGMayaUtil::getCurrentContext(currentContext);
+    if(currentContext != "mayaMVGTool1")
+        return;
 	// delete all manipulators
 	deleteManipulators();
 	// then add a new one, depending on edit mode
