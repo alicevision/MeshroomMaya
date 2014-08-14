@@ -127,7 +127,7 @@ MStatus MVGMayaUtil::getCameraInView(MDagPath& path, const MString& viewName)
 	return sList.isEmpty() ? MS::kFailure : sList.getDagPath(0, path);
 }
 
-MStatus MVGMayaUtil::addToMayaSelection(MString objectName)
+MStatus MVGMayaUtil::addToMayaSelection(const MString& objectName)
 {
 	return MGlobal::executePythonCommand(
 		"import maya.cmds as cmds\n"

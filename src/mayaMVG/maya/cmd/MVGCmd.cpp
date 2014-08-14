@@ -43,7 +43,7 @@ namespace {
 		MVGProjectWrapper::instance().selectItems(selectedCameras);
 	}
 
-    void currentContextChanged(void* userData)
+    void currentContextChangedCB(void* userData)
     {
         if(!userData)
             return;
@@ -52,11 +52,11 @@ namespace {
         MStatus status;
         status = MVGMayaUtil::getCurrentContext(context);
         CHECK(status)
-        
+
         MVGProjectWrapper::instance().setCurrentContext(QString(context.asChar()));
     }
-    
-    void sceneChanged(void* userData)
+
+    void sceneChangedCB(void* userData)
     {
         if(!userData)
             return;
@@ -77,8 +77,8 @@ namespace {
         MVGProjectWrapper::instance().rebuildAllMeshesCacheFromMaya();
         MVGProjectWrapper::instance().rebuildCacheFromMaya();
     }
-    
-    void undo(void * userData)
+
+    void undoCB(void * userData)
     {
         if(!userData)
            return;
@@ -93,11 +93,11 @@ namespace {
         if(cmdName != "select" && cmdName != "miCreateDefaultPresets")
         {
             MVGProjectWrapper::instance().rebuildAllMeshesCacheFromMaya();
-            MVGProjectWrapper::instance().rebuildCacheFromMaya();   
+            MVGProjectWrapper::instance().rebuildCacheFromMaya();
         }
     }
-    
-    void redo(void * userData)
+
+    void redoCB(void * userData)
     {
         if(!userData)
            return;
@@ -189,13 +189,13 @@ MStatus MVGCmd::doIt(const MArgList& args) {
 	// Reload project from Maya
 	MVGProjectWrapper::instance().reloadMVGCamerasFromMaya();
 	MVGProjectWrapper::instance().rebuildAllMeshesCacheFromMaya();
-  
+
     //Maya callbacks
-	_callbackIDs.append(MEventMessage::addEventCallback("PostToolChanged", currentContextChanged, mayaWindow));
-	_callbackIDs.append(MEventMessage::addEventCallback("NewSceneOpened", sceneChanged, mayaWindow));
-	_callbackIDs.append(MEventMessage::addEventCallback("SceneOpened", sceneChanged, mayaWindow));
-	_callbackIDs.append(MEventMessage::addEventCallback("Undo", undo, mayaWindow));
-	_callbackIDs.append(MEventMessage::addEventCallback("Redo", redo, mayaWindow));
+	_callbackIDs.append(MEventMessage::addEventCallback("PostToolChanged", currentContextChangedCB, mayaWindow));
+	_callbackIDs.append(MEventMessage::addEventCallback("NewSceneOpened", sceneChangedCB, mayaWindow));
+	_callbackIDs.append(MEventMessage::addEventCallback("SceneOpened", sceneChangedCB, mayaWindow));
+	_callbackIDs.append(MEventMessage::addEventCallback("Undo", undoCB, mayaWindow));
+	_callbackIDs.append(MEventMessage::addEventCallback("Redo", redoCB, mayaWindow));
     _callbackIDs.append(MEventMessage::addEventCallback("SelectionChanged", selectionChangedCB, mainWidget->view()));
 
 	// -p

@@ -37,7 +37,7 @@ class MVGCreateManipulator: public MPxManipulatorNode
 	public:
 		void setContext(MVGContext* ctx);
 	private:
-		MPoint updateMouse(M3dView& view, DisplayData* data, short& mousex, short& mousey);
+		MPoint updateMouse(M3dView& view, const DisplayData* data, short& mousex, short& mousey);
 
 		// Draw
 		void drawCursor(const float mousex, const float mousey);
@@ -50,7 +50,7 @@ class MVGCreateManipulator: public MPxManipulatorNode
         bool createFace(M3dView& view, DisplayData* data, MVGEditCmd* cmd);
 
         // Command
-        bool addCreateFaceCommand(MVGEditCmd* cmd, MDagPath& meshPath, const MPointArray& facePoints3D) const;
+        bool addCreateFaceCommand(MVGEditCmd* cmd, const MDagPath& meshPath, const MPointArray& facePoints3D) const;
 
 	public:
 		static MTypeId _id;

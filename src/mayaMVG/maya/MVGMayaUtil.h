@@ -39,7 +39,7 @@ struct MVGMayaUtil {
 	static MStatus setCameraInView(const MVGCamera& camera, const MString& viewName);
 	static MStatus getCameraInView(MDagPath& path, const MString& viewName);
 	// maya selection
-	static MStatus addToMayaSelection(MString objectName);
+	static MStatus addToMayaSelection(const MString& objectName);
 	static MStatus clearMayaSelection();
 	// attributes
 	static MStatus getIntArrayAttribute(const MObject&, const MString&, MIntArray&, bool=false);

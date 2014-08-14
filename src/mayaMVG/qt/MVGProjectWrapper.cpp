@@ -52,7 +52,7 @@ const QString MVGProjectWrapper::logText() const
 void MVGProjectWrapper::setLogText(const QString& text)
 {
 	_logText = text;
-	emit logTextChanged();
+	Q_EMIT logTextChanged();
 }
 
 const QString MVGProjectWrapper::currentContext() const
@@ -69,13 +69,13 @@ void MVGProjectWrapper::setCurrentContext(const QString& context)
 void MVGProjectWrapper::appendLogText(const QString& text)
 {
 	_logText.append(text + "\n");
-	emit logTextChanged();
+	Q_EMIT logTextChanged();
 }
 
 void MVGProjectWrapper::setProjectDirectory(const QString& directory)
 {
 	_project.setProjectDirectory(directory.toStdString());
-	emit projectDirectoryChanged();
+	Q_EMIT projectDirectoryChanged();
 }
 
 QString MVGProjectWrapper::openFileDialog() const
@@ -171,10 +171,9 @@ void MVGProjectWrapper::reloadMVGCamerasFromMaya()
 	std::vector<MVGCamera>::const_iterator it = cameraList.begin();
 	_cameraList.clear();
 	for(; it != cameraList.end(); ++it) {
-		_cameraList.append(new MVGCameraWrapper(*it));	
+		_cameraList.append(new MVGCameraWrapper(*it));
 	}
-	emit cameraModelChanged();
-	
+	Q_EMIT cameraModelChanged();
 	// TODO : Camera selection
 }
 

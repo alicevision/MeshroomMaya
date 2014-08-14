@@ -264,7 +264,7 @@ void MVGCreateManipulator::setContext(MVGContext* ctx)
 	_ctx = ctx;
 }
 
-MPoint MVGCreateManipulator::updateMouse(M3dView& view, DisplayData* data, short& mousex, short& mousey)
+MPoint MVGCreateManipulator::updateMouse(M3dView& view, const DisplayData* data, short& mousex, short& mousey)
 {
 	mousePosition(mousex, mousey);
 	MPoint mousePointInCameraCoord;
@@ -470,7 +470,7 @@ bool MVGCreateManipulator::createFace(M3dView& view, DisplayData* data, MVGEditC
     return true;
 }
 
-bool MVGCreateManipulator::addCreateFaceCommand(MVGEditCmd* cmd, MDagPath& meshPath, const MPointArray& facePoints3D) const
+bool MVGCreateManipulator::addCreateFaceCommand(MVGEditCmd* cmd, const MDagPath& meshPath, const MPointArray& facePoints3D) const
 {
 	// Undo/redo
 	if(facePoints3D.length() < 4)

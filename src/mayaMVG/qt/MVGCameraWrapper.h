@@ -28,16 +28,16 @@ class MVGCameraWrapper : public QObject
             , _isSelected(other._isSelected)
             , _views(other._views) {}
 		~MVGCameraWrapper();
-	
+
 	public slots:
-		QString name() const { return QString::fromStdString(_camera.name()); }
-		QString imagePath() const { return QString::fromStdString(_camera.imagePlane()); }
+		const QString name() const { return QString::fromStdString(_camera.name()); }
+		const QString imagePath() const { return QString::fromStdString(_camera.imagePlane()); }
         bool isSelected() const { return _isSelected; }
 		void setIsSelected(const bool isSelected) { _isSelected = isSelected; Q_EMIT isSelectedChanged(); }
-		QStringList views() { return _views; }
+		const QStringList views() { return _views; }
         const QSize sourceSize();
 		const qint64 sourceWeight() const;
-		
+
 	signals:
         void isSelectedChanged();
         void viewsChanged();

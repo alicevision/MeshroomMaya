@@ -36,19 +36,19 @@ class MVGMoveManipulator: public MPxManipulatorNode
 
 	public:
 		void setContext(MVGContext* ctx);
-		
+
 	private:
 		MPoint updateMouse(M3dView& view, DisplayData* data, short& mousex, short& mousey);
-		
+
 		// Draw
-		void drawCursor(float mousex, float mousey);
+		void drawCursor(const float mousex, const float mousey);
 		void drawIntersections(M3dView& view);
-			
+
 		// Compute
-		void computeTmpFaceOnMovePoint(M3dView& view, DisplayData* data, MPoint& mousePoint, bool recompute=false);
-		void computeTmpFaceOnMoveEdge(M3dView& view, DisplayData* data, MPoint& mousePoint, bool recompute=false);
-		bool triangulate(M3dView& view, MVGManipulatorUtil::IntersectionData& intersectionData, MPoint& mousePointInCameraCoord, MPoint& resultPoint3D);
-		bool triangulateEdge(M3dView& view, MVGManipulatorUtil::IntersectionData& intersectionData, MPoint& mousePointInCameraCoord, MPointArray& resultPoint3D);
+		void computeTmpFaceOnMovePoint(M3dView& view, DisplayData* data, const MPoint& mousePoint, bool recompute=false);
+		void computeTmpFaceOnMoveEdge(M3dView& view, DisplayData* data, const MPoint& mousePoint, bool recompute=false);
+		bool triangulate(M3dView& view, const MVGManipulatorUtil::IntersectionData& intersectionData, const MPoint& mousePointInCameraCoord, MPoint& resultPoint3D);
+		bool triangulateEdge(M3dView& view, const MVGManipulatorUtil::IntersectionData& intersectionData, const MPoint& mousePointInCameraCoord, MPointArray& resultPoint3D);
 
         // Command
         bool addUpdateFaceCommand(MVGEditCmd* cmd, MDagPath& meshPath, const MPointArray& newFacePoints3D, const MIntArray& verticesIndexes);

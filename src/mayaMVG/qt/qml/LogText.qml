@@ -62,7 +62,7 @@ Item
                     iconSize: 15
                     checked: true
                     tooltip: "Clear"
-                    onClicked: _project.setLogText(" ");
+                    onClicked: _project.logText = ""
                 }
             }
         }
