@@ -5,13 +5,17 @@
 
 namespace mayaMVG {
 
+class MVGEditCmd;
+class MVGContext;
+
 class MVGCreateManipulator: public MPxManipulatorNode
 {
     enum ECreateState {
         eCreateNone = 0
+        , eCreateFace
         , eCreateExtend
     };
-    
+
 	public:
 		MVGCreateManipulator();
 		virtual ~MVGCreateManipulator();
@@ -35,20 +39,26 @@ class MVGCreateManipulator: public MPxManipulatorNode
 
 	private:
 		MPoint updateMouse(M3dView& view, short& mousex, short& mousey);
-		
+
 		// Draw
-		void drawCursor(float mousex, float mousey);
-		void drawExtendCursor(float mousex, float mousey);
-		void drawIntersections(M3dView& view, float mousex, float mousey);
-		void drawPreview2D(M3dView& view, MVGManipulatorUtil::DisplayData* data);
-		
+		void drawCursor(const float mousex, const float mousey);
+		void drawIntersections(M3dView& view, const float mousex, const float mousey);
+		void drawPreview2D(M3dView& view, const MVGManipulatorUtil::DisplayData* data);
+        void drawOtherPreview2D(M3dView& view, const MVGManipulatorUtil::DisplayData* data);
+
 		// Compute
 		void computeTmpFaceOnEdgeExtend(M3dView& view, MVGManipulatorUtil::DisplayData* data, const MPoint& mousePointInCameraCoord);
+        bool createFace(M3dView& view, MVGManipulatorUtil::DisplayData* data, MVGEditCmd* cmd);
 
 	public:
 		static MTypeId _id;
+		MVGManipulatorUtil* _manipUtil;
         ECreateState _createState;
-        MVGManipulatorUtil* _manipUtil;
+        MVector _createColor;
+        MVector _neutralCreateColor;
+        MVector _extendColor;
+        MVector _faceColor;
+        MVector _cursorColor;
 };
 
 } // namespace

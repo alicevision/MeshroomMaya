@@ -38,6 +38,10 @@ void MVGContext::getClassName(MString & name) const
 
 void MVGContext::updateManipulators()
 {
+    MString currentContext;
+    MVGMayaUtil::getCurrentContext(currentContext);
+    if(currentContext != "mayaMVGTool1")
+        return;
 	// delete all manipulators
 	deleteManipulators();
 	// then add a new one, depending on edit mode
@@ -72,7 +76,7 @@ bool MVGContext::eventFilter(QObject *obj, QEvent *e)
 	// key pressed
 	if(e->type() == QEvent::KeyPress) {
 		QKeyEvent* keyevent = static_cast<QKeyEvent*>(e);
-		if (keyevent->isAutoRepeat())
+		if(keyevent->isAutoRepeat())
 			return false;
 		switch(keyevent->key()) {
 			case Qt::Key_F:
@@ -93,21 +97,6 @@ bool MVGContext::eventFilter(QObject *obj, QEvent *e)
 			case Qt::Key_Escape:
 				updateManipulators();
 				break;
-			// case Qt::Key_Control:
-			// case Qt::Key_Shift:
-			// {
-			// 	M3dView view = M3dView::active3dView();
-			// 	view.refresh(true, true);
-			// 	break;
-			// }
-			// case Qt::Key_Escape:
-			// {
-			// 	M3dView view = M3dView::active3dView();
-			// 	MVGManipulatorUtil::DisplayData* data = _manipUtil.getCachedDisplayData(view);
-			// 	data->buildPoints2D.clear();
-			// 	view.refresh(true, true);
-			// 	break;
-			// }
 			default:
 				return false;
 		}
@@ -115,7 +104,7 @@ bool MVGContext::eventFilter(QObject *obj, QEvent *e)
 	// key released
 	else if(e->type() == QEvent::KeyRelease) {
 		QKeyEvent * keyevent = static_cast<QKeyEvent*>(e);
-		if (keyevent->isAutoRepeat())
+		if(keyevent->isAutoRepeat())
 		 	return false;
 		switch(keyevent->key()) {
 			case Qt::Key_C:
@@ -127,22 +116,6 @@ bool MVGContext::eventFilter(QObject *obj, QEvent *e)
 			case Qt::Key_Escape:
 				updateManipulators();
 				break;
-			// case Qt::Key_C:
-			// {
-			// 	_editMode = eModeMove;
-			// 	M3dView view = M3dView::active3dView();
-			// 	MVGManipulatorUtil::DisplayData* data = _manipUtil.getCachedDisplayData(view);
-			// 	data->buildPoints2D.clear();
-			// 	updateManipulators();
-			// 	break;
-			// }
-			// case Qt::Key_Control:
-			// case Qt::Key_Shift:
-			// {
-			// 	M3dView view = M3dView::active3dView();
-			// 	view.refresh(true, true);
-			// 	break;
-			// }
 			default:
 				return false;
 		}
@@ -209,8 +182,11 @@ bool MVGContext::eventFilter(QObject *obj, QEvent *e)
 		// QVariant window = obj->property("mvg_window");
 		// if(window.type() != QVariant::Invalid)
 		// {
-		// 	_manipUtil.rebuildAllMeshesCacheFromMaya();
-		// 	_manipUtil.rebuildCacheFromMaya();
+			// MDagPath path;
+			// if(!MVGMayaUtil::getDagPathByName(MVGProject::_PROJECT.c_str(), path))
+			// 	return false;
+		// 	MVGProjectWrapper::instance().rebuildAllMeshesCacheFromMaya();
+		// 	MVGProjectWrapper::instance().rebuildCacheFromMaya();
 		// 	return false;
 		// }
 		// check if we are entering an MVG panel

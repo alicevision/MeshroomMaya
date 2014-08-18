@@ -29,9 +29,8 @@ class MVGContext: public MPxContext {
     enum EditMode {
         eModeCreate = 0
         , eModeMove
-        // , eModeDelete
     };
-	
+
 	enum EKeyPressed {
 		eKeyNone = 0
 		, eKeyCtrl

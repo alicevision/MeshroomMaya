@@ -1,8 +1,7 @@
 #include "mayaMVG/maya/context/MVGManipulatorUtil.h"
-#include "mayaMVG/maya/MVGMayaUtil.h"
+#include "mayaMVG/maya/context/MVGDrawUtil.h"
 #include "mayaMVG/maya/context/MVGContext.h"
 #include "mayaMVG/maya/cmd/MVGEditCmd.h"
-#include "mayaMVG/maya/context/MVGDrawUtil.h"
 #include "mayaMVG/core/MVGGeometryUtil.h"
 #include "mayaMVG/core/MVGLog.h"
 #include <maya/MMatrix.h>
@@ -38,7 +37,6 @@ bool MVGManipulatorUtil::intersectPoint(M3dView& view, DisplayData* displayData,
 		std::vector<MVGPoint2D>& meshPoints = it->second;
 		for(int i = 0; i < meshPoints.size(); ++i)
 		{
-			//MVGGeometryUtil::worldToCamera(view, displayData->camera, meshPoints[i], pointCameraCoord);
 			if(meshPoints[i].projectedPoint3D.x <= mousePoint.x + threshold && meshPoints[i].projectedPoint3D.x >= mousePoint.x - threshold
 			&& meshPoints[i].projectedPoint3D.y <= mousePoint.y + threshold && meshPoints[i].projectedPoint3D.y >= mousePoint.y - threshold)
 			{
@@ -169,72 +167,11 @@ void MVGManipulatorUtil::drawPreview3D()
 {
 	if(_previewFace3D.length() > 0)
 	{
-		glLineWidth(1.5f);
-		glBegin(GL_LINE_LOOP);
-			glVertex3f(_previewFace3D[0].x, _previewFace3D[0].y, _previewFace3D[0].z);
-			glVertex3f(_previewFace3D[1].x, _previewFace3D[1].y, _previewFace3D[1].z);
-			glVertex3f(_previewFace3D[2].x, _previewFace3D[2].y, _previewFace3D[2].z);
-			glVertex3f(_previewFace3D[3].x, _previewFace3D[3].y, _previewFace3D[3].z);
-		glEnd();
-		glLineWidth(1.f);
-		glDisable(GL_LINE_STIPPLE);
-			glColor4f(1.f, 1.f, 1.f, 0.6f);
-			glBegin(GL_POLYGON);
-				glVertex3f(_previewFace3D[0].x, _previewFace3D[0].y, _previewFace3D[0].z);
-				glVertex3f(_previewFace3D[1].x, _previewFace3D[1].y, _previewFace3D[1].z);
-				glVertex3f(_previewFace3D[2].x, _previewFace3D[2].y, _previewFace3D[2].z);
-				glVertex3f(_previewFace3D[3].x, _previewFace3D[3].y, _previewFace3D[3].z);
-			glEnd();
+		MVector color(0.f, 0.f, 1.f);
+		MVGDrawUtil::drawLineLoop3D(_previewFace3D, color);
+		color = MVector(1.f, 1.f, 1.f);
+		MVGDrawUtil::drawPolygon3D(_previewFace3D, color, 0.6f);
 	}
-}
-
-bool MVGManipulatorUtil::addCreateFaceCommand(MDagPath& meshPath, const MPointArray& facePoints3D)
-{
-	if(facePoints3D.length() < 4)
-		return false;
-	MVGEditCmd* cmd = (MVGEditCmd*)_context->newCmd();
-	if(!cmd) {
-	  LOG_ERROR("invalid command object.")
-	  return false;
-	}
-
-	// FIX ME - Convert to KObject space
-	MPointArray objectPoints;
-	for(int i = 0; i < facePoints3D.length(); ++i) {
-		MPoint objPoint = facePoints3D[i] * meshPath.inclusiveMatrixInverse();	
-		objectPoints.append(objPoint);
-	}
-	
-	// Create face
-	cmd->doAddPolygon(meshPath, objectPoints);
-	if(cmd->redoIt())
-		cmd->finalize();
-	
-	return true;
-}
-
-bool MVGManipulatorUtil::addUpdateFaceCommand(MDagPath& meshPath, const MPointArray& newFacePoints3D, const MIntArray& verticesIndexes)
-{
-	
-	if(newFacePoints3D.length() != verticesIndexes.length()) {
-		LOG_ERROR("Need an ID per point")
-		return false;
-	}
-	// Undo/redo
-	MVGEditCmd* cmd = (MVGEditCmd*)_context->newCmd();
-	if(!cmd) {
-	  LOG_ERROR("invalid command object.")
-	  return false;
-	}
-	cmd->doMove(meshPath, newFacePoints3D, verticesIndexes);
-	if(cmd->redoIt())
-		cmd->finalize();
-}
-
-void MVGManipulatorUtil::reset()
-{
-	rebuildAllMeshesCacheFromMaya();
-	rebuild();
 }
 
 void MVGManipulatorUtil::rebuild() 
@@ -380,6 +317,11 @@ MStatus MVGManipulatorUtil::rebuildMeshCacheFromMaya(MDagPath& meshPath)
 
 MVGManipulatorUtil::DisplayData* MVGManipulatorUtil::getDisplayData(M3dView& view)
 {		
+	if(_cacheCameraToDisplayData.empty()) {
+		rebuildAllMeshesCacheFromMaya();
+		rebuild();
+	}
+
 	MDagPath path;
 	view.getCamera(path);
 	std::map<std::string, DisplayData>::iterator it = _cacheCameraToDisplayData.find(path.fullPathName().asChar());
@@ -390,6 +332,11 @@ MVGManipulatorUtil::DisplayData* MVGManipulatorUtil::getDisplayData(M3dView& vie
 
 MVGManipulatorUtil::DisplayData* MVGManipulatorUtil::getComplementaryDisplayData(M3dView& view)
 {		
+	if(_cacheCameraToDisplayData.empty()) {
+		rebuildAllMeshesCacheFromMaya();
+		rebuild();
+	}
+
 	MDagPath path;
 	view.getCamera(path);
 	std::map<std::string, MVGManipulatorUtil::DisplayData>::iterator it = _cacheCameraToDisplayData.begin();
@@ -399,4 +346,51 @@ MVGManipulatorUtil::DisplayData* MVGManipulatorUtil::getComplementaryDisplayData
 		}
 	}
 	return NULL;
+}
+
+bool MVGManipulatorUtil::addCreateFaceCommand(const MDagPath& meshPath, const MPointArray& facePoints3D) const
+{
+	// Undo/redo
+	if(facePoints3D.length() < 4)
+		return false;
+
+	MVGEditCmd* cmd = (MVGEditCmd *)_context->newCmd();
+	if(!cmd) {
+	  LOG_ERROR("invalid command object.")
+	  return false;
+	}
+
+	// FIX ME - Convert to KObject space
+	MPointArray objectPoints;
+	for(int i = 0; i < facePoints3D.length(); ++i)
+	{
+		MPoint objPoint = facePoints3D[i] * meshPath.inclusiveMatrixInverse();	
+		objectPoints.append(objPoint);
+	}
+	
+	// Create face
+	cmd->doAddPolygon(meshPath, objectPoints);
+	if(cmd->redoIt())
+		cmd->finalize();
+	return true;
+}
+
+bool MVGManipulatorUtil::addUpdateFaceCommand(const MDagPath& meshPath, const MPointArray& newFacePoints3D, const MIntArray& verticesIndexes) const
+{
+	if(newFacePoints3D.length() != verticesIndexes.length())
+	{
+		LOG_ERROR("Need an ID per point")
+		return false;
+	}
+	
+    MVGEditCmd* cmd = (MVGEditCmd *)_context->newCmd();
+    if(!cmd) {
+      LOG_ERROR("invalid command object.")
+      return false;
+    }
+
+	cmd->doMove(meshPath, newFacePoints3D, verticesIndexes);
+	if(cmd->redoIt())
+		cmd->finalize();
+	return true;
 }

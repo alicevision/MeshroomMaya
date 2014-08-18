@@ -25,6 +25,7 @@ Item {
             sliderMinValue: 90
             sliderMaxValue: 180
             onSettingProjectLoaded: contextBar.settingsVisibility = false
+            thumbSize: sliderMinValue
         }
         // PointCloudItem {
         //     implicitWidth: parent.width

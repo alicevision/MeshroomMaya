@@ -12,7 +12,7 @@ Rectangle {
         property variant project
         property variant camera
         property string source: "img/Folder.png"
-        property color selectedColor: "orangered"
+        property color selectedColor: "#fec04c"
         property color hoverColor: "white"
         property color normalColor: "transparent"
     }
@@ -37,6 +37,7 @@ Rectangle {
             model: m.project.visiblePanelNames
             anchors.fill: parent
             orientation: ListView.Horizontal
+            interactive: false;
             property int itemWidth: (parent.width - spacing) / m.project.visiblePanelNames.length
             spacing: 2
             delegate: Rectangle {

@@ -5,8 +5,11 @@
 
 namespace mayaMVG {
 
+class MVGEditCmd;
+class MVGContext;
+
 class MVGMoveManipulator: public MPxManipulatorNode
-{	
+{
 	enum EMoveState {
         eMoveNone = 0
         , eMovePoint
@@ -36,25 +39,27 @@ class MVGMoveManipulator: public MPxManipulatorNode
 
 	private:
 		MPoint updateMouse(M3dView& view, short& mousex, short& mousey);
-		
 		// Draw
-		void drawCursor(float mousex, float mousey);
-		void drawTriangulateCursor(float mousex, float mousey);
-		void drawMoveInPlaneCursor(float mousex, float mousey);
-		void drawMoveRecomputePlaneCursor(float mousex, float mousey);
+		void drawCursor(const float mousex, const float mousey);
 		void drawIntersections(M3dView& view);
-        void drawTriangulationDisplay(M3dView& view, MVGManipulatorUtil::DisplayData* data, float mousex, float mousey);
-			
+
 		// Compute
-		void computeTmpFaceOnMovePoint(M3dView& view, MVGManipulatorUtil::DisplayData* data, MPoint& mousePoint, bool recompute=false);
-		void computeTmpFaceOnMoveEdge(M3dView& view, MVGManipulatorUtil::DisplayData* data, MPoint& mousePoint, bool recompute=false);
-		bool triangulate(M3dView& view, MVGManipulatorUtil::IntersectionData& intersectionData, MPoint& mousePointInCameraCoord, MPoint& resultPoint3D);
-		bool triangulateEdge(M3dView& view, MVGManipulatorUtil::IntersectionData& intersectionData, MPoint& mousePointInCameraCoord, MPointArray& resultPoint3D);
-        
+		void computeTmpFaceOnMovePoint(M3dView& view, MVGManipulatorUtil::DisplayData* data, const MPoint& mousePoint, bool recompute=false);
+		void computeTmpFaceOnMoveEdge(M3dView& view, MVGManipulatorUtil::DisplayData* data, const MPoint& mousePoint, bool recompute=false);
+		bool triangulate(M3dView& view, const MVGManipulatorUtil::IntersectionData& intersectionData, const MPoint& mousePointInCameraCoord, MPoint& resultPoint3D);
+		bool triangulateEdge(M3dView& view, const MVGManipulatorUtil::IntersectionData& intersectionData, const MPoint& mousePointInCameraCoord, MPointArray& resultPoint3D);
+
 public:
 		static MTypeId _id;
-		EMoveState _moveState;
 		MVGManipulatorUtil* _manipUtil;
+		EMoveState _moveState;
+        MVector _moveInPlaneColor;
+        MVector _moveRecomputeColor;
+        MVector _triangulateColor;
+        MVector _faceColor;
+        MVector _noMoveColor;
+        MVector _neutralColor;
+        MVector _cursorColor;
 };
 
 } // namespace

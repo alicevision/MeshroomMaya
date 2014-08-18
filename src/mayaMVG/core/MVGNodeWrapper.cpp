@@ -47,7 +47,6 @@ bool MVGNodeWrapper::isValid() const
 void MVGNodeWrapper::select() const
 {
 	MSelectionList list;
-	//list.add(_dagpath.transform()); // select the transform node
 	list.add(_dagpath);
 	MGlobal::setActiveSelectionList(list);
 }

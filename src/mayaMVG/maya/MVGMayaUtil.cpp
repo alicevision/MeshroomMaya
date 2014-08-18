@@ -131,7 +131,7 @@ MStatus MVGMayaUtil::getCameraInView(MDagPath& path, const MString& viewName)
 	return sList.isEmpty() ? MS::kFailure : sList.getDagPath(0, path);
 }
 
-MStatus MVGMayaUtil::addToMayaSelection(MString objectName)
+MStatus MVGMayaUtil::addToMayaSelection(const MString& objectName)
 {
 	return MGlobal::executePythonCommand(
 		"import maya.cmds as cmds\n"
@@ -290,6 +290,27 @@ MStatus MVGMayaUtil::getPointArrayAttributeSize(const MObject& object, const MSt
 	return status;
 }
 
+MStatus MVGMayaUtil::getStringAttribute(const MObject& object, const MString& param, MString& string, bool networked)
+{
+	MStatus status;
+	MFnDependencyNode fn(object, &status);
+	CHECK_RETURN_STATUS(status);
+	MPlug plug(fn.findPlug(param, networked, &status));
+	CHECK_RETURN_STATUS(status);
+	string = plug.asString();
+	return status;
+}
+MStatus MVGMayaUtil::setStringAttribute(const MObject& object, const MString& param, const MString& string, bool networked)
+{
+	MStatus status;
+	MFnDependencyNode fn(object, &status);
+	CHECK_RETURN_STATUS(status);
+	MPlug plug(fn.findPlug(param, networked, &status));
+	CHECK_RETURN_STATUS(status);
+	plug.setString(string);
+	return status;
+}
+
 MStatus MVGMayaUtil::getPointInArrayAttribute(const MObject& object, const MString& param, MPoint& point, int index, bool networked)
 {
 	MStatus status;
@@ -395,4 +416,18 @@ MStatus MVGMayaUtil::openFileDialog(MString& directory)
 	status = MGlobal::executePythonCommand( // one line cmd, to get result
 		"window.mvgOpenProjectFileDialog()", directory);
 	return status;
+}
+
+MStatus MVGMayaUtil::getUndoName(MString& undoName)
+{
+    MStatus status = MGlobal::executePythonCommand("import maya.cmds as cmds");
+    status = MGlobal::executePythonCommand( // one line cmd, to get result
+		"cmds.undoInfo( q=True, undoName=True )", undoName);
+}
+
+MStatus MVGMayaUtil::getRedoName(MString& redoName)
+{
+    MStatus status = MGlobal::executePythonCommand("import maya.cmds as cmds");
+    status = MGlobal::executePythonCommand( // one line cmd, to get result
+		"cmds.undoInfo( q=True, redoName=True )", redoName);
 }
