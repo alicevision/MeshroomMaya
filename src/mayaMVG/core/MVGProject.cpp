@@ -9,6 +9,7 @@
 #include <maya/MDagModifier.h>
 #include <maya/MFnTypedAttribute.h>
 #include <maya/MSelectionList.h>
+#include <maya/MPlug.h>
 #include <third_party/stlplus3/filesystemSimplified/file_system.hpp>
 
 namespace mayaMVG {
@@ -17,7 +18,7 @@ std::string MVGProject::_CLOUD = "mvgPointCloud";
 std::string MVGProject::_MESH = "mvgMesh";
 std::string MVGProject::_PROJECT = "mayaMVG";
 
-MString	MVGProject::_PROJECTPATH = "project";
+MString	MVGProject::_PROJECTPATH = "projectPath";
 
 std::string MVGProject::_cameraRelativeDirectory = stlplus::folder_append_separator("outIncremental")
                                         + stlplus::folder_append_separator("SfM_output")
@@ -52,6 +53,11 @@ bool MVGProject::isValid() const
 {
 	if(!_dagpath.isValid() || (_dagpath.apiType()!=MFn::kTransform))
 		return false;
+    MFnTransform fn(_dagpath);
+    MStatus status;
+    fn.findPlug(_PROJECTPATH, false, &status);
+    if(!status)
+        return false;
 	return true;
 }
 
@@ -82,46 +88,38 @@ MVGProject MVGProject::create(const std::string& name)
     // Add root attributes
     MDagModifier dagModifier;
     MFnTypedAttribute tAttr;
-    MObject projectAttr = tAttr.create(_PROJECTPATH, "project", MFnData::kString);
+    MObject projectAttr = tAttr.create(_PROJECTPATH, "prp", MFnData::kString);
     dagModifier.addAttribute(path.node(), projectAttr);
     dagModifier.doIt();
     
 	return project;
 }
 
+// static
+std::vector<MVGProject> MVGProject::list()
+{
+    std::vector<MVGProject> list;
+    MDagPath path;
+    MItDependencyNodes it(MFn::kTransform);
+    for (; !it.isDone(); it.next()) {
+        MFnDependencyNode fn(it.thisNode());
+        MDagPath::getAPathTo(fn.object(), path);
+        MVGProject project(path);
+        if(project.isValid())
+            list.push_back(project);
+    }
+    return list;
+}
+
 bool MVGProject::load(const std::string& projectDirectoryPath)
 {
     if(!isProjectDirectoryValid(projectDirectoryPath))
         return false;
-    
-    // Create project node if deleted
-    MDagPath path;
-    if(!MVGMayaUtil::getDagPathByName(_PROJECT.c_str(), path))
-        create(_PROJECT.c_str());
-
-    // Clean MAYA cameras and pointCloud (under mayaMVG node)
-    MDagPath camerasDagPath;
-    MVGMayaUtil::getDagPathByName("cameras", camerasDagPath);
-    for(int i = camerasDagPath.childCount(); i > 0; --i)
-    {
-        MObject child = camerasDagPath.child(i - 1);
-        MGlobal::deleteNode(child);
-    }
-    
-    MDagPath pointCloudDagPath;
-    MVGMayaUtil::getDagPathByName("clouds", pointCloudDagPath);
-    for(int i = pointCloudDagPath.childCount(); i > 0; --i)
-    {
-        MObject child = pointCloudDagPath.child(i - 1);
-        MGlobal::deleteNode(child);
-    }
-
     // Load new elements
 	if(!loadCameras(projectDirectoryPath))
 		return false;
 	if(!loadPointCloud(projectDirectoryPath))
 		return false;
-    
 	return true;
 }
 
@@ -141,11 +139,6 @@ bool MVGProject::loadPointCloud(const std::string& projectDirectoryPath)
     std::string pointCloudFile = stlplus::folder_append_separator(projectDirectoryPath)
                                     + _pointCloudRelativeFile;
 	return readPointCloud(pointCloudFile);
-}
-
-std::string MVGProject::moduleDirectory() const
-{
-	return MVGMayaUtil::getModulePath().asChar();
 }
 
 std::string MVGProject::projectDirectory() const
@@ -198,7 +191,8 @@ bool MVGProject::isProjectDirectoryValid(const std::string& projectDirectoryPath
 
 std::vector<MVGCamera> MVGProject::cameras() const
 {
-	return MVGCamera::list();
+	// TODO return cameras of this project
+    return MVGCamera::list();
 }
 
 std::vector<MVGPointCloud> MVGProject::pointClouds() const

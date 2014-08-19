@@ -12,13 +12,7 @@ MVGProjectWrapper::MVGProjectWrapper()
 	_allPanelNames.append("mvgLPanel");
 	_allPanelNames.append("mvgRPanel");
 	_visiblePanelNames = _allPanelNames;
-	
-	_project = MVGProject(MVGProject::_PROJECT);
-	if(!_project.isValid()) {
-		_project = MVGProject::create(MVGProject::_PROJECT);
-		LOG_INFO("New OpenMVG Project.")
-	}
-    
+
     // // Initialize currentContext
     // MString context;
     // MVGMayaUtil::getCurrentContext(context);
@@ -29,13 +23,10 @@ MVGProjectWrapper::~MVGProjectWrapper()
 {
 }
 
-const QString MVGProjectWrapper::moduleDirectory() const
-{
-	return QString(_project.moduleDirectory().c_str());
-}
-
 const QString MVGProjectWrapper::projectDirectory() const
 {
+	if(!_project.isValid())
+		return "";
 	return QString(_project.projectDirectory().c_str());
 }
 
@@ -69,6 +60,8 @@ void MVGProjectWrapper::appendLogText(const QString& text)
 
 void MVGProjectWrapper::setProjectDirectory(const QString& directory)
 {
+	if(!_project.isValid())
+		return;
 	_project.setProjectDirectory(directory.toStdString());
 	Q_EMIT projectDirectoryChanged();
 }
@@ -90,14 +83,24 @@ void MVGProjectWrapper::activeMVGContext()
 	MVGMayaUtil::activeContext();
 }
 
-void MVGProjectWrapper::loadProject(const QString& projectDirectoryPath)
-{	
-    if(projectDirectoryPath.isEmpty())
-        return;
+void MVGProjectWrapper::loadExistingProject()
+{
+	std::vector<MVGProject> projects = MVGProject::list();
+	if(projects.empty())
+		return;
+	_project = projects.front();
+	reloadMVGCamerasFromMaya();
+}
+
+void MVGProjectWrapper::loadNewProject(const QString& projectDirectoryPath)
+{
+	_project = MVGProject::create(MVGProject::_PROJECT);
+	if(projectDirectoryPath.isEmpty())
+		return;
 	if(!_project.load(projectDirectoryPath.toStdString())) {
 		LOG_ERROR("An error occured when loading project.");
 		appendLogText(QString("An error occured when loading project."));
-        return;
+		return;
 	}
 	_project.setProjectDirectory(projectDirectoryPath.toStdString());
 	Q_EMIT projectDirectoryChanged();
@@ -119,6 +122,8 @@ void MVGProjectWrapper::selectItems(const QList<QString>& cameraNames) const
 
 void MVGProjectWrapper::selectCameras(const QStringList& cameraNames) const
 {
+	if(!_project.isValid())
+		return;
     std::vector<std::string> cameras;
     for(QStringList::const_iterator it = cameraNames.begin(); it != cameraNames.end(); ++it)
         cameras.push_back(it->toStdString());
@@ -138,6 +143,8 @@ void MVGProjectWrapper::setCameraToView(QObject* camera, const QString& viewName
 
 void MVGProjectWrapper::reloadMVGCamerasFromMaya()
 {
+	if(!_project.isValid())
+		return;
 	Q_EMIT projectDirectoryChanged();
 	const std::vector<MVGCamera>& cameraList = _project.cameras();
 	std::vector<MVGCamera>::const_iterator it = cameraList.begin();

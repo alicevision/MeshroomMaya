@@ -65,11 +65,6 @@ bool MVGMayaUtil::isMVGView(const M3dView & view)
 	// check panel name
 	// or get widget and check mvg flag
 	return true;
-	// QWidget* leftViewport = MVGMayaUtil::getMVGViewportLayout(MVGProjectWrapper::instance().getVisiblePanelNames().at(0).toStdString().c_str());
-	// QWidget* rightViewport = MVGMayaUtil::getMVGViewportLayout(MVGProjectWrapper::instance().getVisiblePanelNames().at(1).toStdString().c_str());
-	// if(!leftViewport || !rightViewport)
-	// 	return false;
-	// return ((view.widget() == leftViewport) || (view.widget() == rightViewport));
 }
 
 bool MVGMayaUtil::isActiveView(const M3dView & view)
@@ -300,6 +295,7 @@ MStatus MVGMayaUtil::getStringAttribute(const MObject& object, const MString& pa
 	string = plug.asString();
 	return status;
 }
+
 MStatus MVGMayaUtil::setStringAttribute(const MObject& object, const MString& param, const MString& string, bool networked)
 {
 	MStatus status;

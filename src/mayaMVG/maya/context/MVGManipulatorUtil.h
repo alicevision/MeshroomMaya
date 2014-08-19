@@ -1,9 +1,10 @@
 #pragma once
 
-#include "mayaMVG/qt/MVGProjectWrapper.h"
+#include "mayaMVG/core/MVGCamera.h"
 #include <maya/MPointArray.h>
 #include <maya/MIntArray.h>
 #include <maya/M3dView.h>
+#include <map>
 
 namespace mayaMVG {
 

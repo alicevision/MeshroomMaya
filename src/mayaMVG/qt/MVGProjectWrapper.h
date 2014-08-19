@@ -43,12 +43,14 @@ public:
 	void appendLogText(const QString&);
 	void selectItems(const QList<QString>& cameraNames) const;
 	Q_INVOKABLE void selectCameras(const QStringList& cameraNames) const;
-    Q_INVOKABLE const QString moduleDirectory() const;
     Q_INVOKABLE QString openFileDialog() const;
     Q_INVOKABLE void activeSelectionContext() const;
     Q_INVOKABLE void activeMVGContext();
-    Q_INVOKABLE void loadProject(const QString& projectDirectoryPath);
+    Q_INVOKABLE void loadExistingProject();
+    Q_INVOKABLE void loadNewProject(const QString& projectDirectoryPath);
     Q_INVOKABLE void setCameraToView(QObject* camera, const QString& viewName, bool rebuildCache = true) const;
+
+private:
     void reloadMVGCamerasFromMaya();
 
 private:

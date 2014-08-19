@@ -20,6 +20,7 @@ class MVGProject : public MVGNodeWrapper {
 	
 	public:
 		static MVGProject create(const std::string& name);
+		static std::vector<MVGProject> list();
 
 	public:
 		bool load(const std::string& projectDirectoryPath);
@@ -28,7 +29,6 @@ class MVGProject : public MVGNodeWrapper {
 	
 	public:
 		// filesystem
-		std::string moduleDirectory() const;
 		std::string projectDirectory() const;
 		void setProjectDirectory(const std::string&) const;
         bool isProjectDirectoryValid(const std::string&) const;
@@ -42,9 +42,8 @@ class MVGProject : public MVGNodeWrapper {
 		static std::string _CLOUD;
 		static std::string _MESH;
 		static std::string _PROJECT;
-        
+        // dynamic attributes
         static MString _PROJECTPATH;
-        
         static std::string _cameraRelativeDirectory;
         static std::string _imageRelativeDirectory;
         static std::string _cameraRelativeFile;

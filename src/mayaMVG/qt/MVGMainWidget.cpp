@@ -1,6 +1,7 @@
 #include "mayaMVG/qt/MVGMainWidget.h"
 #include "mayaMVG/qt/QmlInstantCoding.h"
 #include "mayaMVG/qt/QWheelArea.h"
+#include "mayaMVG/maya/MVGMayaUtil.h"
 #include <QtDeclarative/qdeclarativecontext.h>
 #include <QGraphicsObject>
 
@@ -9,13 +10,15 @@ using namespace mayaMVG;
 MVGMainWidget::MVGMainWidget(QWidget * parent)
 	: QWidget(parent)
 {
-    qmlRegisterType<MVGCameraWrapper>();
-    qmlRegisterType<QObjectListModel>();
-    qmlRegisterType<QWheelArea>("MyTools", 1, 0, "CustomWheelArea");
+	qmlRegisterType<MVGCameraWrapper>();
+	qmlRegisterType<QObjectListModel>();
+	qmlRegisterType<QWheelArea>("MyTools", 1, 0, "CustomWheelArea");
 
 	_view = new QDeclarativeView(parent);
 	
-	QString importDirectory = _projectWrapper.moduleDirectory()+"/qml";
+	_projectWrapper.loadExistingProject();
+
+	QString importDirectory = QString(MVGMayaUtil::getModulePath().asChar())+"/qml";
 	QString sourceDirectory = importDirectory+"/mvg/main.qml";
 
 	// QtDesktop Components

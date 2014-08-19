@@ -19,57 +19,57 @@ namespace {
 	static const char * projectPathFlag = "-p";
 	static const char * projectPathFlagLong = "-project";
 
-    void selectionChangedCB(void* userData) {
-		if(!userData)
-			return;
-		MDagPath path;
-		MObject component;
-		MSelectionList list;
-		MGlobal::getActiveSelectionList(list);
-		QList<QString> selectedCameras;
-		for ( size_t i = 0; i < list.length(); i++) {
-			list.getDagPath(i, path, component);
-			path.extendToShape();
-			if(path.isValid() 
-				&& ((path.child(0).apiType() == MFn::kCamera) || (path.apiType() == MFn::kCamera))) {
-				MFnDependencyNode fn(path.transform());
-				selectedCameras.push_back(fn.name().asChar());
-			}
-		}
-		// MVGProjectWrapper::instance().selectItems(selectedCameras);
-	}
+	// void selectionChangedCB(void* userData) {
+	// 	if(!userData)
+	// 		return;
+	// 	MDagPath path;
+	// 	MObject component;
+	// 	MSelectionList list;
+	// 	MGlobal::getActiveSelectionList(list);
+	// 	QList<QString> selectedCameras;
+	// 	for ( size_t i = 0; i < list.length(); i++) {
+	// 		list.getDagPath(i, path, component);
+	// 		path.extendToShape();
+	// 		if(path.isValid() 
+	// 			&& ((path.child(0).apiType() == MFn::kCamera) || (path.apiType() == MFn::kCamera))) {
+	// 			MFnDependencyNode fn(path.transform());
+	// 			selectedCameras.push_back(fn.name().asChar());
+	// 		}
+	// 	}
+	// 	// MVGProjectWrapper::instance().selectItems(selectedCameras);
+	// }
 
-    void currentContextChangedCB(void* userData)
-    {
-        if(!userData)
-            return;
-        MString context;
-        MStatus status;
-        status = MVGMayaUtil::getCurrentContext(context);
-        CHECK(status)
-        // MVGProjectWrapper::instance().setCurrentContext(QString(context.asChar()));
-    }
+ //    void currentContextChangedCB(void* userData)
+ //    {
+ //        if(!userData)
+ //            return;
+ //        MString context;
+ //        MStatus status;
+ //        status = MVGMayaUtil::getCurrentContext(context);
+ //        CHECK(status)
+ //        // MVGProjectWrapper::instance().setCurrentContext(QString(context.asChar()));
+ //    }
 
-    void sceneChangedCB(void* userData)
-    {
-        if(!userData)
-            return;
-        // TODO : check project validity
-        MDagPath path;
-        if(!MVGMayaUtil::getDagPathByName(MVGProject::_PROJECT.c_str(), path))
-        {
-            LOG_ERROR("Scene is not valid")
-            // MVGProjectWrapper::instance().clear();
-            MStatus status;
-            status = MVGMayaUtil::deleteMVGContext();
-            status = MVGMayaUtil::deleteMVGWindow();
-            CHECK(status)
-            return;
-        }
-        // MVGProjectWrapper::instance().reloadMVGCamerasFromMaya();       
-        // MVGProjectWrapper::instance().rebuildAllMeshesCacheFromMaya();
-        // MVGProjectWrapper::instance().rebuildCacheFromMaya();
-    }
+ //    void sceneChangedCB(void* userData)
+ //    {
+ //        if(!userData)
+ //            return;
+ //        // TODO : check project validity
+ //        MDagPath path;
+ //        if(!MVGMayaUtil::getDagPathByName(MVGProject::_PROJECT.c_str(), path))
+ //        {
+ //            LOG_ERROR("Scene is not valid")
+ //            // MVGProjectWrapper::instance().clear();
+ //            MStatus status;
+ //            status = MVGMayaUtil::deleteMVGContext();
+ //            status = MVGMayaUtil::deleteMVGWindow();
+ //            CHECK(status)
+ //            return;
+ //        }
+ //        // MVGProjectWrapper::instance().reloadMVGCamerasFromMaya();       
+ //        // MVGProjectWrapper::instance().rebuildAllMeshesCacheFromMaya();
+ //        // MVGProjectWrapper::instance().rebuildCacheFromMaya();
+ //    }
 
     void undoCB(void * userData)
     {
@@ -178,12 +178,12 @@ MStatus MVGCmd::doIt(const MArgList& args) {
 	// MVGProjectWrapper::instance().rebuildAllMeshesCacheFromMaya();
 
     //Maya callbacks
-	_callbackIDs.append(MEventMessage::addEventCallback("PostToolChanged", currentContextChangedCB, mayaWindow));
-	_callbackIDs.append(MEventMessage::addEventCallback("NewSceneOpened", sceneChangedCB, mayaWindow));
-	_callbackIDs.append(MEventMessage::addEventCallback("SceneOpened", sceneChangedCB, mayaWindow));
+	// _callbackIDs.append(MEventMessage::addEventCallback("PostToolChanged", currentContextChangedCB, mayaWindow));
+	// _callbackIDs.append(MEventMessage::addEventCallback("NewSceneOpened", sceneChangedCB, mayaWindow));
+	// _callbackIDs.append(MEventMessage::addEventCallback("SceneOpened", sceneChangedCB, mayaWindow));
 	_callbackIDs.append(MEventMessage::addEventCallback("Undo", undoCB, mayaWindow));
 	_callbackIDs.append(MEventMessage::addEventCallback("Redo", redoCB, mayaWindow));
-    _callbackIDs.append(MEventMessage::addEventCallback("SelectionChanged", selectionChangedCB, mainWidget->view()));
+    // _callbackIDs.append(MEventMessage::addEventCallback("SelectionChanged", selectionChangedCB, mainWidget->view()));
 
 	// -p
 	// if(argData.isFlagSet(projectPathFlag)) {

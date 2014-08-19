@@ -4,8 +4,9 @@
 #include "mayaMVG/maya/cmd/MVGEditCmd.h"
 #include "mayaMVG/maya/MVGMayaUtil.h"
 #include "mayaMVG/core/MVGGeometryUtil.h"
+#include "mayaMVG/core/MVGMesh.h"
 #include "mayaMVG/qt/MVGUserLog.h"
-#include "openMVG/multiview/triangulation.hpp"
+// #include "openMVG/multiview/triangulation.hpp"
 
 using namespace mayaMVG;
 

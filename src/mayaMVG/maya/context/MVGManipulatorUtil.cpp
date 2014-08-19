@@ -4,8 +4,8 @@
 #include "mayaMVG/maya/cmd/MVGEditCmd.h"
 #include "mayaMVG/core/MVGGeometryUtil.h"
 #include "mayaMVG/core/MVGLog.h"
+#include "mayaMVG/core/MVGMesh.h"
 #include <maya/MMatrix.h>
-// #include <maya/MQtUtil.h>
 #include <maya/MItDependencyNodes.h>
 #include <maya/MFnDependencyNode.h>
 #include <maya/MFnMesh.h>
@@ -176,7 +176,6 @@ void MVGManipulatorUtil::drawPreview3D()
 
 void MVGManipulatorUtil::rebuild() 
 {	
-	LOG_INFO("MVGManipulatorUtil::rebuild")
 	_cacheCameraToDisplayData.clear();
 	// Rebuild for temporary cache
 	// TODO: remove to use directly data from Maya
@@ -224,7 +223,6 @@ void MVGManipulatorUtil::rebuild()
 
 MStatus MVGManipulatorUtil::rebuildAllMeshesCacheFromMaya()
 {
-	LOG_INFO("MVGManipulatorUtil::rebuildAllMeshesCacheFromMaya")
 	MStatus status;
 	_cacheMeshToPointArray.clear();
 	_cacheMeshToMovablePoint.clear();
@@ -244,7 +242,6 @@ MStatus MVGManipulatorUtil::rebuildAllMeshesCacheFromMaya()
 
 MStatus MVGManipulatorUtil::rebuildMeshCacheFromMaya(const MDagPath& meshPath)
 {
-	LOG_INFO("MVGManipulatorUtil::rebuildMeshCacheFromMaya")
 	MStatus status;
 	MFnMesh fnMesh(meshPath);
 	MPointArray meshPoints;
