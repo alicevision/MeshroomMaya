@@ -138,17 +138,15 @@ bool MVGContext::eventFilter(QObject *obj, QEvent *e)
 	}
 	// mouse button moved
 	else if(e->type() == QEvent::MouseMove) {
-		if(!_eventData.cameraPath.isValid())
-			return false;
 		if(!_eventData.isDragging)
 			return false;
-        MVGCamera camera(_eventData.cameraPath);
+		MVGCamera camera(_eventData.cameraPath);
 		// compute pan offset
 		QMouseEvent* mouseevent = static_cast<QMouseEvent*>(e);
 		QPointF offset_screen = _eventData.onPressMousePos - mouseevent->posF();
 		const double viewport_width = qobject_cast<QWidget*>(obj)->width();
-        QPointF offset = (offset_screen / viewport_width) * camera.getHorizontalFilmAperture() * camera.getZoom();
-        camera.setPan(_eventData.onPressCameraHPan + offset.x(), _eventData.onPressCameraVPan - offset.y());
+		QPointF offset = (offset_screen / viewport_width) * camera.getHorizontalFilmAperture() * camera.getZoom();
+		camera.setPan(_eventData.onPressCameraHPan + offset.x(), _eventData.onPressCameraVPan - offset.y());
 	}
 	// mouse button released
 	else if(e->type() == QEvent::MouseButtonRelease) {
@@ -180,17 +178,6 @@ bool MVGContext::eventFilter(QObject *obj, QEvent *e)
 	}
 	// mouse enters widget's boundaries
 	else if (e->type() == QEvent::Enter) {
-		// // Check if we are entering the MVGWindow
-		// QVariant window = obj->property("mvg_window");
-		// if(window.type() != QVariant::Invalid)
-		// {
-			// MDagPath path;
-			// if(!MVGMayaUtil::getDagPathByName(MVGProject::_PROJECT.c_str(), path))
-			// 	return false;
-		// 	MVGProjectWrapper::instance().rebuildAllMeshesCacheFromMaya();
-		// 	MVGProjectWrapper::instance().rebuildCacheFromMaya();
-		// 	return false;
-		// }
 		// check if we are entering an MVG panel
 		QVariant panelName = obj->property("mvg_panel");
 		if(panelName.type()== QVariant::Invalid)

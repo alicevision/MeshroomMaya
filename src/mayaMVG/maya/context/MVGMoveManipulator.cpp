@@ -49,7 +49,7 @@ void MVGMoveManipulator::draw(M3dView & view, const MDagPath & path,
                                M3dView::DisplayStyle style, M3dView::DisplayStatus dispStatus)
 {
 	view.beginGL();
-    
+
     // CLEAN the input maya OpenGL State
     glDisable(GL_POLYGON_STIPPLE);
     glDisable(GL_LINE_STIPPLE);
@@ -74,9 +74,8 @@ void MVGMoveManipulator::draw(M3dView & view, const MDagPath & path,
 	MVGManipulatorUtil::DisplayData* data = NULL;
 	if(_manipUtil)
 		data = _manipUtil->getDisplayData(view);
-	
 	// stop drawing in case of no data or not the active view
-	if(!data || !MVGMayaUtil::isActiveView(view)) {
+	if(!data || !MVGMayaUtil::isActiveView(view) || !MVGMayaUtil::isMVGView(view)) {
 		MVGDrawUtil::end2DDrawing();
 		view.endGL();
 		return;
@@ -89,92 +88,33 @@ void MVGMoveManipulator::draw(M3dView & view, const MDagPath & path,
 	// draw 
 	drawCursor(mousex, mousey);
 	drawIntersections(view);
-    Qt::KeyboardModifiers modifiers = QApplication::keyboardModifiers();
-    if(modifiers & Qt::NoModifier) {
-        switch(_moveState) {
-            case eMoveNone:
-                break;
-            case eMovePoint: {
-                MPoint& point3D = data->allPoints2D[_manipUtil->intersectionData().meshName].at(_manipUtil->intersectionData().pointIndex).point3D;
-                MPoint viewPoint = MVGGeometryUtil::worldToView(view, point3D);
-                MPoint mouseView(mousex, mousey);
-                MVGDrawUtil::drawLine2D(viewPoint, mouseView, _triangulateColor, 1.5f, 1.f, true);
-                break;
-            }
-            case eMoveEdge: {
-                MPoint viewPoint1;
-                MPoint viewPoint2;
-                MPoint P1 = mousePoint + _manipUtil->intersectionData().edgeRatio * _manipUtil->intersectionData().edgeHeight2D;
-                MPoint P0 = mousePoint  - (1 - _manipUtil->intersectionData().edgeRatio) * _manipUtil->intersectionData().edgeHeight2D;
-                MVGGeometryUtil::cameraToView(view, P1, viewPoint1);
-                MVGGeometryUtil::cameraToView(view, P0, viewPoint2);
-                MVGDrawUtil::drawLine2D(viewPoint1, viewPoint2, _triangulateColor);
-                break;
-            }
-        }
-    }
+//    Qt::KeyboardModifiers modifiers = QApplication::keyboardModifiers();
+//    if(modifiers & Qt::NoModifier) {
+//        switch(_moveState) {
+//            case eMoveNone:
+//                break;
+//            case eMovePoint: {
+//                MPoint& point3D = data->allPoints2D[_manipUtil->intersectionData().meshName].at(_manipUtil->intersectionData().pointIndex).point3D;
+//                MPoint viewPoint = MVGGeometryUtil::worldToView(view, point3D);
+//                MPoint mouseView(mousex, mousey);
+//                MVGDrawUtil::drawLine2D(viewPoint, mouseView, _triangulateColor, 1.5f, 1.f, true);
+//                break;
+//            }
+//            case eMoveEdge: {
+//                MPoint viewPoint1;
+//                MPoint viewPoint2;
+//                MPoint P1 = mousePoint + _manipUtil->intersectionData().edgeRatio * _manipUtil->intersectionData().edgeHeight2D;
+//                MPoint P0 = mousePoint  - (1 - _manipUtil->intersectionData().edgeRatio) * _manipUtil->intersectionData().edgeHeight2D;
+//                MVGGeometryUtil::cameraToView(view, P1, viewPoint1);
+//                MVGGeometryUtil::cameraToView(view, P0, viewPoint2);
+//                MVGDrawUtil::drawLine2D(viewPoint1, viewPoint2, _triangulateColor);
+//                break;
+//            }
+//        }
+//    }
 	MVGDrawUtil::end2DDrawing();
     glDisable(GL_BLEND);
 	view.endGL();
-
-    // // Enable Alpha
-    // glEnable(GL_BLEND);
-    // glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
-
-    // {
-    //     // Enable gl picking
-    //     // Will call manipulator::doPress/doRelease
-    //     MGLuint glPickableItem;
-    //     glFirstHandle(glPickableItem);
-    //     colorAndName(view, glPickableItem, true, mainColor());
-
-    //     // Preview 3D 
-    //     _manipUtil->drawPreview3D();
-
-    //     // Draw	
-    //     MVGDrawUtil::begin2DDrawing(view);
-    //     MPoint center(0, 0);
-    //     MVGDrawUtil::drawCircle2D(center, _cursorColor, 1, 5); // needed - FIXME
-
-    //     if(MVGMayaUtil::isActiveView(view))
-    //     {		
-    //         drawCursor(mousex, mousey);
-    //         drawIntersections(view);
-
-    //         Qt::KeyboardModifiers modifiers = QApplication::keyboardModifiers();
-    //         //if(modifiers & Qt::NoModifier) { // Does not work
-    //         // Triangulation
-    //         if(!(modifiers & Qt::ControlModifier) && !(modifiers & Qt::ShiftModifier)) {
-    //             switch(_moveState)
-    //             {
-    //                 case eMoveNone:
-    //                     break;
-    //                 case eMovePoint:
-    //                 {
-    //                     MPoint& point3D = data->allPoints2D[_manipUtil->intersectionData().meshName].at(_manipUtil->intersectionData().pointIndex).point3D;
-    //                     MPoint viewPoint = MVGGeometryUtil::worldToView(view, point3D);
-    //                     MPoint mouseView(mousex, mousey);
-    //                     MVGDrawUtil::drawLine2D(viewPoint, mouseView, _triangulateColor, 1.5f, 1.f, true);
-    //                     break;
-    //                 }
-    //                 case eMoveEdge:
-    //                 {
-    //                     MPoint viewPoint1;
-    //                     MPoint viewPoint2;
-    //                     MPoint P1 = mousePoint + _manipUtil->intersectionData().edgeRatio * _manipUtil->intersectionData().edgeHeight2D;
-    //                     MPoint P0 = mousePoint  - (1 - _manipUtil->intersectionData().edgeRatio) * _manipUtil->intersectionData().edgeHeight2D;
-    //                     MVGGeometryUtil::cameraToView(view, P1, viewPoint1);
-    //                     MVGGeometryUtil::cameraToView(view, P0, viewPoint2);
-    //                     MVGDrawUtil::drawLine2D(viewPoint1, viewPoint2, _triangulateColor);
-    //                     break;
-    //                 }
-    //             }
-    //         }
-    //     }
-    //     MVGDrawUtil::end2DDrawing();
-    // }
-    // glDisable(GL_BLEND);
-    // view.endGL();
 }
 
 MStatus MVGMoveManipulator::doPress(M3dView& view)

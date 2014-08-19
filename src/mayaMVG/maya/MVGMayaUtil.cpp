@@ -61,10 +61,11 @@ MStatus MVGMayaUtil::setFocusOnView(const MString& viewName)
 
 bool MVGMayaUtil::isMVGView(const M3dView & view)
 {
-	// TODO
-	// check panel name
-	// or get widget and check mvg flag
-	return true;
+	QWidget* leftViewport = MVGMayaUtil::getMVGViewportLayout("mvgLPanel");
+	QWidget* rightViewport = MVGMayaUtil::getMVGViewportLayout("mvgRPanel");
+	if(!leftViewport || !rightViewport)
+		return false;
+	return ((view.widget() == leftViewport) || (view.widget() == rightViewport));
 }
 
 bool MVGMayaUtil::isActiveView(const M3dView & view)
