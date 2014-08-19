@@ -48,7 +48,7 @@ class MVGCreateManipulator: public MPxManipulatorNode
 
 		// Compute
 		void computeTmpFaceOnEdgeExtend(M3dView& view, MVGManipulatorUtil::DisplayData* data, const MPoint& mousePointInCameraCoord);
-        bool createFace(M3dView& view, MVGManipulatorUtil::DisplayData* data, MVGEditCmd* cmd);
+        bool createFace(M3dView& view, MVGManipulatorUtil::DisplayData* data);
 
 	public:
 		static MTypeId _id;

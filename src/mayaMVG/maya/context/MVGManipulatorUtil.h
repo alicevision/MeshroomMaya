@@ -13,7 +13,7 @@ class MVGContext; // forward declaration
 
 class MVGManipulatorUtil {
 
-	public: 
+	public:
 		enum IntersectionState {
 			eIntersectionNone = 0
 			, eIntersectionPoint
@@ -48,31 +48,31 @@ class MVGManipulatorUtil {
 			std::map<std::string, std::vector<MVGPoint2D> > allPoints2D; // Map mesh to MVGPoints2D
 		};
 
-	public: 
+	public:
 		MVGManipulatorUtil(MVGContext*);
-	
+
 	public:
 		// getters & setters
-		IntersectionState& intersectionState() { return _intersectionState; }		
+		IntersectionState& intersectionState() { return _intersectionState; }
 		IntersectionData& intersectionData() { return _intersectionData; }
 		MPointArray& previewFace3D() { return _previewFace3D; }
-		
+
 		// intersections
 		bool intersectPoint(M3dView& view, DisplayData* displayData, const short&x, const short& y);
 		bool intersectEdge(M3dView& view, DisplayData* displayData, const short&x, const short& y);
 		void updateIntersectionState(M3dView& view, DisplayData* data, double mousex, double mousey);
         bool computeEdgeIntersectionData(M3dView& view, DisplayData* data, const MPoint& mousePointInCameraCoord);
-		
+
 		// draw
 		void drawPreview3D();
-		
+
 		// commands
-		bool addCreateFaceCommand(const MDagPath& meshPath, const MPointArray& facePoints3D) const;
-		bool addUpdateFaceCommand(const MDagPath& meshPath, const MPointArray& newFacePoints3D, const MIntArray& verticesIndexes) const;
-		
+		bool addCreateFaceCommand(const MDagPath& meshPath, const MPointArray& facePoints3D);
+		bool addUpdateFaceCommand(const MDagPath& meshPath, const MPointArray& newFacePoints3D, const MIntArray& verticesIndexes);
+
 		// cache
 		MStatus rebuildAllMeshesCacheFromMaya(); // Temporary
-		MStatus rebuildMeshCacheFromMaya(MDagPath& meshPath); // Temporary
+		MStatus rebuildMeshCacheFromMaya(const MDagPath& meshPath); // Temporary
 		void rebuild();
 		DisplayData* getDisplayData(M3dView& view);
 		DisplayData* getComplementaryDisplayData(M3dView& view);

@@ -242,8 +242,8 @@ MStatus MVGManipulatorUtil::rebuildAllMeshesCacheFromMaya()
 	return status;
 }
 
-MStatus MVGManipulatorUtil::rebuildMeshCacheFromMaya(MDagPath& meshPath)
-{	
+MStatus MVGManipulatorUtil::rebuildMeshCacheFromMaya(const MDagPath& meshPath)
+{
 	MStatus status;
 	MFnMesh fnMesh(meshPath);
 	MPointArray meshPoints;
@@ -348,7 +348,7 @@ MVGManipulatorUtil::DisplayData* MVGManipulatorUtil::getComplementaryDisplayData
 	return NULL;
 }
 
-bool MVGManipulatorUtil::addCreateFaceCommand(const MDagPath& meshPath, const MPointArray& facePoints3D) const
+bool MVGManipulatorUtil::addCreateFaceCommand(const MDagPath& meshPath, const MPointArray& facePoints3D)
 {
 	// Undo/redo
 	if(facePoints3D.length() < 4)
@@ -372,10 +372,13 @@ bool MVGManipulatorUtil::addCreateFaceCommand(const MDagPath& meshPath, const MP
 	cmd->doAddPolygon(meshPath, objectPoints);
 	if(cmd->redoIt())
 		cmd->finalize();
+    
+    rebuildAllMeshesCacheFromMaya();    // TODO : only rebuild created mesh
+    rebuild();
 	return true;
 }
 
-bool MVGManipulatorUtil::addUpdateFaceCommand(const MDagPath& meshPath, const MPointArray& newFacePoints3D, const MIntArray& verticesIndexes) const
+bool MVGManipulatorUtil::addUpdateFaceCommand(const MDagPath& meshPath, const MPointArray& newFacePoints3D, const MIntArray& verticesIndexes)
 {
 	if(newFacePoints3D.length() != verticesIndexes.length())
 	{
@@ -392,5 +395,8 @@ bool MVGManipulatorUtil::addUpdateFaceCommand(const MDagPath& meshPath, const MP
 	cmd->doMove(meshPath, newFacePoints3D, verticesIndexes);
 	if(cmd->redoIt())
 		cmd->finalize();
+    
+    rebuildMeshCacheFromMaya(meshPath);
+    rebuild();
 	return true;
 }

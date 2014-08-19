@@ -88,7 +88,6 @@ void MVGCreateManipulator::draw(M3dView & view, const MDagPath & path,
             {
                 drawCursor(mousex, mousey);
                 drawIntersections(view, mousex, mousey);
-                glColor3f(1.f, 0.f, 0.f);
                 drawPreview2D(view, data);
             } else
                 drawOtherPreview2D(view, data);
@@ -117,81 +116,73 @@ MStatus MVGCreateManipulator::doPress(M3dView& view)
 	MPoint mousePoint;
 	mousePoint = updateMouse(view, mousex, mousey);
 
-    _manipUtil->updateIntersectionState(view, data, mousex, mousey);
-	switch(_manipUtil->intersectionState()) {
-		case MVGManipulatorUtil::eIntersectionNone: 
-        case MVGManipulatorUtil::eIntersectionPoint: {
-            _createState = eCreateNone;
-			data->buildPoints2D.append(mousePoint);
-			// Create face if enough points (4))
-			if(data->buildPoints2D.length() < 4)
-				break;
-			// Compute 3D face
-			MPointArray facePoints3D;
-			if(!MVGGeometryUtil::projectFace2D(view, facePoints3D, data->camera, data->buildPoints2D)) {
-                data->buildPoints2D.remove(data->buildPoints2D.length() - 1);
-                USER_ERROR("Can't find a 3D face with these points")
-                break;
-            }
-			MDagPath emptyPath;
-			if(!_manipUtil->addCreateFaceCommand(emptyPath, facePoints3D))
-				return MS::kFailure;
-			break;
-		}
-		case MVGManipulatorUtil::eIntersectionEdge: {
-			_manipUtil->computeEdgeIntersectionData(view, data, mousePoint);
-			_createState = eCreateExtend;
-			break;
-		}
-	}
+//    _manipUtil->updateIntersectionState(view, data, mousex, mousey);
+//	switch(_manipUtil->intersectionState()) {
+//		case MVGManipulatorUtil::eIntersectionNone: 
+//        case MVGManipulatorUtil::eIntersectionPoint: {
+//            _createState = eCreateNone;
+//			data->buildPoints2D.append(mousePoint);
+//			// Create face if enough points (4))
+//			if(data->buildPoints2D.length() < 4)
+//				break;
+//			// Compute 3D face
+//			MPointArray facePoints3D;
+//			if(!MVGGeometryUtil::projectFace2D(view, facePoints3D, data->camera, data->buildPoints2D)) {
+//                data->buildPoints2D.remove(data->buildPoints2D.length() - 1);
+//                USER_ERROR("Can't find a 3D face with these points")
+//                break;
+//            }
+//			MDagPath emptyPath;
+//			if(!_manipUtil->addCreateFaceCommand(emptyPath, facePoints3D))
+//				return MS::kFailure;
+//			break;
+//		}
+//		case MVGManipulatorUtil::eIntersectionEdge: {
+//			_manipUtil->computeEdgeIntersectionData(view, data, mousePoint);
+//			_createState = eCreateExtend;
+//			break;
+//		}
+//	}
 
-    // _manipUtil->updateIntersectionState(view, data, mousex, mousey);
-    // // Clear buildPoint of the other view
-    // if(data->buildPoints2D.length() == 0)
-    // {
-    //     std::map<std::string, DisplayData>& cache = MVGProjectWrapper::instance().getDisplayDataCache();
-    //     for(std::map<std::string, DisplayData>::iterator it = cache.begin(); it != cache.end(); ++it)
-    //     {
-    //         if(&(it->second) != data)
-    //         {
-    //             it->second.buildPoints2D.clear();
-    //             break;
-    //         }
-    //     }
-    // }
-    // switch(_createState)
-    // {
-    //     case eCreateNone:
-    //         if(_manipUtil->intersectionState() != MVGManipulatorUtil::eIntersectionEdge)
-    //         {
-    //             _createState = eCreateFace;
-    //             data->buildPoints2D.append(mousePoint);
-    //             if(data->buildPoints2D.length() < 4)
-    //                 break;
-    //             _createState = eCreateNone;              
-    //             if(!createFace(view, data, cmd))
-    //                 return MS::kFailure;
-    //         }
-    //         else
-    //         {
-    //             _manipUtil->computeEdgeIntersectionData(view, data, mousePoint);            
-    //             _createState = eCreateExtend;
-    //         }
-    //         break;
-    //     case eCreateFace:
-    //         data->buildPoints2D.append(mousePoint);
-    //         if(data->buildPoints2D.length() < 4)
-    //             break;
-    //         _createState = eCreateNone;
-    //         if(!createFace(view, data, cmd))
-    //             return MS::kFailure;
-    //         break;
-    //     case eCreateExtend:
-    //         _manipUtil->computeEdgeIntersectionData(view, data, mousePoint);            
-    //         _createState = eCreateExtend;
-    //         break;
-    // }
-    
+    _manipUtil->updateIntersectionState(view, data, mousex, mousey);
+    // Clear buildPoint of the complementary view  
+    if(data->buildPoints2D.length() == 0)
+    {
+        MVGManipulatorUtil::DisplayData* complementaryCache = _manipUtil->getComplementaryDisplayData(view);
+        complementaryCache->buildPoints2D.clear();
+    }
+    switch(_createState)
+    {
+        case eCreateNone:
+            if(_manipUtil->intersectionState() != MVGManipulatorUtil::eIntersectionEdge)
+            {
+                _createState = eCreateFace;
+                data->buildPoints2D.append(mousePoint);
+                if(data->buildPoints2D.length() < 4)
+                    break;
+                _createState = eCreateNone;              
+                if(!createFace(view, data))
+                    return MS::kFailure;
+            }
+            else
+            {
+                _manipUtil->computeEdgeIntersectionData(view, data, mousePoint);            
+                _createState = eCreateExtend;
+            }
+            break;
+        case eCreateFace:
+            data->buildPoints2D.append(mousePoint);
+            if(data->buildPoints2D.length() < 4)
+                break;
+            _createState = eCreateNone;
+            if(!createFace(view, data))
+                return MS::kFailure;
+            break;
+        case eCreateExtend:
+            _manipUtil->computeEdgeIntersectionData(view, data, mousePoint);            
+            _createState = eCreateExtend;
+            break;
+    }
 	return MPxManipulatorNode::doPress(view);
 }
 
@@ -214,7 +205,7 @@ MStatus MVGCreateManipulator::doRelease(M3dView& view)
 			if(!_manipUtil->addCreateFaceCommand(meshPath, _manipUtil->previewFace3D()))
 				return MS::kFailure;
 			_manipUtil->previewFace3D().clear();
-			// _createState = eCreateNone;
+			_createState = eCreateNone;
 			break;
 		}
 	}
@@ -460,7 +451,7 @@ void MVGCreateManipulator::computeTmpFaceOnEdgeExtend(M3dView& view, MVGManipula
 	// TODO : compute plane with straight line constraint
 }
 
-bool MVGCreateManipulator::createFace(M3dView& view, MVGManipulatorUtil::DisplayData* data, MVGEditCmd* cmd)
+bool MVGCreateManipulator::createFace(M3dView& view, MVGManipulatorUtil::DisplayData* data)
 {
     if(!data)
         return false;
@@ -474,6 +465,7 @@ bool MVGCreateManipulator::createFace(M3dView& view, MVGManipulatorUtil::Display
         return false;
     }
 
+    data->buildPoints2D.clear();
     MDagPath emptyPath;
     if(!_manipUtil->addCreateFaceCommand(emptyPath, facePoints3D))
         return false;
