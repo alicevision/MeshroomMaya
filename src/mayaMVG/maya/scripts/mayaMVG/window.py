@@ -4,7 +4,9 @@ import pymel.core as pm
 
 def mvgOpenProjectFileDialog():
     import maya.cmds as cmds
-    return cmds.fileDialog2(caption='Select project path', fileMode=3, okCaption='Load')[0]
+    path = cmds.fileDialog2(caption='Select project path', fileMode=3, okCaption='Load')
+    if path: return path[0]
+    else: return ''
 
 def mvgDeleteWindow():
     import maya.cmds as cmds
