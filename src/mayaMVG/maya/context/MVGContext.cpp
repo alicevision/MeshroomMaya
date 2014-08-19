@@ -23,6 +23,8 @@ MVGContext::MVGContext()
 void MVGContext::toolOnSetup(MEvent& event)
 {
 	updateManipulators();
+	_manipUtil.rebuildAllMeshesCacheFromMaya();
+	_manipUtil.rebuild();
 }
 
 void MVGContext::toolOffCleanup()

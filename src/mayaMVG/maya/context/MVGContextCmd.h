@@ -19,7 +19,7 @@ public:
 	virtual MStatus doQueryFlags();
 	virtual MStatus appendSyntax();
 private:
-	MVGContext* m_pContext;
+	MVGContext* _pContext;
 };
 
 } // mayaMVG

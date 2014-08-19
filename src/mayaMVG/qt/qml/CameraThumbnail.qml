@@ -69,11 +69,9 @@ Rectangle {
                     hoverEnabled: true
                     onClicked: {
                         m.project.setCameraToView(m.camera, model.modelData);
-                        m.project.rebuildCacheFromMaya();
                     }
                 }
             }
         }
     }
-    
 }

@@ -48,7 +48,7 @@ public:
     Q_INVOKABLE void activeSelectionContext() const;
     Q_INVOKABLE void activeMVGContext();
     Q_INVOKABLE void loadProject(const QString& projectDirectoryPath);
-    Q_INVOKABLE void setCameraToView(QObject* camera, const QString& viewName) const;
+    Q_INVOKABLE void setCameraToView(QObject* camera, const QString& viewName, bool rebuildCache = true) const;
     void reloadMVGCamerasFromMaya();
 
 private:

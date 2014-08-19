@@ -30,13 +30,11 @@ class MVGContext: public MPxContext {
         eModeCreate = 0
         , eModeMove
     };
-
 	enum EKeyPressed {
 		eKeyNone = 0
 		, eKeyCtrl
 		, eKeyShift
 	};
-	
     public:
         MVGContext();
         virtual ~MVGContext(){}
@@ -47,6 +45,8 @@ class MVGContext: public MPxContext {
         void updateManipulators();
         bool eventFilter(QObject *obj, QEvent *e);
         MVGEditCmd* newCmd();
+    public:
+        MVGManipulatorUtil& getCache() { return _manipUtil; }
     private:
         EventData _eventData;
         MVGEventFilter<MVGContext> _filter;

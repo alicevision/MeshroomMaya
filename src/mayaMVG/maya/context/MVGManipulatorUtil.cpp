@@ -244,6 +244,7 @@ MStatus MVGManipulatorUtil::rebuildAllMeshesCacheFromMaya()
 
 MStatus MVGManipulatorUtil::rebuildMeshCacheFromMaya(const MDagPath& meshPath)
 {
+	LOG_INFO("MVGManipulatorUtil::rebuildMeshCacheFromMaya")
 	MStatus status;
 	MFnMesh fnMesh(meshPath);
 	MPointArray meshPoints;
@@ -317,11 +318,10 @@ MStatus MVGManipulatorUtil::rebuildMeshCacheFromMaya(const MDagPath& meshPath)
 
 MVGManipulatorUtil::DisplayData* MVGManipulatorUtil::getDisplayData(M3dView& view)
 {		
-	if(_cacheCameraToDisplayData.empty()) {
-		rebuildAllMeshesCacheFromMaya();
-		rebuild();
-	}
-
+	// if(_cacheCameraToDisplayData.empty()) {
+	// 	rebuildAllMeshesCacheFromMaya();
+	// 	rebuild();
+	// }
 	MDagPath path;
 	view.getCamera(path);
 	std::map<std::string, DisplayData>::iterator it = _cacheCameraToDisplayData.find(path.fullPathName().asChar());
@@ -332,11 +332,10 @@ MVGManipulatorUtil::DisplayData* MVGManipulatorUtil::getDisplayData(M3dView& vie
 
 MVGManipulatorUtil::DisplayData* MVGManipulatorUtil::getComplementaryDisplayData(M3dView& view)
 {		
-	if(_cacheCameraToDisplayData.empty()) {
-		rebuildAllMeshesCacheFromMaya();
-		rebuild();
-	}
-
+	// if(_cacheCameraToDisplayData.empty()) {
+	// 	rebuildAllMeshesCacheFromMaya();
+	// 	rebuild();
+	// }
 	MDagPath path;
 	view.getCamera(path);
 	std::map<std::string, MVGManipulatorUtil::DisplayData>::iterator it = _cacheCameraToDisplayData.begin();

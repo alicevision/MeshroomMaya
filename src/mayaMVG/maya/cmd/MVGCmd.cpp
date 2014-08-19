@@ -22,7 +22,6 @@ namespace {
     void selectionChangedCB(void* userData) {
 		if(!userData)
 			return;
-
 		MDagPath path;
 		MObject component;
 		MSelectionList list;
@@ -84,10 +83,7 @@ namespace {
         int spaceIndex = redoName.index(' ');
         MString cmdName = redoName.substring(0, spaceIndex - 1);
         if(cmdName != "select" && cmdName != "miCreateDefaultPresets")
-        {
-            // MVGProjectWrapper::instance().rebuildAllMeshesCacheFromMaya();
-            // MVGProjectWrapper::instance().rebuildCacheFromMaya();
-        }
+            MGlobal::executeCommand("mayaMVGTool -e -rebuild mayaMVGTool1");
     }
 
     void redoCB(void * userData)
@@ -100,10 +96,7 @@ namespace {
         int spaceIndex = undoName.index(' ');
         MString cmdName = undoName.substring(0, spaceIndex - 1);
         if(cmdName != "select" && cmdName != "miCreateDefaultPresets")
-        {
-            // MVGProjectWrapper::instance().rebuildAllMeshesCacheFromMaya();
-            // MVGProjectWrapper::instance().rebuildCacheFromMaya();
-        }
+            MGlobal::executeCommand("mayaMVGTool -e -rebuild mayaMVGTool1");
     }
 
 }
