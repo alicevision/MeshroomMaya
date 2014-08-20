@@ -17,12 +17,12 @@ Item {
             iconSource: "img/mouse_select.png"
             tooltip: "Selection mode"
             onClicked: m.project.activeSelectionContext();
-            //checked: (m.project.currentContext === "selectSuperContext")
+            checked: (m.project.currentContext === "selectSuperContext")
         }
         ToolButton {
             iconSource: "img/mouse_place.png"
             tooltip: "MVG mode"
-            //checked: (m.project.currentContext === "mayaMVGTool1")
+            checked: (m.project.currentContext === "mayaMVGTool1")
             onClicked: m.project.activeMVGContext();
         }
         Rectangle {

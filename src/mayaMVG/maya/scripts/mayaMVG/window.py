@@ -45,3 +45,13 @@ def mvgCreateWindow():
     cmds.window(win, e=True, widthHeight=[920,700])
     return win
 
+def mvgReloadPanels():
+    import maya.cmds as cmds
+    if(cmds.paneLayout('leftPane', ex=True)):
+        if not cmds.modelPanel('mvgLPanel', ex=True):
+            cmds.modelPanel('mvgLPanel', mbv=False, l='MVG leftView', p='leftPane')
+            cmds.modelEditor('mvgLPanel', e=True, grid=False, cameras=False, dynamics=False)
+    if(cmds.paneLayout('rightPane', ex=True)):
+        if not cmds.modelPanel('mvgRPanel', ex=True):
+            cmds.modelPanel('mvgRPanel', mbv=False, l='MVG rightView', p='rightPane')
+            cmds.modelEditor('mvgRPanel', e=True, grid=False, cameras=False, dynamics=False)

@@ -10,6 +10,8 @@ using namespace mayaMVG;
 MVGMainWidget::MVGMainWidget(QWidget * parent)
 	: QWidget(parent)
 {
+	setObjectName("mvgMainWidget");
+	
 	qmlRegisterType<MVGCameraWrapper>();
 	qmlRegisterType<QObjectListModel>();
 	qmlRegisterType<QWheelArea>("MyTools", 1, 0, "CustomWheelArea");

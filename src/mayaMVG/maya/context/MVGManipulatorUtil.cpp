@@ -1,6 +1,7 @@
 #include "mayaMVG/maya/context/MVGManipulatorUtil.h"
 #include "mayaMVG/maya/context/MVGDrawUtil.h"
 #include "mayaMVG/maya/context/MVGContext.h"
+#include "mayaMVG/maya/MVGMayaUtil.h"
 #include "mayaMVG/maya/cmd/MVGEditCmd.h"
 #include "mayaMVG/core/MVGGeometryUtil.h"
 #include "mayaMVG/core/MVGLog.h"
@@ -182,20 +183,16 @@ void MVGManipulatorUtil::rebuild()
 		|| _cacheMeshToMovablePoint.size() != _cacheMeshToEdgeArray.size())
 		return; // assert
 
-	// 
-	std::vector<std::string> visiblePanelNames;
-	visiblePanelNames.push_back("mvgLPanel");
-	visiblePanelNames.push_back("mvgRPanel");
-
 	M3dView view;
-	MStatus status;
 	MDagPath cameraPath;
-	// For each panel
-	for(std::vector<std::string>::const_iterator panelIt = visiblePanelNames.begin(); panelIt!= visiblePanelNames.end(); ++panelIt) {
-		status = M3dView::getM3dViewFromModelPanel(panelIt->c_str(), view);
-		CHECK(status);
+	for(size_t i=0; i < M3dView::numberOf3dViews(); ++i) {
+		// Get M3dView & update viewing parameters
+		M3dView::get3dView(i, view);
+		if(!MVGMayaUtil::isMVGView(view))
+			continue;
 		view.getCamera(cameraPath);
 		view.updateViewingParameters();
+		// Get associated camera
 		MVGCamera c(cameraPath);
 		if(!c.isValid())
 			continue;

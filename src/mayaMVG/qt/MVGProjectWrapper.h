@@ -16,7 +16,7 @@ class MVGProjectWrapper : public QObject
     Q_PROPERTY(QObjectListModel* cameraModel READ getCameraModel NOTIFY cameraModelChanged);
 	Q_PROPERTY(QStringList visiblePanelNames READ getVisiblePanelNames NOTIFY panelModelChanged);
     Q_PROPERTY(QString logText READ logText WRITE setLogText NOTIFY logTextChanged);
-    // Q_PROPERTY(QString currentContext READ currentContext WRITE setCurrentContext NOTIFY currentContextChanged);
+    Q_PROPERTY(QString currentContext READ currentContext WRITE setCurrentContext NOTIFY currentContextChanged);
 
 public:
 	MVGProjectWrapper();
@@ -29,8 +29,8 @@ public slots:
     const QStringList& getVisiblePanelNames() const { return _visiblePanelNames; }
 	const QString logText() const;
     void setLogText(const QString&);
-    // const QString currentContext() const;
-    // void setCurrentContext(const QString&);
+    const QString currentContext() const;
+    void setCurrentContext(const QString&);
 	
 signals:
     void projectDirectoryChanged();
@@ -59,6 +59,7 @@ private:
     QString _logText;
 	QStringList _allPanelNames;
 	QStringList _visiblePanelNames;
+    QString _currentContext;
 };
 
 } // mayaMVG
