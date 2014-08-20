@@ -64,16 +64,14 @@ MStatus MVGEditCmd::doIt(const MArgList& args)
 MStatus MVGEditCmd::redoIt()
 {
 	MStatus status;
-    MVGMesh mesh(_meshPath);
+    MVGMesh mesh(_meshName);
 	// -create
 	if(_flags & CMD_CREATE) {
 		if(!mesh.isValid()) { // Retrieve mesh or create it
 			mesh = MVGMesh::create(MVGProject::_MESH);
-            //USER_WARNING("Action is not stacked in undo/redo")
-            //status =  MS::kFailure;
 			if(!mesh.isValid())
 				return MS::kFailure;
-            _meshPath = mesh.dagPath();
+            _meshName = mesh.dagPath().fullPathName();
 		}
 		int index;
 		if(!mesh.addPolygon(_points, index))
@@ -99,20 +97,19 @@ MStatus MVGEditCmd::redoIt()
 MStatus MVGEditCmd::undoIt()
 { 
 	MStatus status;
-    MVGMesh mesh(_meshPath);
+    MVGMesh mesh(_meshName);
 	// -create
 	if(_flags & CMD_CREATE) {
-		if(!mesh.isValid())
+		if(!mesh.isValid()){
 			return MStatus::kFailure;
+		}
         if(mesh.getPolygonsCount() > 1)
             mesh.deletePolygon(_indexes[0]);
-        else
-        {
-            // // TODO
-            // USER_ERROR("Can't delete last face")
-            // return MS::kFailure;
-            MObject transform = mesh.dagPath().transform();
-            MGlobal::deleteNode(transform);
+        else {
+            return MS::kFailure;
+            // MObject transform = mesh.dagPath().transform();
+            // MGlobal::deleteNode(transform);
+            // MGlobal::executeCommand("delete mvgMesh", false, false);
         }
 	}
 	// -move
@@ -153,14 +150,14 @@ MStatus MVGEditCmd::finalize()
 void MVGEditCmd::doAddPolygon(const MDagPath& meshPath, const MPointArray& points)
 {
 	_flags |= CMD_CREATE;
-	_meshPath = meshPath;
+	_meshName = meshPath.fullPathName();
 	_points = points;
 }
 
 void MVGEditCmd::doMove(const MDagPath& meshPath, const MPointArray& points, const MIntArray& verticesIndexes)
 {
 	_flags |= CMD_MOVE;
-	_meshPath = meshPath;
+	_meshName = meshPath.fullPathName();
 	_points = points;
 	_indexes = verticesIndexes;
 }

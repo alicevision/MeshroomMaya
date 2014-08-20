@@ -149,18 +149,17 @@ bool MVGManipulatorUtil::computeEdgeIntersectionData(M3dView& view, DisplayData*
 
 	// Compute height 3D
 	_intersectionData.edgeHeight3D = edgePoint3D_1 - edgePoint3D_0;
-    
-    // Update face informations
-    MVGMesh mesh(_intersectionData.meshName);
-   _intersectionData.facePointIndexes.clear();
-    MIntArray connectedFaceIndex = mesh.getConnectedFacesToVertex(_intersectionData.edgePointIndexes[0]);
-    if(connectedFaceIndex.length() > 0)
-    {
-       _intersectionData.facePointIndexes = mesh.getFaceVertices(connectedFaceIndex[0]);
-       return true;
-    }
-    
-    return false;
+
+	// Update face informations
+	MVGMesh mesh(_intersectionData.meshName);
+	_intersectionData.facePointIndexes.clear();
+	MIntArray connectedFaceIndex = mesh.getConnectedFacesToVertex(_intersectionData.edgePointIndexes[0]);
+	if(connectedFaceIndex.length() > 0) {
+		_intersectionData.facePointIndexes = mesh.getFaceVertices(connectedFaceIndex[0]);
+		return true;
+	}
+
+	return false;
 }
 
 void MVGManipulatorUtil::drawPreview3D()
@@ -176,9 +175,14 @@ void MVGManipulatorUtil::drawPreview3D()
 
 void MVGManipulatorUtil::rebuild() 
 {	
+	// Clear cache
 	_cacheCameraToDisplayData.clear();
-	// Rebuild for temporary cache
-	// TODO: remove to use directly data from Maya
+
+	if(_cacheMeshToPointArray.size() != _cacheMeshToMovablePoint.size()
+		|| _cacheMeshToMovablePoint.size() != _cacheMeshToEdgeArray.size())
+		return; // assert
+
+	// 
 	std::vector<std::string> visiblePanelNames;
 	visiblePanelNames.push_back("mvgLPanel");
 	visiblePanelNames.push_back("mvgRPanel");
@@ -186,56 +190,53 @@ void MVGManipulatorUtil::rebuild()
 	M3dView view;
 	MStatus status;
 	MDagPath cameraPath;
-	for(std::vector<std::string>::const_iterator panelIt = visiblePanelNames.begin(); panelIt!= visiblePanelNames.end(); ++panelIt)
-	{
+	// For each panel
+	for(std::vector<std::string>::const_iterator panelIt = visiblePanelNames.begin(); panelIt!= visiblePanelNames.end(); ++panelIt) {
 		status = M3dView::getM3dViewFromModelPanel(panelIt->c_str(), view);
 		CHECK(status);
 		view.getCamera(cameraPath);
 		view.updateViewingParameters();
 		MVGCamera c(cameraPath);
-		if(c.isValid()) {
-			DisplayData data;
-			data.camera = c;
-			// Browse meshes
-			std::map<std::string, std::vector<MVGPoint2D> > newMap;
-			for(std::map<std::string, MPointArray>::iterator it = _cacheMeshToPointArray.begin(); it != _cacheMeshToPointArray.end(); ++it)
-			{
-				std::vector<MVGPoint2D> points2D;
-				// Browse points
-				MPointArray& points3D = it->second;
-				for(int i = 0; i < points3D.length(); ++i)
-				{
-					MVGPoint2D mvgPoint;;
-					mvgPoint.point3D = points3D[i];
-					MPoint point2D;
-					MVGGeometryUtil::worldToCamera(view, points3D[i], point2D);
-					mvgPoint.projectedPoint3D = point2D;
-					mvgPoint.movableState = _cacheMeshToMovablePoint[it->first].at(i);
-					points2D.push_back(mvgPoint);
-				}
-				newMap[it->first] = points2D;
+		if(!c.isValid())
+			continue;
+		DisplayData data;
+		data.camera = c;
+		// For each mesh
+		std::map<std::string, std::vector<MVGPoint2D> > newMap;
+		for(std::map<std::string, MPointArray>::iterator it = _cacheMeshToPointArray.begin(); it != _cacheMeshToPointArray.end(); ++it) {
+			std::vector<MVGPoint2D> points2D;
+			// For each vertex
+			MPointArray& points3D = it->second;
+			if(_cacheMeshToMovablePoint[it->first].size() != points3D.length())
+				continue; // assert
+			for(int i = 0; i < points3D.length(); ++i) {
+				MVGPoint2D mvgPoint;
+				mvgPoint.point3D = points3D[i];
+				MVGGeometryUtil::worldToCamera(view, points3D[i], mvgPoint.projectedPoint3D);
+				mvgPoint.movableState = _cacheMeshToMovablePoint[it->first].at(i);
+				points2D.push_back(mvgPoint);
 			}
-			data.allPoints2D = newMap;		
-			_cacheCameraToDisplayData[cameraPath.fullPathName().asChar()] = data;
+			newMap[it->first] = points2D;
 		}
+		data.allPoints2D = newMap;		
+		_cacheCameraToDisplayData[cameraPath.fullPathName().asChar()] = data;
 	}
 }
 
 MStatus MVGManipulatorUtil::rebuildAllMeshesCacheFromMaya()
 {
 	MStatus status;
+	// Clear all
 	_cacheMeshToPointArray.clear();
 	_cacheMeshToMovablePoint.clear();
 	_cacheMeshToEdgeArray.clear();
-	
 	// Retrieves all meshes
-	// TODO Use MVGMesh::list()
 	MDagPath path;
-	MItDependencyNodes it(MFn::kMesh);
-	for(; !it.isDone(); it.next()) {
-		MFnDependencyNode fn(it.thisNode());
-		MDagPath::getAPathTo(fn.object(), path);
-		status = rebuildMeshCacheFromMaya(path);
+	std::vector<MVGMesh> meshes = MVGMesh::list();
+	std::vector<MVGMesh>::const_iterator it = meshes.begin();
+	for(; it != meshes.end(); ++it) {
+		status = rebuildMeshCacheFromMaya(it->dagPath());
+		CHECK(status)
 	}
 	return status;
 }
@@ -244,81 +245,73 @@ MStatus MVGManipulatorUtil::rebuildMeshCacheFromMaya(const MDagPath& meshPath)
 {
 	MStatus status;
 	MFnMesh fnMesh(meshPath);
-	MPointArray meshPoints;
-	std::vector<MIntArray> meshEdges;
+	std::string meshName = meshPath.fullPathName().asChar();
 	
-	// Mesh points
+	// ???
+	// fnMesh.syncObject();
+
+	// MPlug plugMesh;
+	// MObject meshData;
+	// plugMesh = meshfn.findPlug(MString("outMesh"), &status);
+	// MDGContext dgContext(0.0);
+	// status = plugMesh.getValue(meshData, dgContext);
+	// MFnMeshn fnMesh(meshData, &status);
+
+	// Save mesh points
+	MPointArray meshPoints;
 	if(!fnMesh.getPoints(meshPoints, MSpace::kWorld))
 		return MS::kFailure;
-	_cacheMeshToPointArray[meshPath.fullPathName().asChar()] = meshPoints;
+	_cacheMeshToPointArray[meshName] = meshPoints;
 	
-	// Connected face
+	// Save movable state
+	MIntArray faceList;
 	std::vector<EPointState> movableStates;
 	MItMeshVertex vertexIt(meshPath, MObject::kNullObj, &status);
-	if(!status)
-		return MS::kFailure;
-	
-	MIntArray faceList;
-	while(!vertexIt.isDone())
-	{
+	CHECK_RETURN_STATUS(status)
+	while(!vertexIt.isDone()) {
 		vertexIt.getConnectedFaces(faceList);
-		// Point connected to several faces
-		if(faceList.length() > 1)
+		if(faceList.length() > 1) // Point connected to several faces = unmovable
 			movableStates.push_back(eUnMovable);
-		
-		// Face points connected to several face
-		else if(faceList.length() > 0)
-		{			
-			// Get the points of the first face
-			MItMeshPolygon faceIt(meshPath, MObject::kNullObj);
-			int prev;
-			faceIt.setIndex(faceList[0], prev);
+		else if(faceList.length() > 0) { // Face points connected to several face		
 			MIntArray faceVerticesIndexes;
-			faceIt.getVertices(faceVerticesIndexes);
-			
+			fnMesh.getPolygonVertices(faceList[0], faceVerticesIndexes);
 			// For each point, check number of connected faces
 			int numConnectedFace;
-			bool check = false;
-			for(int i = 0; i < faceVerticesIndexes.length(); ++i)
-			{
+			EPointState state = eMovableRecompute;
+			for(int i = 0; i < faceVerticesIndexes.length(); ++i) {
 				MItMeshVertex vertexIter(meshPath, MObject::kNullObj);
-				vertexIter.setIndex(faceVerticesIndexes[i], prev);
+				int previousIndex;
+				vertexIter.setIndex(faceVerticesIndexes[i], previousIndex);
 				vertexIter.numConnectedFaces(numConnectedFace);
-				if(numConnectedFace > 1)
-				{
-					movableStates.push_back(eMovableInSamePlane);
-					check = true;
+				if(numConnectedFace > 1) {
+					state = eMovableInSamePlane;
 					break;
 				}		
 			}
-			if(!check)
-				movableStates.push_back(eMovableRecompute);
+			movableStates.push_back(state);
 		}
 		vertexIt.next();
 	}
-	_cacheMeshToMovablePoint[meshPath.fullPathName().asChar()] = movableStates;	
-	// Mesh edges
+	_cacheMeshToMovablePoint[meshName] = movableStates;
+
+	// Save mesh edges
+	std::vector<MIntArray> meshEdges;
 	MItMeshEdge edgeIt(meshPath, MObject::kNullObj, &status);
-	if(!status)
-		return MS::kFailure;
-	while(!edgeIt.isDone())
-	{
+	CHECK_RETURN_STATUS(status)
+	while(!edgeIt.isDone()) {
 		MIntArray pointIndexArray;
 		pointIndexArray.append(edgeIt.index(0));
 		pointIndexArray.append(edgeIt.index(1));
 		meshEdges.push_back(pointIndexArray);
 		edgeIt.next();
 	}
-	_cacheMeshToEdgeArray[meshPath.fullPathName().asChar()] = meshEdges;	
+	_cacheMeshToEdgeArray[meshName] = meshEdges;	
+
 	return status;
 }
 
 MVGManipulatorUtil::DisplayData* MVGManipulatorUtil::getDisplayData(M3dView& view)
 {		
-	// if(_cacheCameraToDisplayData.empty()) {
-	// 	rebuildAllMeshesCacheFromMaya();
-	// 	rebuild();
-	// }
 	MDagPath path;
 	view.getCamera(path);
 	std::map<std::string, DisplayData>::iterator it = _cacheCameraToDisplayData.find(path.fullPathName().asChar());
@@ -329,10 +322,6 @@ MVGManipulatorUtil::DisplayData* MVGManipulatorUtil::getDisplayData(M3dView& vie
 
 MVGManipulatorUtil::DisplayData* MVGManipulatorUtil::getComplementaryDisplayData(M3dView& view)
 {		
-	// if(_cacheCameraToDisplayData.empty()) {
-	// 	rebuildAllMeshesCacheFromMaya();
-	// 	rebuild();
-	// }
 	MDagPath path;
 	view.getCamera(path);
 	std::map<std::string, MVGManipulatorUtil::DisplayData>::iterator it = _cacheCameraToDisplayData.begin();

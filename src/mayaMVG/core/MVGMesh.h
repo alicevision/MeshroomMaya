@@ -3,6 +3,7 @@
 #include "mayaMVG/core/MVGNodeWrapper.h"
 #include <maya/MPointArray.h>
 #include <maya/MIntArray.h>
+#include <vector>
 
 namespace mayaMVG {
 
@@ -19,6 +20,7 @@ class MVGMesh : public MVGNodeWrapper  {
 		
 	public:
 		static MVGMesh create(const std::string& name);
+		static std::vector<MVGMesh> list();
 
 	public:
 		bool addPolygon(const MPointArray& pointArray, int& index) const;

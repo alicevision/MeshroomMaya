@@ -15,12 +15,15 @@ class MVGContext; // forward declaration
 class MVGManipulatorUtil {
 
 	public:
+
+		// on press, move, release, drag
 		enum IntersectionState {
 			eIntersectionNone = 0
 			, eIntersectionPoint
 			, eIntersectionEdge
 		};
 
+		// on press
 		struct IntersectionData {
 			std::string meshName;
 			int	pointIndex; // Index of the intersected point
@@ -43,8 +46,9 @@ class MVGManipulatorUtil {
 			EPointState movableState; // How the point is movable 
 		};
 
+		// per camera
 		struct DisplayData {
-			MVGCamera camera;
+			MVGCamera camera; // needed?
 			MPointArray buildPoints2D; // Temporary points in Camera before having 3D information
 			std::map<std::string, std::vector<MVGPoint2D> > allPoints2D; // Map mesh to MVGPoints2D
 		};
@@ -77,11 +81,12 @@ class MVGManipulatorUtil {
 		void rebuild();
 		DisplayData* getDisplayData(M3dView& view);
 		DisplayData* getComplementaryDisplayData(M3dView& view);
+		int getCacheCount() const { return _cacheCameraToDisplayData.size(); }
 
 	private:
 		MVGContext* _context;
 		IntersectionState _intersectionState;
-		IntersectionData _intersectionData;		
+		IntersectionData _intersectionData;
 		MPointArray _previewFace3D;
 		std::map<std::string, DisplayData> _cacheCameraToDisplayData;	
 		std::map<std::string, MPointArray> _cacheMeshToPointArray; // Map from meshName to mesh points (Temporary)

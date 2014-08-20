@@ -3,6 +3,7 @@
 #include <maya/MPxToolCommand.h>
 #include <maya/MDagPath.h>
 #include <maya/MPointArray.h>
+#include <maya/MDagModifier.h>
 
 namespace mayaMVG {
 
@@ -31,7 +32,7 @@ class MVGEditCmd : public MPxToolCommand {
 		static MString name;
 	private:
 		size_t _flags;
-		MDagPath _meshPath;
+		MString _meshName;
 		MPointArray _points;
 		MIntArray _indexes;
 };
