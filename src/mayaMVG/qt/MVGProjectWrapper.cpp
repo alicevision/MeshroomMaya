@@ -94,7 +94,8 @@ void MVGProjectWrapper::loadExistingProject()
 
 void MVGProjectWrapper::loadNewProject(const QString& projectDirectoryPath)
 {
-	_project = MVGProject::create(MVGProject::_PROJECT);
+    if(!_project.isValid())
+        _project = MVGProject::create(MVGProject::_PROJECT);
 	if(projectDirectoryPath.isEmpty())
 		return;
 	if(!_project.load(projectDirectoryPath.toStdString())) {
