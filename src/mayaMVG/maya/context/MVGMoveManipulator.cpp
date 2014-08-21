@@ -19,7 +19,6 @@ MVGMoveManipulator::MVGMoveManipulator()
     , _triangulateColor(0.9f, 0.5f, 0.4f)   // Orange
     , _faceColor(1.f, 1.f, 1.f)             // White
     , _noMoveColor(1.f, 0.f, 0.f)           // Red
-    , _neutralColor(0.3f, 0.3f, 0.6f)       // Dark blue
     , _cursorColor(0.f, 0.f, 0.f)           // Black
     , _manipUtil(NULL)
 
@@ -90,28 +89,8 @@ void MVGMoveManipulator::draw(M3dView & view, const MDagPath & path,
 	drawCursor(mousex, mousey);
 	drawIntersections(view);
     Qt::KeyboardModifiers modifiers = QApplication::keyboardModifiers();
-    if(modifiers & Qt::NoModifier) {
-        switch(_moveState) {
-            case eMoveNone:
-                break;
-            case eMovePoint: {
-                MPoint& point3D = data->allPoints2D[_manipUtil->intersectionData().meshName].at(_manipUtil->intersectionData().pointIndex).point3D;
-                MPoint viewPoint = MVGGeometryUtil::worldToView(view, point3D);
-                MPoint mouseView(mousex, mousey);
-                MVGDrawUtil::drawLine2D(viewPoint, mouseView, _triangulateColor, 1.5f, 1.f, true);
-                break;
-            }
-            case eMoveEdge: {
-                MPoint viewPoint1;
-                MPoint viewPoint2;
-                MPoint P1 = mousePoint + _manipUtil->intersectionData().edgeRatio * _manipUtil->intersectionData().edgeHeight2D;
-                MPoint P0 = mousePoint  - (1 - _manipUtil->intersectionData().edgeRatio) * _manipUtil->intersectionData().edgeHeight2D;
-                MVGGeometryUtil::cameraToView(view, P1, viewPoint1);
-                MVGGeometryUtil::cameraToView(view, P0, viewPoint2);
-                MVGDrawUtil::drawLine2D(viewPoint1, viewPoint2, _triangulateColor);
-                break;
-            }
-        }
+    if(!(modifiers & Qt::ControlModifier) && !(modifiers & Qt::ShiftModifier)) {
+        drawTriangulation(view, data, mousex, mousey);
     }
 	MVGDrawUtil::end2DDrawing();
     glDisable(GL_BLEND);
@@ -426,7 +405,7 @@ void MVGMoveManipulator::drawIntersections(M3dView& view)
             }
             else
             {
-                MVGDrawUtil::drawCircle2D(point, _neutralColor, POINT_RADIUS, 30);
+                MVGDrawUtil::drawCircle2D(point, _triangulateColor, POINT_RADIUS, 30);
             }
 			break;
 		}
@@ -453,11 +432,38 @@ void MVGMoveManipulator::drawIntersections(M3dView& view)
             }
             else
             {
-                MVGDrawUtil::drawLine2D(viewPoint1, viewPoint2, _neutralColor);
+                MVGDrawUtil::drawLine2D(viewPoint1, viewPoint2, _triangulateColor);
             }
 			break;
         }
 	}
+}
+
+void MVGMoveManipulator::drawTriangulation(M3dView& view, MVGManipulatorUtil::DisplayData* data, const float mousex, const float mousey)
+{
+    switch(_moveState) {
+        case eMoveNone:
+            break;
+        case eMovePoint: {
+            MPoint& point3D = data->allPoints2D[_manipUtil->intersectionData().meshName].at(_manipUtil->intersectionData().pointIndex).point3D;
+            MPoint viewPoint = MVGGeometryUtil::worldToView(view, point3D);
+            MPoint mouseView(mousex, mousey);
+            MVGDrawUtil::drawLine2D(viewPoint, mouseView, _triangulateColor, 1.5f, 1.f, true);
+            break;
+        }
+        case eMoveEdge: {
+            MPoint mousePoint;
+            MVGGeometryUtil::viewToCamera(view, mousex, mousey, mousePoint);
+            MPoint viewPoint1;
+            MPoint viewPoint2;
+            MPoint P1 = mousePoint + _manipUtil->intersectionData().edgeRatio * _manipUtil->intersectionData().edgeHeight2D;
+            MPoint P0 = mousePoint  - (1 - _manipUtil->intersectionData().edgeRatio) * _manipUtil->intersectionData().edgeHeight2D;
+            MVGGeometryUtil::cameraToView(view, P1, viewPoint1);
+            MVGGeometryUtil::cameraToView(view, P0, viewPoint2);
+            MVGDrawUtil::drawLine2D(viewPoint1, viewPoint2, _triangulateColor);
+            break;
+        }
+    }
 }
 
 void MVGMoveManipulator::computeTmpFaceOnMovePoint(M3dView& view, MVGManipulatorUtil::DisplayData* data, const MPoint& mousePoint, bool recompute)

@@ -42,6 +42,7 @@ class MVGMoveManipulator: public MPxManipulatorNode
 		// Draw
 		void drawCursor(const float mousex, const float mousey);
 		void drawIntersections(M3dView& view);
+		void drawTriangulation(M3dView& view, MVGManipulatorUtil::DisplayData* data, const float mousex, const float mousey);
 
 		// Compute
 		void computeTmpFaceOnMovePoint(M3dView& view, MVGManipulatorUtil::DisplayData* data, const MPoint& mousePoint, bool recompute=false);
@@ -58,7 +59,6 @@ public:
         MVector _triangulateColor;
         MVector _faceColor;
         MVector _noMoveColor;
-        MVector _neutralColor;
         MVector _cursorColor;
 };
 
