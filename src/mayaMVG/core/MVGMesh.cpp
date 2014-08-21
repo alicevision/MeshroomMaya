@@ -12,6 +12,7 @@
 #include <maya/MItMeshPolygon.h>
 #include <maya/MItMeshEdge.h>
 #include <maya/MItMeshVertex.h>
+#include <maya/MItDependencyNodes.h>
 
 using namespace mayaMVG;
 
@@ -37,7 +38,10 @@ MVGMesh::~MVGMesh()
 // virtual
 bool MVGMesh::isValid() const
 {
-	return _dagpath.isValid();
+	if(!_dagpath.isValid() || (_dagpath.apiType()!=MFn::kMesh))
+		return false;
+	MFnMesh fn(_dagpath);
+	return !fn.isIntermediateObject();
 }
 
 // static
@@ -79,6 +83,22 @@ MVGMesh MVGMesh::create(const std::string& name)
 	MVGMesh mesh(path);
 	mesh.setName(name);
 	return mesh;
+}
+
+// static
+std::vector<MVGMesh> MVGMesh::list()
+{
+	std::vector<MVGMesh> list;
+	MDagPath path;
+	MItDependencyNodes it(MFn::kMesh);
+	for (; !it.isDone(); it.next()) {
+		MFnDependencyNode fn(it.thisNode());
+		MDagPath::getAPathTo(fn.object(), path);
+		MVGMesh mesh(path);
+		if(mesh.isValid())
+			list.push_back(mesh);
+	}
+	return list;
 }
 
 bool MVGMesh::addPolygon(const MPointArray& pointArray, int& index) const

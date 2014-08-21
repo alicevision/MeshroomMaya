@@ -420,9 +420,9 @@ void MVGCreateManipulator::computeTmpFaceOnEdgeExtend(M3dView& view, MVGManipula
 
 	// Compute 3D face
 	_manipUtil->previewFace3D().clear();
-	if(!MVGGeometryUtil::projectFace2D(view, _manipUtil->previewFace3D(), data->camera, previewPoints2D, true, intersectionData.edgeHeight3D))
-	{ 
-        _manipUtil->previewFace3D().setLength(4);    
+	if(!MVGGeometryUtil::projectFace2D(view, _manipUtil->previewFace3D(), data->camera, previewPoints2D, intersectionData.edgeHeight3D))
+	{
+        _manipUtil->previewFace3D().setLength(4);
         MVGMesh mesh(intersectionData.meshName);
         if(!mesh.isValid())
             return;

@@ -13,10 +13,10 @@ MVGProjectWrapper::MVGProjectWrapper()
 	_allPanelNames.append("mvgRPanel");
 	_visiblePanelNames = _allPanelNames;
 
-    // // Initialize currentContext
-    // MString context;
-    // MVGMayaUtil::getCurrentContext(context);
-    // _currentContext = context.asChar();
+    // Initialize currentContext
+    MString context;
+    MVGMayaUtil::getCurrentContext(context);
+    _currentContext = context.asChar();
 }
 
 MVGProjectWrapper::~MVGProjectWrapper()
@@ -41,16 +41,16 @@ void MVGProjectWrapper::setLogText(const QString& text)
 	Q_EMIT logTextChanged();
 }
 
-// const QString MVGProjectWrapper::currentContext() const
-// {
-//     return _currentContext;
-// }
+const QString MVGProjectWrapper::currentContext() const
+{
+    return _currentContext;
+}
 
-// void MVGProjectWrapper::setCurrentContext(const QString& context)
-// {
-//     _currentContext = context;
-//     Q_EMIT currentContextChanged();
-// }
+void MVGProjectWrapper::setCurrentContext(const QString& context)
+{
+    _currentContext = context;
+    Q_EMIT currentContextChanged();
+}
 
 void MVGProjectWrapper::appendLogText(const QString& text)
 {
@@ -85,6 +85,7 @@ void MVGProjectWrapper::activeMVGContext()
 
 void MVGProjectWrapper::loadExistingProject()
 {
+	_cameraList.clear();
 	std::vector<MVGProject> projects = MVGProject::list();
 	if(projects.empty())
 		return;
@@ -144,15 +145,14 @@ void MVGProjectWrapper::setCameraToView(QObject* camera, const QString& viewName
 
 void MVGProjectWrapper::reloadMVGCamerasFromMaya()
 {
+	_cameraList.clear();
 	if(!_project.isValid())
 		return;
 	Q_EMIT projectDirectoryChanged();
 	const std::vector<MVGCamera>& cameraList = _project.cameras();
 	std::vector<MVGCamera>::const_iterator it = cameraList.begin();
-	_cameraList.clear();
-	for(; it != cameraList.end(); ++it) {
+	for(; it != cameraList.end(); ++it)
 		_cameraList.append(new MVGCameraWrapper(*it));
-	}
 	Q_EMIT cameraModelChanged();
 	// TODO : Camera selection
 }

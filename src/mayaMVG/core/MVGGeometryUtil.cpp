@@ -131,27 +131,24 @@ void MVGGeometryUtil::cameraToImage(const MVGCamera& camera, const MPoint& point
 	image.y = (-pointCenteredNorm.y + 0.5) * width - verticalMargin;
 }
 
-bool MVGGeometryUtil::projectFace2D(M3dView& view, MPointArray& face3DPoints, const MVGCamera& camera, const MPointArray& face2DPoints, bool compute, MVector height)
+bool MVGGeometryUtil::projectFace2D(M3dView& view, MPointArray& face3DPoints, const MVGCamera& camera, const MPointArray& face2DPoints, MVector height)
 {
 	std::vector<MVGPointCloudItem> items = camera.visibleItems();
-	if(items.size() < 3) {
-		LOG_ERROR("Need more than " << items.size() << " point cloud items. Abort.");
+	if(items.size() < 3)
 		return false;
-	}
-	
+
 	std::vector<MVGPointCloudItem>::const_iterator it = items.begin();
 	std::vector<MPoint> facePoints_view;
-	
+
 	// Camera -> View
 	MPoint viewPoint;
-	for(size_t i = 0; i < face2DPoints.length(); ++i)
-	{
+	for(size_t i = 0; i < face2DPoints.length(); ++i) {
 		cameraToView(view, face2DPoints[i], viewPoint);
 		facePoints_view.push_back(viewPoint);
 	}
-	cameraToView(view, face2DPoints[0],viewPoint);	// Extra point
+	cameraToView(view, face2DPoints[0], viewPoint);	// Extra point
 	facePoints_view.push_back(viewPoint);
-	
+
 	// Get selected points in pointCloud
 	std::vector<MVGPointCloudItem> selectedItems;
 	int windingNumber = 0;
@@ -160,10 +157,8 @@ bool MVGGeometryUtil::projectFace2D(M3dView& view, MPointArray& face3DPoints, co
 		if(windingNumber != 0)
 			selectedItems.push_back(*it);
 	}
-	if(selectedItems.size() < 3) {
-		LOG_ERROR("Need more than " << selectedItems.size() << " selected points. Abort.");
+	if(selectedItems.size() < 3)
 		return false;
-	}
 
 	// 3D plane estimation
 	// w/ a variant of RANSAC using Least Median of Squares
@@ -176,24 +171,21 @@ bool MVGGeometryUtil::projectFace2D(M3dView& view, MPointArray& face3DPoints, co
 	double outlierThreshold = std::numeric_limits<double>::infinity();
 	double dBestMedian = openMVG::robust::LeastMedianOfSquares(kernel, &model, &outlierThreshold);
 
-	// Retrieve Face3D vertices from this model
+	// Retrieve projected Face3D vertices from this model
 	MPoint P;
 	MPoint cameraCenter = AS_MPOINT(camera.pinholeCamera()._C);
 	MPoint worldPoint;
-	
-	if(compute) {	
-		// Three first points are retrieved from the selection points
-		for(size_t i = 0; i < facePoints_view.size()-2; ++i) // remove extra point
-		{
+
+	if(height.length() != 0) {
+		// First points projection
+		for(size_t i = 0; i < facePoints_view.size()-2; ++i) { // remove extra point
 			worldPoint = viewToWorld(view, facePoints_view[i]);
 			plane_line_intersect(model, cameraCenter, worldPoint, P);
 			face3DPoints.append(P);
 		}
-		// Compute last point to keep 3D lenghts
-		if(height.length() == 0)
-		{
-			height = face3DPoints[0]- face3DPoints[1];
-		}			
+		// Last point projection (keep 3D lengths)
+		// if(height.length() == 0)
+		// 	height = face3DPoints[0]- face3DPoints[1];
 		MPoint lastPoint3D = face3DPoints[2] + height; // TODO : warning
 		MPoint viewPoint = worldToView(view, lastPoint3D);
 		worldPoint = viewToWorld(view, viewPoint);
@@ -201,14 +193,13 @@ bool MVGGeometryUtil::projectFace2D(M3dView& view, MPointArray& face3DPoints, co
 		face3DPoints.append(P);
 	}
 	else {
-		for(size_t i = 0; i < facePoints_view.size()-1; ++i) // remove extra point
-		{
+		for(size_t i = 0; i < facePoints_view.size()-1; ++i) { // remove extra point
 			worldPoint = viewToWorld(view, facePoints_view[i]);
 			plane_line_intersect(model, cameraCenter, worldPoint, P);
 			face3DPoints.append(P);
 		}
 	}
-	
+
 	return true;
 }
 

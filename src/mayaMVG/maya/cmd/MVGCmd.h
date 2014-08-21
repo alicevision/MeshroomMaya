@@ -17,9 +17,7 @@ public:
 	virtual MStatus doIt(const MArgList& args);
 	static void* creator();
 	static MSyntax newSyntax();
-    
-public:
-    static MCallbackIdArray _callbackIDs;
+
 };
 
 } // mayaMVG
