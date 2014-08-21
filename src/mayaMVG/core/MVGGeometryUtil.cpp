@@ -210,7 +210,7 @@ bool MVGGeometryUtil::computePlane(MPointArray& facePoints3D, PlaneKernel::Model
 		LOG_ERROR("Need at least 3 points to compute a plane")
 		return false;
 	}
-	openMVG::Mat facePointsMat(3, 4);
+	openMVG::Mat facePointsMat(3, facePoints3D.length());
 	for (size_t i = 0; i <facePoints3D.length(); ++i)
 		facePointsMat.col(i) = AS_VEC3(facePoints3D[i]);
 	PlaneKernel kernel(facePointsMat);

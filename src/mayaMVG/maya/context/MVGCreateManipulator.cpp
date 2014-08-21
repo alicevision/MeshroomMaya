@@ -279,7 +279,9 @@ void MVGCreateManipulator::drawIntersections(M3dView& view, const float mousex, 
         {
             if(_createState == eCreateFace)
                 break;
-            MPoint A = MVGGeometryUtil::worldToView(view,  meshPoints[intersectionData.edgePointIndexes[0]].point3D);
+            if(intersectionData.edgePointIndexes.length() == 0 || meshPoints.size() < intersectionData.edgePointIndexes[0] || meshPoints.size() < intersectionData.edgePointIndexes[1])
+                return;
+            MPoint A = MVGGeometryUtil::worldToView(view, meshPoints[intersectionData.edgePointIndexes[0]].point3D);
             MPoint B = MVGGeometryUtil::worldToView(view, meshPoints[intersectionData.edgePointIndexes[1]].point3D);
             MVGDrawUtil::drawLine2D(A, B, _extendColor);
 			break;
@@ -379,6 +381,8 @@ void MVGCreateManipulator::computeTmpFaceOnEdgeExtend(M3dView& view, MVGManipula
 	std::vector<MVGManipulatorUtil::MVGPoint2D>& mvgPoints = data->allPoints2D[intersectionData.meshName];
 	
 	// Get edge 3D points 
+    if(intersectionData.edgePointIndexes.length() == 0 || mvgPoints.size() < intersectionData.edgePointIndexes[0] || mvgPoints.size() < intersectionData.edgePointIndexes[1])
+        return;
 	MPoint edgePoint3D_0 = mvgPoints[intersectionData.edgePointIndexes[0]].point3D;
 	MPoint edgePoint3D_1 = mvgPoints[intersectionData.edgePointIndexes[1]].point3D;
 

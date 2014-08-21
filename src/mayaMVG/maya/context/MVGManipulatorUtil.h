@@ -83,6 +83,12 @@ class MVGManipulatorUtil {
 		DisplayData* getComplementaryDisplayData(M3dView& view);
 		int getCacheCount() const { return _cacheCameraToDisplayData.size(); }
 
+		// Reset
+		void resetCache();
+		void resetMeshCache();
+		void resetTemporaryData();
+		void resetIntersections();
+
 	private:
 		MVGContext* _context;
 		IntersectionState _intersectionState;

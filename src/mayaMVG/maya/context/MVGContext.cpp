@@ -63,6 +63,7 @@ void MVGContext::updateManipulators()
 				MPxManipulatorNode::newManipulator("MVGMoveManipulator", manipObject, &status));
 			if(!status || !manip)
 				return;
+			_manipUtil.resetTemporaryData();
 			manip->setManipUtil(&_manipUtil);
 			break;
 		}

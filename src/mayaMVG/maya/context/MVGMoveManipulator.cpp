@@ -121,6 +121,8 @@ MStatus MVGMoveManipulator::doPress(M3dView& view)
 			break;
 		case MVGManipulatorUtil::eIntersectionPoint:
 		{	
+            if(intersectionData.pointIndex < 0)
+                break;
 			if((modifiers & Qt::ShiftModifier) || (modifiers & Qt::ControlModifier))
 			{
                 // Update face informations
@@ -171,6 +173,8 @@ MStatus MVGMoveManipulator::doRelease(M3dView& view)
                 intersectionData.facePointIndexes.clear();
             }
             else {
+                if(intersectionData.pointIndex < 0)
+                    break;
                 MPoint triangulatedPoint;
                 if(!triangulate(view, intersectionData, mousePoint, triangulatedPoint))
                     break;
@@ -187,6 +191,8 @@ MStatus MVGMoveManipulator::doRelease(M3dView& view)
 		}		
 		case eMoveEdge: 
 		{
+            if(intersectionData.edgePointIndexes.length() == 0)
+                break;
             if((modifiers & Qt::ShiftModifier) || (modifiers & Qt::ControlModifier))
 			{ 
                 if(_manipUtil->previewFace3D().length() == 0)
@@ -255,6 +261,8 @@ MStatus MVGMoveManipulator::doDrag(M3dView& view)
 		case eMoveNone:
 			break;
 		case eMovePoint: {
+            if(intersectionData.pointIndex < 0 || meshPoints.size() < intersectionData.pointIndex)
+                break;
             if(modifiers & Qt::ControlModifier) {
                 if(meshPoints[intersectionData.pointIndex].movableState >= MVGManipulatorUtil::eMovableInSamePlane)
                     computeTmpFaceOnMovePoint(view, data, mousePoint);
@@ -268,6 +276,8 @@ MStatus MVGMoveManipulator::doDrag(M3dView& view)
 			break;
 		}
 		case eMoveEdge: {
+            if(intersectionData.edgePointIndexes.length() == 0 || meshPoints.size() < intersectionData.edgePointIndexes[0] || meshPoints.size() < intersectionData.edgePointIndexes[1])
+                break;
             if(modifiers & Qt::ControlModifier) {
                 if(meshPoints[intersectionData.edgePointIndexes[0]].movableState >= MVGManipulatorUtil::eMovableInSamePlane
                     && meshPoints[intersectionData.edgePointIndexes[1]].movableState >= MVGManipulatorUtil::eMovableInSamePlane)
@@ -328,6 +338,8 @@ void MVGMoveManipulator::drawIntersections(M3dView& view)
 	{
 		case MVGManipulatorUtil::eIntersectionPoint:
 		{
+            if(intersectionData.pointIndex < 0 || meshPoints.size() < intersectionData.pointIndex)
+                return;
 			MVGManipulatorUtil::EPointState movableState = meshPoints[intersectionData.pointIndex].movableState;
             MPoint point = MVGGeometryUtil::worldToView(view, meshPoints[intersectionData.pointIndex].point3D);
             if(modifiers & Qt::ControlModifier)
@@ -351,6 +363,8 @@ void MVGMoveManipulator::drawIntersections(M3dView& view)
 			break;
 		}
 		case MVGManipulatorUtil::eIntersectionEdge:	{
+            if(intersectionData.edgePointIndexes.length() == 0 || meshPoints.size() < intersectionData.edgePointIndexes[0] || meshPoints.size() < intersectionData.edgePointIndexes[1])
+                return;
 			std::vector<MVGManipulatorUtil::EPointState> movableStates;
 			movableStates.push_back(meshPoints[intersectionData.edgePointIndexes[0]].movableState);
 			movableStates.push_back(meshPoints[intersectionData.edgePointIndexes[1]].movableState);
@@ -386,6 +400,8 @@ void MVGMoveManipulator::drawTriangulation(M3dView& view, MVGManipulatorUtil::Di
         case eMoveNone:
             break;
         case eMovePoint: {
+            if(_manipUtil->intersectionData().pointIndex < 0)
+                break;
             MPoint& point3D = data->allPoints2D[_manipUtil->intersectionData().meshName].at(_manipUtil->intersectionData().pointIndex).point3D;
             MPoint viewPoint = MVGGeometryUtil::worldToView(view, point3D);
             MPoint mouseView(mousex, mousey);
@@ -415,6 +431,12 @@ void MVGMoveManipulator::computeTmpFaceOnMovePoint(M3dView& view, MVGManipulator
 	MIntArray faceVerticesId = intersectionData.facePointIndexes;
 	MPointArray& previewFace3D = _manipUtil->previewFace3D();
 	
+    if(intersectionData.pointIndex < 0)
+        return;
+    for(int i = 0; i < faceVerticesId.length(); ++i) {
+        if(meshPoints2D.size() < faceVerticesId[i])
+            return;
+    }
 	if(recomputePlane) {
 		MPointArray previewPoints2D;
 		for(int i = 0; i < faceVerticesId.length(); ++i) {
@@ -449,13 +471,17 @@ void MVGMoveManipulator::computeTmpFaceOnMovePoint(M3dView& view, MVGManipulator
 
 void MVGMoveManipulator::computeTmpFaceOnMoveEdge(M3dView& view, MVGManipulatorUtil::DisplayData* data, const MPoint& mousePoint, bool recompute)
 {
-	MVGManipulatorUtil::IntersectionData& intersectionData = _manipUtil->intersectionData();
-	std::vector<MVGManipulatorUtil::MVGPoint2D>& meshPoints2D = data->allPoints2D[intersectionData.meshName];
-	MPointArray& previewFace3D = _manipUtil->previewFace3D();
+    MVGManipulatorUtil::IntersectionData& intersectionData = _manipUtil->intersectionData();
+    std::vector<MVGManipulatorUtil::MVGPoint2D>& meshPoints2D = data->allPoints2D[intersectionData.meshName];
+    MPointArray& previewFace3D = _manipUtil->previewFace3D();
+    if(intersectionData.edgePointIndexes.length() == 0)
+        return;
 	MIntArray faceVerticesId = intersectionData.facePointIndexes;
 	MIntArray edgeVerticesId = intersectionData.edgePointIndexes;
 	MIntArray fixedVerticesId;
 	for(int i = 0; i < faceVerticesId.length(); ++i) {
+        if(meshPoints2D.size() < faceVerticesId[i])
+            return;
 		int found = false;
 		for(int j = 0; j < edgeVerticesId.length(); ++j) {
 			if(faceVerticesId[i] == edgeVerticesId[j])
@@ -473,6 +499,9 @@ void MVGMoveManipulator::computeTmpFaceOnMoveEdge(M3dView& view, MVGManipulatorU
 		fixedVerticesId[1] = tmp[0];
 	}
 		
+    if(meshPoints2D.size() < fixedVerticesId[0] || meshPoints2D.size() < fixedVerticesId[1])
+            return;
+
 	if(recompute) {
 		MPointArray previewPoints2D;
 
@@ -549,6 +578,8 @@ bool MVGMoveManipulator::triangulate(M3dView& view, const MVGManipulatorUtil::In
 		return false;
 
 	std::vector<MVGManipulatorUtil::MVGPoint2D>& meshPoints2D = complementaryData->allPoints2D[intersectionData.meshName];
+    if(intersectionData.pointIndex < 0 || meshPoints2D.size() < intersectionData.pointIndex)
+        return false;
 	points2D.append(meshPoints2D[intersectionData.pointIndex].projectedPoint3D);
 
 	std::vector<MVGCamera> cameras;
@@ -582,6 +613,8 @@ bool MVGMoveManipulator::triangulateEdge(M3dView& view, const MVGManipulatorUtil
 
     // Edge points
 	std::vector<MVGManipulatorUtil::MVGPoint2D>& meshPoints2D = complementaryData->allPoints2D[intersectionData.meshName];
+    if(intersectionData.edgePointIndexes.length() == 0 || meshPoints2D.size() < intersectionData.edgePointIndexes[0] || meshPoints2D.size() < intersectionData.edgePointIndexes[1])
+        return false;
     array0.append(meshPoints2D[intersectionData.edgePointIndexes[0]].projectedPoint3D);
     array1.append(meshPoints2D[intersectionData.edgePointIndexes[1]].projectedPoint3D);
 

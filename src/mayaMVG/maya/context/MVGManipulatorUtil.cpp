@@ -49,7 +49,7 @@ bool MVGManipulatorUtil::intersectPoint(M3dView& view, DisplayData* displayData,
 		}
 	}
 		
-	_intersectionData.pointIndex = -1;
+	resetIntersections();
 	return false;
 }
 
@@ -78,6 +78,8 @@ bool MVGManipulatorUtil::intersectEdge(M3dView& view, DisplayData* displayData, 
 		std::vector<MVGPoint2D>& mvgPoints = displayData->allPoints2D[it->first];
 		for(std::vector<MIntArray>::iterator edgeIt = edgesArray.begin(); edgeIt != edgesArray.end(); ++edgeIt)
 		{
+			if(mvgPoints.size() < (*edgeIt)[0] || mvgPoints.size() < (*edgeIt)[1])
+				continue;
 			MPoint A = mvgPoints[(*edgeIt)[0]].projectedPoint3D;
 			MPoint B = mvgPoints[(*edgeIt)[1]].projectedPoint3D;
 				
@@ -92,7 +94,7 @@ bool MVGManipulatorUtil::intersectEdge(M3dView& view, DisplayData* displayData, 
 			((BP*BA) > 0) ? sign2 = 1 : sign2 = -1;
 			if(sign1 != sign2)
 				continue;
-			// Lenght of orthogonal projection on edge
+			// length of orthogonal projection on edge
 			double s = MVGGeometryUtil::crossProduct2D(AB, PA) / (AB.length()*AB.length());
 			if(s < 0)
 				s *= -1;
@@ -111,8 +113,7 @@ bool MVGManipulatorUtil::intersectEdge(M3dView& view, DisplayData* displayData, 
 
 	if(minDistanceFound < -tolerance || minDistanceFound > tolerance)
 	{
-		_intersectionData.edgePointIndexes.clear();
-		_intersectionData.meshName = "";
+		resetIntersections();
 		return false;
 	}
 	
@@ -123,23 +124,19 @@ bool MVGManipulatorUtil::intersectEdge(M3dView& view, DisplayData* displayData, 
 
 void MVGManipulatorUtil::updateIntersectionState(M3dView& view, DisplayData* data, double mousex, double mousey)
 {
-	_intersectionData.pointIndex = -1;
-	_intersectionData.edgePointIndexes.clear();
-	if(intersectPoint(view, data, mousex, mousey)) {
+	resetIntersections();
+	if(intersectPoint(view, data, mousex, mousey))
 		_intersectionState = MVGManipulatorUtil::eIntersectionPoint;
-	} 
-	else if(intersectEdge(view, data, mousex, mousey)) {
+	else if(intersectEdge(view, data, mousex, mousey))
 		_intersectionState = MVGManipulatorUtil::eIntersectionEdge;
-	} 
-	else {
-		_intersectionState = MVGManipulatorUtil::eIntersectionNone;
-	}
 }
 
 bool MVGManipulatorUtil::computeEdgeIntersectionData(M3dView& view, DisplayData* data, const MPoint& mousePointInCameraCoord)
 {
 	std::vector<MVGPoint2D>& mvgPoints = data->allPoints2D[_intersectionData.meshName];
 	
+	if(_intersectionData.edgePointIndexes.length() == 0 || mvgPoints.size() < _intersectionData.edgePointIndexes[0] || mvgPoints.size() < _intersectionData.edgePointIndexes[1])
+		return false;
 	// Compute height and ratio 2D
 	MPoint edgePoint3D_0 = mvgPoints[_intersectionData.edgePointIndexes[0]].point3D;
 	MPoint edgePoint3D_1 = mvgPoints[_intersectionData.edgePointIndexes[1]].point3D;
@@ -224,9 +221,7 @@ MStatus MVGManipulatorUtil::rebuildAllMeshesCacheFromMaya()
 {
 	MStatus status;
 	// Clear all
-	_cacheMeshToPointArray.clear();
-	_cacheMeshToMovablePoint.clear();
-	_cacheMeshToEdgeArray.clear();
+	resetMeshCache();
 	// Retrieves all meshes
 	MDagPath path;
 	std::vector<MVGMesh> meshes = MVGMesh::list();
@@ -241,11 +236,13 @@ MStatus MVGManipulatorUtil::rebuildAllMeshesCacheFromMaya()
 MStatus MVGManipulatorUtil::rebuildMeshCacheFromMaya(const MDagPath& meshPath)
 {
 	MStatus status;
-	MFnMesh fnMesh(meshPath);
+	MFnMesh fnMesh(meshPath, &status);
+	CHECK_RETURN_STATUS(status)
 	std::string meshName = meshPath.fullPathName().asChar();
 	
-	// ???
+	// // ??????????
 	// fnMesh.syncObject();
+	// fnMesh.updateSurface();
 
 	// MPlug plugMesh;
 	// MObject meshData;
@@ -328,6 +325,37 @@ MVGManipulatorUtil::DisplayData* MVGManipulatorUtil::getComplementaryDisplayData
 		}
 	}
 	return NULL;
+}
+
+void MVGManipulatorUtil::resetCache()
+{
+	_cacheCameraToDisplayData.clear();	
+}
+
+void MVGManipulatorUtil::resetMeshCache()
+{
+	_cacheMeshToPointArray.clear();
+	_cacheMeshToMovablePoint.clear();
+	_cacheMeshToEdgeArray.clear();
+}
+
+void MVGManipulatorUtil::resetTemporaryData()
+{
+	_previewFace3D.clear();
+	for(std::map<std::string, DisplayData>::iterator it = _cacheCameraToDisplayData.begin(); it != _cacheCameraToDisplayData.end(); ++it)
+		it->second.buildPoints2D.clear();
+}
+
+void MVGManipulatorUtil::resetIntersections()
+{
+	_intersectionState = eIntersectionNone;
+	_intersectionData.meshName.clear();
+	_intersectionData.pointIndex = -1;
+	_intersectionData.edgePointIndexes.clear();
+	_intersectionData.edgeHeight3D = MVector(0, 0, 0);
+	_intersectionData.edgeHeight2D = MVector(0, 0, 0);
+	_intersectionData.edgeRatio = 0;
+	_intersectionData.facePointIndexes.clear();
 }
 
 bool MVGManipulatorUtil::addCreateFaceCommand(const MDagPath& meshPath, const MPointArray& facePoints3D)
