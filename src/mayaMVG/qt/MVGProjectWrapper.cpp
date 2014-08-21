@@ -30,16 +30,16 @@ const QString MVGProjectWrapper::projectDirectory() const
 	return QString(_project.projectDirectory().c_str());
 }
 
-const QString MVGProjectWrapper::logText() const
-{
-	return _logText;
-}
-
-void MVGProjectWrapper::setLogText(const QString& text)
-{
-	_logText = text;
-	Q_EMIT logTextChanged();
-}
+//const QString MVGProjectWrapper::logText() const
+//{
+//	return _logText;
+//}
+//
+//void MVGProjectWrapper::setLogText(const QString& text)
+//{
+//	_logText = text;
+//	Q_EMIT logTextChanged();
+//}
 
 const QString MVGProjectWrapper::currentContext() const
 {
@@ -52,11 +52,11 @@ void MVGProjectWrapper::setCurrentContext(const QString& context)
     Q_EMIT currentContextChanged();
 }
 
-void MVGProjectWrapper::appendLogText(const QString& text)
-{
-	_logText.append(text + "\n");
-	Q_EMIT logTextChanged();
-}
+//void MVGProjectWrapper::appendLogText(const QString& text)
+//{
+//	_logText.append(text + "\n");
+//	Q_EMIT logTextChanged();
+//}
 
 void MVGProjectWrapper::setProjectDirectory(const QString& directory)
 {
@@ -101,7 +101,7 @@ void MVGProjectWrapper::loadNewProject(const QString& projectDirectoryPath)
 		return;
 	if(!_project.load(projectDirectoryPath.toStdString())) {
 		LOG_ERROR("An error occured when loading project.");
-		appendLogText(QString("An error occured when loading project."));
+//		appendLogText(QString("An error occured when loading project."));
 		return;
 	}
 	_project.setProjectDirectory(projectDirectoryPath.toStdString());

@@ -533,14 +533,14 @@ void MVGMoveManipulator::computeTmpFaceOnMoveEdge(M3dView& view, MVGManipulatorU
 
 bool MVGMoveManipulator::triangulate(M3dView& view, const MVGManipulatorUtil::IntersectionData& intersectionData, const MPoint& mousePointInCameraCoord, MPoint& resultPoint3D)
 {
-	// Points in camera coordinates
-	MPointArray points2D;
-	points2D.append(mousePointInCameraCoord);
-
 	if(_manipUtil->getCacheCount() == 1) {
 		USER_WARNING("Can't triangulate with the same camera")
 		return false;
 	}
+
+	// Points in camera coordinates
+	MPointArray points2D;
+	points2D.append(mousePointInCameraCoord);
 
     MDagPath cameraPath;
 	view.getCamera(cameraPath);
@@ -561,31 +561,21 @@ bool MVGMoveManipulator::triangulate(M3dView& view, const MVGManipulatorUtil::In
 
 bool MVGMoveManipulator::triangulateEdge(M3dView& view, const MVGManipulatorUtil::IntersectionData& intersectionData, const MPoint& mousePointInCameraCoord, MPointArray& resultPoint3D)
 {
+	if(_manipUtil->getCacheCount() == 1) {
+		USER_WARNING("Can't triangulate with the same camera")
+		return false;
+	}
+
     // Edge points (moved)
     MPointArray array0, array1;
     MPoint P1 = mousePointInCameraCoord + intersectionData.edgeRatio * intersectionData.edgeHeight2D;
     array1.append(P1);
     MPoint P0 = mousePointInCameraCoord - (1 - intersectionData.edgeRatio) * intersectionData.edgeHeight2D;
     array0.append(P0);
-    
-	// std::map<std::string, MVGManipulatorUtil::DisplayData>& displayDataCache = _manipUtil->getDisplayDataCache();
- //    if(displayDataCache.size() == 1)
- //    {
- //        USER_WARNING("Can't triangulate with the same camera")
- //        return false;
- //    }
 
     MDagPath cameraPath;
 	view.getCamera(cameraPath);
-	// MVGManipulatorUtil::DisplayData* otherData;
-	// for(std::map<std::string, MVGManipulatorUtil::DisplayData>::iterator it = displayDataCache.begin(); it != displayDataCache.end(); ++it)
-	// {
-	// 	if(it->first != cameraPath.fullPathName().asChar())
-	// 		otherData = (&it->second);
-	// }
-	// if(!otherData)
-	// 	return false;
-    
+
     MVGManipulatorUtil::DisplayData* complementaryData = _manipUtil->getComplementaryDisplayData(view);
 	if(!complementaryData)
 		return false;

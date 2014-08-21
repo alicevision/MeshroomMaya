@@ -42,42 +42,42 @@ Item {
         }
     }
 
-    // Log
-    LogText {
-        id: logText
-        width: parent.width - 20
-        height: 120
-        visible: false
+//    // Log
+//    LogText {
+//        id: logText
+//        width: parent.width - 20
+//        height: 120
+//        visible: false
 
-        anchors {
-            bottom: parent.bottom
-            left: parent.left
+//        anchors {
+//            bottom: parent.bottom
+//            left: parent.left
 
-            bottomMargin: 10
-            leftMargin: 10
-        }
-        text: _project.logText
-    }
+//            bottomMargin: 10
+//            leftMargin: 10
+//        }
+//        text: _project.logText
+//    }
 
-    // Open/Close LogText
-    Rectangle {
-        width: 20
-        height: 20
-        color: "#fec04c"
-        opacity: 0.7
+//    // Open/Close LogText
+//    Rectangle {
+//        width: 20
+//        height: 20
+//        color: "#fec04c"
+//        opacity: 0.7
 
-        anchors {
-            bottom: parent.bottom
-            right: parent.right
+//        anchors {
+//            bottom: parent.bottom
+//            right: parent.right
 
-        }
-        ToolButton {
-            anchors.fill: parent
-            iconSource: "img/up_left_arrow.png"
-            tooltip: "Open error log"
-            onClicked: logText.visible = true
-        }
-    }
+//        }
+//        ToolButton {
+//            anchors.fill: parent
+//            iconSource: "img/up_left_arrow.png"
+//            tooltip: "Open error log"
+//            onClicked: logText.visible = true
+//        }
+//    }
 
     CustomWheelArea {
         id: wheelArea

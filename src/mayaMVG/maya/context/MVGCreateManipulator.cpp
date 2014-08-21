@@ -118,40 +118,13 @@ MStatus MVGCreateManipulator::doPress(M3dView& view)
 	MPoint mousePoint;
 	mousePoint = updateMouse(view, mousex, mousey);
 
-//    _manipUtil->updateIntersectionState(view, data, mousex, mousey);
-//	switch(_manipUtil->intersectionState()) {
-//		case MVGManipulatorUtil::eIntersectionNone: 
-//        case MVGManipulatorUtil::eIntersectionPoint: {
-//            _createState = eCreateNone;
-//			data->buildPoints2D.append(mousePoint);
-//			// Create face if enough points (4))
-//			if(data->buildPoints2D.length() < 4)
-//				break;
-//			// Compute 3D face
-//			MPointArray facePoints3D;
-//			if(!MVGGeometryUtil::projectFace2D(view, facePoints3D, data->camera, data->buildPoints2D)) {
-//                data->buildPoints2D.remove(data->buildPoints2D.length() - 1);
-//                USER_ERROR("Can't find a 3D face with these points")
-//                break;
-//            }
-//			MDagPath emptyPath;
-//			if(!_manipUtil->addCreateFaceCommand(emptyPath, facePoints3D))
-//				return MS::kFailure;
-//			break;
-//		}
-//		case MVGManipulatorUtil::eIntersectionEdge: {
-//			_manipUtil->computeEdgeIntersectionData(view, data, mousePoint);
-//			_createState = eCreateExtend;
-//			break;
-//		}
-//	}
-
     _manipUtil->updateIntersectionState(view, data, mousex, mousey);
-    // Clear buildPoint of the complementary view  
+    // Clear buildPoint of the complementary view
     if(data->buildPoints2D.length() == 0)
     {
         MVGManipulatorUtil::DisplayData* complementaryCache = _manipUtil->getComplementaryDisplayData(view);
-        complementaryCache->buildPoints2D.clear();
+        if(complementaryCache != data)
+            complementaryCache->buildPoints2D.clear();
     }
     switch(_createState)
     {
