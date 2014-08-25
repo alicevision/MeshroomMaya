@@ -25,10 +25,10 @@ protected:
 		switch(event->orientation())
         {
             case Qt::Horizontal:
-                emit horizontalWheel(event->delta(), event->modifiers());
+                Q_EMIT horizontalWheel(event->delta(), event->modifiers());
                 break;
             case Qt::Vertical:
-                emit verticalWheel(event->delta(), event->modifiers());
+                Q_EMIT verticalWheel(event->delta(), event->modifiers());
                 break;
             default:
                 event->ignore();
@@ -52,7 +52,7 @@ public:
 signals:
     void verticalWheel(int delta, Qt::KeyboardModifiers modifier);
     void horizontalWheel(int delta, Qt::KeyboardModifiers modifier);
-	
+
 private:
 	QGraphicsSceneWheelEvent* _lastEvent;  // Hack: only valid during the wheelEvent call
 };

@@ -12,7 +12,7 @@ Item {
             implicitHeight: 35
             implicitWidth: parent.width
             project: _project
-            settingsVisibility: true
+            settingsVisibility: (_project.projectDirectory === "")
         }
         ProjectSettings {
             id: settings
@@ -24,8 +24,8 @@ Item {
             project: _project
             sliderMinValue: 90
             sliderMaxValue: 180
-
             onSettingProjectLoaded: contextBar.settingsVisibility = false
+            thumbSize: sliderMinValue
         }
         // PointCloudItem {
         //     implicitWidth: parent.width

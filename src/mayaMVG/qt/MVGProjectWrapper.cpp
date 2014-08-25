@@ -3,77 +3,50 @@
 #include "mayaMVG/maya/MVGMayaUtil.h"
 #include "mayaMVG/core/MVGLog.h"
 #include <maya/MQtUtil.h>
+#include "mayaMVG/core/MVGGeometryUtil.h"
 
-#include "mayaMVG/qt/MVGUserLog.h"
-#include "mayaMVG/maya/context/MVGBuildFaceManipulator.h"
-
-namespace mayaMVG {
+using namespace mayaMVG;
 
 MVGProjectWrapper::MVGProjectWrapper()
 {
-	_project = MVGProject(MVGProject::_PROJECT);
-	if(!_project.isValid()) {
-		_project = MVGProject::create(MVGProject::_PROJECT);
-		LOG_INFO("New OpenMVG Project.")
-	}
+	_allPanelNames.append("mvgLPanel");
+	_allPanelNames.append("mvgRPanel");
+	_visiblePanelNames = _allPanelNames;
+
+    // Initialize currentContext
+    MString context;
+    MVGMayaUtil::getCurrentContext(context);
+    _currentContext = context.asChar();
 }
 
 MVGProjectWrapper::~MVGProjectWrapper()
 {
 }
 
-const QString MVGProjectWrapper::moduleDirectory() const
-{
-	return QString::fromStdString(_project.moduleDirectory());
-}
-
 const QString MVGProjectWrapper::projectDirectory() const
 {
-	return QString::fromStdString(_project.projectDirectory());
+	if(!_project.isValid())
+		return "";
+	return QString(_project.projectDirectory().c_str());
 }
 
-const QString MVGProjectWrapper::cameraDirectory() const
+const QString MVGProjectWrapper::currentContext() const
 {
-	return QString::fromStdString(_project.cameraDirectory());
+    return _currentContext;
 }
 
-const QString MVGProjectWrapper::imageDirectory() const
+void MVGProjectWrapper::setCurrentContext(const QString& context)
 {
-	return QString::fromStdString(_project.imageDirectory());
-}
-
-const QString MVGProjectWrapper::pointCloudFile() const
-{
-	return QString::fromStdString(_project.pointCloudFile());
-}
-
-const QString MVGProjectWrapper::logText() const
-{
-	return _logText;
-}
-
-void MVGProjectWrapper::setLogText(const QString text)
-{
-	_logText = text;
-	emit logTextChanged();
-}
-
-void MVGProjectWrapper::appendLogText(const QString text)
-{
-	_logText.append(text + "\n");
-	emit logTextChanged();
+    _currentContext = context;
+    Q_EMIT currentContextChanged();
 }
 
 void MVGProjectWrapper::setProjectDirectory(const QString& directory)
 {
+	if(!_project.isValid())
+		return;
 	_project.setProjectDirectory(directory.toStdString());
-	emit projectDirectoryChanged();
-}
-
-void MVGProjectWrapper::addCamera(const MVGCamera& camera)
-{
-	_cameraList.append(new MVGCameraWrapper(camera));
-	emit cameraModelChanged();
+	Q_EMIT projectDirectoryChanged();
 }
 
 QString MVGProjectWrapper::openFileDialog() const
@@ -84,52 +57,86 @@ QString MVGProjectWrapper::openFileDialog() const
     return MQtUtil::toQString(directoryPath);
 }
 
-void MVGProjectWrapper::onSelectContextButtonClicked() {
+void MVGProjectWrapper::activeSelectionContext() const
+{
 	MVGMayaUtil::activeSelectionContext();
 }
 
-void MVGProjectWrapper::onPlaceContextButtonClicked() 
+void MVGProjectWrapper::activeMVGContext() 
 {
 	MVGMayaUtil::activeContext();
 }
 
-void MVGProjectWrapper::loadProject(const QString& projectDirectoryPath)
-{	
-	_project.setProjectDirectory(projectDirectoryPath.toStdString());
-	if(!_project.load())
-	{
-		USER_ERROR("An error occured when loading project.");
-	}
-	Q_EMIT projectDirectoryChanged();
-	// Populate menu
-	const std::vector<MVGCamera>& cameraList = _project.cameras();
-	std::vector<MVGCamera>::const_iterator it = cameraList.begin();
+void MVGProjectWrapper::loadExistingProject()
+{
 	_cameraList.clear();
-	for(; it != cameraList.end(); ++it) {
-		addCamera(*it);
+	std::vector<MVGProject> projects = MVGProject::list();
+	if(projects.empty())
+		return;
+	_project = projects.front();
+	reloadMVGCamerasFromMaya();
+}
+
+void MVGProjectWrapper::loadNewProject(const QString& projectDirectoryPath)
+{
+    if(!_project.isValid())
+        _project = MVGProject::create(MVGProject::_PROJECT);
+	if(projectDirectoryPath.isEmpty())
+		return;
+	if(!_project.load(projectDirectoryPath.toStdString())) {
+		LOG_ERROR("An error occured when loading project.");
+//		appendLogText(QString("An error occured when loading project."));
+		return;
 	}
-	// select the two first cameras for the views
+	_project.setProjectDirectory(projectDirectoryPath.toStdString());
+	Q_EMIT projectDirectoryChanged();
+	
+	reloadMVGCamerasFromMaya();
+	// Select the two first cameras for the views
 	if(_cameraList.size() > 1) {
 		QList<MVGCameraWrapper*>& cameras = _cameraList.asQList<MVGCameraWrapper>();
-		_project.setCameraInView(cameras[0]->camera(), "mvgLPanel");
-		_project.setCameraInView(cameras[1]->camera(), "mvgRPanel");
+		setCameraToView(cameras[0], _visiblePanelNames[0], false);
+		setCameraToView(cameras[1], _visiblePanelNames[1], false);
 	}
 }
 
-void MVGProjectWrapper::selectItems(const QList<QString>& cameraNames)
+void MVGProjectWrapper::selectItems(const QList<QString>& cameraNames) const
 {
     foreach(MVGCameraWrapper* camera, _cameraList.asQList<MVGCameraWrapper>())
         camera->setIsSelected(cameraNames.contains(camera->name()));
 }
 
-void MVGProjectWrapper::setCameraToView(QObject* camera, const QString& viewName)
+void MVGProjectWrapper::selectCameras(const QStringList& cameraNames) const
+{
+	if(!_project.isValid())
+		return;
+    std::vector<std::string> cameras;
+    for(QStringList::const_iterator it = cameraNames.begin(); it != cameraNames.end(); ++it)
+        cameras.push_back(it->toStdString());
+    _project.selectCameras(cameras);
+}
+
+void MVGProjectWrapper::setCameraToView(QObject* camera, const QString& viewName, bool rebuildCache) const
 {
     foreach(MVGCameraWrapper* c, _cameraList.asQList<MVGCameraWrapper>())
         c->setInView(viewName, false);
     MVGCameraWrapper*cam = qobject_cast<MVGCameraWrapper*>(camera);
     cam->setInView(viewName, true);
-    _project.setCameraInView(cam->camera(), viewName.toStdString());
+    // rebuild cache
+    if(rebuildCache)
+    	MGlobal::executeCommand("mayaMVGTool -e -rebuild mayaMVGTool1");
 }
 
-} // namespace mayaMVG 
-
+void MVGProjectWrapper::reloadMVGCamerasFromMaya()
+{
+	_cameraList.clear();
+	if(!_project.isValid())
+		return;
+	Q_EMIT projectDirectoryChanged();
+	const std::vector<MVGCamera>& cameraList = _project.cameras();
+	std::vector<MVGCamera>::const_iterator it = cameraList.begin();
+	for(; it != cameraList.end(); ++it)
+		_cameraList.append(new MVGCameraWrapper(*it));
+	Q_EMIT cameraModelChanged();
+	// TODO : Camera selection
+}

@@ -9,16 +9,22 @@
 #include <maya/MPointArray.h>
 #include <maya/MIntArray.h>
 #include <maya/MDagModifier.h>
-
 #include <maya/MItMeshPolygon.h>
 #include <maya/MItMeshEdge.h>
 #include <maya/MItMeshVertex.h>
+#include <maya/MItDependencyNodes.h>
+#include <maya/MGlobal.h>
 
 using namespace mayaMVG;
 
 MVGMesh::MVGMesh(const std::string& name)
 	: MVGNodeWrapper(name)
 {
+}
+
+MVGMesh::MVGMesh(const MString& name)
+    : MVGNodeWrapper(name)
+{   
 }
 
 MVGMesh::MVGMesh(const MDagPath& dagPath)
@@ -33,7 +39,10 @@ MVGMesh::~MVGMesh()
 // virtual
 bool MVGMesh::isValid() const
 {
-	return _dagpath.isValid();
+	if(!_dagpath.isValid() || (_dagpath.apiType()!=MFn::kMesh))
+		return false;
+	MFnMesh fn(_dagpath);
+	return !fn.isIntermediateObject();
 }
 
 // static
@@ -77,146 +86,112 @@ MVGMesh MVGMesh::create(const std::string& name)
 	return mesh;
 }
 
-void MVGMesh::addPolygon(const MVGFace3D& face3d) const
+// static
+std::vector<MVGMesh> MVGMesh::list()
 {
-	MStatus status;
-	MFnMesh fnMesh(_dagpath.node(), &status);
-	MPointArray pointArray;
-	pointArray.append(face3d._p[0]);
-	pointArray.append(face3d._p[1]);
-	pointArray.append(face3d._p[2]);
-	pointArray.append(face3d._p[3]);
-	fnMesh.addPolygon(pointArray, true, 0.01, MObject::kNullObj, &status);
-	CHECK(status);
+	std::vector<MVGMesh> list;
+	MDagPath path;
+	MItDependencyNodes it(MFn::kMesh);
+	for (; !it.isDone(); it.next()) {
+		MFnDependencyNode fn(it.thisNode());
+		MDagPath::getAPathTo(fn.object(), path);
+		MVGMesh mesh(path);
+		if(mesh.isValid())
+			list.push_back(mesh);
+	}
+	return list;
 }
 
-void MVGMesh::deleteFace(const int index) const
+bool MVGMesh::addPolygon(const MPointArray& pointArray, int& index) const
 {
 	MStatus status;
-	MFnMesh fnMesh(_dagpath.node(), &status);
+	MFnMesh fnMesh(_dagpath, &status);
+	if(pointArray.length() < 3)
+		return false;
 	
+	fnMesh.addPolygon(pointArray, index, true, 0.01, MObject::kNullObj, &status);
+	fnMesh.updateSurface();
+	CHECK(status)
+
+	// FIXME - remove this
+	// this command was introduced here to fix the 'mergeVertice' issue
+	MString command;
+	command.format("select -r ^1s;BakeAllNonDefHistory;polyMergeVertex -d 0.001 ^1s;select -cl;", fnMesh.dagPath().fullPathName());
+	MGlobal::executeCommand(command, false, false);
+
+	return status ? true : false;
+}
+
+bool MVGMesh::deletePolygon(const int index) const
+{
+	MStatus status;
+	MFnMesh fnMesh(_dagpath, &status);
+	CHECK(status);
 	status = fnMesh.deleteFace(index);
+	fnMesh.updateSurface();
+	CHECK(status);
+	return status ? true : false;
 }
 
-void MVGMesh::getPoints(MPointArray& pointArray) const
+MStatus MVGMesh::getPoints(MPointArray& pointArray) const
 {
 	MStatus status;
-	MFnMesh fnMesh(_dagpath.node(), &status);
-	
-	fnMesh.getPoints(pointArray, MSpace::kPostTransform);
+	MFnMesh fnMesh(_dagpath, &status);
 	CHECK(status);
+	fnMesh.getPoints(pointArray, MSpace::kWorld);
+	CHECK_RETURN_STATUS(status);
 }
 
-int MVGMesh::getVerticesCount() const
+int MVGMesh::getPolygonsCount() const
 {
-	MStatus status;
-	MFnMesh fnMesh(_dagpath.node(), &status);
-	
-	int count = fnMesh.numVertices(&status);
+    MStatus status;
+	MFnMesh fnMesh(_dagpath, &status);
 	CHECK(status);
-	
-	return count;
+    int count = fnMesh.numPolygons(&status);
+    CHECK_RETURN_STATUS(status);
 }
 
-bool MVGMesh::intersect(MPoint& point, MVector& dir, MPointArray&points) const
-{
-	MStatus status;
-	MFnMesh fnMesh(_dagpath.node(), &status);
-	
-	bool intersect = fnMesh.intersect(point, dir, points, status);
-	CHECK(status);
-	return intersect;
-}
-
-int MVGMesh::getNumConnectedFacesToVertex(int vertexId)
-{
-	MStatus status;
-	MItMeshVertex verticesIter(_dagpath, MObject::kNullObj, &status);
-	int prev;
-	status = verticesIter.setIndex(vertexId, prev);
-	int faceCount;
-	status = verticesIter.numConnectedFaces(faceCount);
-	
-	CHECK(status);
-	return faceCount;
-}
-
-int MVGMesh::getNumConnectedFacesToEdge(int edgeId)
-{
-	MStatus status;
-	MItMeshEdge edgeIter(_dagpath, MObject::kNullObj, &status);
-	int prev;
-	status = edgeIter.setIndex(edgeId, prev);
-	int faceCount;
-	status = edgeIter.numConnectedFaces(faceCount);
-	
-	CHECK(status);
-	return faceCount;
-}
-
-MIntArray MVGMesh::getConnectedFacesToVertex(int vertexId)
+const MIntArray MVGMesh::getConnectedFacesToVertex(int vertexId) const
 {
 	MIntArray connectedFacesId;
 	MStatus status;
 	MItMeshVertex verticesIter(_dagpath, MObject::kNullObj, &status);
+	CHECK(status);
 	int prev;
 	status = verticesIter.setIndex(vertexId, prev);
-	
+	CHECK(status);
 	status = verticesIter.getConnectedFaces(connectedFacesId);
-	
 	CHECK(status);
 	return connectedFacesId;
 }
 
-int MVGMesh::getConnectedFacesToEdge(MIntArray& facesId, int edgeId)
+const MIntArray MVGMesh::getFaceVertices(int faceId) const
 {
 	MStatus status;
-	MItMeshEdge edgeIter(_dagpath, MObject::kNullObj, &status);
-	int prev;
-	status = edgeIter.setIndex(edgeId, prev);
-	
-	int faceCount;
-	faceCount = edgeIter.getConnectedFaces(facesId, &status);
-	
-	CHECK(status);
-	return faceCount;
-}
-
-
-MIntArray MVGMesh::getFaceVertices(int faceId)
-{
-	MStatus status;
-	MItMeshPolygon faceIter(_dagpath.node());
+	MItMeshPolygon faceIter(_dagpath);
 	int prev;
 	status = faceIter.setIndex(faceId, prev);
-
+	CHECK(status);
 	MIntArray vertices;
 	status = faceIter.getVertices(vertices);
-	
 	CHECK(status);
 	return vertices;
 }
 
-MIntArray MVGMesh::getEdgeVertices(int edgeId)
+MStatus MVGMesh::setPoint(int vertexId, MPoint& point) const
 {
 	MStatus status;
-	MFnMesh fnMesh(_dagpath.node(), &status);
-	
-	int2 edgeVertices;
-	status = fnMesh.getEdgeVertices(edgeId, edgeVertices);
+	MFnMesh fnMesh(_dagpath, &status);
 	CHECK(status);
-	
-	MIntArray edgeVerticesArray;
-	edgeVerticesArray.append(edgeVertices[0]);
-	edgeVerticesArray.append(edgeVertices[1]);
-	return edgeVerticesArray;
+	status = fnMesh.setPoint(vertexId, point, MSpace::kWorld);
+	fnMesh.updateSurface();
+	CHECK_RETURN_STATUS(status);
 }
 
-void MVGMesh::setPoint(int vertexId, MPoint& point)
+MStatus MVGMesh::getPoint(int vertexId, MPoint& point) const
 {
 	MStatus status;
-	MFnMesh fnMesh(_dagpath.node(), &status);
-	fnMesh.setPoint(vertexId, point);
-	CHECK(status);
+	MFnMesh fnMesh(_dagpath, &status);
+	status = fnMesh.getPoint(vertexId, point, MSpace::kWorld);
+	CHECK_RETURN_STATUS(status);
 }
-			

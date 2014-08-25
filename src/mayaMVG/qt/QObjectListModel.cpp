@@ -104,7 +104,7 @@ void QObjectListModel::setObjectList(QObjectList objects)
     beginResetModel();
     m_objects = objects;
     endResetModel();
-    emit dataChanged(index(0), index(m_objects.count()));
+    Q_EMIT dataChanged(index(0), index(m_objects.count()));
     if (m_objects.count() != oldCount)
         internEmitCountChanged();
 }
@@ -179,7 +179,7 @@ void QObjectListModel::insert(int i, const QObjectList &objects)
 void QObjectListModel::replace(int i, QObject *object)
 {
     m_objects.replace(i, object);
-    emit dataChanged(index(i), index(i));
+    Q_EMIT dataChanged(index(i), index(i));
 }
 
 /*!
@@ -256,13 +256,13 @@ QObject *QObjectListModel::get(int i) const
 
 void QObjectListModel::emitModified()
 {
-    emit countChanged();
+    Q_EMIT countChanged();
 }
 
 void QObjectListModel::internEmitCountChanged()
 {
     if( m_autoEmit )
-        emit countChanged();
+        Q_EMIT countChanged();
 }
 
 /*!

@@ -12,7 +12,18 @@ MVGNodeWrapper::MVGNodeWrapper()
 
 MVGNodeWrapper::MVGNodeWrapper(const std::string& name)
 {
+	if(name.empty())
+		return;
 	MVGMayaUtil::getDagPathByName(name.c_str(), _dagpath);
+	if(_dagpath.apiType() == MFn::kTransform)
+		_dagpath.extendToShape();
+}
+
+MVGNodeWrapper::MVGNodeWrapper(const MString& name)
+{
+	if(name.length() == 0)
+		return;
+	MVGMayaUtil::getDagPathByName(name, _dagpath);
 	if(_dagpath.apiType() == MFn::kTransform)
 		_dagpath.extendToShape();
 }
@@ -36,7 +47,6 @@ bool MVGNodeWrapper::isValid() const
 void MVGNodeWrapper::select() const
 {
 	MSelectionList list;
-	//list.add(_dagpath.transform()); // select the transform node
 	list.add(_dagpath);
 	MGlobal::setActiveSelectionList(list);
 }

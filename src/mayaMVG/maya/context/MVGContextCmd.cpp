@@ -5,12 +5,19 @@ using namespace mayaMVG;
 
 MString MVGContextCmd::name("mayaMVGTool");
 
-MVGContextCmd::MVGContextCmd() : m_pContext(NULL) {
+namespace {
+
+static const char * rebuildFlag = "-r";
+static const char * rebuildFlagLong = "-rebuild";
+
+}
+
+MVGContextCmd::MVGContextCmd() : _pContext(NULL) {
 }
 
 MPxContext* MVGContextCmd::makeObj() {
-    m_pContext = new MVGContext();
-    return m_pContext;
+    _pContext = new MVGContext();
+    return _pContext;
 }
 
 void* MVGContextCmd::creator() {
@@ -18,7 +25,15 @@ void* MVGContextCmd::creator() {
 }
 
 MStatus MVGContextCmd::doEditFlags() {
-	return MS::kSuccess;
+	MStatus status = MS::kSuccess;
+	MArgParser argData = parser();
+	// -rebuild: rebuild cache
+	if (argData.isFlagSet(rebuildFlag)) {
+		MVGManipulatorUtil& cache =_pContext->getCache();
+		cache.rebuildAllMeshesCacheFromMaya();
+		cache.rebuild();
+	}
+	return status;
 }
 
 MStatus MVGContextCmd::doQueryFlags() {
@@ -26,5 +41,10 @@ MStatus MVGContextCmd::doQueryFlags() {
 }
 
 MStatus MVGContextCmd::appendSyntax() {
+	MSyntax mySyntax = syntax();
+	if (MS::kSuccess
+			!= mySyntax.addFlag(rebuildFlag, rebuildFlagLong)) {
+		return MS::kFailure;
+	}
 	return MS::kSuccess;
 }

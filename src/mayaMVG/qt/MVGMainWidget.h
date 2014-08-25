@@ -1,7 +1,8 @@
 #pragma once
 
-#include <QWidget>
+#include "mayaMVG/qt/MVGProjectWrapper.h"
 #include <QtDeclarative/qdeclarativeview.h>
+#include <QWidget>
 
 namespace mayaMVG {
 
@@ -15,9 +16,11 @@ class MVGMainWidget : public QWidget {
 
 	public:
 		QDeclarativeView* view() const ;
-				
+		MVGProjectWrapper& getProjectWrapper() { return _projectWrapper;}
+
 	private:
 		QDeclarativeView* _view;
+		MVGProjectWrapper _projectWrapper;
 };
 
-} // mayaMVG
+} // namespace

@@ -4,7 +4,6 @@ import QtDesktop 0.1
 
 Item {
     property alias project: m.project
-
     signal browserProjectLoaded
     QtObject {
         id: m
@@ -31,8 +30,8 @@ Item {
                     anchors.fill: parent
                     onDoubleClicked: {
                         var projectPath = m.project.openFileDialog()
-                        m.project.loadProject(projectPath)
-                        browserProjectLoadedd()
+                        m.project.loadNewProject(projectPath)
+                        browserProjectLoaded()
                     }
                 }
             }
@@ -51,7 +50,7 @@ Item {
                 anchors.fill: parent
                 onClicked: {
                     var projectPath = m.project.openFileDialog()
-                    m.project.loadProject(projectPath)
+                    m.project.loadNewProject(projectPath)
                     browserProjectLoaded()
                 }
             }

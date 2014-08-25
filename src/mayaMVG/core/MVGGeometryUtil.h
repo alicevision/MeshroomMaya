@@ -2,6 +2,7 @@
 
 #include "openMVG/numeric/numeric.h"
 #include <maya/MPoint.h>
+#include <maya/MPointArray.h>
 #include <maya/M3dView.h>
 #include <vector>
 #include <algorithm>
@@ -13,31 +14,6 @@ namespace mayaMVG {
 
 #define AS_VEC3(a)\
 	openMVG::Vec3(a.x, a.y, a.z)
-
-
-struct MVGFace2D {
-	MVGFace2D(){}
-	MVGFace2D(MPoint a, MPoint b, MPoint c, MPoint d) {
-		_p[0] = a; _p[1] = b; _p[2] = c; _p[3] = d;
-	}
-	MVGFace2D(std::vector<MPoint> p) {
-		for(size_t i = 0; i<std::min((size_t)4, p.size()); ++i)
-			_p[i] = p[i];
-	}
-	MPoint _p[4];
-};
-
-struct MVGFace3D {
-	MVGFace3D(){}
-	MVGFace3D(MPoint a, MPoint b, MPoint c, MPoint d) {
-		_p[0] = a; _p[1] = b; _p[2] = c; _p[3] = d;
-	}
-	MVGFace3D(std::vector<MPoint> p) {
-		for(size_t i = 0; i<std::min((size_t)4, p.size()); ++i)
-			_p[i] = p[i];
-	}
-	MPoint _p[4];
-};
 
 // Should be part of OpenMVG
 struct PlaneKernel
@@ -97,16 +73,24 @@ class MVGPointCloud;
 class MVGCamera;
 
 struct MVGGeometryUtil {
+    // 
 	static MPoint worldToView(M3dView&, const MPoint&);
 	static MPoint viewToWorld(M3dView&, const MPoint&);
-	static void viewToCamera(M3dView& view, MVGCamera& camera, short x, short y, MPoint& point);
-	static void worldToCamera(M3dView& view, MVGCamera& camera, MPoint& worldPoint, MPoint& point);
-	static void cameraToView(M3dView& view, MVGCamera& camera, MPoint& point, short& x, short& y);
-	static bool projectFace2D(MVGFace3D&, M3dView&, MVGCamera&, MVGFace2D&, bool compute = false, MVector height = MVector(0, 0, 0));
-	static void computePlane(MVGFace3D& face3D, PlaneKernel::Model& model);
-	static void projectPointOnPlane(MPoint& point, M3dView& view, PlaneKernel::Model& model, MVGCamera&,  MPoint& projectedPoint);
+	static void viewToCamera(M3dView& view, const short x, const short y, MPoint& point);
+	static void worldToCamera(M3dView& view, const MPoint& worldPoint, MPoint& point);
+	static void cameraToView(M3dView& view, const MPoint& point, MPoint& viewPoint);
+	static void cameraToImage(const MVGCamera& camera, const MPoint& point, MPoint& image);
+
+    //
+	static bool projectFace2D(M3dView& view, MPointArray& face3DPoints, const MVGCamera& camera, const MPointArray& face2DPoints, MVector height = MVector(0, 0, 0));
+	static bool computePlane(MPointArray& facePoints3D, PlaneKernel::Model& model);
+	static void projectPointOnPlane(const MPoint& point, M3dView& view, PlaneKernel::Model& model, const MVGCamera&,  MPoint& projectedPoint);
+	static void triangulatePoint(MPointArray& points2D, std::vector<MVGCamera>& cameras, MPoint& resultPoint3D);
+
+    // math
+    static double crossProduct2D(MVector& A, MVector& B);
+	static double dotProduct2D(MVector& A, MVector& B);
+	static bool edgesIntersection(MPoint A, MPoint B, MVector AD,  MVector BC);
 };
-
-
 
 } // mayaMVG

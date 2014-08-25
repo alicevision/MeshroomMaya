@@ -10,6 +10,7 @@ class MVGNodeWrapper {
 	public:
 		MVGNodeWrapper();
 		MVGNodeWrapper(const std::string& name);
+        MVGNodeWrapper(const MString& name);
 		MVGNodeWrapper(const MDagPath& dagPath);
 		virtual ~MVGNodeWrapper();
 

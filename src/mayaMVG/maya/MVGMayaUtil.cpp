@@ -1,10 +1,9 @@
+#include "mayaMVG/qt/MVGProjectWrapper.h"
+
 #include "mayaMVG/maya/MVGMayaUtil.h"
-#include <QWidget>
 #include "mayaMVG/core/MVGCamera.h"
 #include "mayaMVG/core/MVGLog.h"
 #include <maya/MFnDependencyNode.h>
-#include <maya/MItDependencyNodes.h>
-#include <maya/MDagPath.h>
 #include <maya/MGlobal.h>
 #include <maya/MQtUtil.h>
 #include <maya/MSelectionList.h>
@@ -17,139 +16,79 @@
 #include <maya/MPlugArray.h>
 #include <maya/MCommonSystemUtils.h>
 #include <maya/MPointArray.h>
+#include <sstream>
 
 using namespace mayaMVG;
 
-MStatus MVGMayaUtil::openFileDialog(MString& directory)
+MStatus MVGMayaUtil::createMVGWindow()
 {
-	MStatus status;
-	MGlobal::executePythonCommand(
-		"import maya.cmds as cmds\n"
-		"def openFileDialog():\n"
-		"	directory = cmds.fileDialog2(caption=\"Choose projectdirectory\", fileMode=3, okCaption=\"Load\")\n"
-		"	return directory[0].encode('ascii')\n");
-	
-	status = MGlobal::executePythonCommand("openFileDialog()", directory);
-	
-	return status;
-}
-
-MStatus MVGMayaUtil::createMVGWindow() {
-	MStatus status;
-	MString windowName;
-	status = MGlobal::executePythonCommand(
-		"import maya.cmds as cmds\n"
-		"def createMVGWindow():\n"
-		"    win = cmds.window('mayaMVG')\n"
-		"    cmds.paneLayout('mainPane', configuration='vertical3')\n"
-		"    # first modelPanel\n"
-		"    cmds.paneLayout('leftPane')\n"
-		"    if cmds.modelPanel('mvgLPanel', ex=True):\n"
-		"        cmds.modelPanel('mvgLPanel', e=True, p='leftPane')\n"
-		"    else:\n"
-		"        cmds.modelPanel('mvgLPanel', mbv=False)\n"
-		"        cmds.modelEditor('mvgLPanel', e=True, grid=False)\n"
-		"        cmds.modelEditor('mvgLPanel', e=True, cameras=False)\n"
-		"        cmds.modelEditor('mvgLPanel', e=True, displayAppearance='smoothShaded')\n"
-		"    cmds.setParent('..')\n"
-		"    cmds.setParent('..')\n"
-		"    # second modelPanel\n"
-		"    cmds.paneLayout('rightPane')\n"
-		"    if cmds.modelPanel('mvgRPanel', ex=True):\n"
-		"        cmds.modelPanel('mvgRPanel', e=True, p='rightPane')\n"
-		"    else:\n"
-		"        cmds.modelPanel('mvgRPanel', mbv=False)\n"
-		"        cmds.modelEditor('mvgRPanel', e=True, grid=False)\n"
-		"        cmds.modelEditor('mvgRPanel', e=True, cameras=False)\n"
-		"        cmds.modelEditor('mvgRPanel', e=True, displayAppearance='smoothShaded')\n"
-		"    cmds.setParent('..')\n"
-		"    cmds.setParent('..')\n"
-		"    # custom Qt content\n"
-		"    cmds.paneLayout('mvgMenuPanel')\n"
-		"    cmds.setParent('..')\n"
-		"    cmds.setParent('..')\n"
-		"    cmds.showWindow(win)\n"
-		"    cmds.window(win, e=True, widthHeight=[920,700])\n"
-		"    return win\n");
-	status = MGlobal::executePythonCommand("createMVGWindow()", windowName);
-	return status;
-}
-
-MStatus MVGMayaUtil::deleteMVGWindow() {
 	return MGlobal::executePythonCommand(
-		"import maya.cmds as cmds\n"
-		"if cmds.window('mayaMVG', exists=True):\n"
-		"    cmds.deleteUI('mayaMVG', window=True)\n");
+		"from mayaMVG import window;\n"
+		"window.mvgCreateWindow()");
 }
 
-QWidget* MVGMayaUtil::getMVGWindow() {
+MStatus MVGMayaUtil::deleteMVGWindow()
+{
+	return MGlobal::executePythonCommand(
+		"from mayaMVG import window;\n"
+		"window.mvgDeleteWindow()");
+}
+
+QWidget* MVGMayaUtil::getMVGWindow()
+{
 	return MQtUtil::findWindow("mayaMVG");
 }
 
-QWidget* MVGMayaUtil::getMVGMenuLayout() {
+QWidget* MVGMayaUtil::getMVGMenuLayout()
+{
 	return MQtUtil::findLayout("mvgMenuPanel");
 }
 
-QWidget* MVGMayaUtil::getMVGLeftViewportLayout() {
-	M3dView leftView;
-	M3dView::getM3dViewFromModelPanel("mvgLPanel", leftView);
-	return leftView.widget();
+QWidget* MVGMayaUtil::getMVGViewportLayout(const MString& viewName)
+{
+	M3dView view;
+	if(M3dView::getM3dViewFromModelPanel(viewName, view))
+		return view.widget();
+	return NULL;
 }
 
-QWidget* MVGMayaUtil::getMVGRightViewportLayout() {
-	M3dView rightView;
-	M3dView::getM3dViewFromModelPanel("mvgRPanel", rightView);
-	return rightView.widget();
-}
-
-MStatus MVGMayaUtil::setFocusOnLeftView() {
+MStatus MVGMayaUtil::setFocusOnView(const MString& viewName)
+{
 	return MGlobal::executePythonCommand(
 		"import maya.cmds as cmds\n"
-		"cmds.setFocus('mvgLPanel')\n");
+		"cmds.setFocus('"+viewName+"')\n");
 }
 
-MStatus MVGMayaUtil::setFocusOnRightView() {
-	return MGlobal::executePythonCommand(
-		"import maya.cmds as cmds\n"
-		"cmds.setFocus('mvgRPanel')\n");
-}
-
-bool MVGMayaUtil::isMVGView(const M3dView & view) {
-	QWidget* leftViewport = MVGMayaUtil::getMVGLeftViewportLayout();
-	QWidget* rightViewport = MVGMayaUtil::getMVGRightViewportLayout();
+bool MVGMayaUtil::isMVGView(const M3dView & view)
+{
+	QWidget* leftViewport = MVGMayaUtil::getMVGViewportLayout("mvgLPanel");
+	QWidget* rightViewport = MVGMayaUtil::getMVGViewportLayout("mvgRPanel");
+	if(!leftViewport || !rightViewport)
+		return false;
 	return ((view.widget() == leftViewport) || (view.widget() == rightViewport));
 }
 
-bool MVGMayaUtil::isActiveView(const M3dView & view) {
+bool MVGMayaUtil::isActiveView(const M3dView & view)
+{
 	M3dView activeView = M3dView::active3dView();
 	return (activeView.widget() == view.widget());
 }
 
-bool MVGMayaUtil::mouseUnderView(const M3dView & view) {
-	QWidget * viewWidget = view.widget();
-	if (viewWidget->rect().contains(viewWidget->mapFromGlobal(QCursor::pos()))) {
-		return true;
-	}
-	return false;
-}
-
-MStatus MVGMayaUtil::createMVGContext() {
+MStatus MVGMayaUtil::createMVGContext()
+{
 	return MGlobal::executePythonCommand(
-		"import maya.cmds as cmds\n"
-		"if cmds.contextInfo('mayaMVGTool1', exists=True):\n"
-		"    cmds.deleteUI('mayaMVGTool1', toolContext=True)\n"
-		"cmds.mayaMVGTool('mayaMVGTool1')\n");
+		"from mayaMVG import context;\n"
+		"context.mvgCreateContext()");
 }
 
-MStatus MVGMayaUtil::deleteMVGContext() {
+MStatus MVGMayaUtil::deleteMVGContext()
+{
 	return MGlobal::executePythonCommand(
-		"import maya.cmds as cmds\n"
-		"cmds.setToolTo('selectSuperContext')\n"
-		"if cmds.contextInfo('mayaMVGTool1', exists=True):\n"
-		"    cmds.deleteUI('mayaMVGTool1', toolContext=True)\n");
+		"from mayaMVG import context;\n"
+		"context.mvgDeleteContext()");
 }
 
-MStatus MVGMayaUtil::activeContext() 
+MStatus MVGMayaUtil::activeContext()
 {
 	return MGlobal::executePythonCommand(
 		"import maya.cmds as cmds\n"
@@ -163,31 +102,40 @@ MStatus MVGMayaUtil::activeSelectionContext()
 		"cmds.setToolTo('selectSuperContext')\n");
 }
 
-MStatus MVGMayaUtil::setCameraInView(const MVGCamera& camera, const MString& viewName) {
-	return MGlobal::executePythonCommand(
-		MString("import maya.cmds as cmds\n"
-		"cmds.modelPanel('")+viewName+MString("', e=True, cam='")+camera.name().c_str()+"')");
+MStatus MVGMayaUtil::getCurrentContext(MString& context)
+{
+    MGlobal::executePythonCommand("import maya.cmds as cmds\n");
+    return MGlobal::executePythonCommand("cmds.currentCtx()\n", context);
 }
 
-MStatus MVGMayaUtil::getCameraInView(MDagPath& path, const MString& viewName) {
+MStatus MVGMayaUtil::setCameraInView(const MVGCamera& camera, const MString& viewName)
+{
+	MGlobal::executePythonCommand("import maya.cmds as cmds");
+	std::stringstream ss; // one line cmd, to get result
+	ss << "cmds.modelPanel('" << viewName << "', e=True, cam='" 
+	   << camera.name().c_str() << "')";
+	return MGlobal::executePythonCommand(ss.str().c_str());
+}
+
+MStatus MVGMayaUtil::getCameraInView(MDagPath& path, const MString& viewName)
+{
 	MString camera;
-	MGlobal::executePythonCommand(
-		"import maya.cmds as cmds\n"
-		"def getMVGPanel():\n"
-		"    return cmds.modelPanel('"+viewName+"', q=True, cam=True)\n");
-	MGlobal::executePythonCommand("getMVGPanel()", camera);
+	MGlobal::executePythonCommand("from mayaMVG import camera");
+	MGlobal::executePythonCommand("camera.mvgGetCameraFromView('"+viewName+"')", camera);
 	MSelectionList sList;
 	MGlobal::getSelectionListByName(camera, sList);
 	return sList.isEmpty() ? MS::kFailure : sList.getDagPath(0, path);
 }
 
-MStatus MVGMayaUtil::addToMayaSelection(MString objectName) {
+MStatus MVGMayaUtil::addToMayaSelection(const MString& objectName)
+{
 	return MGlobal::executePythonCommand(
 		"import maya.cmds as cmds\n"
 		"cmds.select('"+objectName+"', add=True)");
 }
 
-MStatus MVGMayaUtil::clearMayaSelection() {
+MStatus MVGMayaUtil::clearMayaSelection()
+{
 	return MGlobal::executePythonCommand(
 		"import maya.cmds as cmds\n"
 		"cmds.select(cl=True)");
@@ -268,6 +216,8 @@ MStatus MVGMayaUtil::getDoubleArrayAttribute(const MObject& object, const MStrin
 	} else {
 		MDataHandle dataHandle = plug.asMDataHandle(MDGContext::fsNormal, &status);
 		CHECK_RETURN_STATUS(status);
+		if(dataHandle.data() == MObject::kNullObj)
+			return MS::kFailure;
 		MFnDoubleArrayData arrayData(dataHandle.data(), &status);
 		CHECK_RETURN_STATUS(status);
 		status = arrayData.copyTo(doubleArray);
@@ -306,6 +256,8 @@ MStatus MVGMayaUtil::getPointArrayAttribute(const MObject& object, const MString
 	} else {
 		MDataHandle dataHandle = plug.asMDataHandle(MDGContext::fsNormal, &status);
 		CHECK_RETURN_STATUS(status);
+		if(dataHandle.data() == MObject::kNullObj)
+			return MS::kFailure;
 		MFnPointArrayData arrayData(dataHandle.data(), &status);
 		CHECK_RETURN_STATUS(status);
 		status = arrayData.copyTo(pointArray);
@@ -320,21 +272,39 @@ MStatus MVGMayaUtil::getPointArrayAttributeSize(const MObject& object, const MSt
 	CHECK_RETURN_STATUS(status);
 	MPlug plug(fn.findPlug(param, networked, &status));
 	CHECK_RETURN_STATUS(status);
-	
 	if (plug.isArray()) {
 		size = plug.numElements();
-	}
-	else
-	{		
+	} else {		
 		MDataHandle dataHandle = plug.asMDataHandle(MDGContext::fsNormal, &status);
 		CHECK_RETURN_STATUS(status);
+		if(dataHandle.data() == MObject::kNullObj)
+			return MS::kFailure;
 		MFnPointArrayData arrayData(dataHandle.data(), &status);
 		CHECK_RETURN_STATUS(status);
-		
 		size = arrayData.length();
 	}
+	return status;
+}
 
-	
+MStatus MVGMayaUtil::getStringAttribute(const MObject& object, const MString& param, MString& string, bool networked)
+{
+	MStatus status;
+	MFnDependencyNode fn(object, &status);
+	CHECK_RETURN_STATUS(status);
+	MPlug plug(fn.findPlug(param, networked, &status));
+	CHECK_RETURN_STATUS(status);
+	string = plug.asString();
+	return status;
+}
+
+MStatus MVGMayaUtil::setStringAttribute(const MObject& object, const MString& param, const MString& string, bool networked)
+{
+	MStatus status;
+	MFnDependencyNode fn(object, &status);
+	CHECK_RETURN_STATUS(status);
+	MPlug plug(fn.findPlug(param, networked, &status));
+	CHECK_RETURN_STATUS(status);
+	plug.setString(string);
 	return status;
 }
 
@@ -345,14 +315,13 @@ MStatus MVGMayaUtil::getPointInArrayAttribute(const MObject& object, const MStri
 	CHECK_RETURN_STATUS(status);
 	MPlug plug(fn.findPlug(param, networked, &status));
 	CHECK_RETURN_STATUS(status);
-
 	if (plug.isArray()) {
-		
 		point = MPoint(plug[index].child(0).asDouble(), plug[index].child(1).asDouble());
-
 	} else {
 		MDataHandle dataHandle = plug.asMDataHandle(MDGContext::fsNormal, &status);
 		CHECK_RETURN_STATUS(status);
+		if(dataHandle.data() == MObject::kNullObj)
+			return MS::kFailure;
 		MFnPointArrayData arrayData(dataHandle.data(), &status);
 		CHECK_RETURN_STATUS(status);
 		point = arrayData.array()[index];
@@ -371,27 +340,6 @@ MStatus MVGMayaUtil::setPointArrayAttribute(const MObject& object, const MString
 	MObject obj = fnData.create(pointArray, &status);
 	CHECK_RETURN_STATUS(status);
 	status = plug.setValue(obj);
-	return status;
-}
-
-MStatus MVGMayaUtil::getStringAttribute(const MObject& object, const MString& param, MString& string, bool networked)
-{
-	MStatus status;
-	MFnDependencyNode fn(object, &status);
-	CHECK_RETURN_STATUS(status);
-	MPlug plug(fn.findPlug(param, networked, &status));
-	CHECK_RETURN_STATUS(status);
-	string = plug.asString();
-	return status;
-}
-MStatus MVGMayaUtil::setStringAttribute(const MObject& object, const MString& param, const MString& string, bool networked)
-{
-	MStatus status;
-	MFnDependencyNode fn(object, &status);
-	CHECK_RETURN_STATUS(status);
-	MPlug plug(fn.findPlug(param, networked, &status));
-	CHECK_RETURN_STATUS(status);
-	plug.setString(string);
 	return status;
 }
 
@@ -458,3 +406,26 @@ MString MVGMayaUtil::getModulePath()
 	MGlobal::executeCommand("getModulePath -moduleName \"mayaMVG\";", result);
 	return result;
 }
+
+MStatus MVGMayaUtil::openFileDialog(MString& directory)
+{
+	MStatus status = MGlobal::executePythonCommand("from mayaMVG import window");
+	status = MGlobal::executePythonCommand( // one line cmd, to get result
+		"window.mvgOpenProjectFileDialog()", directory);
+	return status;
+}
+
+MStatus MVGMayaUtil::getUndoName(MString& undoName)
+{
+    MStatus status = MGlobal::executePythonCommand("import maya.cmds as cmds");
+    status = MGlobal::executePythonCommand( // one line cmd, to get result
+		"cmds.undoInfo( q=True, undoName=True )", undoName);
+}
+
+MStatus MVGMayaUtil::getRedoName(MString& redoName)
+{
+    MStatus status = MGlobal::executePythonCommand("import maya.cmds as cmds");
+    status = MGlobal::executePythonCommand( // one line cmd, to get result
+		"cmds.undoInfo( q=True, redoName=True )", redoName);
+}
+

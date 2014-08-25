@@ -25,23 +25,21 @@ struct MVGMayaUtil {
 	// window menu
 	static QWidget* getMVGMenuLayout();
 	// viewports
-	static QWidget* getMVGLeftViewportLayout();
-	static QWidget* getMVGRightViewportLayout();
-	static MStatus setFocusOnLeftView();
-	static MStatus setFocusOnRightView();
+	static QWidget* getMVGViewportLayout(const MString& viewName);
+	static MStatus setFocusOnView(const MString& viewName);
 	static bool isMVGView(const M3dView & view);
 	static bool isActiveView(const M3dView & view);
-	static bool mouseUnderView(const M3dView & view);
 	// context
 	static MStatus createMVGContext();
 	static MStatus deleteMVGContext();
 	static MStatus activeContext(); 
 	static MStatus activeSelectionContext();
+    static MStatus getCurrentContext(MString& context);
 	// cameras
 	static MStatus setCameraInView(const MVGCamera& camera, const MString& viewName);
 	static MStatus getCameraInView(MDagPath& path, const MString& viewName);
 	// maya selection
-	static MStatus addToMayaSelection(MString objectName);
+	static MStatus addToMayaSelection(const MString& objectName);
 	static MStatus clearMayaSelection();
 	// attributes
 	static MStatus getIntArrayAttribute(const MObject&, const MString&, MIntArray&, bool=false);
@@ -54,8 +52,8 @@ struct MVGMayaUtil {
 	static MStatus setPointArrayAttribute(const MObject&, const MString&, const MPointArray&, bool=false);
 	static MStatus getPointInArrayAttribute(const MObject&, const MString&, MPoint&, int, bool=false);
 	static MStatus getPointArrayAttributeSize(const MObject&, const MString&, int&, bool=false);
-	static MStatus getStringAttribute(const MObject&, const MString&, MString&, bool = false);
-	static MStatus setStringAttribute(const MObject&, const MString&, const MString&, bool=false);
+    static MStatus getStringAttribute(const MObject&, const MString&, MString&, bool = false);
+    static MStatus setStringAttribute(const MObject&, const MString&, const MString&, bool=false);
 	static MStatus findConnectedNodes(const MObject&, const MString&, std::vector<MObject>&);
 	// nodes
 	static MStatus getObjectByName(const MString&, MObject&);
@@ -63,9 +61,11 @@ struct MVGMayaUtil {
 	// environment
 	static MString getEnv(const MString&);
 	static MString getModulePath();
-	
 	// filedialog
 	static MStatus openFileDialog(MString& directory);
+    // undo/redo
+    static MStatus getUndoName(MString& undoName);
+    static MStatus getRedoName(MString& redoName);
 };
 
 } // mayaMVG

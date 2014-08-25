@@ -11,10 +11,22 @@ Item {
         id: m
         property int thumbSize
         property variant project
+        property int currentIndex
     }
     function altColor(i) {
         var colors = [ "#262626", "#2f2f2f2f" ];
         return colors[i];
+    }
+    function selectCameras(oldIndex, newIndex) {
+        var qlist = [];
+        var begin = Math.min(oldIndex, newIndex);
+        var end = Math.max(oldIndex, newIndex) + 1;
+
+        for(var i = begin; i < end; ++i)
+        {
+            qlist[qlist.length] = m.project.cameraModel.get(i).name;
+        }
+        m.project.selectCameras(qlist);
     }
     ListView {
         id: cameraListView
@@ -23,13 +35,14 @@ Item {
         boundsBehavior: Flickable.StopAtBounds
         flickableDirection: Flickable.VerticalFlick
         model: m.project.cameraModel
-        property variant aa: m.project.plop
         delegate: CameraItem {
             width: cameraList.width
             baseHeight: m.thumbSize
             color: altColor(index%2)
             camera: model.modelData
             project: m.project
+            onSelection: m.currentIndex = index
+            onMultipleSelection: selectCameras(m.currentIndex, index)
         }
         clip: true
         states: State  {

@@ -12,16 +12,11 @@ Rectangle {
         property variant project
         property variant camera
         property string source: "img/Folder.png"
-        property color selectedColor: "orangered"
+        property color selectedColor: "#fec04c"
         property color hoverColor: "white"
         property color normalColor: "transparent"
     }
 
-    ListModel {
-        id: viewModel
-        ListElement { view: "mvgLPanel" }
-        ListElement { view: "mvgRPanel" }
-    }
     Item {
         anchors.fill: parent
         visible: cameraThumbnail.status == Image.Ready || cameraThumbnail.status == Image.Error
@@ -35,14 +30,15 @@ Rectangle {
             sourceSize.width: 400  // Use proxy buffer at smaller resolution
             source: m.camera ? m.camera.imagePath : m.source
             asynchronous: true
-            fillMode: Image.PreserveAspectFit
+            //fillMode: Image.PreserveAspectFit
         }
         ListView {
             id: viewList
-            model: viewModel
+            model: m.project.visiblePanelNames
             anchors.fill: parent
             orientation: ListView.Horizontal
-            property int itemWidth: (parent.width - spacing)/ viewModel.count
+            interactive: false;
+            property int itemWidth: (parent.width - spacing) / m.project.visiblePanelNames.length
             spacing: 2
             delegate: Rectangle {
                 id: cameraSelection
@@ -53,7 +49,7 @@ Rectangle {
                 property variant views: m.camera.views
                 property bool isInView: false
                 onViewsChanged: {
-                    isInView = m.camera.isInView(view)
+                    isInView = m.camera.isInView(model.modelData)
                 }
                 states: [
                     State {
@@ -72,11 +68,10 @@ Rectangle {
                     anchors.fill: parent
                     hoverEnabled: true
                     onClicked: {
-                        m.project.setCameraToView(m.camera, view);
+                        m.project.setCameraToView(m.camera, model.modelData);
                     }
                 }
             }
         }
     }
-    
 }

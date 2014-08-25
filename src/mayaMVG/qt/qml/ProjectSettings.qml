@@ -10,7 +10,6 @@ Item {
     property alias thumbSize: m.thumbSize
     property alias sliderMinValue: m.sliderMinValue
     property alias sliderMaxValue: m.sliderMaxValue
-
     signal settingProjectLoaded
     QtObject {
         id: m
@@ -19,7 +18,6 @@ Item {
         property int thumbSize
         property int sliderMinValue
         property int sliderMaxValue
-
     }
     opacity: 0  // needed for animation
 
@@ -75,9 +73,9 @@ Item {
                         }
                         Slider {
                             Layout.horizontalSizePolicy: Layout.Expanding
-                            minimumValue: m.sliderMinValue //90
-                            maximumValue: m.sliderMaxValue //180
-                            value:  m.thumbSize
+                            minimumValue: m.sliderMinValue
+                            maximumValue: m.sliderMaxValue
+                            value: m.thumbSize
                             onValueChanged: {
                                 m.thumbSize = value
                             }

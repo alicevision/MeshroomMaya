@@ -4,9 +4,10 @@
 #include "mayaMVG/core/MVGPointCloud.h"
 #include "mayaMVG/core/MVGMesh.h"
 #include <vector>
+#include <map>
 
 namespace mayaMVG {
-
+		
 class MVGProject : public MVGNodeWrapper {
 	
 	public:
@@ -19,36 +20,35 @@ class MVGProject : public MVGNodeWrapper {
 	
 	public:
 		static MVGProject create(const std::string& name);
+		static std::vector<MVGProject> list();
 
 	public:
-		bool load();
-		bool loadCameras();
-		bool loadPointCloud();
+		bool load(const std::string& projectDirectoryPath);
+		bool loadCameras(const std::string& projectDirectoryPath);
+		bool loadPointCloud(const std::string& projectDirectoryPath);
 	
 	public:
-		// views
-		void setCameraInView(const MVGCamera& camera, const std::string& viewName) const;
 		// filesystem
-		std::string moduleDirectory() const;
 		std::string projectDirectory() const;
 		void setProjectDirectory(const std::string&) const;
-		std::string cameraFile() const;
-		std::string cameraBinary(const std::string&) const;
-		std::string cameraDirectory() const;
-		std::string imageFile(const std::string&) const;
-		std::string imageDirectory() const;
-		std::string pointCloudFile() const;
+        bool isProjectDirectoryValid(const std::string&) const;
 		// nodes
 		std::vector<MVGCamera> cameras() const;
-	
+		std::vector<MVGPointCloud> pointClouds() const;
+        void selectCameras(std::vector<std::string> cameraNames) const;
+
 	public:
 		// openMVG node names
 		static std::string _CLOUD;
 		static std::string _MESH;
 		static std::string _PROJECT;
-		
-		// dynamic attributes
-		static MString _PROJECTPATH;
+
+        // dynamic attributes
+        static MString _PROJECTPATH;
+        static std::string _cameraRelativeDirectory;
+        static std::string _imageRelativeDirectory;
+        static std::string _cameraRelativeFile;
+        static std::string _pointCloudRelativeFile;
 };
 
 } // mayaMVG

@@ -1,9 +1,7 @@
 #include "mayaMVG/qt/MVGCameraWrapper.h"
-#include "mayaMVG/qt/MVGProjectWrapper.h"
-#include "mayaMVG/core/MVGLog.h"
 #include "mayaMVG/maya/MVGMayaUtil.h"
 
-namespace mayaMVG {
+using namespace mayaMVG;
 
 MVGCameraWrapper::MVGCameraWrapper(const MVGCamera& camera)
 	: _camera(camera)
@@ -27,6 +25,8 @@ void MVGCameraWrapper::setInView(const QString& viewName, const bool value)
             _views.push_back(viewName);
             Q_EMIT viewsChanged();
         }
+        
+        _camera.setInView(viewName.toStdString());
         return;
     }
     if(_views.removeOne(viewName))
@@ -51,6 +51,4 @@ const qint64 MVGCameraWrapper::sourceWeight() const
 
 void MVGCameraWrapper::select() const{
 	_camera.select();
-}
-
 }
