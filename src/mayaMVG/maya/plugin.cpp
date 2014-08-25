@@ -96,7 +96,7 @@ static void redoCB(void * /*userData*/)
 
 MStatus initializePlugin(MObject obj) {
 	MStatus status;
-	MFnPlugin plugin(obj, PLUGIN_COMPANY, "1.0", "Any");
+	MFnPlugin plugin(obj, PLUGIN_COMPANY, "0.1.0", "Any");
 
 	// register commands
 	status = plugin.registerCommand("MVGCmd", MVGCmd::creator);
