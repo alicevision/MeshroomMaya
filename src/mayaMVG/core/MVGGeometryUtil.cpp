@@ -65,15 +65,19 @@ namespace { // empty namespace
 
 MPoint MVGGeometryUtil::worldToView(M3dView& view, const MPoint& world)
 {
+    MStatus status;
 	short x, y;
-	view.worldToView(world, x, y);
+	view.worldToView(world, x, y, &status);
+    CHECK(status)
 	return MPoint(x, y);
 }
 
 MPoint MVGGeometryUtil::viewToWorld(M3dView& view, const MPoint& screen)
 {
+    MStatus status;
 	MPoint wpoint, wdir;
-	view.viewToWorld(screen.x, screen.y, wpoint, wdir);
+	status = view.viewToWorld(screen.x, screen.y, wpoint, wdir);
+    CHECK(status)
 	return wpoint;
 }
 
@@ -89,13 +93,15 @@ void MVGGeometryUtil::viewToCamera(M3dView& view, const short x, const short y, 
 	point =  point * camera.getHorizontalFilmAperture() * camera.getZoom();
 	// pan
 	point.x += camera.getHorizontalPan();
-	point.y += camera.getVerticalPan();
+	point.y += camera.getVerticalPan();     
 }
 
  void MVGGeometryUtil::worldToCamera(M3dView& view, const MPoint& worldPoint, MPoint& point)
 {
+    MStatus status;
 	short x, y;
-	view.worldToView(worldPoint, x, y);
+	view.worldToView(worldPoint, x, y, &status);
+    CHECK(status)
 	viewToCamera(view, x, y, point);
 }
 

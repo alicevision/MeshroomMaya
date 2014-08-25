@@ -31,7 +31,6 @@ bool MVGManipulatorUtil::intersectPoint(M3dView& view, DisplayData* displayData,
 	double threshold = (2*POINT_RADIUS*displayData->camera.getZoom())/view.portHeight();
 	MPoint mousePoint;
 	MVGGeometryUtil::viewToCamera(view, x, y, mousePoint);
-
 	std::map<std::string, std::vector<MVGPoint2D> >& meshMap = displayData->allPoints2D;
 	for(std::map<std::string, std::vector<MVGPoint2D> >::iterator it = meshMap.begin(); it != meshMap.end(); ++it)
 	{
@@ -43,7 +42,6 @@ bool MVGManipulatorUtil::intersectPoint(M3dView& view, DisplayData* displayData,
 			{
 				_intersectionData.pointIndex = i;
 				_intersectionData.meshName =  it->first;
-
 				return true;
 			}
 		}
@@ -124,6 +122,8 @@ bool MVGManipulatorUtil::intersectEdge(M3dView& view, DisplayData* displayData, 
 
 void MVGManipulatorUtil::updateIntersectionState(M3dView& view, DisplayData* data, double mousex, double mousey)
 {
+    if(data->allPoints2D.empty())
+        return;
 	resetIntersections();
 	if(intersectPoint(view, data, mousex, mousey))
 		_intersectionState = MVGManipulatorUtil::eIntersectionPoint;
