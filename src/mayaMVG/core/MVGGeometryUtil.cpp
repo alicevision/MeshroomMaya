@@ -1,5 +1,6 @@
 #include "mayaMVG/core/MVGGeometryUtil.h"
 #include "mayaMVG/core/MVGPointCloud.h"
+#include "mayaMVG/core/MVGProject.h"
 #include "mayaMVG/core/MVGCamera.h"
 #include "mayaMVG/core/MVGLog.h"
 #include <openMVG/robust_estimation/robust_estimator_LMeds.hpp>
@@ -10,6 +11,8 @@
 #include <maya/MVectorArray.h>
 #include <maya/MPlug.h>
 #include <maya/MFnDagNode.h>
+#include <maya/MMatrix.h>
+#include <maya/MFnTransform.h>
 #include <vector>
 
 using namespace mayaMVG;
@@ -139,6 +142,9 @@ void MVGGeometryUtil::cameraToImage(const MVGCamera& camera, const MPoint& point
 
 bool MVGGeometryUtil::projectFace2D(M3dView& view, MPointArray& face3DPoints, const MVGCamera& camera, const MPointArray& face2DPoints, MVector height)
 {
+	if(!camera.isValid())
+		return false;
+
 	std::vector<MVGPointCloudItem> items = camera.visibleItems();
 	if(items.size() < 3)
 		return false;
@@ -180,8 +186,14 @@ bool MVGGeometryUtil::projectFace2D(M3dView& view, MPointArray& face3DPoints, co
 	// Retrieve projected Face3D vertices from this model
 	MPoint P;
 	MPoint cameraCenter = AS_MPOINT(camera.pinholeCamera()._C);
-	MPoint worldPoint;
 
+	MVGPointCloud cloud(MVGProject::_CLOUD);
+	MMatrix inclusiveMatrix = MMatrix::identity;
+	if(cloud.isValid() && cloud.dagPath().isValid())
+		inclusiveMatrix = cloud.dagPath().inclusiveMatrix();
+	cameraCenter *= inclusiveMatrix;
+
+	MPoint worldPoint;
 	if(height.length() != 0) {
 		// First points projection
 		for(size_t i = 0; i < facePoints_view.size()-2; ++i) { // remove extra point
@@ -190,8 +202,6 @@ bool MVGGeometryUtil::projectFace2D(M3dView& view, MPointArray& face3DPoints, co
 			face3DPoints.append(P);
 		}
 		// Last point projection (keep 3D lengths)
-		// if(height.length() == 0)
-		// 	height = face3DPoints[0]- face3DPoints[1];
 		MPoint lastPoint3D = face3DPoints[2] + height; // TODO : warning
 		MPoint viewPoint = worldToView(view, lastPoint3D);
 		worldPoint = viewToWorld(view, viewPoint);

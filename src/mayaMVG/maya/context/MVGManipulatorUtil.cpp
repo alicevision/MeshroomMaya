@@ -6,6 +6,8 @@
 #include "mayaMVG/core/MVGGeometryUtil.h"
 #include "mayaMVG/core/MVGLog.h"
 #include "mayaMVG/core/MVGMesh.h"
+#include "mayaMVG/core/MVGProject.h"
+#include "mayaMVG/core/MVGPointCloud.h"
 #include <maya/MMatrix.h>
 #include <maya/MItDependencyNodes.h>
 #include <maya/MFnDependencyNode.h>
@@ -375,10 +377,24 @@ bool MVGManipulatorUtil::addCreateFaceCommand(const MDagPath& meshPath, const MP
 	}
 
 	// FIX ME - Convert to KObject space
+	MMatrix inclusiveMatrix;
+	if(!meshPath.isValid())		// EmptyPath : get pointCloud inclusiveMatrix
+	{	
+		MVGPointCloud cloud(MVGProject::_CLOUD);
+		if(!cloud.isValid()) {
+			LOG_ERROR("invalid point cloud node.")
+			return false;
+		}
+		MDagPath cloudPath = cloud.dagPath();
+		if(cloudPath.isValid())
+			inclusiveMatrix = cloudPath.inclusiveMatrixInverse();
+	}
+	else {	// Get mesh inclusiveMatrix
+		inclusiveMatrix = meshPath.inclusiveMatrixInverse();
+	}		
 	MPointArray objectPoints;
-	for(int i = 0; i < facePoints3D.length(); ++i)
-	{
-		MPoint objPoint = facePoints3D[i] * meshPath.inclusiveMatrixInverse();	
+	for(int i = 0; i < facePoints3D.length(); ++i) {
+		MPoint objPoint = facePoints3D[i] * inclusiveMatrix;
 		objectPoints.append(objPoint);
 	}
 	

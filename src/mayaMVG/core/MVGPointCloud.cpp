@@ -10,6 +10,7 @@
 #include <maya/MDagModifier.h>
 #include <maya/MFnTypedAttribute.h>
 #include <maya/MFnVectorArrayData.h>
+#include <maya/MPlug.h>
 #include <stdexcept>
 
 using namespace mayaMVG;
@@ -51,6 +52,14 @@ MVGPointCloud MVGPointCloud::create(const std::string& name)
 	MDagPath path;
 	MObject particleSystem = fnParticle.create(&status);
 	MDagPath::getAPathTo(particleSystem, path);
+
+	MFnDagNode fn(path.transform());
+	fn.findPlug("translateX").setLocked(true);
+	fn.findPlug("translateY").setLocked(true);
+	fn.findPlug("translateZ").setLocked(true);
+	fn.findPlug("rotateX").setLocked(true);
+	fn.findPlug("rotateY").setLocked(true);
+	fn.findPlug("rotateZ").setLocked(true);
 
 	// add dynamic attributes & reparent
 	MDagModifier dagModifier;
