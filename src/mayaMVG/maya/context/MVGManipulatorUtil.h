@@ -41,7 +41,6 @@ class MVGManipulatorUtil {
 		};
 
 		struct MVGPoint2D {
-			MPoint projectedPoint3D; // Position in camera coord of the projected associated point 3D
 			MPoint point3D; // Position 3D
 			EPointState movableState; // How the point is movable
 		};

@@ -388,8 +388,11 @@ void MVGCreateManipulator::computeTmpFaceOnEdgeExtend(M3dView& view, MVGManipula
 
 	// Build 2D points preview to compute 3D face
 	MPointArray previewPoints2D;
-	previewPoints2D.append(mvgPoints[intersectionData.edgePointIndexes[0]].projectedPoint3D);
-	previewPoints2D.append(mvgPoints[intersectionData.edgePointIndexes[1]].projectedPoint3D);
+    MPoint pCamera0, pCamera1;
+    MVGGeometryUtil::worldToCamera(view, mvgPoints[intersectionData.edgePointIndexes[0]].point3D, pCamera0);
+    MVGGeometryUtil::worldToCamera(view, mvgPoints[intersectionData.edgePointIndexes[1]].point3D, pCamera1);
+	previewPoints2D.append(pCamera0);
+	previewPoints2D.append(pCamera1);
 	MPoint P3 = mousePointInCameraCoord - (1 - intersectionData.edgeRatio) * intersectionData.edgeHeight2D;
 	MPoint P4 = mousePointInCameraCoord + intersectionData.edgeRatio * intersectionData.edgeHeight2D;
 	previewPoints2D.append(P3);

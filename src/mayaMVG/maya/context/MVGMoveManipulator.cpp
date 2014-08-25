@@ -442,8 +442,11 @@ void MVGMoveManipulator::computeTmpFaceOnMovePoint(M3dView& view, MVGManipulator
 		for(int i = 0; i < faceVerticesId.length(); ++i) {
 			if(intersectionData.pointIndex == faceVerticesId[i])
 				previewPoints2D.append(mousePoint);
-			else
-				previewPoints2D.append(meshPoints2D[faceVerticesId[i]].projectedPoint3D);
+			else {
+                MPoint pCamera;
+                MVGGeometryUtil::worldToCamera(view, meshPoints2D[faceVerticesId[i]].point3D, pCamera);
+				previewPoints2D.append(pCamera);
+            }
 		}
 		// Compute face
 		previewFace3D.clear();
@@ -506,8 +509,12 @@ void MVGMoveManipulator::computeTmpFaceOnMoveEdge(M3dView& view, MVGManipulatorU
 		MPointArray previewPoints2D;
 
 		// First : fixed points
-		previewPoints2D.append(meshPoints2D[fixedVerticesId[0]].projectedPoint3D);
-		previewPoints2D.append(meshPoints2D[fixedVerticesId[1]].projectedPoint3D);
+        MPoint pCamera0, pCamera1;
+        MVGGeometryUtil::worldToCamera(view, meshPoints2D[fixedVerticesId[0]].point3D, pCamera0);
+        MVGGeometryUtil::worldToCamera(view, meshPoints2D[fixedVerticesId[1]].point3D, pCamera1);
+
+		previewPoints2D.append(pCamera0);
+		previewPoints2D.append(pCamera1);
 
 		// Then : mousePoints computed with egdeHeight and ratio
 		MPoint P3 = mousePoint + intersectionData.edgeRatio * intersectionData.edgeHeight2D;
@@ -580,7 +587,10 @@ bool MVGMoveManipulator::triangulate(M3dView& view, const MVGManipulatorUtil::In
 	std::vector<MVGManipulatorUtil::MVGPoint2D>& meshPoints2D = complementaryData->allPoints2D[intersectionData.meshName];
     if(intersectionData.pointIndex < 0 || meshPoints2D.size() < intersectionData.pointIndex)
         return false;
-	points2D.append(meshPoints2D[intersectionData.pointIndex].projectedPoint3D);
+
+    MPoint pCamera;
+    MVGGeometryUtil::worldToCamera(view, meshPoints2D[intersectionData.pointIndex].point3D, pCamera);
+	points2D.append(pCamera);
 
 	std::vector<MVGCamera> cameras;
 	cameras.push_back(MVGCamera(cameraPath));
@@ -615,8 +625,11 @@ bool MVGMoveManipulator::triangulateEdge(M3dView& view, const MVGManipulatorUtil
 	std::vector<MVGManipulatorUtil::MVGPoint2D>& meshPoints2D = complementaryData->allPoints2D[intersectionData.meshName];
     if(intersectionData.edgePointIndexes.length() == 0 || meshPoints2D.size() < intersectionData.edgePointIndexes[0] || meshPoints2D.size() < intersectionData.edgePointIndexes[1])
         return false;
-    array0.append(meshPoints2D[intersectionData.edgePointIndexes[0]].projectedPoint3D);
-    array1.append(meshPoints2D[intersectionData.edgePointIndexes[1]].projectedPoint3D);
+    MPoint pCamera0, pCamera1;
+    MVGGeometryUtil::worldToCamera(view, meshPoints2D[intersectionData.edgePointIndexes[0]].point3D, pCamera0);
+    MVGGeometryUtil::worldToCamera(view, meshPoints2D[intersectionData.edgePointIndexes[1]].point3D, pCamera1);
+    array0.append(pCamera0);
+    array1.append(pCamera1);
 
 	// MVGCameras
     std::vector<MVGCamera> cameras;
