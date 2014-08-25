@@ -13,6 +13,7 @@
 #include <maya/MItMeshEdge.h>
 #include <maya/MItMeshVertex.h>
 #include <maya/MItDependencyNodes.h>
+#include <maya/MGlobal.h>
 
 using namespace mayaMVG;
 
@@ -111,6 +112,13 @@ bool MVGMesh::addPolygon(const MPointArray& pointArray, int& index) const
 	fnMesh.addPolygon(pointArray, index, true, 0.01, MObject::kNullObj, &status);
 	fnMesh.updateSurface();
 	CHECK(status)
+
+	// FIXME - remove this
+	// this command was introduced here to fix the 'mergeVertice' issue
+	MString command;
+	command.format("select -r ^1s;BakeAllNonDefHistory;polyMergeVertex -d 0.001 ^1s;select -cl;", fnMesh.dagPath().fullPathName());
+	MGlobal::executeCommand(command, false, false);
+
 	return status ? true : false;
 }
 
@@ -131,8 +139,7 @@ MStatus MVGMesh::getPoints(MPointArray& pointArray) const
 	MFnMesh fnMesh(_dagpath, &status);
 	CHECK(status);
 	fnMesh.getPoints(pointArray, MSpace::kWorld);
-	CHECK(status);
-    return status;
+	CHECK_RETURN_STATUS(status);
 }
 
 int MVGMesh::getPolygonsCount() const
@@ -141,8 +148,7 @@ int MVGMesh::getPolygonsCount() const
 	MFnMesh fnMesh(_dagpath, &status);
 	CHECK(status);
     int count = fnMesh.numPolygons(&status);
-    CHECK(status);
-    return count;
+    CHECK_RETURN_STATUS(status);
 }
 
 const MIntArray MVGMesh::getConnectedFacesToVertex(int vertexId) const
@@ -179,8 +185,7 @@ MStatus MVGMesh::setPoint(int vertexId, MPoint& point) const
 	CHECK(status);
 	status = fnMesh.setPoint(vertexId, point, MSpace::kWorld);
 	fnMesh.updateSurface();
-	CHECK(status);
-	return status;
+	CHECK_RETURN_STATUS(status);
 }
 
 MStatus MVGMesh::getPoint(int vertexId, MPoint& point) const
@@ -188,6 +193,5 @@ MStatus MVGMesh::getPoint(int vertexId, MPoint& point) const
 	MStatus status;
 	MFnMesh fnMesh(_dagpath, &status);
 	status = fnMesh.getPoint(vertexId, point, MSpace::kWorld);
-	CHECK(status);
-	return status;
+	CHECK_RETURN_STATUS(status);
 }
