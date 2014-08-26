@@ -573,25 +573,31 @@ bool MVGMoveManipulator::triangulate(M3dView& view, const MVGManipulatorUtil::In
 		USER_WARNING("Can't triangulate with the same camera")
 		return false;
 	}
+	MVGManipulatorUtil::DisplayData* complementaryData = _manipUtil->getComplementaryDisplayData(view);
+	if(!complementaryData)
+		return false;
 
 	// Points in camera coordinates
 	MPointArray points2D;
 	points2D.append(mousePointInCameraCoord);
 
-    MDagPath cameraPath;
-	view.getCamera(cameraPath);
-	MVGManipulatorUtil::DisplayData* complementaryData = _manipUtil->getComplementaryDisplayData(view);
-	if(!complementaryData)
-		return false;
-
-	std::vector<MVGManipulatorUtil::MVGPoint2D>& meshPoints2D = complementaryData->allPoints2D[intersectionData.meshName];
-    if(intersectionData.pointIndex < 0 || meshPoints2D.size() < intersectionData.pointIndex)
+	std::vector<MVGManipulatorUtil::MVGPoint2D>& complementaryMeshPoints2D = complementaryData->allPoints2D[intersectionData.meshName];
+    if(intersectionData.pointIndex < 0 || complementaryMeshPoints2D.size() < intersectionData.pointIndex)
         return false;
 
-    MPoint pCamera;
-    MVGGeometryUtil::worldToCamera(view, meshPoints2D[intersectionData.pointIndex].point3D, pCamera);
+	// Complementary view
+	// TODO : use projectedPoint3D and don't retrieve view
+	M3dView complementaryView;
+	if(!MVGMayaUtil::getComplementaryView(view, complementaryView))
+		return false;
+	
+	MPoint pCamera;
+    MVGGeometryUtil::worldToCamera(complementaryView, complementaryMeshPoints2D[intersectionData.pointIndex].point3D, pCamera);
 	points2D.append(pCamera);
 
+	// Cameras
+    MDagPath cameraPath;
+	view.getCamera(cameraPath);
 	std::vector<MVGCamera> cameras;
 	cameras.push_back(MVGCamera(cameraPath));
 	cameras.push_back(complementaryData->camera);
@@ -606,6 +612,9 @@ bool MVGMoveManipulator::triangulateEdge(M3dView& view, const MVGManipulatorUtil
 		USER_WARNING("Can't triangulate with the same camera")
 		return false;
 	}
+    MVGManipulatorUtil::DisplayData* complementaryData = _manipUtil->getComplementaryDisplayData(view);
+	if(!complementaryData)
+		return false;
 
     // Edge points (moved)
     MPointArray array0, array1;
@@ -614,24 +623,23 @@ bool MVGMoveManipulator::triangulateEdge(M3dView& view, const MVGManipulatorUtil
     MPoint P0 = mousePointInCameraCoord - (1 - intersectionData.edgeRatio) * intersectionData.edgeHeight2D;
     array0.append(P0);
 
-    MDagPath cameraPath;
-	view.getCamera(cameraPath);
-
-    MVGManipulatorUtil::DisplayData* complementaryData = _manipUtil->getComplementaryDisplayData(view);
-	if(!complementaryData)
+    // Complementary view
+	// TODO : use projectedPoint3D and don't retrieve view
+	M3dView complementaryView;
+	if(!MVGMayaUtil::getComplementaryView(view, complementaryView))
 		return false;
-
-    // Edge points
 	std::vector<MVGManipulatorUtil::MVGPoint2D>& meshPoints2D = complementaryData->allPoints2D[intersectionData.meshName];
     if(intersectionData.edgePointIndexes.length() == 0 || meshPoints2D.size() < intersectionData.edgePointIndexes[0] || meshPoints2D.size() < intersectionData.edgePointIndexes[1])
         return false;
     MPoint pCamera0, pCamera1;
-    MVGGeometryUtil::worldToCamera(view, meshPoints2D[intersectionData.edgePointIndexes[0]].point3D, pCamera0);
-    MVGGeometryUtil::worldToCamera(view, meshPoints2D[intersectionData.edgePointIndexes[1]].point3D, pCamera1);
+    MVGGeometryUtil::worldToCamera(complementaryView, meshPoints2D[intersectionData.edgePointIndexes[0]].point3D, pCamera0);
+    MVGGeometryUtil::worldToCamera(complementaryView, meshPoints2D[intersectionData.edgePointIndexes[1]].point3D, pCamera1);
     array0.append(pCamera0);
     array1.append(pCamera1);
 
 	// MVGCameras
+    MDagPath cameraPath;
+	view.getCamera(cameraPath);
     std::vector<MVGCamera> cameras;
     cameras.push_back(MVGCamera(cameraPath));
     cameras.push_back(complementaryData->camera);

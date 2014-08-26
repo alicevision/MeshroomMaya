@@ -29,6 +29,7 @@ struct MVGMayaUtil {
 	static MStatus setFocusOnView(const MString& viewName);
 	static bool isMVGView(const M3dView & view);
 	static bool isActiveView(const M3dView & view);
+	static bool getComplementaryView(const M3dView& view, M3dView& complementaryView);
 	// context
 	static MStatus createMVGContext();
 	static MStatus deleteMVGContext();

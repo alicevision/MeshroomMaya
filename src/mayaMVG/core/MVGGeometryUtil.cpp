@@ -186,7 +186,6 @@ bool MVGGeometryUtil::projectFace2D(M3dView& view, MPointArray& face3DPoints, co
 	// Retrieve projected Face3D vertices from this model
 	MPoint P;
 	MPoint cameraCenter = AS_MPOINT(camera.pinholeCamera()._C);
-
 	MVGPointCloud cloud(MVGProject::_CLOUD);
 	MMatrix inclusiveMatrix = MMatrix::identity;
 	if(cloud.isValid() && cloud.dagPath().isValid())
@@ -239,6 +238,12 @@ bool MVGGeometryUtil::computePlane(MPointArray& facePoints3D, PlaneKernel::Model
 void MVGGeometryUtil::projectPointOnPlane(const MPoint& point, M3dView& view, PlaneKernel::Model& model, const MVGCamera& camera, MPoint& projectedPoint)
 {
 	MPoint cameraCenter = AS_MPOINT(camera.pinholeCamera()._C);
+	MVGPointCloud cloud(MVGProject::_CLOUD);
+	MMatrix inclusiveMatrix = MMatrix::identity;
+	if(cloud.isValid() && cloud.dagPath().isValid())
+		inclusiveMatrix = cloud.dagPath().inclusiveMatrix();
+	cameraCenter *= inclusiveMatrix;
+	
     MPoint viewPoint;
 	MVector dir;
 	cameraToView(view, point, viewPoint);
@@ -249,46 +254,46 @@ void MVGGeometryUtil::projectPointOnPlane(const MPoint& point, M3dView& view, Pl
 
 void MVGGeometryUtil::triangulatePoint(MPointArray& points2D, std::vector<MVGCamera>& cameras, MPoint& resultPoint3D)
 {
-	// Result
-	openMVG::Vec3 result;
-    MPoint cameraPoint;
-	// N views
-//	openMVG::Mat2X A(2, points2D.length());
-//	
-//	for(size_t i = 0; i <points2D.length(); ++i)
-//	{
-//		MVGGeometryUtil::cameraToImage(cameras[i], points2D[i], x, y);
-//		A(0, i) = points2D[i].x;
-//		A(1, i) = points2D[i].y;
-//	}
-	
-	// Projective cameras
-//	std::vector<openMVG::Mat34> projectiveCameras;
-//	for(size_t i = 0; i <cameras.size(); ++i)
-//	{
-//		projectiveCameras.push_back(cameras[i].pinholeCamera()._P);
-//	}
-	
-	/// Compute a 3D position of a point from several images of it. In particular,
-	///  compute the projective point X in R^4 such that x = PX.
-	/// Algorithm is the standard DLT; for derivation see appendix of Keir's thesis.
-	//openMVG::TriangulateNView(A, projectiveCameras, &result4);
-	
 	// 2 views
-	openMVG::Vec2 xL_;
-	MVGGeometryUtil::cameraToImage(cameras[0], points2D[0], cameraPoint);
-	xL_(0) = cameraPoint.x;
-	xL_(1) = cameraPoint.y;
-	openMVG::Vec2 xR_;
-	MVGGeometryUtil::cameraToImage(cameras[1], points2D[1], cameraPoint);
-	xR_(0) = cameraPoint.x;
-	xR_(1) = cameraPoint.y;
-	
-	const openMVG::Mat34 PL = cameras[0].pinholeCamera()._P;
-	const openMVG::Mat34 PR = cameras[1].pinholeCamera()._P;
-		
+	MPoint imagePoint;
+	MVGGeometryUtil::cameraToImage(cameras[0], points2D[0], imagePoint);
+	const openMVG::Vec2 xL_(imagePoint.x,	imagePoint.y);
+	MVGGeometryUtil::cameraToImage(cameras[1], points2D[1], imagePoint);
+	const openMVG::Vec2 xR_(imagePoint.x, imagePoint.y);		
+
+	// Retrieve pinhole cameras
+	MVGPointCloud cloud(MVGProject::_CLOUD);
+	MMatrix inclusiveMatrix = MMatrix::identity;
+	if(cloud.isValid() && cloud.dagPath().isValid())
+		inclusiveMatrix = cloud.dagPath().inclusiveMatrix();	
+	MTransformationMatrix transformMatrix(inclusiveMatrix);
+	MMatrix rotationMatrix = transformMatrix.asRotateMatrix();
+	openMVG::Mat3 rotation;
+	for(int i = 0; i < 3; ++i)
+	{
+		for(int j = 0; j < 3; ++j)
+			rotation(i, j) = rotationMatrix[i][j];     
+	}  
+	MPoint cameraCenterL = AS_MPOINT(cameras[0].pinholeCamera()._C);
+	cameraCenterL *= inclusiveMatrix;
+	const openMVG::Mat3 KL = cameras[0].pinholeCamera()._K;
+	const openMVG::Mat3 RL = cameras[0].pinholeCamera()._R;
+	openMVG::Vec3 CL = AS_VEC3(cameraCenterL);
+	const openMVG::Vec3 tL = -RL* rotation *CL;
+	MPoint cameraCenterR = AS_MPOINT(cameras[1].pinholeCamera()._C);
+	cameraCenterR *= inclusiveMatrix;
+	const openMVG::Mat3 KR = cameras[1].pinholeCamera()._K;
+	const openMVG::Mat3 RR = cameras[1].pinholeCamera()._R;
+	openMVG::Vec3 CR = AS_VEC3(cameraCenterR);
+	const openMVG::Vec3 tR = -RR* rotation * CR;
+	openMVG::Mat34 PL;
+	openMVG::P_From_KRt(KL, RL* rotation, tL, &PL);
+	openMVG::Mat34 PR;
+	openMVG::P_From_KRt(KR, RR* rotation, tR, &PR); 
+
+	openMVG::Vec3 result;
 	openMVG::TriangulateDLT(PL, xL_, PR, xR_, &result);
-	
+
 	resultPoint3D.x = result(0);
 	resultPoint3D.y = result(1);
 	resultPoint3D.z = result(2);

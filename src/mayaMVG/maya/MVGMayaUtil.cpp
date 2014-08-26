@@ -74,6 +74,21 @@ bool MVGMayaUtil::isActiveView(const M3dView & view)
 	return (activeView.widget() == view.widget());
 }
 
+bool MVGMayaUtil::getComplementaryView(const M3dView& view, M3dView& complementaryView)
+{
+	M3dView tmpView;
+	for(size_t i = 0; i < M3dView::numberOf3dViews(); ++i)
+	{
+		M3dView::get3dView(i, tmpView);
+		if(tmpView.widget() != view .widget()&& isMVGView(tmpView))
+		{
+			complementaryView = tmpView;
+			return true;
+		}
+	}
+	return false;
+}
+
 MStatus MVGMayaUtil::createMVGContext()
 {
 	return MGlobal::executePythonCommand(
