@@ -69,6 +69,8 @@ MStatus MVGEditCmd::redoIt()
 	if(_flags & CMD_CREATE) {
 		if(!mesh.isValid()) { // Retrieve mesh or create it
 			mesh = MVGMesh::create(MVGProject::_MESH);
+			USER_WARNING("Action is no stacked in undo/redo")
+			status =  MS::kFailure;
 			if(!mesh.isValid())
 				return MS::kFailure;
             _meshName = mesh.dagPath().fullPathName();
@@ -106,6 +108,7 @@ MStatus MVGEditCmd::undoIt()
         if(mesh.getPolygonsCount() > 1)
             mesh.deletePolygon(_indexes[0]);
         else {
+			USER_ERROR("Can't delete last face")
             return MS::kFailure;
             // MObject transform = mesh.dagPath().transform();
             // MGlobal::deleteNode(transform);

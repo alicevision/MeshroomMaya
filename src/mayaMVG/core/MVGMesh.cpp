@@ -148,7 +148,8 @@ int MVGMesh::getPolygonsCount() const
 	MFnMesh fnMesh(_dagpath, &status);
 	CHECK(status);
     int count = fnMesh.numPolygons(&status);
-    CHECK_RETURN_STATUS(status);
+    CHECK(status);
+	return count;
 }
 
 const MIntArray MVGMesh::getConnectedFacesToVertex(int vertexId) const
