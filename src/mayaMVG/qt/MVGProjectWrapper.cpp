@@ -42,9 +42,8 @@ void MVGProjectWrapper::setCurrentContext(const QString& context)
 
 void MVGProjectWrapper::setProjectDirectory(const QString& directory)
 {
-	if(!_project.isValid())
-		return;
-	_project.setProjectDirectory(directory.toStdString());
+	if(_project.isValid())
+		_project.setProjectDirectory(directory.toStdString());
 	Q_EMIT projectDirectoryChanged();
 }
 
@@ -68,7 +67,7 @@ void MVGProjectWrapper::activeMVGContext()
 
 void MVGProjectWrapper::loadExistingProject()
 {
-	_cameraList.clear();
+	clear();
 	std::vector<MVGProject> projects = MVGProject::list();
 	if(projects.empty())
 		return;
@@ -78,13 +77,16 @@ void MVGProjectWrapper::loadExistingProject()
 
 void MVGProjectWrapper::loadNewProject(const QString& projectDirectoryPath)
 {
-    if(!_project.isValid())
-        _project = MVGProject::create(MVGProject::_PROJECT);
+	// Cancel load
 	if(projectDirectoryPath.isEmpty())
 		return;
+	
+	clear();
+	activeSelectionContext();
+    if(!_project.isValid())
+        _project = MVGProject::create(MVGProject::_PROJECT);
 	if(!_project.load(projectDirectoryPath.toStdString())) {
 		LOG_ERROR("An error occured when loading project.");
-//		appendLogText(QString("An error occured when loading project."));
 		return;
 	}
 	_project.setProjectDirectory(projectDirectoryPath.toStdString());
@@ -124,6 +126,11 @@ void MVGProjectWrapper::setCameraToView(QObject* camera, const QString& viewName
     // rebuild cache
     if(rebuildCache)
     	MGlobal::executeCommand("mayaMVGTool -e -rebuild mayaMVGTool1");
+}
+
+void MVGProjectWrapper::clear() {
+	_cameraList.clear();
+	setProjectDirectory("");
 }
 
 void MVGProjectWrapper::reloadMVGCamerasFromMaya()

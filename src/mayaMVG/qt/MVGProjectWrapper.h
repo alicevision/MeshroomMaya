@@ -43,6 +43,7 @@ public:
     Q_INVOKABLE void loadExistingProject();
     Q_INVOKABLE void loadNewProject(const QString& projectDirectoryPath);
     Q_INVOKABLE void setCameraToView(QObject* camera, const QString& viewName, bool rebuildCache = true) const;
+	void clear();
 
 private:
     void reloadMVGCamerasFromMaya();

@@ -129,24 +129,9 @@ std::vector<MVGProject> MVGProject::list()
 
 bool MVGProject::load(const std::string& projectDirectoryPath)
 {
-	// Clean project if already exists
-	// TODO: remove when multiproject   
-	MDagPath camerasDagPath;
-	MVGMayaUtil::getDagPathByName("cameras", camerasDagPath);
-	for(int i = camerasDagPath.childCount(); i > 0; --i)
-	{
-		MObject child = camerasDagPath.child(i - 1);
-		MGlobal::deleteNode(child);
-	}
-	
-	MDagPath pointCloudDagPath;
-	MVGMayaUtil::getDagPathByName("clouds", pointCloudDagPath);
-	for(int i = pointCloudDagPath.childCount(); i > 0; --i)
-	{
-		MObject child = pointCloudDagPath.child(i - 1);
-		MGlobal::deleteNode(child);
-	}
-	
+	// TODO: remove when multiproject
+	clear();
+
 	if(!isProjectDirectoryValid(projectDirectoryPath))
 		return false;
 	// Load new elements
@@ -173,6 +158,24 @@ bool MVGProject::loadPointCloud(const std::string& projectDirectoryPath)
 	std::string pointCloudFile = stlplus::folder_append_separator(projectDirectoryPath)
 									+ _pointCloudRelativeFile;
 	return readPointCloud(pointCloudFile);
+}
+
+void MVGProject::clear() {
+	MDagPath camerasDagPath;
+	MVGMayaUtil::getDagPathByName("cameras", camerasDagPath);
+	for(int i = camerasDagPath.childCount(); i > 0; --i)
+	{
+		MObject child = camerasDagPath.child(i - 1);
+		MGlobal::deleteNode(child);
+	}
+	
+	MDagPath pointCloudDagPath;
+	MVGMayaUtil::getDagPathByName("clouds", pointCloudDagPath);
+	for(int i = pointCloudDagPath.childCount(); i > 0; --i)
+	{
+		MObject child = pointCloudDagPath.child(i - 1);
+		MGlobal::deleteNode(child);
+	}
 }
 
 std::string MVGProject::getProjectDirectory() const

@@ -26,7 +26,8 @@ class MVGProject : public MVGNodeWrapper {
 		bool load(const std::string& projectDirectoryPath);
 		bool loadCameras(const std::string& projectDirectoryPath);
 		bool loadPointCloud(const std::string& projectDirectoryPath);
-	
+		void clear();
+
 	public:
 		// filesystem
 		std::string getProjectDirectory() const;
