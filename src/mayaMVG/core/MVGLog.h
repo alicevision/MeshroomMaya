@@ -16,6 +16,13 @@ namespace mayaMVG {
 							return; \
 						} \
 					}
+	
+#define CHECK_RETURN_VARIABLE(assertion, returnVariable) { \
+					if(!(assertion)) { \
+						LOG_ERROR("Unexpected error (" __FILE__":" << __LINE__<< ")") \
+						return returnVariable; \
+					} \
+				}
 
 #define CHECK_RETURN_STATUS(assertion) { \
 						if(!(assertion)) { \

@@ -12,12 +12,12 @@ static const char * rebuildFlagLong = "-rebuild";
 
 }
 
-MVGContextCmd::MVGContextCmd() : _pContext(NULL) {
+MVGContextCmd::MVGContextCmd() : _context(NULL) {
 }
 
 MPxContext* MVGContextCmd::makeObj() {
-    _pContext = new MVGContext();
-    return _pContext;
+    _context = new MVGContext();
+    return _context;
 }
 
 void* MVGContextCmd::creator() {
@@ -25,15 +25,14 @@ void* MVGContextCmd::creator() {
 }
 
 MStatus MVGContextCmd::doEditFlags() {
-	MStatus status = MS::kSuccess;
 	MArgParser argData = parser();
 	// -rebuild: rebuild cache
 	if (argData.isFlagSet(rebuildFlag)) {
-		MVGManipulatorUtil& cache =_pContext->getCache();
+		MVGManipulatorUtil& cache =_context->getCache();
 		cache.rebuildAllMeshesCacheFromMaya();
 		cache.rebuild();
 	}
-	return status;
+	return MS::kSuccess;
 }
 
 MStatus MVGContextCmd::doQueryFlags() {

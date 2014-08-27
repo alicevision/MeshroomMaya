@@ -230,7 +230,7 @@ MStatus MVGManipulatorUtil::rebuildAllMeshesCacheFromMaya()
 	std::vector<MVGMesh>::const_iterator it = meshes.begin();
 	for(; it != meshes.end(); ++it) {
 		status = rebuildMeshCacheFromMaya(it->getDagPath());
-		CHECK(status)
+		CHECK_RETURN_STATUS(status)
 	}
 	return status;
 }

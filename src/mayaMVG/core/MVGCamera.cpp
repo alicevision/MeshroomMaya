@@ -40,10 +40,11 @@ MVGCamera::MVGCamera(const int& id)
 	MItDependencyNodes it(MFn::kCamera);
 	for (; !it.isDone(); it.next()) {
 		MFnDependencyNode fn(it.thisNode());
-		MDagPath::getAPathTo(fn.object(), path);
+		status = MDagPath::getAPathTo(fn.object(), path);
+		CHECK_RETURN(status)
 		MVGCamera camera(path);
 		if(camera.isValid() && (camera.getId()==id)) {
-			MDagPath::getAPathTo(fn.object(), _dagpath);
+			status = MDagPath::getAPathTo(fn.object(), _dagpath);
 			return;
 		}
 	}

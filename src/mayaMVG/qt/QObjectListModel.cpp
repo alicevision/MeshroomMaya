@@ -37,7 +37,7 @@
 */
 QObjectListModel::QObjectListModel(QObject *parent)
 : QAbstractListModel(parent)
-, m_autoEmit(true)
+, _autoEmit(true)
 {
     QHash<int, QByteArray> roles;
     roles[ObjectRole] = "object";
@@ -50,8 +50,8 @@ QObjectListModel::QObjectListModel(QObject *parent)
 */
 QObjectListModel::QObjectListModel(QObjectList objects, QObject *parent)
 : QAbstractListModel(parent)
-, m_autoEmit(true)
-, m_objects(objects)
+, _autoEmit(true)
+, _objects(objects)
 {
     QHash<int, QByteArray> roles;
     roles[ObjectRole] = "object";
@@ -67,11 +67,11 @@ QObjectListModel::QObjectListModel(QObjectList objects, QObject *parent)
 */
 QVariant QObjectListModel::data(const QModelIndex &index, int role) const
 {
-    if (index.row() < 0 || index.row() >= m_objects.size())
+    if (index.row() < 0 || index.row() >= _objects.size())
         return QVariant();
 
     if (role == ObjectRole)
-        return QVariant::fromValue(m_objects.at(index.row()));
+        return QVariant::fromValue(_objects.at(index.row()));
 
     return QVariant();
 }
@@ -91,7 +91,7 @@ int QObjectListModel::rowCount(const QModelIndex &parent) const
 */
 QObjectList QObjectListModel::objectList() const
 {
-    return m_objects;
+    return _objects;
 }
 
 /*!
@@ -100,12 +100,12 @@ QObjectList QObjectListModel::objectList() const
 */
 void QObjectListModel::setObjectList(QObjectList objects)
 {
-    int oldCount = m_objects.count();
+    int oldCount = _objects.count();
     beginResetModel();
-    m_objects = objects;
+    _objects = objects;
     endResetModel();
-    Q_EMIT dataChanged(index(0), index(m_objects.count()));
-    if (m_objects.count() != oldCount)
+    Q_EMIT dataChanged(index(0), index(_objects.count()));
+    if (_objects.count() != oldCount)
         internEmitCountChanged();
 }
 
@@ -118,8 +118,8 @@ void QObjectListModel::setObjectList(QObjectList objects)
 */
 void QObjectListModel::append(QObject *object)
 {
-    beginInsertRows(QModelIndex(), m_objects.count(), m_objects.count());
-    m_objects.append(object);
+    beginInsertRows(QModelIndex(), _objects.count(), _objects.count());
+    _objects.append(object);
     endInsertRows();
     internEmitCountChanged();
 }
@@ -130,8 +130,8 @@ void QObjectListModel::append(QObject *object)
 */
 void QObjectListModel::append(const QObjectList &objects)
 {
-    beginInsertRows(QModelIndex(), m_objects.count(), m_objects.count()+objects.count()-1);
-    m_objects.append(objects);
+    beginInsertRows(QModelIndex(), _objects.count(), _objects.count()+objects.count()-1);
+    _objects.append(objects);
     endInsertRows();
     internEmitCountChanged();
 }
@@ -146,7 +146,7 @@ void QObjectListModel::append(const QObjectList &objects)
 void QObjectListModel::insert(int i, QObject *object)
 {
     beginInsertRows(QModelIndex(), i, i);
-    m_objects.insert(i, object);
+    _objects.insert(i, object);
     endInsertRows();
     internEmitCountChanged();
 }
@@ -164,7 +164,7 @@ void QObjectListModel::insert(int i, const QObjectList &objects)
 
     beginInsertRows(QModelIndex(), i, i+objects.count()-1);
     for (int j = objects.count() - 1; j > -1; --j)
-        m_objects.insert(i, objects.at(j));
+        _objects.insert(i, objects.at(j));
     endInsertRows();
     internEmitCountChanged();
 }
@@ -178,7 +178,7 @@ void QObjectListModel::insert(int i, const QObjectList &objects)
 */
 void QObjectListModel::replace(int i, QObject *object)
 {
-    m_objects.replace(i, object);
+    _objects.replace(i, object);
     Q_EMIT dataChanged(index(i), index(i));
 }
 
@@ -196,7 +196,7 @@ void QObjectListModel::move(int from, int to)
 {
     if (!beginMoveRows(QModelIndex(), from, from, QModelIndex(), to > from ? to+1 : to))
         return; //should only be triggered for our simple case if from == to.
-    m_objects.move(from, to);
+    _objects.move(from, to);
     endMoveRows();
 }
 
@@ -211,7 +211,7 @@ void QObjectListModel::removeAt(int i, int count)
 {
     beginRemoveRows(QModelIndex(), i, i + count - 1);
     for (int j = 0; j < count; ++j)
-        m_objects.removeAt(i);
+        _objects.removeAt(i);
     endRemoveRows();
     internEmitCountChanged();
 }
@@ -225,7 +225,7 @@ void QObjectListModel::removeAt(int i, int count)
 QObject *QObjectListModel::takeAt(int i)
 {
     beginRemoveRows(QModelIndex(), i, i);
-    QObject *obj = m_objects.takeAt(i);
+    QObject *obj = _objects.takeAt(i);
     endRemoveRows();
     internEmitCountChanged();
     return obj;
@@ -236,11 +236,11 @@ QObject *QObjectListModel::takeAt(int i)
 */
 void QObjectListModel::clear()
 {
-    if (m_objects.isEmpty())
+    if (_objects.isEmpty())
         return;
 
-    beginRemoveRows(QModelIndex(), 0, m_objects.count() - 1);
-    m_objects.clear();
+    beginRemoveRows(QModelIndex(), 0, _objects.count() - 1);
+    _objects.clear();
     endRemoveRows();
     internEmitCountChanged();
 }
@@ -251,7 +251,7 @@ void QObjectListModel::clear()
 */
 QObject *QObjectListModel::get(int i) const
 {
-    return m_objects.at(i);
+    return _objects.at(i);
 }
 
 void QObjectListModel::emitModified()
@@ -261,7 +261,7 @@ void QObjectListModel::emitModified()
 
 void QObjectListModel::internEmitCountChanged()
 {
-    if( m_autoEmit )
+    if( _autoEmit )
         Q_EMIT countChanged();
 }
 

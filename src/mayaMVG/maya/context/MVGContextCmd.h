@@ -19,7 +19,7 @@ public:
 	virtual MStatus doQueryFlags();
 	virtual MStatus appendSyntax();
 private:
-	MVGContext* _pContext;
+	MVGContext* _context;
 };
 
 } // namespace

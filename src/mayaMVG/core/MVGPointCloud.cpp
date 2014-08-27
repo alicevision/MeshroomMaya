@@ -52,6 +52,7 @@ MVGPointCloud MVGPointCloud::create(const std::string& name)
 	// create maya particle system node
 	MDagPath path;
 	MObject particleSystem = fnParticle.create(&status);
+	CHECK(status)
 	MDagPath::getAPathTo(particleSystem, path);
 
 	MFnDagNode fn(path.transform());
@@ -82,8 +83,8 @@ void MVGPointCloud::setItems(const std::vector<MVGPointCloudItem>& items)
 		return;
 
 	MStatus status;
-	MFnParticleSystem fnParticle(_dagpath.node(), &status);
-
+	MFnParticleSystem fnParticle(_dagpath, &status);
+	CHECK(status)
 	// as MVectorArray
 	MPointArray array_position;
 	MVectorArray array_color;
@@ -96,10 +97,11 @@ void MVGPointCloud::setItems(const std::vector<MVGPointCloudItem>& items)
 
 	// emit particles
 	status = fnParticle.emit(array_position);
-	
+	CHECK(status)
 	// set color
 	fnParticle.setPerParticleAttribute(_RGBPP, array_color, &status);
 	status = fnParticle.saveInitialState();
+	CHECK(status)
 }
 
 std::vector<MVGPointCloudItem> MVGPointCloud::getItems() const
@@ -107,7 +109,8 @@ std::vector<MVGPointCloudItem> MVGPointCloud::getItems() const
 	MStatus status;
 	std::vector<MVGPointCloudItem> items;
 
-	MFnParticleSystem fnParticle(_dagpath.node(), &status);
+	MFnParticleSystem fnParticle(_dagpath, &status);
+	CHECK(status)
 	MVectorArray positionArray;
 	fnParticle.position(positionArray);
 	for(int i = 0; i < positionArray.length(); ++i)

@@ -104,10 +104,10 @@ bool MVGMesh::addPolygon(const MPointArray& pointArray, int& index) const
 	MFnMesh fnMesh(_dagpath, &status);
 	if(pointArray.length() < 3)
 		return false;
-	
+
 	fnMesh.addPolygon(pointArray, index, true, 0.01, MObject::kNullObj, &status);
+	CHECK_RETURN_VARIABLE(status, false)
 	fnMesh.updateSurface();
-	CHECK(status)
 
 	// FIXME - remove this
 	// this command was introduced here to fix the 'mergeVertice' issue
@@ -115,27 +115,27 @@ bool MVGMesh::addPolygon(const MPointArray& pointArray, int& index) const
 	command.format("select -r ^1s;BakeAllNonDefHistory;polyMergeVertex -d 0.001 ^1s;select -cl;", fnMesh.dagPath().fullPathName());
 	MGlobal::executeCommand(command, false, false);
 
-	return status ? true : false;
+	return true;
 }
 
 bool MVGMesh::deletePolygon(const int index) const
 {
 	MStatus status;
 	MFnMesh fnMesh(_dagpath, &status);
-	CHECK(status);
+	CHECK_RETURN_VARIABLE(status, false)
 	status = fnMesh.deleteFace(index);
+	CHECK_RETURN_VARIABLE(status, false)
 	fnMesh.updateSurface();
-	CHECK(status);
-	return status ? true : false;
+	return true;
 }
 
 MStatus MVGMesh::getPoints(MPointArray& pointArray) const
 {
 	MStatus status;
 	MFnMesh fnMesh(_dagpath, &status);
-	CHECK(status);
+	CHECK_RETURN_STATUS(status);
 	status = fnMesh.getPoints(pointArray, MSpace::kWorld);
-	CHECK(status)
+	CHECK_RETURN_STATUS(status)
 	return status;
 }
 
@@ -153,9 +153,9 @@ MStatus MVGMesh::getPolygonVertices(const int polygonId, MIntArray& vertexList) 
 {
 	MStatus status;
 	MFnMesh fnMesh(_dagpath, &status);
-	CHECK(status);
+	CHECK_RETURN_STATUS(status);
 	status = fnMesh.getPolygonVertices(polygonId, vertexList);
-	CHECK(status)
+	CHECK_RETURN_STATUS(status)
 	return status;
 }
 
@@ -190,10 +190,10 @@ MStatus MVGMesh::setPoint(int vertexId, MPoint& point) const
 {
 	MStatus status;
 	MFnMesh fnMesh(_dagpath, &status);
-	CHECK(status);
+	CHECK_RETURN_STATUS(status);
 	status = fnMesh.setPoint(vertexId, point, MSpace::kWorld);
 	fnMesh.updateSurface();
-	CHECK(status)
+	CHECK_RETURN_STATUS(status)
 	return status;
 }
 
@@ -202,7 +202,7 @@ MStatus MVGMesh::getPoint(int vertexId, MPoint& point) const
 	MStatus status;
 	MFnMesh fnMesh(_dagpath, &status);
 	status = fnMesh.getPoint(vertexId, point, MSpace::kWorld);
-	CHECK(status)
+	CHECK_RETURN_STATUS(status)
 	return status;
 }
 

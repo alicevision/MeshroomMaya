@@ -45,7 +45,6 @@ MSyntax MVGEditCmd::newSyntax()
 
 MStatus MVGEditCmd::doIt(const MArgList& args)
 {
-	MStatus status = MS::kSuccess;
 	MSyntax syntax = MVGEditCmd::newSyntax();
 	MArgDatabase argData(syntax, args);
 	// -create

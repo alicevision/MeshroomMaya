@@ -69,6 +69,7 @@ bool MVGProject::isValid() const
 	fn.findPlug(_PROJECTPATH, false, &status);
 	if(!status)
 		return false;
+
 	return true;
 }
 
@@ -78,9 +79,10 @@ MVGProject MVGProject::create(const std::string& name)
 	MStatus status;
 	MFnTransform fn;
 	MDagPath path;
-	
+
 	// root node
-	MObject transform = fn.create(MObject::kNullObj, &status);	
+	MObject transform = fn.create(MObject::kNullObj, &status);
+	CHECK(status)
 	// root/cameras
 	MObject cameras = fn.create(transform, &status);
 	fn.setName("cameras");
