@@ -111,9 +111,9 @@ bool MVGMesh::addPolygon(const MPointArray& pointArray, int& index) const
 
 	// FIXME - remove this
 	// this command was introduced here to fix the 'mergeVertice' issue
-	MString command;
-	command.format("select -r ^1s;BakeAllNonDefHistory;polyMergeVertex -d 0.001 ^1s;select -cl;", fnMesh.dagPath().fullPathName());
-	MGlobal::executeCommand(command, false, false);
+//	MString command;
+//	command.format("select -r ^1s;BakeAllNonDefHistory;polyMergeVertex -d 0.001 ^1s;select -cl;", fnMesh.dagPath().fullPathName());
+//	MGlobal::executeCommand(command, false, false);
 
 	return true;
 }
