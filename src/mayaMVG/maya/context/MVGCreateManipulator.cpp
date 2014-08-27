@@ -119,16 +119,15 @@ MStatus MVGCreateManipulator::doPress(M3dView& view)
 
     _manipUtil->updateIntersectionState(view, data, mousex, mousey);
     // Clear buildPoint of the complementary view
-    if(data->buildPoints2D.length() == 0)
+    if(data->buildPoints2D.length() == 0 && _manipUtil->getCacheCount() > 1)
     {
         MVGManipulatorUtil::DisplayData* complementaryCache = _manipUtil->getComplementaryDisplayData(view);
-        if(complementaryCache != data)
-            complementaryCache->buildPoints2D.clear();
+		complementaryCache->buildPoints2D.clear();
     }
     switch(_createState)
     {
         case eCreateNone:
-            if(_manipUtil->intersectionState() != MVGManipulatorUtil::eIntersectionEdge)
+            if(_manipUtil->getIntersectionState() != MVGManipulatorUtil::eIntersectionEdge)
             {
                 _createState = eCreateFace;
                 data->buildPoints2D.append(mousePoint);
@@ -172,13 +171,13 @@ MStatus MVGCreateManipulator::doRelease(M3dView& view)
 		case eCreateNone:
         case eCreateFace:
 			break;
-		case eCreateExtend: 
+		case eCreateExtend:
 		{
 			MDagPath meshPath;
-			MVGMayaUtil::getDagPathByName(_manipUtil->intersectionData().meshName.c_str(), meshPath);
-			if(!_manipUtil->addCreateFaceCommand(meshPath, _manipUtil->previewFace3D()))
+			MVGMayaUtil::getDagPathByName(_manipUtil->getIntersectionData().meshName.c_str(), meshPath);
+			if(!_manipUtil->addCreateFaceCommand(meshPath, _manipUtil->getPreviewFace3D()))
 				return MS::kFailure;
-			_manipUtil->previewFace3D().clear();
+			_manipUtil->getPreviewFace3D().clear();
 			_createState = eCreateNone;
 			break;
 		}
@@ -254,8 +253,8 @@ void MVGCreateManipulator::drawCursor(const float mousex, const float mousey)
 
     if(_createState == eCreateFace)
         return;
-    
-	if(_manipUtil->intersectionState() == MVGManipulatorUtil::eIntersectionEdge)
+
+	if(_manipUtil->getIntersectionState() == MVGManipulatorUtil::eIntersectionEdge)
 		MVGDrawUtil::drawExtendItem(mousex + 10, mousey + 10, _extendColor);
 }
 
@@ -266,11 +265,11 @@ void MVGCreateManipulator::drawIntersections(M3dView& view, const float mousex, 
 		data = _manipUtil->getDisplayData(view);
 	if(!data || data->allPoints2D.empty())
 		return;
-	
-	MVGManipulatorUtil::IntersectionData& intersectionData = _manipUtil->intersectionData();
+
+	MVGManipulatorUtil::IntersectionData& intersectionData = _manipUtil->getIntersectionData();
 	std::vector<MVGManipulatorUtil::MVGPoint2D>& meshPoints = data->allPoints2D[intersectionData.meshName];
-	
-	switch(_manipUtil->intersectionState())
+
+	switch(_manipUtil->getIntersectionState())
 	{
 		case MVGManipulatorUtil::eIntersectionPoint:
 			break;
@@ -338,7 +337,7 @@ void MVGCreateManipulator::drawOtherPreview2D(M3dView& view, const MVGManipulato
 {
     if(!data)
         return;
-    
+
     short mousex, mousey;
 	mousePosition(mousex, mousey);
     MPoint viewPoint;
@@ -352,11 +351,11 @@ void MVGCreateManipulator::drawOtherPreview2D(M3dView& view, const MVGManipulato
 			MVGGeometryUtil::cameraToView(view, points[i], viewPoint);
             drawPoints.append(viewPoint);
 		}
-        
+
         // Draw points
         for(int i = 0; i < drawPoints.length(); ++i)
             MVGDrawUtil::drawCircle2D(drawPoints[i], _neutralCreateColor, POINT_RADIUS, 30);
-        
+
         // Draw Poly
         if(drawPoints.length() > 2)
         {
@@ -376,10 +375,10 @@ void MVGCreateManipulator::drawOtherPreview2D(M3dView& view, const MVGManipulato
 
 void MVGCreateManipulator::computeTmpFaceOnEdgeExtend(M3dView& view, MVGManipulatorUtil::DisplayData* data, const MPoint& mousePointInCameraCoord)
 {
-	MVGManipulatorUtil::IntersectionData& intersectionData = _manipUtil->intersectionData();
+	MVGManipulatorUtil::IntersectionData& intersectionData = _manipUtil->getIntersectionData();
 	std::vector<MVGManipulatorUtil::MVGPoint2D>& mvgPoints = data->allPoints2D[intersectionData.meshName];
-	
-	// Get edge 3D points 
+
+	// Get edge 3D points
     if(intersectionData.edgePointIndexes.length() == 0 || mvgPoints.size() < intersectionData.edgePointIndexes[0] || mvgPoints.size() < intersectionData.edgePointIndexes[1])
         return;
 	MPoint edgePoint3D_0 = mvgPoints[intersectionData.edgePointIndexes[0]].point3D;
@@ -398,10 +397,10 @@ void MVGCreateManipulator::computeTmpFaceOnEdgeExtend(M3dView& view, MVGManipula
 	previewPoints2D.append(P4);
 
 	// Compute 3D face
-	_manipUtil->previewFace3D().clear();
-	if(!MVGGeometryUtil::projectFace2D(view, _manipUtil->previewFace3D(), data->camera, previewPoints2D, intersectionData.edgeHeight3D))
+	_manipUtil->getPreviewFace3D().clear();
+	if(!MVGGeometryUtil::projectFace2D(view, _manipUtil->getPreviewFace3D(), data->camera, previewPoints2D, intersectionData.edgeHeight3D))
 	{
-        _manipUtil->previewFace3D().setLength(4);
+        _manipUtil->getPreviewFace3D().setLength(4);
         MVGMesh mesh(intersectionData.meshName);
         if(!mesh.isValid())
             return;
@@ -416,19 +415,19 @@ void MVGCreateManipulator::computeTmpFaceOnEdgeExtend(M3dView& view, MVGManipula
         PlaneKernel::Model model;
         MVGGeometryUtil::computePlane(faceVertices, model);
 
-        // Project new points on plane		
+        // Project new points on plane
         MVGGeometryUtil::projectPointOnPlane(P3, view, model, data->camera, movedPoint);
-        _manipUtil->previewFace3D()[2] = movedPoint;
+        _manipUtil->getPreviewFace3D()[2] = movedPoint;
 
         // Keep 3D length
         MVGGeometryUtil::projectPointOnPlane(P4, view, model, data->camera, movedPoint);
-        _manipUtil->previewFace3D()[3] = movedPoint;		
+        _manipUtil->getPreviewFace3D()[3] = movedPoint;		
 	}
-         
+  
     // Keep the old first 2 points to have a connected face
-    _manipUtil->previewFace3D()[0] = edgePoint3D_1;
-    _manipUtil->previewFace3D()[1] = edgePoint3D_0;
-   
+    _manipUtil->getPreviewFace3D()[0] = edgePoint3D_1;
+    _manipUtil->getPreviewFace3D()[1] = edgePoint3D_0;
+
 	// TODO : compute plane with straight line constraint
 }
 

@@ -16,7 +16,7 @@ class MVGMainWidget : public QWidget {
 		~MVGMainWidget();
 
 	public:
-		QDeclarativeView* view() const ;
+		QDeclarativeView* getView() const ;
 		MVGProjectWrapper& getProjectWrapper() { return _projectWrapper;}
 
 	private:

@@ -51,12 +51,12 @@ void MVGNodeWrapper::select() const
 	MGlobal::setActiveSelectionList(list);
 }
 
-const MDagPath& MVGNodeWrapper::dagPath() const
+const MDagPath& MVGNodeWrapper::getDagPath() const
 {
 	return _dagpath;
 }
 
-std::string MVGNodeWrapper::name() const
+std::string MVGNodeWrapper::getName() const
 {
 	MFnDagNode fn(_dagpath.transform()); // return the transform name
 	return fn.name().asChar();

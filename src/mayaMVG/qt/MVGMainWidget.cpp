@@ -42,7 +42,7 @@ MVGMainWidget::~MVGMainWidget()
 {
 }
 
-QDeclarativeView* MVGMainWidget::view() const 
+QDeclarativeView* MVGMainWidget::getView() const 
 {
 	return _view;
 }

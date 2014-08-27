@@ -19,7 +19,7 @@ class MVGCamera : public MVGNodeWrapper {
 		MVGCamera(const MDagPath& dagPath);
 		MVGCamera(const int& id);
 		virtual ~MVGCamera();
-	
+
 	public:
 		bool operator<(const MVGCamera&) const;
 
@@ -31,17 +31,17 @@ class MVGCamera : public MVGNodeWrapper {
 		static std::vector<MVGCamera> list();
 
 	public:
-		int id() const;
+		int getId() const;
 		void setId(const int&) const;
-		MDagPath imagePath() const;
-		std::string imagePlane() const;
+		MDagPath getImagePath() const;
+		std::string getImagePlane() const;
 		void setImagePlane(const std::string&) const;
 		void loadImagePlane() const;
-		openMVG::PinholeCamera pinholeCamera() const;
+		openMVG::PinholeCamera getPinholeCamera() const;
 		void setPinholeCamera(const openMVG::PinholeCamera&) const;
-		std::vector<MVGPointCloudItem> visibleItems() const;
+		std::vector<MVGPointCloudItem> getVisibleItems() const;
 		void setVisibleItems(const std::vector<MVGPointCloudItem>& item) const;
-		
+
 		double getZoom() const;
 		void setZoom(const double zoom) const;
 		double getHorizontalPan() const;
@@ -50,7 +50,7 @@ class MVGCamera : public MVGNodeWrapper {
 		void setVerticalPan(const double pan) const;
         void setPan(const double hpan, const double vpan) const;
         double getHorizontalFilmAperture() const;
-        
+  
         void resetZoomAndPan() const;
         void setInView(const std::string& viewName) const;
 

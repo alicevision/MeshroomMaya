@@ -29,12 +29,12 @@ class MVGProject : public MVGNodeWrapper {
 	
 	public:
 		// filesystem
-		std::string projectDirectory() const;
+		std::string getProjectDirectory() const;
 		void setProjectDirectory(const std::string&) const;
         bool isProjectDirectoryValid(const std::string&) const;
 		// nodes
-		std::vector<MVGCamera> cameras() const;
-		std::vector<MVGPointCloud> pointClouds() const;
+		std::vector<MVGCamera> getCameras() const;
+		std::vector<MVGPointCloud> getPointCloud() const;
         void selectCameras(std::vector<std::string> cameraNames) const;
 
 	public:

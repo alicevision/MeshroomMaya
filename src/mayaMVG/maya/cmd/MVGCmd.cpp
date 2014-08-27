@@ -80,20 +80,7 @@ MStatus MVGCmd::doIt(const MArgList& args) {
 
 	// create MVG menu
 	MVGMainWidget* mainWidget = new MVGMainWidget(menuLayout);
-	MQtUtil::addWidgetToMayaLayout(mainWidget->view(), menuLayout);
-	
-	// // Reload project from Maya
-	// MVGProjectWrapper::instance().reloadProjectFromMaya();
-	// MVGProjectWrapper::instance().rebuildAllMeshesCacheFromMaya();
-
-    
-
-	// -p
-	// if(argData.isFlagSet(projectPathFlag)) {
-	// 	MString projectPath;
-	// 	argData.getFlagArgument(projectPathFlag, 0, projectPath);
-	// 	MVGProjectWrapper::instance().loadProject(MQtUtil::toQString(projectPath));
-	// }
+	MQtUtil::addWidgetToMayaLayout(mainWidget->getView(), menuLayout);
 
 	return status;
 }

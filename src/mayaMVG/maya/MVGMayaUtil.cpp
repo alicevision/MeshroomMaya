@@ -124,8 +124,8 @@ MStatus MVGMayaUtil::setCameraInView(const MVGCamera& camera, const MString& vie
 {
 	MGlobal::executePythonCommand("import maya.cmds as cmds");
 	std::stringstream ss; // one line cmd, to get result
-	ss << "cmds.modelPanel('" << viewName << "', e=True, cam='" 
-	   << camera.name().c_str() << "')";
+	ss << "cmds.modelPanel('" << viewName << "', e=True, cam='"
+	   << camera.getName().c_str() << "')";
 	return MGlobal::executePythonCommand(ss.str().c_str());
 }
 

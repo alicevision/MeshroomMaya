@@ -173,7 +173,7 @@ bool MVGProject::loadPointCloud(const std::string& projectDirectoryPath)
 	return readPointCloud(pointCloudFile);
 }
 
-std::string MVGProject::projectDirectory() const
+std::string MVGProject::getProjectDirectory() const
 {
 	MString directory;
 	// Retrive it by its name
@@ -217,13 +217,13 @@ bool MVGProject::isProjectDirectoryValid(const std::string& projectDirectoryPath
 	return true;
 }
 
-std::vector<MVGCamera> MVGProject::cameras() const
+std::vector<MVGCamera> MVGProject::getCameras() const
 {
 	// TODO return cameras of this project
 	return MVGCamera::list();
 }
 
-std::vector<MVGPointCloud> MVGProject::pointClouds() const
+std::vector<MVGPointCloud> MVGProject::getPointCloud() const
 {
 	std::vector<MVGPointCloud> list;
 	MDagPath path;
@@ -244,7 +244,7 @@ void MVGProject::selectCameras(std::vector<std::string> cameraNames) const
 	for(std::vector<std::string>::iterator it = cameraNames.begin(); it != cameraNames.end(); ++it)
 	{
 		MVGCamera camera(*it);
-		list.add(camera.dagPath());
+		list.add(camera.getDagPath());
 	}
 	MGlobal::setActiveSelectionList(list);
 }

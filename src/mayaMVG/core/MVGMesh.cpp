@@ -49,7 +49,7 @@ MVGMesh MVGMesh::create(const std::string& name)
 
 	// get project root node
 	MVGProject project(MVGProject::_PROJECT);
-	MObject rootObj = project.dagPath().child(2); // meshes transform
+	MObject rootObj = project.getDagPath().child(2); // meshes transform
 
 	// create empty mesh
 	MPointArray vertexArray;
@@ -134,8 +134,9 @@ MStatus MVGMesh::getPoints(MPointArray& pointArray) const
 	MStatus status;
 	MFnMesh fnMesh(_dagpath, &status);
 	CHECK(status);
-	fnMesh.getPoints(pointArray, MSpace::kWorld);
-	CHECK_RETURN_STATUS(status);
+	status = fnMesh.getPoints(pointArray, MSpace::kWorld);
+	CHECK(status)
+	return status;
 }
 
 int MVGMesh::getPolygonsCount() const
@@ -154,7 +155,8 @@ MStatus MVGMesh::getPolygonVertices(const int polygonId, MIntArray& vertexList) 
 	MFnMesh fnMesh(_dagpath, &status);
 	CHECK(status);
 	status = fnMesh.getPolygonVertices(polygonId, vertexList);
-	CHECK_RETURN_STATUS(status);
+	CHECK(status)
+	return status;
 }
 
 const MIntArray MVGMesh::getConnectedFacesToVertex(int vertexId) const
@@ -191,7 +193,8 @@ MStatus MVGMesh::setPoint(int vertexId, MPoint& point) const
 	CHECK(status);
 	status = fnMesh.setPoint(vertexId, point, MSpace::kWorld);
 	fnMesh.updateSurface();
-	CHECK_RETURN_STATUS(status);
+	CHECK(status)
+	return status;
 }
 
 MStatus MVGMesh::getPoint(int vertexId, MPoint& point) const
@@ -199,7 +202,8 @@ MStatus MVGMesh::getPoint(int vertexId, MPoint& point) const
 	MStatus status;
 	MFnMesh fnMesh(_dagpath, &status);
 	status = fnMesh.getPoint(vertexId, point, MSpace::kWorld);
-	CHECK_RETURN_STATUS(status);
+	CHECK(status)
+	return status;
 }
 
 } // namespace

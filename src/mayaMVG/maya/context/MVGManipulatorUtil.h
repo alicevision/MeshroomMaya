@@ -58,9 +58,9 @@ class MVGManipulatorUtil {
 
 	public:
 		// getters & setters
-		IntersectionState& intersectionState() { return _intersectionState; }
-		IntersectionData& intersectionData() { return _intersectionData; }
-		MPointArray& previewFace3D() { return _previewFace3D; }
+		IntersectionState& getIntersectionState() { return _intersectionState; }
+		IntersectionData& getIntersectionData() { return _intersectionData; }
+		MPointArray& getPreviewFace3D() { return _previewFace3D; }
 
 		// intersections
 		bool intersectPoint(M3dView& view, DisplayData* displayData, const short&x, const short& y);

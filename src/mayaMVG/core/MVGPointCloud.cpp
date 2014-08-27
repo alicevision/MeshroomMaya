@@ -47,7 +47,7 @@ MVGPointCloud MVGPointCloud::create(const std::string& name)
 
 	// get project root node
 	MVGProject project(MVGProject::_PROJECT);
-	MObject parent = project.dagPath().child(1); // clouds transform
+	MObject parent = project.getDagPath().child(1); // clouds transform
 
 	// create maya particle system node
 	MDagPath path;

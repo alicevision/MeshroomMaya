@@ -124,9 +124,9 @@ void MVGGeometryUtil::cameraToView(M3dView& view, const MPoint& point, MPoint& v
 }
 
 void MVGGeometryUtil::cameraToImage(const MVGCamera& camera, const MPoint& point, MPoint& image)
-{	
-	// Get image size 
-	MFnDagNode fnImage(camera.imagePath());
+{
+	// Get image size
+	MFnDagNode fnImage(camera.getImagePath());
 	const double width = fnImage.findPlug("coverageX").asDouble();
 	const double height = fnImage.findPlug("coverageY").asDouble();
 
@@ -142,7 +142,7 @@ bool MVGGeometryUtil::projectFace2D(M3dView& view, MPointArray& face3DPoints, co
 	if(!camera.isValid())
 		return false;
 
-	std::vector<MVGPointCloudItem> items = camera.visibleItems();
+	std::vector<MVGPointCloudItem> items = camera.getVisibleItems();
 	if(items.size() < 3)
 		return false;
 
@@ -182,11 +182,11 @@ bool MVGGeometryUtil::projectFace2D(M3dView& view, MPointArray& face3DPoints, co
 
 	// Retrieve projected Face3D vertices from this model
 	MPoint P;
-	MPoint cameraCenter = AS_MPOINT(camera.pinholeCamera()._C);
+	MPoint cameraCenter = AS_MPOINT(camera.getPinholeCamera()._C);
 	MVGPointCloud cloud(MVGProject::_CLOUD);
 	MMatrix inclusiveMatrix = MMatrix::identity;
-	if(cloud.isValid() && cloud.dagPath().isValid())
-		inclusiveMatrix = cloud.dagPath().inclusiveMatrix();
+	if(cloud.isValid() && cloud.getDagPath().isValid())
+		inclusiveMatrix = cloud.getDagPath().inclusiveMatrix();
 	cameraCenter *= inclusiveMatrix;
 
 	MPoint worldPoint;
@@ -234,13 +234,13 @@ bool MVGGeometryUtil::computePlane(MPointArray& facePoints3D, PlaneKernel::Model
 
 void MVGGeometryUtil::projectPointOnPlane(const MPoint& point, M3dView& view, PlaneKernel::Model& model, const MVGCamera& camera, MPoint& projectedPoint)
 {
-	MPoint cameraCenter = AS_MPOINT(camera.pinholeCamera()._C);
+	MPoint cameraCenter = AS_MPOINT(camera.getPinholeCamera()._C);
 	MVGPointCloud cloud(MVGProject::_CLOUD);
 	MMatrix inclusiveMatrix = MMatrix::identity;
-	if(cloud.isValid() && cloud.dagPath().isValid())
-		inclusiveMatrix = cloud.dagPath().inclusiveMatrix();
+	if(cloud.isValid() && cloud.getDagPath().isValid())
+		inclusiveMatrix = cloud.getDagPath().inclusiveMatrix();
 	cameraCenter *= inclusiveMatrix;
-	
+
     MPoint viewPoint;
 	MVector dir;
 	cameraToView(view, point, viewPoint);
@@ -261,26 +261,26 @@ void MVGGeometryUtil::triangulatePoint(MPointArray& points2D, std::vector<MVGCam
 	// Retrieve pinhole cameras
 	MVGPointCloud cloud(MVGProject::_CLOUD);
 	MMatrix inclusiveMatrix = MMatrix::identity;
-	if(cloud.isValid() && cloud.dagPath().isValid())
-		inclusiveMatrix = cloud.dagPath().inclusiveMatrix();	
+	if(cloud.isValid() && cloud.getDagPath().isValid())
+		inclusiveMatrix = cloud.getDagPath().inclusiveMatrix();	
 	MTransformationMatrix transformMatrix(inclusiveMatrix);
 	MMatrix rotationMatrix = transformMatrix.asRotateMatrix();
 	openMVG::Mat3 rotation;
 	for(int i = 0; i < 3; ++i)
 	{
 		for(int j = 0; j < 3; ++j)
-			rotation(i, j) = rotationMatrix[i][j];     
-	}  
-	MPoint cameraCenterL = AS_MPOINT(cameras[0].pinholeCamera()._C);
+			rotation(i, j) = rotationMatrix[i][j];
+	}
+	MPoint cameraCenterL = AS_MPOINT(cameras[0].getPinholeCamera()._C);
 	cameraCenterL *= inclusiveMatrix;
-	const openMVG::Mat3 KL = cameras[0].pinholeCamera()._K;
-	const openMVG::Mat3 RL = cameras[0].pinholeCamera()._R;
+	const openMVG::Mat3 KL = cameras[0].getPinholeCamera()._K;
+	const openMVG::Mat3 RL = cameras[0].getPinholeCamera()._R;
 	openMVG::Vec3 CL = AS_VEC3(cameraCenterL);
 	const openMVG::Vec3 tL = -RL* rotation *CL;
-	MPoint cameraCenterR = AS_MPOINT(cameras[1].pinholeCamera()._C);
+	MPoint cameraCenterR = AS_MPOINT(cameras[1].getPinholeCamera()._C);
 	cameraCenterR *= inclusiveMatrix;
-	const openMVG::Mat3 KR = cameras[1].pinholeCamera()._K;
-	const openMVG::Mat3 RR = cameras[1].pinholeCamera()._R;
+	const openMVG::Mat3 KR = cameras[1].getPinholeCamera()._K;
+	const openMVG::Mat3 RR = cameras[1].getPinholeCamera()._R;
 	openMVG::Vec3 CR = AS_VEC3(cameraCenterR);
 	const openMVG::Vec3 tR = -RR* rotation * CR;
 	openMVG::Mat34 PL;

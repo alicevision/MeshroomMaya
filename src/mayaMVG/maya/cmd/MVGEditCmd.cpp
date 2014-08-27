@@ -71,7 +71,7 @@ MStatus MVGEditCmd::redoIt()
 			status =  MS::kFailure;
 			if(!mesh.isValid())
 				return MS::kFailure;
-            _meshName = mesh.dagPath().fullPathName();
+            _meshName = mesh.getDagPath().fullPathName();
 		}
 		int index;
 		if(!mesh.addPolygon(_points, index))

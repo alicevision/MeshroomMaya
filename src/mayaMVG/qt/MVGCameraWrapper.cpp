@@ -14,7 +14,7 @@ MVGCameraWrapper::MVGCameraWrapper(const MVGCamera& camera)
 MVGCameraWrapper::~MVGCameraWrapper() {
 }
 
-const MVGCamera& MVGCameraWrapper::camera() const
+const MVGCamera& MVGCameraWrapper::getCamera() const
 {
 	return _camera;
 }
@@ -34,19 +34,19 @@ void MVGCameraWrapper::setInView(const QString& viewName, const bool value)
         Q_EMIT viewsChanged();
 }
 
-const QSize MVGCameraWrapper::sourceSize()
+const QSize MVGCameraWrapper::getSourceSize()
 {
     if(!_imageLoaded) {
-        QImage image(imagePath());
+        QImage image(getImagePath());
         _imageLoaded = true;
         _imageSize = image.size();
     }
     return _imageSize;
 }
 
-const qint64 MVGCameraWrapper::sourceWeight() const
+const qint64 MVGCameraWrapper::getSourceWeight() const
 {
-	QFileInfo info(imagePath());
+	QFileInfo info(getImagePath());
 	return info.size();
 }
 

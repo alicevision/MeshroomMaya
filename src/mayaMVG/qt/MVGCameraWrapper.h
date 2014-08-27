@@ -11,12 +11,12 @@ class MVGCameraWrapper : public QObject
 {
         Q_OBJECT
 
-		Q_PROPERTY(QString name READ name CONSTANT)
-		Q_PROPERTY(QString imagePath READ imagePath CONSTANT)
+		Q_PROPERTY(QString name READ getName CONSTANT)
+		Q_PROPERTY(QString imagePath READ getImagePath CONSTANT)
         Q_PROPERTY(bool isSelected READ isSelected WRITE setIsSelected NOTIFY isSelectedChanged)
-        Q_PROPERTY(QStringList views READ views NOTIFY viewsChanged)
-		Q_PROPERTY(QSize sourceSize READ sourceSize CONSTANT)
-		Q_PROPERTY(qint64 sourceWeight READ sourceWeight CONSTANT)
+        Q_PROPERTY(QStringList views READ getViews NOTIFY viewsChanged)
+		Q_PROPERTY(QSize sourceSize READ getSourceSize CONSTANT)
+		Q_PROPERTY(qint64 sourceWeight READ getSourceWeight CONSTANT)
 
     public:
         MVGCameraWrapper(const MVGCamera& camera);
@@ -29,22 +29,22 @@ class MVGCameraWrapper : public QObject
 		~MVGCameraWrapper();
 
 	public slots:
-		const QString name() const { return QString::fromStdString(_camera.name()); }
-		const QString imagePath() const { return QString::fromStdString(_camera.imagePlane()); }
+		const QString getName() const { return QString::fromStdString(_camera.getName()); }
+		const QString getImagePath() const { return QString::fromStdString(_camera.getImagePlane()); }
         bool isSelected() const { return _isSelected; }
 		void setIsSelected(const bool isSelected) { _isSelected = isSelected; Q_EMIT isSelectedChanged(); }
-		const QStringList views() { return _views; }
-        const QSize sourceSize();
-		const qint64 sourceWeight() const;
+		const QStringList getViews() { return _views; }
+        const QSize getSourceSize();
+		const qint64 getSourceWeight() const;
 
 	signals:
         void isSelectedChanged();
         void viewsChanged();
-		
+
 	public:
-        const MVGCamera& camera() const;
+        const MVGCamera& getCamera() const;
         Q_INVOKABLE bool isInView(const QString& viewName) const {return _views.contains(viewName);}
-        Q_INVOKABLE void setInView(const QString& viewName, const bool value);		
+        Q_INVOKABLE void setInView(const QString& viewName, const bool value);
 		Q_INVOKABLE void select() const;
 
 	private:

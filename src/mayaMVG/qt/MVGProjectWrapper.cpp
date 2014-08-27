@@ -22,14 +22,14 @@ MVGProjectWrapper::~MVGProjectWrapper()
 {
 }
 
-const QString MVGProjectWrapper::projectDirectory() const
+const QString MVGProjectWrapper::getProjectDirectory() const
 {
 	if(!_project.isValid())
 		return "";
-	return QString(_project.projectDirectory().c_str());
+	return QString(_project.getProjectDirectory().c_str());
 }
 
-const QString MVGProjectWrapper::currentContext() const
+const QString MVGProjectWrapper::getCurrentContext() const
 {
     return _currentContext;
 }
@@ -102,7 +102,7 @@ void MVGProjectWrapper::loadNewProject(const QString& projectDirectoryPath)
 void MVGProjectWrapper::selectItems(const QList<QString>& cameraNames) const
 {
     foreach(MVGCameraWrapper* camera, _cameraList.asQList<MVGCameraWrapper>())
-        camera->setIsSelected(cameraNames.contains(camera->name()));
+        camera->setIsSelected(cameraNames.contains(camera->getName()));
 }
 
 void MVGProjectWrapper::selectCameras(const QStringList& cameraNames) const
@@ -132,7 +132,7 @@ void MVGProjectWrapper::reloadMVGCamerasFromMaya()
 	if(!_project.isValid())
 		return;
 	Q_EMIT projectDirectoryChanged();
-	const std::vector<MVGCamera>& cameraList = _project.cameras();
+	const std::vector<MVGCamera>& cameraList = _project.getCameras();
 	std::vector<MVGCamera>::const_iterator it = cameraList.begin();
 	for(; it != cameraList.end(); ++it)
 		_cameraList.append(new MVGCameraWrapper(*it));

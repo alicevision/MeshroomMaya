@@ -9,7 +9,6 @@
 #include "mayaMVG/core/MVGProject.h"
 #include "mayaMVG/core/MVGPointCloud.h"
 #include <maya/MMatrix.h>
-#include <maya/MFnMesh.h>
 #include <maya/MItMeshEdge.h>
 #include <maya/MItMeshVertex.h>
 
@@ -230,7 +229,7 @@ MStatus MVGManipulatorUtil::rebuildAllMeshesCacheFromMaya()
 	std::vector<MVGMesh> meshes = MVGMesh::list();
 	std::vector<MVGMesh>::const_iterator it = meshes.begin();
 	for(; it != meshes.end(); ++it) {
-		status = rebuildMeshCacheFromMaya(it->dagPath());
+		status = rebuildMeshCacheFromMaya(it->getDagPath());
 		CHECK(status)
 	}
 	return status;
@@ -239,8 +238,9 @@ MStatus MVGManipulatorUtil::rebuildAllMeshesCacheFromMaya()
 MStatus MVGManipulatorUtil::rebuildMeshCacheFromMaya(const MDagPath& meshPath)
 {
 	MStatus status;
-	MFnMesh fnMesh(meshPath, &status);
-	CHECK_RETURN_STATUS(status)
+	MVGMesh mesh(meshPath);
+	if(!mesh.isValid())
+		return MS::kFailure;
 	std::string meshName = meshPath.fullPathName().asChar();
 	
 	// // ??????????
@@ -255,9 +255,9 @@ MStatus MVGManipulatorUtil::rebuildMeshCacheFromMaya(const MDagPath& meshPath)
 	// MFnMeshn fnMesh(meshData, &status);
 
 	// Save mesh points
-	MPointArray meshPoints;
-	if(!fnMesh.getPoints(meshPoints, MSpace::kWorld))
-		return MS::kFailure;
+	MPointArray meshPoints;	
+	status = mesh.getPoints(meshPoints);
+	CHECK_RETURN_STATUS(status)
 	_cacheMeshToPointArray[meshName] = meshPoints;
 
 	// Save movable state
@@ -271,7 +271,7 @@ MStatus MVGManipulatorUtil::rebuildMeshCacheFromMaya(const MDagPath& meshPath)
 			movableStates.push_back(eUnMovable);
 		else if(faceList.length() > 0) { // Face points connected to several face		
 			MIntArray faceVerticesIndexes;
-			fnMesh.getPolygonVertices(faceList[0], faceVerticesIndexes);
+			mesh.getPolygonVertices(faceList[0], faceVerticesIndexes);
 			// For each point, check number of connected faces
 			int numConnectedFace;
 			EPointState state = eMovableRecompute;
@@ -382,7 +382,7 @@ bool MVGManipulatorUtil::addCreateFaceCommand(const MDagPath& meshPath, const MP
 			LOG_ERROR("invalid point cloud node.")
 			return false;
 		}
-		MDagPath cloudPath = cloud.dagPath();
+		MDagPath cloudPath = cloud.getDagPath();
 		if(cloudPath.isValid())
 			inclusiveMatrix = cloudPath.inclusiveMatrixInverse();
 	}
