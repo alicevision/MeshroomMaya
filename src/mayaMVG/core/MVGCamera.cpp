@@ -177,9 +177,6 @@ void MVGCamera::setImagePlane(const std::string& img) const
 	fnImage.findPlug("dic").setValue(1);
 	fnImage.findPlug("displayOnlyIfCurrent").setValue(1);
 	fnImage.findPlug("fit").setValue(2);
-	// fnImage.findPlug("width").setValue((int)width);
-	// fnImage.findPlug("height").setValue((int)height);
-	// fnImage.findPlug("verticalFilmAperture").setValue(defVFA);
 
 	// handling deferred loading
 	if(fnImage.findPlug(_DEFERRED).isNull()){

@@ -89,7 +89,6 @@ struct MVGGeometryUtil {
 
     // math
     static double crossProduct2D(MVector& A, MVector& B);
-	static double dotProduct2D(MVector& A, MVector& B);
 	static bool edgesIntersection(MPoint A, MPoint B, MVector AD,  MVector BC);
 };
 

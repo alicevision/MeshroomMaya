@@ -223,21 +223,6 @@ std::vector<MVGCamera> MVGProject::getCameras() const
 	return MVGCamera::list();
 }
 
-std::vector<MVGPointCloud> MVGProject::getPointCloud() const
-{
-	std::vector<MVGPointCloud> list;
-	MDagPath path;
-	MItDependencyNodes it(MFn::kParticle);
-	for (; !it.isDone(); it.next()) {
-		MFnDependencyNode fn(it.thisNode());
-		MDagPath::getAPathTo(fn.object(), path);
-		MVGPointCloud cloud(path);
-		if(cloud.isValid())
-			list.push_back(cloud);
-	}
-	return list;
-}
-
 void MVGProject::selectCameras(std::vector<std::string> cameraNames) const
 {
 	MSelectionList list;

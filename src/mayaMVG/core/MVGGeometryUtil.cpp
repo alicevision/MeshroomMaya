@@ -300,12 +300,8 @@ double MVGGeometryUtil::crossProduct2D(MVector& A, MVector& B) {
     return A.x*B.y - A.y*B.x;
 }
 
-double MVGGeometryUtil::dotProduct2D(MVector& A, MVector& B) {
-    return A.x*B.x - A.y*B.y;
-}
-
 bool MVGGeometryUtil::edgesIntersection(MPoint A, MPoint B, MVector AD,  MVector BC)
-{		
+{
     // r x s = 0
     double cross = crossProduct2D(AD, BC);
     double eps = 0.00001;
