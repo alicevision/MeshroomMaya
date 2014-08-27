@@ -1,10 +1,9 @@
 #include "mayaMVG/core/MVGCamera.h"
-#include "mayaMVG/core/MVGPointCloud.h"
 #include "mayaMVG/core/MVGProject.h"
 #include "mayaMVG/core/MVGLog.h"
+#include "mayaMVG/core/MVGPointCloud.h"
+#include "mayaMVG/core/MVGPointCloudItem.h"
 #include "mayaMVG/maya/MVGMayaUtil.h"
-#include <maya/MPoint.h>
-#include <maya/MString.h>
 #include <maya/MMatrix.h>
 #include <maya/MQuaternion.h>
 #include <maya/MFnCamera.h>
@@ -13,9 +12,7 @@
 #include <maya/MDagModifier.h>
 #include <maya/MFnNumericAttribute.h>
 #include <maya/MFnTypedAttribute.h>
-#include <maya/MSelectionList.h>
 #include <maya/MItDependencyNodes.h>
-#include <maya/MPointArray.h>
 
 namespace mayaMVG {
 

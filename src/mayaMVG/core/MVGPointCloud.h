@@ -1,12 +1,12 @@
 #pragma once
 
 #include "mayaMVG/core/MVGNodeWrapper.h"
-#include "mayaMVG/core/MVGPointCloudItem.h"
 #include <vector>
 
 namespace mayaMVG {
 
 class MVGCamera;
+class MVGPointCloudItem;
 
 class MVGPointCloud : public MVGNodeWrapper  {
 
@@ -30,4 +30,4 @@ class MVGPointCloud : public MVGNodeWrapper  {
 		static MString _RGBPP;
 };
 
-} // mayaMVG
+} // namespace

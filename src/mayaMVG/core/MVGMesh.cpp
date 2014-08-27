@@ -1,21 +1,17 @@
 #include "mayaMVG/core/MVGMesh.h"
 #include "mayaMVG/core/MVGLog.h"
-#include "mayaMVG/core/MVGGeometryUtil.h"
 #include "mayaMVG/core/MVGProject.h"
-#include "mayaMVG/maya/MVGMayaUtil.h"
 #include <maya/MFnMesh.h>
 #include <maya/MFnSet.h>
 #include <maya/MSelectionList.h>
-#include <maya/MPointArray.h>
-#include <maya/MIntArray.h>
 #include <maya/MDagModifier.h>
 #include <maya/MItMeshPolygon.h>
-#include <maya/MItMeshEdge.h>
 #include <maya/MItMeshVertex.h>
 #include <maya/MItDependencyNodes.h>
 #include <maya/MGlobal.h>
+#include <maya/MPointArray.h>
 
-using namespace mayaMVG;
+namespace mayaMVG {
 
 MVGMesh::MVGMesh(const std::string& name)
 	: MVGNodeWrapper(name)
@@ -152,6 +148,15 @@ int MVGMesh::getPolygonsCount() const
 	return count;
 }
 
+MStatus MVGMesh::getPolygonVertices(const int polygonId, MIntArray& vertexList) const
+{
+	MStatus status;
+	MFnMesh fnMesh(_dagpath, &status);
+	CHECK(status);
+	status = fnMesh.getPolygonVertices(polygonId, vertexList);
+	CHECK_RETURN_STATUS(status);
+}
+
 const MIntArray MVGMesh::getConnectedFacesToVertex(int vertexId) const
 {
 	MIntArray connectedFacesId;
@@ -196,3 +201,5 @@ MStatus MVGMesh::getPoint(int vertexId, MPoint& point) const
 	status = fnMesh.getPoint(vertexId, point, MSpace::kWorld);
 	CHECK_RETURN_STATUS(status);
 }
+
+} // namespace

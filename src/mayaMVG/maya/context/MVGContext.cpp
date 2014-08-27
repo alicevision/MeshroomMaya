@@ -1,16 +1,13 @@
 #include "mayaMVG/maya/context/MVGContext.h"
 #include "mayaMVG/maya/context/MVGCreateManipulator.h"
 #include "mayaMVG/maya/context/MVGMoveManipulator.h"
-#include "mayaMVG/maya/cmd/MVGEditCmd.h"
 #include "mayaMVG/maya/MVGMayaUtil.h"
-#include "mayaMVG/core/MVGLog.h"
-#include "mayaMVG/qt/MVGEventFilter.h"
 #include "mayaMVG/qt/MVGQt.h"
 #include <maya/MQtUtil.h>
 
-using namespace mayaMVG;
+namespace mayaMVG {
 
-MVGContext::MVGContext() 
+MVGContext::MVGContext()
 	: _filter((QObject*)MVGMayaUtil::getMVGWindow(), this)
 	, _filterLV((QObject*)MVGMayaUtil::getMVGViewportLayout("mvgLPanel"), this)
 	, _filterRV((QObject*)MVGMayaUtil::getMVGViewportLayout("mvgRPanel"), this)
@@ -198,3 +195,4 @@ MVGEditCmd* MVGContext::newCmd()
 	return (MVGEditCmd *)newToolCommand();
 }
 
+} // namespace

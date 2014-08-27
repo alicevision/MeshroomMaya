@@ -3,9 +3,8 @@
 #include "mayaMVG/maya/MVGMayaUtil.h"
 #include "mayaMVG/core/MVGLog.h"
 #include <maya/MQtUtil.h>
-#include "mayaMVG/core/MVGGeometryUtil.h"
 
-using namespace mayaMVG;
+namespace mayaMVG {
 
 MVGProjectWrapper::MVGProjectWrapper()
 {
@@ -140,3 +139,5 @@ void MVGProjectWrapper::reloadMVGCamerasFromMaya()
 	Q_EMIT cameraModelChanged();
 	// TODO : Camera selection
 }
+
+} // namespace

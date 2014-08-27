@@ -1,7 +1,7 @@
 #include "mayaMVG/maya/context/MVGContextCmd.h"
 #include "mayaMVG/maya/context/MVGContext.h"
 
-using namespace mayaMVG;
+namespace mayaMVG {
 
 MString MVGContextCmd::name("mayaMVGTool");
 
@@ -48,3 +48,5 @@ MStatus MVGContextCmd::appendSyntax() {
 	}
 	return MS::kSuccess;
 }
+
+} // namespace

@@ -1,7 +1,8 @@
 #include "mayaMVG/qt/MVGCameraWrapper.h"
-#include "mayaMVG/maya/MVGMayaUtil.h"
+#include <QImage>
+#include <QFileInfo>
 
-using namespace mayaMVG;
+namespace mayaMVG {
 
 MVGCameraWrapper::MVGCameraWrapper(const MVGCamera& camera)
 	: _camera(camera)
@@ -52,3 +53,5 @@ const qint64 MVGCameraWrapper::sourceWeight() const
 void MVGCameraWrapper::select() const{
 	_camera.select();
 }
+
+} // namespace

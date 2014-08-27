@@ -19,4 +19,4 @@ class MVGPointCloudItem {
 		float _weight;
 };
 
-} // mayaMVG
+} // namespace

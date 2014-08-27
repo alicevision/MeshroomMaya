@@ -22,4 +22,4 @@ private:
 	MVGContext* _pContext;
 };
 
-} // mayaMVG
+} // namespace

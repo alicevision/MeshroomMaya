@@ -1,7 +1,6 @@
 #pragma once
 
 #include "mayaMVG/qt/MVGQt.h"
-#include "mayaMVG/core/MVGLog.h"
 
 namespace mayaMVG {
 

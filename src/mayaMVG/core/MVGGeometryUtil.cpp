@@ -1,21 +1,18 @@
 #include "mayaMVG/core/MVGGeometryUtil.h"
 #include "mayaMVG/core/MVGPointCloud.h"
+#include "mayaMVG/core/MVGPointCloudItem.h"
 #include "mayaMVG/core/MVGProject.h"
 #include "mayaMVG/core/MVGCamera.h"
 #include "mayaMVG/core/MVGLog.h"
-#include <openMVG/robust_estimation/robust_estimator_LMeds.hpp>
-#include <openMVG/multiview/triangulation_nview.hpp>
-#include <openMVG/multiview/triangulation.hpp>
-#include <openMVG/multiview/projection.hpp>
+#include "openMVG/robust_estimation/robust_estimator_LMeds.hpp"
+#include "openMVG/multiview/triangulation.hpp"
 #include <maya/MPointArray.h>
-#include <maya/MVectorArray.h>
+#include <maya/M3dView.h>
 #include <maya/MPlug.h>
 #include <maya/MFnDagNode.h>
 #include <maya/MMatrix.h>
-#include <maya/MFnTransform.h>
-#include <vector>
 
-using namespace mayaMVG;
+namespace mayaMVG {
 
 namespace { // empty namespace
 
@@ -329,3 +326,4 @@ bool MVGGeometryUtil::edgesIntersection(MPoint A, MPoint B, MVector AD,  MVector
     }
     return false;
 }
+} // namespace

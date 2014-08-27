@@ -7,9 +7,11 @@
 #include "mayaMVG/maya/context/MVGContextCmd.h"
 #include "mayaMVG/maya/context/MVGCreateManipulator.h"
 #include "mayaMVG/maya/context/MVGMoveManipulator.h"
+#include <maya/MFnDependencyNode.h>
 #include <maya/MSelectionList.h>
 #include <maya/MEventMessage.h>
 #include <maya/MMessage.h>
+#include <maya/MCallbackIdArray.h>
 
 
 using namespace mayaMVG;

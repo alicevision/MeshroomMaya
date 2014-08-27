@@ -2,8 +2,6 @@
 
 #include <maya/MPxCommand.h>
 #include <maya/MSyntax.h>
-#include <maya/MArgDatabase.h>
-#include <maya/MCallbackIdArray.h>
 
 namespace mayaMVG {
 
@@ -20,4 +18,4 @@ public:
 
 };
 
-} // mayaMVG
+} // namespace

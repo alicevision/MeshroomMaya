@@ -1,15 +1,15 @@
 #pragma once
 
-#include "mayaMVG/core/MVGCamera.h"
-#include "mayaMVG/core/MVGPointCloud.h"
-#include "mayaMVG/core/MVGMesh.h"
+#include "mayaMVG/core/MVGNodeWrapper.h"
 #include <vector>
-#include <map>
 
 namespace mayaMVG {
-		
+
+class MVGCamera;
+class MVGPointCloud;
+
 class MVGProject : public MVGNodeWrapper {
-	
+
 	public:
 		MVGProject(const std::string& name = "mayaMVG");
 		MVGProject(const MDagPath& dagPath);
@@ -51,4 +51,4 @@ class MVGProject : public MVGNodeWrapper {
         static std::string _pointCloudRelativeFile;
 };
 
-} // mayaMVG
+} // namespace

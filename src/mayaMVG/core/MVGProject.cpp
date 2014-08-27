@@ -1,5 +1,4 @@
 #include "mayaMVG/core/MVGProject.h"
-#include "mayaMVG/core/MVGCamera.h"
 #include "mayaMVG/core/MVGLog.h"
 #include "mayaMVG/io/cameraIO.h"
 #include "mayaMVG/io/pointCloudIO.h"
@@ -250,4 +249,4 @@ void MVGProject::selectCameras(std::vector<std::string> cameraNames) const
 	MGlobal::setActiveSelectionList(list);
 }
 
-}	//mayaMVG
+} // namespace

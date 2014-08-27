@@ -1,14 +1,11 @@
-#include "QtDeclarative/QDeclarativeView"
-#include "QtDeclarative/qdeclarativecontext.h"
 #include "mayaMVG/maya/cmd/MVGCmd.h"
 #include "mayaMVG/maya/MVGMayaUtil.h"
 #include "mayaMVG/core/MVGLog.h"
 #include "mayaMVG/qt/MVGMainWidget.h"
-#include <mayaMVG/qt/MVGProjectWrapper.h>
 #include <maya/MQtUtil.h>
-#include <maya/MGlobal.h>
+#include <maya/MArgDatabase.h>
 
-using namespace mayaMVG;
+namespace mayaMVG {
 
 namespace {
 	static const char * projectPathFlag = "-p";
@@ -100,3 +97,5 @@ MStatus MVGCmd::doIt(const MArgList& args) {
 
 	return status;
 }
+
+} // namespace

@@ -84,4 +84,4 @@ bool readCameras(std::string filePath, std::string imageDir, std::string cameraD
 	return true;
 }
 
-} // mayaMVG
+} // namespace

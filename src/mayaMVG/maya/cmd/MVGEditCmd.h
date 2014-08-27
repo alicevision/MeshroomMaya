@@ -1,9 +1,10 @@
 #pragma once
 
 #include <maya/MPxToolCommand.h>
-#include <maya/MDagPath.h>
 #include <maya/MPointArray.h>
-#include <maya/MDagModifier.h>
+#include <maya/MIntArray.h>
+
+class MDagPath;
 
 namespace mayaMVG {
 

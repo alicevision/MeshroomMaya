@@ -1,5 +1,7 @@
 #pragma once
 
+#include <maya/M3dView.h>
+
 namespace mayaMVG {
 
 struct MVGDrawUtil {

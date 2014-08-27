@@ -69,4 +69,4 @@ struct MVGMayaUtil {
     static MStatus getRedoName(MString& redoName);
 };
 
-} // mayaMVG
+} // namespace

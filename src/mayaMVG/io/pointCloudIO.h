@@ -1,14 +1,12 @@
 #pragma once
 
 #include "mayaMVG/core/MVGPointCloud.h"
-#include "mayaMVG/io/pointCloudIO.h"
-#include "mayaMVG/core/MVGLog.h"
+#include "mayaMVG/core/MVGPointCloudItem.h"
 #include <software/SfMViewer/Ply.h>
 
-
 namespace mayaMVG {
-	
-bool readPointCloud(std::string filePath)	
+
+bool readPointCloud(std::string filePath)
 {
 	MVGPointCloud pointCloud(MVGProject::_CLOUD);
 	if(!pointCloud.isValid()) {
@@ -110,4 +108,4 @@ bool readPointCloud(std::string filePath)
 	return true;
 }
 
-} // mayaMVG
+} // namespace

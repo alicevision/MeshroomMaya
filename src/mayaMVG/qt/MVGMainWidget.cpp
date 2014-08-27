@@ -2,10 +2,9 @@
 #include "mayaMVG/qt/QmlInstantCoding.h"
 #include "mayaMVG/qt/QWheelArea.h"
 #include "mayaMVG/maya/MVGMayaUtil.h"
-#include <QtDeclarative/qdeclarativecontext.h>
-#include <QGraphicsObject>
+#include "mayaMVG/qt/MVGCameraWrapper.h"
 
-using namespace mayaMVG;
+namespace mayaMVG {
 
 MVGMainWidget::MVGMainWidget(QWidget * parent)
 	: QWidget(parent)
@@ -47,3 +46,5 @@ QDeclarativeView* MVGMainWidget::view() const
 {
 	return _view;
 }
+
+} // namespace

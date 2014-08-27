@@ -1,10 +1,10 @@
 #include "mayaMVG/core/MVGNodeWrapper.h"
-#include "mayaMVG/core/MVGLog.h"
 #include "mayaMVG/maya/MVGMayaUtil.h"
+#include <maya/MGlobal.h>
 #include <maya/MFnDagNode.h>
 #include <maya/MSelectionList.h>
 
-using namespace mayaMVG;
+namespace mayaMVG {
 
 MVGNodeWrapper::MVGNodeWrapper()
 {
@@ -67,3 +67,5 @@ void MVGNodeWrapper::setName(const std::string& name)
 	MFnDagNode fn(_dagpath.transform()); // rename the transform node
 	fn.setName(name.c_str());
 }
+
+} // namespace

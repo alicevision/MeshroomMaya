@@ -2,8 +2,7 @@
 
 #include <QObject>
 #include <QSize>
-#include <QtDeclarative>
-#include <QDeclarativeListProperty>
+#include <QStringList>
 #include "mayaMVG/core/MVGCamera.h"
 
 namespace mayaMVG {

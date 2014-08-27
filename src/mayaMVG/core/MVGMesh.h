@@ -1,9 +1,11 @@
 #pragma once
 
 #include "mayaMVG/core/MVGNodeWrapper.h"
-#include <maya/MPointArray.h>
-#include <maya/MIntArray.h>
 #include <vector>
+
+class MPoint;
+class MPointArray;
+class MIntArray;
 
 namespace mayaMVG {
 
@@ -27,6 +29,7 @@ class MVGMesh : public MVGNodeWrapper  {
 		bool deletePolygon(const int index) const;
 		MStatus getPoints(MPointArray& pointArray) const;
         int getPolygonsCount() const;
+		MStatus getPolygonVertices(const int polygonId, MIntArray& vertexList) const;
 		const MIntArray getConnectedFacesToVertex(int vertexId) const;
 		const MIntArray getFaceVertices(int faceId) const;
 		MStatus getPoint(int vertexId, MPoint& point) const;

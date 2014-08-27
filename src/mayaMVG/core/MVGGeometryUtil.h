@@ -1,11 +1,11 @@
 #pragma once
 
 #include "openMVG/numeric/numeric.h"
-#include <maya/MPoint.h>
-#include <maya/MPointArray.h>
-#include <maya/M3dView.h>
-#include <vector>
-#include <algorithm>
+#include <maya/MVector.h>
+
+class MPoint;
+class MPointArray;
+class M3dView;
 
 namespace mayaMVG {
 
@@ -93,4 +93,4 @@ struct MVGGeometryUtil {
 	static bool edgesIntersection(MPoint A, MPoint B, MVector AD,  MVector BC);
 };
 
-} // mayaMVG
+} // namespace

@@ -1,14 +1,12 @@
 #include "mayaMVG/maya/context/MVGMoveManipulator.h"
-#include "mayaMVG/maya/context/MVGContext.h"
 #include "mayaMVG/maya/context/MVGDrawUtil.h"
-#include "mayaMVG/maya/cmd/MVGEditCmd.h"
 #include "mayaMVG/maya/MVGMayaUtil.h"
 #include "mayaMVG/core/MVGGeometryUtil.h"
 #include "mayaMVG/core/MVGMesh.h"
 #include "mayaMVG/qt/MVGUserLog.h"
-// #include "openMVG/multiview/triangulation.hpp"
+#include "mayaMVG/qt/MVGQt.h"
 
-using namespace mayaMVG;
+namespace mayaMVG {
 
 MTypeId MVGMoveManipulator::_id(0x99222); // FIXME /!\
 
@@ -660,3 +658,5 @@ void MVGMoveManipulator::drawUI(MHWRender::MUIDrawManager& drawManager, const MH
 	// TODO
 	drawManager.endDrawable();
 }
+
+} // namespace

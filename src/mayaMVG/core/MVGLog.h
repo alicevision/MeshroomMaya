@@ -40,4 +40,4 @@ namespace mayaMVG {
 					 std::cerr << s.str() << std::endl; \
 				   }
 
-} // mayaMVG
+} // namespace

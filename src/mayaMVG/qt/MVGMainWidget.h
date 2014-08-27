@@ -2,7 +2,8 @@
 
 #include "mayaMVG/qt/MVGProjectWrapper.h"
 #include <QtDeclarative/qdeclarativeview.h>
-#include <QWidget>
+
+class QWidget;
 
 namespace mayaMVG {
 

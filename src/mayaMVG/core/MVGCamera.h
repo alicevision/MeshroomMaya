@@ -1,16 +1,15 @@
 #pragma once
 
 #include "mayaMVG/core/MVGNodeWrapper.h"
-#include "mayaMVG/core/MVGPointCloudItem.h"
 #undef Success // needed by eigen..
-#include <openMVG/cameras/PinholeCamera.hpp>
-#include <maya/MPointArray.h>
+#include "openMVG/cameras/PinholeCamera.hpp"
 #include <vector>
 
 class MString;
-class MFnCamera;
 
 namespace mayaMVG {
+
+class MVGPointCloudItem;
 
 class MVGCamera : public MVGNodeWrapper {
 

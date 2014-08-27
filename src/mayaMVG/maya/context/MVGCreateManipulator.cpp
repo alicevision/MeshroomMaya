@@ -1,13 +1,12 @@
 #include "mayaMVG/maya/context/MVGCreateManipulator.h"
 #include "mayaMVG/maya/context/MVGDrawUtil.h"
-#include "mayaMVG/maya/cmd/MVGEditCmd.h"
 #include "mayaMVG/maya/MVGMayaUtil.h"
 #include "mayaMVG/core/MVGGeometryUtil.h"
 #include "mayaMVG/core/MVGMesh.h"
 #include "mayaMVG/qt/MVGUserLog.h"
 #include "mayaMVG/qt/MVGQt.h"
 
-using namespace mayaMVG;
+namespace mayaMVG {
 
 class MVGContext;
 
@@ -451,6 +450,8 @@ bool MVGCreateManipulator::createFace(M3dView& view, MVGManipulatorUtil::Display
     MDagPath emptyPath;
     if(!_manipUtil->addCreateFaceCommand(emptyPath, facePoints3D))
         return false;
-    
+
     return true;
 }
+
+} // namespace

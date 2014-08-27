@@ -3,8 +3,9 @@
 #include "mayaMVG/core/MVGCamera.h"
 #include <maya/MPointArray.h>
 #include <maya/MIntArray.h>
-#include <maya/M3dView.h>
 #include <map>
+
+class M3dView;
 
 namespace mayaMVG {
 
@@ -99,4 +100,4 @@ class MVGManipulatorUtil {
 		std::map<std::string, std::vector<MIntArray> > _cacheMeshToEdgeArray; // Map from meshName to edge points ID (Temporary)
 };
 
-} // mayaMVG
+} // namespace

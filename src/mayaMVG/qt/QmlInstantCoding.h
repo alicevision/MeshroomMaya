@@ -3,9 +3,6 @@
 #include <QtCore>
 #include <QtDeclarative>
 #include "QtDeclarative/qdeclarativeview.h"
-#include <iostream>
-#include <ctime>
-#include "mayaMVG/core/MVGLog.h"
 
 namespace mayaMVG {
 

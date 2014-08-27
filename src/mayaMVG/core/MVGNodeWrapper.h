@@ -27,4 +27,4 @@ class MVGNodeWrapper {
 		MDagPath _dagpath;
 };
 
-} // mayaMVG
+} // namespace

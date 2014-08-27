@@ -1,8 +1,7 @@
 #pragma once
 
 #include <QObject>
-#include <QFileDialog>
-#include "mayaMVG/qt/MVGCameraWrapper.h"
+#include <QStringList>
 #include "mayaMVG/core/MVGProject.h"
 #include "mayaMVG/qt/QObjectListModel.h"
 

@@ -1,7 +1,8 @@
 #include "mayaMVG/qt/QmlInstantCoding.h"
+#include "mayaMVG/core/MVGLog.h"
 #include <QDir>
 
-using namespace mayaMVG;
+namespace mayaMVG {
 
 QmlInstantCoding::QmlInstantCoding (QDeclarativeView* attachedView, bool watching, bool watchSource, bool verbose)
 : QObject(attachedView)
@@ -216,3 +217,4 @@ void QmlInstantCoding::onFileChanged(const QString& sourceFile)
 
 }
 
+} // namespace

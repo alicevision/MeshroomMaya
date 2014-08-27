@@ -9,15 +9,12 @@
 #include "mayaMVG/core/MVGProject.h"
 #include "mayaMVG/core/MVGPointCloud.h"
 #include <maya/MMatrix.h>
-#include <maya/MItDependencyNodes.h>
-#include <maya/MFnDependencyNode.h>
 #include <maya/MFnMesh.h>
 #include <maya/MItMeshEdge.h>
 #include <maya/MItMeshVertex.h>
-#include <maya/MItMeshPolygon.h>
 
-using namespace mayaMVG;
-	
+namespace mayaMVG {
+
 MVGManipulatorUtil::MVGManipulatorUtil(MVGContext* context)
 	: _context(context)
 	, _intersectionState(eIntersectionNone)
@@ -430,3 +427,5 @@ bool MVGManipulatorUtil::addUpdateFaceCommand(const MDagPath& meshPath, const MP
     rebuild();
 	return true;
 }
+
+} // namespace

@@ -1,8 +1,9 @@
 #include "mayaMVG/core/MVGPointCloud.h"
+#include "mayaMVG/core/MVGPointCloudItem.h"
 #include "mayaMVG/core/MVGCamera.h"
 #include "mayaMVG/core/MVGLog.h"
-#include "mayaMVG/maya/MVGMayaUtil.h"
 #include "mayaMVG/core/MVGProject.h"
+#include "mayaMVG/maya/MVGMayaUtil.h"
 #include <maya/MFnParticleSystem.h>
 #include <maya/MVectorArray.h>
 #include <maya/MPointArray.h>
@@ -13,7 +14,7 @@
 #include <maya/MPlug.h>
 #include <stdexcept>
 
-using namespace mayaMVG;
+namespace mayaMVG {
 
 // dynamic attributes
 MString MVGPointCloud::_RGBPP = "rgbPP";
@@ -117,3 +118,5 @@ std::vector<MVGPointCloudItem> MVGPointCloud::getItems() const
 	}
 	return items;
 }
+
+} // namespace

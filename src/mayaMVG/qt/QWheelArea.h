@@ -1,23 +1,20 @@
 #ifndef QWHEELAREA_H
 #define QWHEELAREA_H
- 
-#include <QDeclarativeItem>
-#include <QGraphicsSceneWheelEvent>
-#include "mayaMVG/core/MVGLog.h"
- 
-#include <assert.h>
 
+#include <QDeclarativeItem>
+#include <QGraphicsSceneWheelEvent> 
+#include <assert.h>
 
 class QWheelArea : public QDeclarativeItem
 {
     Q_OBJECT
- 
+
 public:
     explicit QWheelArea(QDeclarativeItem *parent = 0)
 	: QDeclarativeItem(parent)
 	, _lastEvent(NULL)
 	{}
- 
+
 protected:
     void wheelEvent(QGraphicsSceneWheelEvent *event)
 	{

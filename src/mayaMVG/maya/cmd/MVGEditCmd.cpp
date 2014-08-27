@@ -1,12 +1,10 @@
-#include "mayaMVG/qt/MVGProjectWrapper.h"
-#include "mayaMVG/qt/MVGUserLog.h"
 #include "mayaMVG/maya/cmd/MVGEditCmd.h"
+#include "mayaMVG/qt/MVGUserLog.h"
 #include "mayaMVG/core/MVGMesh.h"
 #include "mayaMVG/core/MVGProject.h"
 #include <maya/MSyntax.h>
 #include <maya/MArgList.h>
 #include <maya/MArgDatabase.h>
-#include <maya/MGlobal.h>
 
 namespace { // empty
 
@@ -17,7 +15,7 @@ namespace { // empty
 
 } // empty
 
-using namespace mayaMVG;
+namespace mayaMVG {
 
 MString MVGEditCmd::name("MVGEditCmd");
 
@@ -164,3 +162,5 @@ void MVGEditCmd::doMove(const MDagPath& meshPath, const MPointArray& points, con
 	_points = points;
 	_indexes = verticesIndexes;
 }
+
+} // namespace

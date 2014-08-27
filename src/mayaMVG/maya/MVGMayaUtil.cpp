@@ -1,5 +1,3 @@
-#include "mayaMVG/qt/MVGProjectWrapper.h"
-
 #include "mayaMVG/maya/MVGMayaUtil.h"
 #include "mayaMVG/core/MVGCamera.h"
 #include "mayaMVG/core/MVGLog.h"
@@ -16,9 +14,8 @@
 #include <maya/MPlugArray.h>
 #include <maya/MCommonSystemUtils.h>
 #include <maya/MPointArray.h>
-#include <sstream>
 
-using namespace mayaMVG;
+namespace mayaMVG {
 
 MStatus MVGMayaUtil::createMVGWindow()
 {
@@ -80,7 +77,7 @@ bool MVGMayaUtil::getComplementaryView(const M3dView& view, M3dView& complementa
 	for(size_t i = 0; i < M3dView::numberOf3dViews(); ++i)
 	{
 		M3dView::get3dView(i, tmpView);
-		if(tmpView.widget() != view .widget()&& isMVGView(tmpView))
+		if(isMVGView(tmpView) && tmpView.widget() != view.widget())
 		{
 			complementaryView = tmpView;
 			return true;
@@ -444,3 +441,4 @@ MStatus MVGMayaUtil::getRedoName(MString& redoName)
 		"cmds.undoInfo( q=True, redoName=True )", redoName);
 }
 
+} // namespace
