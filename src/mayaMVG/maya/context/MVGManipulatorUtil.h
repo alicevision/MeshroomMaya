@@ -69,7 +69,7 @@ class MVGManipulatorUtil {
         bool computeEdgeIntersectionData(M3dView& view, DisplayData* data, const MPoint& mousePointInCameraCoord);
 
 		// draw
-		void drawPreview3D();
+		void drawPreview3D() const;
 
 		// commands
 		bool addCreateFaceCommand(const MDagPath& meshPath, const MPointArray& facePoints3D);

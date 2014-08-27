@@ -33,7 +33,7 @@ class MVGCameraWrapper : public QObject
 		const QString getImagePath() const { return QString::fromStdString(_camera.getImagePlane()); }
         bool isSelected() const { return _isSelected; }
 		void setIsSelected(const bool isSelected) { _isSelected = isSelected; Q_EMIT isSelectedChanged(); }
-		const QStringList getViews() { return _views; }
+		const QStringList getViews() const { return _views; }
         const QSize getSourceSize();
 		const qint64 getSourceWeight() const;
 

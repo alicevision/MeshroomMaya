@@ -310,7 +310,7 @@ MPoint MVGMoveManipulator::updateMouse(M3dView& view, short& mousex, short& mous
 	return mousePointInCameraCoord;
 }
 
-void MVGMoveManipulator::drawCursor(const float mousex, const float mousey)
+void MVGMoveManipulator::drawCursor(const float mousex, const float mousey) const
 {
 	MVGDrawUtil::drawArrowsCursor(mousex, mousey, _cursorColor);
     Qt::KeyboardModifiers modifiers = QApplication::keyboardModifiers();
@@ -321,8 +321,8 @@ void MVGMoveManipulator::drawCursor(const float mousex, const float mousey)
     else
         MVGDrawUtil::drawFullCross(mousex + 10, mousey + 10, 5, 1, _triangulateColor);
 }
-		
-void MVGMoveManipulator::drawIntersections(M3dView& view)
+
+void MVGMoveManipulator::drawIntersections(M3dView& view) const
 {
 	MVGManipulatorUtil::DisplayData* data = _manipUtil->getDisplayData(view);
 	if(!data || data->allPoints2D.empty())
@@ -392,7 +392,7 @@ void MVGMoveManipulator::drawIntersections(M3dView& view)
 	}
 }
 
-void MVGMoveManipulator::drawTriangulation(M3dView& view, MVGManipulatorUtil::DisplayData* data, const float mousex, const float mousey)
+void MVGMoveManipulator::drawTriangulation(M3dView& view, MVGManipulatorUtil::DisplayData* data, const float mousex, const float mousey) const
 {
     switch(_moveState) {
         case eMoveNone:
@@ -421,7 +421,7 @@ void MVGMoveManipulator::drawTriangulation(M3dView& view, MVGManipulatorUtil::Di
     }
 }
 
-void MVGMoveManipulator::computeTmpFaceOnMovePoint(M3dView& view, MVGManipulatorUtil::DisplayData* data, const MPoint& mousePoint, bool recomputePlane)
+void MVGMoveManipulator::computeTmpFaceOnMovePoint(M3dView& view, MVGManipulatorUtil::DisplayData* data, const MPoint& mousePoint, bool recomputePlane) const
 {
 	//
 	MVGManipulatorUtil::IntersectionData& intersectionData = _manipUtil->getIntersectionData();
@@ -469,8 +469,7 @@ void MVGMoveManipulator::computeTmpFaceOnMovePoint(M3dView& view, MVGManipulator
 	}
 }
 
-
-void MVGMoveManipulator::computeTmpFaceOnMoveEdge(M3dView& view, MVGManipulatorUtil::DisplayData* data, const MPoint& mousePoint, bool recompute)
+void MVGMoveManipulator::computeTmpFaceOnMoveEdge(M3dView& view, MVGManipulatorUtil::DisplayData* data, const MPoint& mousePoint, bool recompute) const
 {
     MVGManipulatorUtil::IntersectionData& intersectionData = _manipUtil->getIntersectionData();
     std::vector<MVGManipulatorUtil::MVGPoint2D>& meshPoints2D = data->allPoints2D[intersectionData.meshName];
@@ -565,7 +564,7 @@ void MVGMoveManipulator::computeTmpFaceOnMoveEdge(M3dView& view, MVGManipulatorU
 	}
 }
 
-bool MVGMoveManipulator::triangulate(M3dView& view, const MVGManipulatorUtil::IntersectionData& intersectionData, const MPoint& mousePointInCameraCoord, MPoint& resultPoint3D)
+bool MVGMoveManipulator::triangulate(M3dView& view, const MVGManipulatorUtil::IntersectionData& intersectionData, const MPoint& mousePointInCameraCoord, MPoint& resultPoint3D) const
 {
 	if(_manipUtil->getCacheCount() == 1) {
 		USER_WARNING("Can't triangulate with the same camera")
@@ -604,7 +603,7 @@ bool MVGMoveManipulator::triangulate(M3dView& view, const MVGManipulatorUtil::In
 	return true;
 }
 
-bool MVGMoveManipulator::triangulateEdge(M3dView& view, const MVGManipulatorUtil::IntersectionData& intersectionData, const MPoint& mousePointInCameraCoord, MPointArray& resultPoint3D)
+bool MVGMoveManipulator::triangulateEdge(M3dView& view, const MVGManipulatorUtil::IntersectionData& intersectionData, const MPoint& mousePointInCameraCoord, MPointArray& resultPoint3D) const
 {
 	if(_manipUtil->getCacheCount() == 1) {
 		USER_WARNING("Can't triangulate with the same camera")

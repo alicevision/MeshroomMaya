@@ -40,15 +40,15 @@ class MVGMoveManipulator: public MPxManipulatorNode
 	private:
 		MPoint updateMouse(M3dView& view, short& mousex, short& mousey);
 		// Draw
-		void drawCursor(const float mousex, const float mousey);
-		void drawIntersections(M3dView& view);
-		void drawTriangulation(M3dView& view, MVGManipulatorUtil::DisplayData* data, const float mousex, const float mousey);
+		void drawCursor(const float mousex, const float mousey) const;
+		void drawIntersections(M3dView& view) const;
+		void drawTriangulation(M3dView& view, MVGManipulatorUtil::DisplayData* data, const float mousex, const float mousey) const;
 
 		// Compute
-		void computeTmpFaceOnMovePoint(M3dView& view, MVGManipulatorUtil::DisplayData* data, const MPoint& mousePoint, bool recompute=false);
-		void computeTmpFaceOnMoveEdge(M3dView& view, MVGManipulatorUtil::DisplayData* data, const MPoint& mousePoint, bool recompute=false);
-		bool triangulate(M3dView& view, const MVGManipulatorUtil::IntersectionData& intersectionData, const MPoint& mousePointInCameraCoord, MPoint& resultPoint3D);
-		bool triangulateEdge(M3dView& view, const MVGManipulatorUtil::IntersectionData& intersectionData, const MPoint& mousePointInCameraCoord, MPointArray& resultPoint3D);
+		void computeTmpFaceOnMovePoint(M3dView& view, MVGManipulatorUtil::DisplayData* data, const MPoint& mousePoint, bool recompute=false) const;
+		void computeTmpFaceOnMoveEdge(M3dView& view, MVGManipulatorUtil::DisplayData* data, const MPoint& mousePoint, bool recompute=false) const;
+		bool triangulate(M3dView& view, const MVGManipulatorUtil::IntersectionData& intersectionData, const MPoint& mousePointInCameraCoord, MPoint& resultPoint3D) const;
+		bool triangulateEdge(M3dView& view, const MVGManipulatorUtil::IntersectionData& intersectionData, const MPoint& mousePointInCameraCoord, MPointArray& resultPoint3D) const;
 
 public:
 		static MTypeId _id;

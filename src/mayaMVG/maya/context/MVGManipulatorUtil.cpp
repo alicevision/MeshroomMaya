@@ -163,7 +163,7 @@ bool MVGManipulatorUtil::computeEdgeIntersectionData(M3dView& view, DisplayData*
 	return false;
 }
 
-void MVGManipulatorUtil::drawPreview3D()
+void MVGManipulatorUtil::drawPreview3D() const
 {
 	if(_previewFace3D.length() > 0)
 	{

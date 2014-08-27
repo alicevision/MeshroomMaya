@@ -21,7 +21,7 @@ class MVGNodeWrapper {
 	public:
 		const MDagPath& getDagPath() const;
 		std::string getName() const;
-		void setName(const std::string&);
+		void setName(const std::string&) const;
 
 	protected:
 		MDagPath _dagpath;

@@ -62,7 +62,7 @@ std::string MVGNodeWrapper::getName() const
 	return fn.name().asChar();
 }
 
-void MVGNodeWrapper::setName(const std::string& name)
+void MVGNodeWrapper::setName(const std::string& name) const
 {
 	MFnDagNode fn(_dagpath.transform()); // rename the transform node
 	fn.setName(name.c_str());
