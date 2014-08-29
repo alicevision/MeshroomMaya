@@ -130,7 +130,7 @@ void MVGProjectWrapper::setCameraToView(QObject* camera, const QString& viewName
 
 void MVGProjectWrapper::clear() {
 	_cameraList.clear();
-	setProjectDirectory("");
+	Q_EMIT projectDirectoryChanged();
 }
 
 void MVGProjectWrapper::reloadMVGCamerasFromMaya()
