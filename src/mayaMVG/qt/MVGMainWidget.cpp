@@ -34,8 +34,8 @@ MVGMainWidget::MVGMainWidget(QWidget * parent)
 	_view->setResizeMode(QDeclarativeView::SizeRootObjectToView);
 
 	// Instant coding
-	QmlInstantCoding* qic = new QmlInstantCoding(_view, true);
-	qic->addFilesFromDirectory(importDirectory, true);
+	// QmlInstantCoding* qic = new QmlInstantCoding(_view, true);
+	// qic->addFilesFromDirectory(importDirectory, true);
 }
 
 MVGMainWidget::~MVGMainWidget()
