@@ -10,6 +10,7 @@
 #include <maya/MItDependencyNodes.h>
 #include <maya/MGlobal.h>
 #include <maya/MPointArray.h>
+#include <maya/MFloatPointArray.h>
 
 namespace mayaMVG {
 
@@ -109,12 +110,6 @@ bool MVGMesh::addPolygon(const MPointArray& pointArray, int& index) const
 	CHECK_RETURN_VARIABLE(status, false)
 	fnMesh.updateSurface();
 
-	// FIXME - remove this
-	// this command was introduced here to fix the 'mergeVertice' issue
-//	MString command;
-//	command.format("select -r ^1s;BakeAllNonDefHistory;polyMergeVertex -d 0.001 ^1s;select -cl;", fnMesh.dagPath().fullPathName());
-//	MGlobal::executeCommand(command, false, false);
-
 	return true;
 }
 
@@ -191,8 +186,22 @@ MStatus MVGMesh::setPoint(int vertexId, MPoint& point) const
 	MStatus status;
 	MFnMesh fnMesh(_dagpath, &status);
 	CHECK_RETURN_STATUS(status);
-	status = fnMesh.setPoint(vertexId, point, MSpace::kWorld);
+
+	// FIXME - vertex merge issue
+	//       - don't use the MFnMesh::setPoint
+	
+	MIntArray polygonCounts;
+	MIntArray polygonConnects;
+	status = fnMesh.getVertices(polygonCounts, polygonConnects);
+	MFloatPointArray meshVertices;
+	fnMesh.getPoints(meshVertices, MSpace::kObject);
+	if(vertexId >= meshVertices.length())
+		return MS::kFailure;
+	meshVertices[vertexId] = MFloatPoint(point.x, point.y, point.z);
+	status = fnMesh.createInPlace(fnMesh.numVertices(), fnMesh.numPolygons(), meshVertices, polygonCounts, polygonConnects);
+	CHECK(status)
 	fnMesh.updateSurface();
+
 	CHECK_RETURN_STATUS(status)
 	return status;
 }
