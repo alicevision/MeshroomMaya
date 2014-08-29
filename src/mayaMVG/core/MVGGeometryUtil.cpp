@@ -65,11 +65,22 @@ namespace { // empty namespace
 
 MPoint MVGGeometryUtil::worldToView(M3dView& view, const MPoint& world)
 {
+	// Don't use view.worldToView() because of the short values
     MStatus status;
-	short x, y;
-	view.worldToView(world, x, y, &status);
-    CHECK(status)
-	return MPoint(x, y);
+	MMatrix modelViewMatrix, projectionMatrix;
+	status = view.modelViewMatrix(modelViewMatrix);
+	status = view.projectionMatrix(projectionMatrix);
+	CHECK(status)
+	MPoint point = world*(modelViewMatrix*projectionMatrix);
+	
+	unsigned int viewportX, viewportY, viewportWidth, viewportHeight;
+	view.viewport(viewportX, viewportY, viewportWidth, viewportHeight);
+	
+	MPoint viewPoint;
+	viewPoint.x =static_cast<int>(static_cast<double>(viewportWidth) * (point.x / point.w + 1.0) / 2.0);
+	viewPoint.y =static_cast<int>(static_cast<double>(viewportHeight) * (point.y / point.w + 1.0) / 2.0);
+
+	return viewPoint;
 }
 
 MPoint MVGGeometryUtil::viewToWorld(M3dView& view, const MPoint& screen)
@@ -81,28 +92,28 @@ MPoint MVGGeometryUtil::viewToWorld(M3dView& view, const MPoint& screen)
 	return wpoint;
 }
 
-void MVGGeometryUtil::viewToCamera(M3dView& view, const short x, const short y, MPoint& point)
+void MVGGeometryUtil::viewToCamera(M3dView& view, const MPoint& viewPoint, MPoint& point)
 {
+	double portHeight = (double)view.portHeight();
+	double portWidth = (double)view.portWidth();
+	
 	MDagPath dagPath;
 	view.getCamera(dagPath);
     MVGCamera camera(dagPath);
-	point.x = ((float)x / view.portWidth()) - 0.5;
-	point.y = ((float)y / view.portWidth()) - 0.5 - 0.5 * ((view.portHeight() / (float)view.portWidth()) - 1.0 );
-	point.z = 0.f;
-	// zoom  
+	point.x = (viewPoint.x / portWidth) - 0.5;
+	point.y = (viewPoint.y / portWidth) - 0.5 - 0.5 * (portHeight / portWidth - 1.0 );
+	point.z = 0.;
+	// zoom
 	point =  point * camera.getHorizontalFilmAperture() * camera.getZoom();
 	// pan
 	point.x += camera.getHorizontalPan();
-	point.y += camera.getVerticalPan();     
+	point.y += camera.getVerticalPan();  
 }
 
  void MVGGeometryUtil::worldToCamera(M3dView& view, const MPoint& worldPoint, MPoint& point)
 {
-    MStatus status;
-	short x, y;
-	view.worldToView(worldPoint, x, y, &status);
-    CHECK(status)
-	viewToCamera(view, x, y, point);
+	MPoint viewPoint = worldToView(view, worldPoint);
+	viewToCamera(view, viewPoint, point);
 }
 
 void MVGGeometryUtil::cameraToView(M3dView& view, const MPoint& point, MPoint& viewPoint)

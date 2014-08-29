@@ -21,14 +21,12 @@ MVGManipulatorUtil::MVGManipulatorUtil(MVGContext* context)
 	_intersectionData.pointIndex = -1;
 }
 
-bool MVGManipulatorUtil::intersectPoint(M3dView& view, DisplayData* displayData, const short&x, const short& y)
+bool MVGManipulatorUtil::intersectPoint(M3dView& view, DisplayData* displayData, const MPoint& pointInCameraCoordinates)
 {
 	if(!displayData)
 		return false;
-	
+
 	double threshold = (POINT_RADIUS*displayData->camera.getZoom())/(double)view.portWidth();
-	MPoint mousePoint;
-	MVGGeometryUtil::viewToCamera(view, x, y, mousePoint);
 	std::map<std::string, std::vector<MVGPoint2D> >& meshMap = displayData->allPoints2D;
 	for(std::map<std::string, std::vector<MVGPoint2D> >::iterator it = meshMap.begin(); it != meshMap.end(); ++it)
 	{
@@ -37,8 +35,8 @@ bool MVGManipulatorUtil::intersectPoint(M3dView& view, DisplayData* displayData,
 		{
 			MPoint p;
 			MVGGeometryUtil::worldToCamera(view, meshPoints[i].point3D, p);
-			if(p.x <= mousePoint.x + threshold && p.x >= mousePoint.x - threshold
-			&& p.y <= mousePoint.y + threshold && p.y >= mousePoint.y - threshold)
+			if(p.x <= pointInCameraCoordinates.x + threshold && p.x >= pointInCameraCoordinates.x - threshold
+			&& p.y <= pointInCameraCoordinates.y + threshold && p.y >= pointInCameraCoordinates.y - threshold)
 			{
 				_intersectionData.pointIndex = i;
 				_intersectionData.meshName =  it->first;
@@ -51,26 +49,23 @@ bool MVGManipulatorUtil::intersectPoint(M3dView& view, DisplayData* displayData,
 	return false;
 }
 
-bool MVGManipulatorUtil::intersectEdge(M3dView& view, DisplayData* displayData, const short&x, const short& y)
+bool MVGManipulatorUtil::intersectEdge(M3dView& view, DisplayData* displayData, const MPoint& pointInCameraCoordinates)
 {
 	if(!displayData)
 		return false;
-	
-	MPoint mousePoint;
-	MVGGeometryUtil::viewToCamera(view, x, y, mousePoint);
-	
+
 	double minDistanceFound = -1.0;
 	double distance;
 	MIntArray tmp;
 	std::string tmpMesh;
-	
+
 	// Browse meshes
 	for(std::map<std::string, std::vector<MIntArray> >::iterator it = _cacheMeshToEdgeArray.begin(); it != _cacheMeshToEdgeArray.end(); ++it)
 	{
 		std::vector<MIntArray>& edgesArray = it->second;
 		if(edgesArray.size() < 1)
 			return false;
-		
+
 		// Browse edges
 		std::vector<MVGPoint2D>& mvgPoints = displayData->allPoints2D[it->first];
 		for(std::vector<MIntArray>::iterator edgeIt = edgesArray.begin(); edgeIt != edgesArray.end(); ++edgeIt)
@@ -82,52 +77,46 @@ bool MVGManipulatorUtil::intersectEdge(M3dView& view, DisplayData* displayData, 
 			MVGGeometryUtil::worldToCamera(view, mvgPoints[(*edgeIt)[1]].point3D, B);
 
 			MVector AB = B - A;
-			MVector PA = A - mousePoint;
-			MVector AP = mousePoint - A;
-			MVector BP = mousePoint - B;
-			MVector BA = A -B;
-			// Dot signs			
-			int sign1, sign2;
-			((AP*AB) > 0) ? sign1 = 1 : sign1 = -1;
-			((BP*BA) > 0) ? sign2 = 1 : sign2 = -1;
-			if(sign1 != sign2)
+			MVector AP = pointInCameraCoordinates - A;
+
+			// Projected point on segment
+			double AHLenght = (AB*AP)/ AB.length();
+			if(AHLenght > AB.length() || AP*AB < 0.)
 				continue;
-			// length of orthogonal projection on edge
-			double s = MVGGeometryUtil::crossProduct2D(AB, PA) / (AB.length()*AB.length());
-			if(s < 0)
-				s *= -1;
-			distance = s * AB.length();
+
+			distance = sqrt(pow(AP.length(), 2) - pow(AHLenght, 2));				
 			if(minDistanceFound < 0.0 || distance < minDistanceFound)
 			{
 				tmp.clear();
 				tmp.append((*edgeIt)[0]);
 				tmp.append((*edgeIt)[1]);
 				tmpMesh = it->first;
-				minDistanceFound = distance;
+				minDistanceFound = distance;	
 			}
 		}
 	}
 
-	double threshold = (POINT_RADIUS*displayData->camera.getZoom())/(double)view.portWidth();
+ 	double threshold = (POINT_RADIUS*displayData->camera.getZoom())/(double)view.portWidth();
 	if(minDistanceFound < -threshold || minDistanceFound > threshold)
 	{
 		resetIntersections();
 		return false;
 	}
-	
+
 	_intersectionData.edgePointIndexes = tmp;
 	_intersectionData.meshName = tmpMesh;
+
 	return true;
 }
 
-void MVGManipulatorUtil::updateIntersectionState(M3dView& view, DisplayData* data, double mousex, double mousey)
+void MVGManipulatorUtil::updateIntersectionState(M3dView& view, DisplayData* data, const MPoint& mousePointInCameraCoordinates)
 {
     if(data->allPoints2D.empty())
         return;
 	resetIntersections();
-	if(intersectPoint(view, data, mousex, mousey))
+	if(intersectPoint(view, data, mousePointInCameraCoordinates))
 		_intersectionState = MVGManipulatorUtil::eIntersectionPoint;
-	else if(intersectEdge(view, data, mousex, mousey))
+	else if(intersectEdge(view, data, mousePointInCameraCoordinates))
 		_intersectionState = MVGManipulatorUtil::eIntersectionEdge;
 }
 

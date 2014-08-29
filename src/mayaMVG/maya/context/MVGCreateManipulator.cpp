@@ -51,13 +51,15 @@ void MVGCreateManipulator::draw(M3dView & view, const MDagPath & path,
     glDisable(GL_POLYGON_STIPPLE);
     glDisable(GL_LINE_STIPPLE);
 
+	// glXQueryVersion(NULL, NULL, NULL);	// Breakpoint in gDebugger
+	
     // Enable Alpha
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
 
-    // update mouse coordinates & get it in camera space
-    short mousex, mousey;
-    MPoint mousePoint = updateMouse(view, mousex, mousey);
+	// update mouse coordinates
+	 short mousex, mousey;
+	 mousePosition(mousex, mousey);
 
     {
         // enable gl picking
@@ -112,12 +114,10 @@ MStatus MVGCreateManipulator::doPress(M3dView& view)
 		data = _manipUtil->getDisplayData(view);
 	if(!data)
 		return MS::kFailure;
-	
-	short mousex, mousey;
-	MPoint mousePoint;
-	mousePoint = updateMouse(view, mousex, mousey);
 
-    _manipUtil->updateIntersectionState(view, data, mousex, mousey);
+	MPoint mousePoint = updateMouse(view);
+
+    _manipUtil->updateIntersectionState(view, data, mousePoint);
     // Clear buildPoint of the complementary view
     if(data->buildPoints2D.length() == 0 && _manipUtil->getCacheCount() > 1)
     {
@@ -193,10 +193,9 @@ MStatus MVGCreateManipulator::doMove(M3dView& view, bool& refresh)
 		data = _manipUtil->getDisplayData(view);
 	if(!data)
 		return MS::kFailure;
-	
-	short mousex, mousey;
-	mousePosition(mousex, mousey);
-	_manipUtil->updateIntersectionState(view, data, mousex, mousey);
+
+	MPoint mousePosition = updateMouse(view);
+	_manipUtil->updateIntersectionState(view, data, mousePosition);
 
 	return MPxManipulatorNode::doMove(view, refresh);
 }
@@ -208,20 +207,12 @@ MStatus MVGCreateManipulator::doDrag(M3dView& view)
 		data = _manipUtil->getDisplayData(view);
 	if(!data)
 		return MS::kFailure;
-	
-	short mousex, mousey;
-	MPoint mousePoint;
-	mousePoint = updateMouse(view, mousex, mousey);
 
-	switch(_createState) {
-		case eCreateNone:
-        case eCreateFace:
-			break;
-		case eCreateExtend:
-		{
-			computeTmpFaceOnEdgeExtend(view, data, mousePoint);
-			break;
-		}
+	MPoint mousePoint = updateMouse(view);
+	if(_createState == eCreateExtend)
+	{
+		MPoint mousePoint = updateMouse(view);
+		computeTmpFaceOnEdgeExtend(view, data, mousePoint);
 	}
 	return MPxManipulatorNode::doDrag(view);
 }
@@ -239,11 +230,12 @@ void MVGCreateManipulator::drawUI(MHWRender::MUIDrawManager& drawManager, const 
 }
 
 
-MPoint MVGCreateManipulator::updateMouse(M3dView& view, short& mousex, short& mousey)
+MPoint MVGCreateManipulator::updateMouse(M3dView& view)
 {
-	mousePosition(mousex, mousey);
+	short x, y;
+	mousePosition(x, y);
 	MPoint mousePointInCameraCoord;
-	MVGGeometryUtil::viewToCamera(view, mousex, mousey, mousePointInCameraCoord);
+	MVGGeometryUtil::viewToCamera(view, MPoint(x, y), mousePointInCameraCoord);
 	return mousePointInCameraCoord;
 }
 

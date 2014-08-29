@@ -63,9 +63,9 @@ class MVGManipulatorUtil {
 		MPointArray& getPreviewFace3D() { return _previewFace3D; }
 
 		// intersections
-		bool intersectPoint(M3dView& view, DisplayData* displayData, const short&x, const short& y);
-		bool intersectEdge(M3dView& view, DisplayData* displayData, const short&x, const short& y);
-		void updateIntersectionState(M3dView& view, DisplayData* data, double mousex, double mousey);
+		bool intersectPoint(M3dView& view, DisplayData* displayData, const MPoint& point);
+		bool intersectEdge(M3dView& view, DisplayData* displayData, const MPoint& point);
+		void updateIntersectionState(M3dView& view, DisplayData* data, const MPoint& mousePointInCameraCoordinates);
         bool computeEdgeIntersectionData(M3dView& view, DisplayData* data, const MPoint& mousePointInCameraCoord);
 
 		// draw

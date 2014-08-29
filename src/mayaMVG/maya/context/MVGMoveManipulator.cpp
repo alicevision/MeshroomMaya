@@ -77,12 +77,12 @@ void MVGMoveManipulator::draw(M3dView & view, const MDagPath & path,
 		view.endGL();
 		return;
 	}
-	
-	// update mouse coordinates & get it in camera space
-	short mousex, mousey;
-	MPoint mousePoint = updateMouse(view, mousex, mousey);
 
-	// draw 
+	// update mouse coordinates
+	short mousex, mousey;
+	mousePosition(mousex, mousey);
+
+	// draw
 	drawCursor(mousex, mousey);
 	drawIntersections(view);
     Qt::KeyboardModifiers modifiers = QApplication::keyboardModifiers();
@@ -107,10 +107,9 @@ MStatus MVGMoveManipulator::doPress(M3dView& view)
 	if(!data)
 		return MS::kFailure;
 
-	short mousex, mousey;
-	MPoint mousePoint = updateMouse(view, mousex, mousey);
-	MVGManipulatorUtil::IntersectionData& intersectionData = _manipUtil->getIntersectionData();	
-	_manipUtil->updateIntersectionState(view, data, mousex, mousey);
+	MPoint mousePoint = updateMouse(view);
+	MVGManipulatorUtil::IntersectionData& intersectionData = _manipUtil->getIntersectionData();
+	_manipUtil->updateIntersectionState(view, data, mousePoint);
 
     Qt::KeyboardModifiers modifiers = QApplication::keyboardModifiers();
 	switch(_manipUtil->getIntersectionState())
@@ -149,9 +148,8 @@ MStatus MVGMoveManipulator::doRelease(M3dView& view)
 		data = _manipUtil->getDisplayData(view);
 	if(!data)
 		return MS::kFailure;
-	
-	short mousex, mousey;
-	MPoint mousePoint = updateMouse(view, mousex, mousey);
+
+	MPoint mousePoint = updateMouse(view);
 
 	MVGManipulatorUtil::IntersectionData& intersectionData = _manipUtil->getIntersectionData();
     Qt::KeyboardModifiers modifiers = QApplication::keyboardModifiers();
@@ -232,11 +230,10 @@ MStatus MVGMoveManipulator::doMove(M3dView& view, bool& refresh)
 	if(!data)
 		return MS::kFailure;
 
-	short mousex, mousey;
-	mousePosition(mousex, mousey);
+	MPoint mousePoint = updateMouse(view);
 
 	if(data->allPoints2D.size() > 0)
-		_manipUtil->updateIntersectionState(view, data, mousex, mousey);
+		_manipUtil->updateIntersectionState(view, data, mousePoint);
 	return MPxManipulatorNode::doMove(view, refresh);
 }
 
@@ -248,8 +245,7 @@ MStatus MVGMoveManipulator::doDrag(M3dView& view)
 	if(!data)
 		return MS::kFailure;
 
-	short mousex, mousey;
-	MPoint mousePoint = updateMouse(view, mousex, mousey);
+	MPoint mousePoint = updateMouse(view);
 
 	MVGManipulatorUtil::IntersectionData& intersectionData = _manipUtil->getIntersectionData();
 	std::vector<MVGManipulatorUtil::MVGPoint2D>& meshPoints = data->allPoints2D[intersectionData.meshName];
@@ -302,11 +298,13 @@ void MVGMoveManipulator::preDrawUI(const M3dView& view)
 }
 
 
-MPoint MVGMoveManipulator::updateMouse(M3dView& view, short& mousex, short& mousey)
+MPoint MVGMoveManipulator::updateMouse(M3dView& view)
 {
-	mousePosition(mousex, mousey);
+	short x, y;
+	mousePosition(x, y);
+	MPoint mouse(x, y);
 	MPoint mousePointInCameraCoord;
-	MVGGeometryUtil::viewToCamera(view, mousex, mousey, mousePointInCameraCoord);
+	MVGGeometryUtil::viewToCamera(view, mouse, mousePointInCameraCoord);
 	return mousePointInCameraCoord;
 }
 
@@ -408,7 +406,7 @@ void MVGMoveManipulator::drawTriangulation(M3dView& view, MVGManipulatorUtil::Di
         }
         case eMoveEdge: {
             MPoint mousePoint;
-            MVGGeometryUtil::viewToCamera(view, mousex, mousey, mousePoint);
+            MVGGeometryUtil::viewToCamera(view, MPoint(mousex, mousey), mousePoint);
             MPoint viewPoint1;
             MPoint viewPoint2;
             MPoint P1 = mousePoint + _manipUtil->getIntersectionData().edgeRatio * _manipUtil->getIntersectionData().edgeHeight2D;
