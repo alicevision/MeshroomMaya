@@ -128,6 +128,30 @@ void MVGProjectWrapper::setCameraToView(QObject* camera, const QString& viewName
     	MGlobal::executeCommand("mayaMVGTool -e -rebuild mayaMVGTool1");
 }
 
+bool MVGProjectWrapper::isPointCloudDisplayed(const QString panel)
+{
+	int result;
+	MString command;
+	command.format("modelEditor -q -dynamics ^1s", MString(panel.toStdString().c_str()));
+	MStatus status = MGlobal::executeCommand(command, result, false, false);
+	CHECK(status)
+	return result;
+}
+
+void MVGProjectWrapper::displayPointCloud(const QString panel, const bool display)
+{
+	MStatus status;
+	MString displayString;
+	displayString = display ? "true" : "false";
+	MString command;
+	status = command.format("modelEditor -e -dynamics ^1s ^2s", displayString, MString(panel.toStdString().c_str()));
+	CHECK(status)
+	status = MGlobal::executeCommand(command, false, false);
+	CHECK(status)
+	
+	Q_EMIT isPointCloudDisplayedChanged(panel);
+}
+
 void MVGProjectWrapper::clear() {
 	_cameraList.clear();
 	Q_EMIT projectDirectoryChanged();

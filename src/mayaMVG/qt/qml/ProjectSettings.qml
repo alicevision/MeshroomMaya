@@ -33,7 +33,7 @@ Item {
             State {
                 name: "OPEN"
                 when: m.isOpen
-                PropertyChanges { target: settings; height: 100; }
+                PropertyChanges { target: settings; height: 120; }
                 PropertyChanges { target: settings; opacity: 1; }
             }
         ]
@@ -87,8 +87,77 @@ Item {
                         text: "Thumbnail size"
                     }
                 }
+
+                Item {
+                    implicitHeight: 35
+                    implicitWidth: parent.width
+
+                    Connections {
+                         target: m.project
+                         onIsPointCloudDisplayedChanged:{
+                             if(panel === m.project.visiblePanelNames[0])
+                                pointCloudLCheckBox.checked = m.project.isPointCloudDisplayed(panel)
+                             else if(panel === m.project.visiblePanelNames[1])
+                                pointCloudRCheckBox.checked = m.project.isPointCloudDisplayed(panel)
+                         }
+                     }
+                    RowLayout {
+                        anchors.fill: parent
+
+                        Text {
+                            width: text.length
+                            text: "Display point cloud : "
+                            color: "white"
+                            font.pointSize: 11
+                        }
+
+                        CheckBox {
+                            id: pointCloudLCheckBox
+                            implicitHeight: parent.height
+                            implicitWidth: parent.height
+                            checked: m.project.isPointCloudDisplayed(m.project.visiblePanelNames[0])
+                            MouseArea {
+                                anchors.fill: parent
+                                onClicked: m.project.displayPointCloud(m.project.visiblePanelNames[0], !pointCloudLCheckBox.checked)
+                            }
+                        }
+
+                        Text {
+                            width: text.length
+                            text: "Left"
+                            color: "white"
+                            font.pointSize: 11
+                            MouseArea {
+                                anchors.fill: parent
+                                onClicked: m.project.displayPointCloud(m.project.visiblePanelNames[0], !pointCloudLCheckBox.checked)
+                            }
+                        }
+
+                        CheckBox {
+                            id: pointCloudRCheckBox
+                            implicitHeight: parent.height
+                            implicitWidth: parent.height
+                            checked: m.project.isPointCloudDisplayed(m.project.visiblePanelNames[1])
+                            MouseArea {
+                                anchors.fill: parent
+                                onClicked: m.project.displayPointCloud(m.project.visiblePanelNames[1], !pointCloudRCheckBox.checked)
+                            }
+                        }
+
+                        Text {
+                            Layout.horizontalSizePolicy: Layout.Expanding
+                            width: text.length
+                            text: "Right"
+                            color: "white"
+                            font.pointSize: 11
+                            MouseArea {
+                                anchors.fill: parent
+                                onClicked: m.project.displayPointCloud(m.project.visiblePanelNames[1], !pointCloudRCheckBox.checked)
+                            }
+                        }
+                    }
+                }
             }
         }
     }
-
 }
