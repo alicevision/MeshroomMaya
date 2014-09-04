@@ -1,8 +1,11 @@
+#include <QCoreApplication>
+
 #include "mayaMVG/qt/MVGProjectWrapper.h"
 #include "mayaMVG/qt/MVGCameraWrapper.h"
 #include "mayaMVG/maya/MVGMayaUtil.h"
 #include "mayaMVG/core/MVGLog.h"
 #include <maya/MQtUtil.h>
+
 
 namespace mayaMVG {
 
@@ -93,7 +96,10 @@ void MVGProjectWrapper::loadNewProject(const QString& projectDirectoryPath)
 	Q_EMIT projectDirectoryChanged();
 	
 	reloadMVGCamerasFromMaya();
-	// Select the two first cameras for the views
+	
+	qApp->processEvents();
+	
+//	 Select the two first cameras for the views
 	if(_cameraList.size() > 1) {
 		QList<MVGCameraWrapper*>& cameras = _cameraList.asQList<MVGCameraWrapper>();
 		setCameraToView(cameras[0], _visiblePanelNames[0], false);

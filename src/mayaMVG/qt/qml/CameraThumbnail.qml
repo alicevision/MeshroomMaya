@@ -19,19 +19,32 @@ Rectangle {
 
     Item {
         anchors.fill: parent
-        visible: cameraThumbnail.status == Image.Ready || cameraThumbnail.status == Image.Error
         anchors.verticalCenter: parent.verticalCenter
         // TODO: use max(width, height)
-        width: parent.width
-        height: parent.height
+
         Image {
             id: cameraThumbnail
             anchors.fill: parent
-            sourceSize.width: 400  // Use proxy buffer at smaller resolution
+            sourceSize.width: settings.sliderMaxValue  // Use proxy buffer at smaller resolution
             source: m.camera ? m.camera.imagePath : m.source
             asynchronous: true
-            //fillMode: Image.PreserveAspectFit
+            cache: true
+            // fillMode: Image.PreserveAspectFit
         }
+
+        Image {
+            id: thumbnailProgress
+            anchors.centerIn: parent
+            width: parent.width/3
+            height: parent.width/3
+            sourceSize.width: 50
+            source: "img/progress.png"
+            visible: cameraThumbnail.status != Image.Ready
+            RotationAnimation on rotation{
+                from: 0; to: 360; loops: Animation.Infinite; direction: RotationAnimation.Clockwise; duration: 1500
+            }
+        }
+
         ListView {
             id: viewList
             model: m.project.visiblePanelNames
