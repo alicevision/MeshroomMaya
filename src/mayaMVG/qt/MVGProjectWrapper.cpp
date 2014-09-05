@@ -94,12 +94,14 @@ void MVGProjectWrapper::loadNewProject(const QString& projectDirectoryPath)
 	}
 	_project.setProjectDirectory(projectDirectoryPath.toStdString());
 	Q_EMIT projectDirectoryChanged();
-	
+
 	reloadMVGCamerasFromMaya();
-	
+
+	// Set image planes in Maya takes a lot of time.
+	// So we ask Qt to process events (UI) before Maya will freeze the application.
 	qApp->processEvents();
-	
-//	 Select the two first cameras for the views
+
+	// Select the two first cameras for the views
 	if(_cameraList.size() > 1) {
 		QList<MVGCameraWrapper*>& cameras = _cameraList.asQList<MVGCameraWrapper>();
 		setCameraToView(cameras[0], _visiblePanelNames[0], false);
