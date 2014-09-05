@@ -57,6 +57,7 @@ set(MOC_HDRS
 	qt/MVGMainWidget.h
 	qt/MVGCameraWrapper.h
 	qt/MVGProjectWrapper.h
+	qt/MVGPanelWrapper.h
 	qt/QmlInstantCoding.h
 	qt/QObjectListModel.h
     qt/QWheelArea.h

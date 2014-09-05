@@ -11,9 +11,10 @@ namespace mayaMVG {
 
 MVGProjectWrapper::MVGProjectWrapper()
 {
-	_allPanelNames.append("mvgLPanel");
-	_allPanelNames.append("mvgRPanel");
-	_visiblePanelNames = _allPanelNames;
+	MVGPanelWrapper* leftPanel = new MVGPanelWrapper("mvgLPanel", "Left");
+	MVGPanelWrapper* rightPanel  = new MVGPanelWrapper("mvgRPanel", "Right");
+	_panelList.append(leftPanel);
+	_panelList.append(rightPanel);
 
     // Initialize currentContext
     MString context;
@@ -100,12 +101,12 @@ void MVGProjectWrapper::loadNewProject(const QString& projectDirectoryPath)
 	// Set image planes in Maya takes a lot of time.
 	// So we ask Qt to process events (UI) before Maya will freeze the application.
 	qApp->processEvents();
-
+	
 	// Select the two first cameras for the views
-	if(_cameraList.size() > 1) {
+	if(_cameraList.size() > 1 & _panelList.count() > 1) {
 		QList<MVGCameraWrapper*>& cameras = _cameraList.asQList<MVGCameraWrapper>();
-		setCameraToView(cameras[0], _visiblePanelNames[0], false);
-		setCameraToView(cameras[1], _visiblePanelNames[1], false);
+		setCameraToView(cameras[0], static_cast<MVGPanelWrapper*>(_panelList.get(0))->getName(), false);
+		setCameraToView(cameras[1], static_cast<MVGPanelWrapper*>(_panelList.get(1))->getName(), false);
 	}
 }
 
@@ -134,30 +135,6 @@ void MVGProjectWrapper::setCameraToView(QObject* camera, const QString& viewName
     // rebuild cache
     if(rebuildCache)
     	MGlobal::executeCommand("mayaMVGTool -e -rebuild mayaMVGTool1");
-}
-
-bool MVGProjectWrapper::isPointCloudDisplayed(const QString panel)
-{
-	int result;
-	MString command;
-	command.format("modelEditor -q -dynamics ^1s", MString(panel.toStdString().c_str()));
-	MStatus status = MGlobal::executeCommand(command, result, false, false);
-	CHECK(status)
-	return result;
-}
-
-void MVGProjectWrapper::displayPointCloud(const QString panel, const bool display)
-{
-	MStatus status;
-	MString displayString;
-	displayString = display ? "true" : "false";
-	MString command;
-	status = command.format("modelEditor -e -dynamics ^1s ^2s", displayString, MString(panel.toStdString().c_str()));
-	CHECK(status)
-	status = MGlobal::executeCommand(command, false, false);
-	CHECK(status)
-	
-	Q_EMIT isPointCloudDisplayedChanged(panel);
 }
 
 void MVGProjectWrapper::clear() {

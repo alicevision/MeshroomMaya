@@ -92,15 +92,6 @@ Item {
                     implicitHeight: 35
                     implicitWidth: parent.width
 
-                    Connections {
-                         target: m.project
-                         onIsPointCloudDisplayedChanged:{
-                             if(panel === m.project.visiblePanelNames[0])
-                                pointCloudLCheckBox.checked = m.project.isPointCloudDisplayed(panel)
-                             else if(panel === m.project.visiblePanelNames[1])
-                                pointCloudRCheckBox.checked = m.project.isPointCloudDisplayed(panel)
-                         }
-                     }
                     RowLayout {
                         anchors.fill: parent
 
@@ -115,21 +106,21 @@ Item {
                             id: pointCloudLCheckBox
                             implicitHeight: parent.height
                             implicitWidth: parent.height
-                            checked: m.project.isPointCloudDisplayed(m.project.visiblePanelNames[0])
+                            checked: m.project.panelList.get(0).isPointCloudDisplayed
                             MouseArea {
                                 anchors.fill: parent
-                                onClicked: m.project.displayPointCloud(m.project.visiblePanelNames[0], !pointCloudLCheckBox.checked)
+                                onClicked:m.project.panelList.get(0).isPointCloudDisplayed = !pointCloudLCheckBox.checked
                             }
                         }
 
                         Text {
                             width: text.length
-                            text: "Left"
+                            text: m.project.panelList.get(0).label
                             color: "white"
                             font.pointSize: 11
                             MouseArea {
                                 anchors.fill: parent
-                                onClicked: m.project.displayPointCloud(m.project.visiblePanelNames[0], !pointCloudLCheckBox.checked)
+                                onClicked: m.project.panelList.get(0).isPointCloudDisplayed = !pointCloudLCheckBox.checked
                             }
                         }
 
@@ -137,22 +128,22 @@ Item {
                             id: pointCloudRCheckBox
                             implicitHeight: parent.height
                             implicitWidth: parent.height
-                            checked: m.project.isPointCloudDisplayed(m.project.visiblePanelNames[1])
+                            checked: m.project.panelList.get(1).isPointCloudDisplayed
                             MouseArea {
                                 anchors.fill: parent
-                                onClicked: m.project.displayPointCloud(m.project.visiblePanelNames[1], !pointCloudRCheckBox.checked)
+                                onClicked: m.project.panelList.get(1).isPointCloudDisplayed = !pointCloudRCheckBox.checked
                             }
                         }
 
                         Text {
                             Layout.horizontalSizePolicy: Layout.Expanding
                             width: text.length
-                            text: "Right"
+                            text: m.project.panelList.get(1).label
                             color: "white"
                             font.pointSize: 11
                             MouseArea {
                                 anchors.fill: parent
-                                onClicked: m.project.displayPointCloud(m.project.visiblePanelNames[1], !pointCloudRCheckBox.checked)
+                                onClicked: m.project.panelList.get(1).isPointCloudDisplayed = !pointCloudRCheckBox.checked
                             }
                         }
                     }

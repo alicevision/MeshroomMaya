@@ -25,33 +25,39 @@ Rectangle {
         Image {
             id: cameraThumbnail
             anchors.fill: parent
-            sourceSize.width: settings.sliderMaxValue  // Use proxy buffer at smaller resolution
+            // Add 1.5 margin to add a correct resizing interpolation
+            sourceSize.width: settings.sliderMaxValue * 2 // Use proxy buffer at smaller resolution
             source: m.camera ? m.camera.imagePath : m.source
             asynchronous: true
             cache: true
             // fillMode: Image.PreserveAspectFit
         }
 
-        Image {
-            id: thumbnailProgress
+        Loader {
             anchors.centerIn: parent
             width: parent.width/3
-            height: parent.width/3
-            sourceSize.width: 50
-            source: "img/progress.png"
-            visible: cameraThumbnail.status != Image.Ready
-            RotationAnimation on rotation{
-                from: 0; to: 360; loops: Animation.Infinite; direction: RotationAnimation.Clockwise; duration: 1500
+            height: parent.height/3
+            sourceComponent: (cameraThumbnail.status != Image.Ready) ? thumbnailProgressComponent : undefined
+        }
+
+        Component {
+            id: thumbnailProgressComponent
+            Image {
+                id: thumbnailProgress
+                source: "img/progress.png"
+                RotationAnimation on rotation{
+                    from: 0; to: 360; loops: Animation.Infinite; direction: RotationAnimation.Clockwise; duration: 1500
+                }
             }
         }
 
         ListView {
             id: viewList
-            model: m.project.visiblePanelNames
+            model: m.project.panelList
             anchors.fill: parent
             orientation: ListView.Horizontal
             interactive: false;
-            property int itemWidth: (parent.width - spacing) / m.project.visiblePanelNames.length
+            property int itemWidth: (parent.width - spacing) / m.project.panelList.count
             spacing: 2
             delegate: Rectangle {
                 id: cameraSelection
@@ -62,7 +68,7 @@ Rectangle {
                 property variant views: m.camera.views
                 property bool isInView: false
                 onViewsChanged: {
-                    isInView = m.camera.isInView(model.modelData)
+                    isInView = m.camera.isInView(model.modelData.name)
                 }
                 states: [
                     State {
@@ -81,7 +87,7 @@ Rectangle {
                     anchors.fill: parent
                     hoverEnabled: true
                     onClicked: {
-                        m.project.setCameraToView(m.camera, model.modelData);
+                        m.project.setCameraToView(m.camera, model.modelData.name);
                     }
                 }
             }
