@@ -56,17 +56,31 @@ Rectangle {
             implicitWidth: 100
             Layout.horizontalSizePolicy: Layout.Expanding
             height: parent.height
+
+            MouseArea { // Place here to not block mouse event below
+                anchors.fill: parent
+                onClicked: {
+                    if(mouse.modifiers & Qt.ShiftModifier)
+                        multipleSelection(index)
+                    else {
+                        m.camera.select();
+                        selection(index)
+                    }
+                }
+            }
             ColumnLayout {
                 anchors.fill: parent
                 // title
                 Item {
                     width: parent.width
                     Layout.verticalSizePolicy: Layout.Expanding
-                    Text {
-                        text: m.camera.name
-                        font.pointSize: 12
-                        color: "white"
-                        anchors.verticalCenter: parent.verticalCenter
+                    TextInput {
+                       anchors.verticalCenter: parent.verticalCenter
+                       text: m.camera.name
+                       font.pointSize: 12
+                       readOnly: true
+                       selectByMouse: true
+                       color: "white"
                     }
                 }
                 // extra infos (see component below)
@@ -81,17 +95,7 @@ Rectangle {
                     }
                 }
             }
-            MouseArea {
-                anchors.fill: parent
-                onClicked: {
-                    if(mouse.modifiers & Qt.ShiftModifier)
-                        multipleSelection(index)
-                    else {
-                        m.camera.select();
-                        selection(index)
-                    }
-                }
-            }
+
         }
     }
     function convertWeight(weight)
@@ -105,6 +109,7 @@ Rectangle {
             return (Math.ceil(weight/1024)) + " ko"
         return Math.ceil((weight/1024).toString()) + " octets"
     }
+
     // COMPONENT extraInformation
     Component {
         id: extraInformation
@@ -114,11 +119,13 @@ Rectangle {
             Item {
                 width: parent.width
                 Layout.minimumHeight: childrenRect.height
-                Text {
-                    text: m.camera.imagePath
-                    elide: Text.ElideLeft
+                TextInput {
                     width: parent.width
+                    anchors.verticalCenter: parent.verticalCenter
+                    text: m.camera.imagePath
                     font.pointSize: 10
+                    readOnly: true
+                    selectByMouse: true
                     color: "#888888"
                 }
             }
@@ -126,11 +133,12 @@ Rectangle {
             Item {
                 width: parent.width
                 Layout.minimumHeight: childrenRect.height
-                Text {
-                    text: m.camera.sourceSize.width + "x" + m.camera.sourceSize.height
-                    elide: Text.ElideLeft
+                TextInput {
                     width: parent.width
+                    text: m.camera.sourceSize.width + "x" + m.camera.sourceSize.height
                     font.pointSize: 10
+                    readOnly: true
+                    selectByMouse: true
                     color: "#888888"
                 }
             }
@@ -138,11 +146,12 @@ Rectangle {
             Item {
                 width: parent.width
                 Layout.minimumHeight: childrenRect.height
-                Text {
-                    text: convertWeight(m.camera.sourceWeight)
-                    elide: Text.ElideLeft
+                TextInput {
                     width: parent.width
+                    text: convertWeight(m.camera.sourceWeight)
                     font.pointSize: 10
+                    readOnly: true
+                    selectByMouse: true
                     color: "#888888"
                 }
             }
