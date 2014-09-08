@@ -25,7 +25,7 @@ Rectangle {
         Image {
             id: cameraThumbnail
             anchors.fill: parent
-            // Add 1.5 margin to add a correct resizing interpolation
+            // Add 2 margin to add a correct resizing interpolation
             sourceSize.width: settings.sliderMaxValue * 2 // Use proxy buffer at smaller resolution
             source: m.camera ? m.camera.imagePath : m.source
             asynchronous: true
