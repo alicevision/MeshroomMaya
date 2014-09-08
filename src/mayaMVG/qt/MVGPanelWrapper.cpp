@@ -16,6 +16,12 @@ MVGPanelWrapper::MVGPanelWrapper(QString name)
 	MVGPanelWrapper(name, name);
 }
 
+void MVGPanelWrapper::setLabel(QString label)
+{ 
+	_label = label;
+	Q_EMIT labelChanged();
+}
+
 bool MVGPanelWrapper::isPointCloudDisplayed() const
 {
 	int result;
