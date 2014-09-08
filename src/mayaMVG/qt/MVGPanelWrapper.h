@@ -1,6 +1,8 @@
 #pragma once
 
 #include <QObject>
+#include <maya/MCallbackIdArray.h>
+#include <maya/MEventMessage.h>
 
 namespace mayaMVG {
 class MVGPanelWrapper : public QObject
@@ -15,6 +17,9 @@ class MVGPanelWrapper : public QObject
 public:
 	MVGPanelWrapper(QString name);
 	MVGPanelWrapper(QString name, QString label);
+	~MVGPanelWrapper();
+	
+	void emitIsPointCloudDisplayedChanged();
 
 public slots:
 	inline const QString& getName() const { return _name; }
@@ -23,7 +28,7 @@ public slots:
 	inline const bool getIsVisible() const { return _isVisible; }
 	bool isPointCloudDisplayed() const;
 	void displayPointCloud(const bool display);
-
+	
 signals:
 	void isPointCloudDisplayedChanged();
 	void labelChanged();
@@ -32,6 +37,8 @@ private:
 	QString _name;
 	QString _label;
 	bool _isVisible;
+	
+	MCallbackIdArray _mayaCallbackIds;
 };
 
 } // namespace
