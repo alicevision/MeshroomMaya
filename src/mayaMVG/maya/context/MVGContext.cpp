@@ -174,6 +174,10 @@ bool MVGContext::eventFilter(QObject *obj, QEvent *e)
 		QPointF offset = mouse_maya_center - mouseAfterZoo_maya_center;
         camera.setPan(camera.getHorizontalPan() - offset.x(), camera.getVerticalPan() + offset.y());
 	}
+	else if(e->type() == QEvent::Leave) {
+		// Reset camera path which is only set in QEvent::Enter (event not detected for QML view)
+		_eventData.cameraPath = MDagPath();
+	}
 	// mouse enters widget's boundaries
 	else if (e->type() == QEvent::Enter) {
 		// check if we are entering an MVG panel
