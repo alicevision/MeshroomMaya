@@ -24,7 +24,7 @@ def mvgCreateWindow():
     else:
         cmds.modelPanel('mvgLPanel', mbv=False, l='MVG leftView')
         cmds.modelEditor('mvgLPanel', e=True, grid=False, cameras=False, dynamics=False)
-        cmds.modelEditor('mvgLPanel', e=True, displayAppearance='smoothShaded', wireframeOnShaded=True)
+        cmds.modelEditor('mvgLPanel', e=True, xray=1, displayAppearance='smoothShaded', wireframeOnShaded=True)
     cmds.setParent('..')
     cmds.setParent('..')
     # second modelPanel
@@ -34,7 +34,7 @@ def mvgCreateWindow():
     else:
         cmds.modelPanel('mvgRPanel', mbv=False, l='MVG rightView')
         cmds.modelEditor('mvgRPanel', e=True, grid=False, cameras=False, dynamics=False)
-        cmds.modelEditor('mvgRPanel', e=True, displayAppearance='smoothShaded', wireframeOnShaded=True)
+        cmds.modelEditor('mvgRPanel', e=True, xray=1, displayAppearance='smoothShaded', wireframeOnShaded=True)
     cmds.setParent('..')
     cmds.setParent('..')
     # custom Qt content

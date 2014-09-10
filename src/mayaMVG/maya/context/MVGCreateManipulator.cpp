@@ -44,19 +44,20 @@ void MVGCreateManipulator::postConstructor()
 
 void MVGCreateManipulator::draw(M3dView & view, const MDagPath & path,
                                M3dView::DisplayStyle style, M3dView::DisplayStatus dispStatus)
-{
+{	
 	view.beginGL();
 
     // CLEAN the input maya OpenGL State
     glDisable(GL_POLYGON_STIPPLE);
     glDisable(GL_LINE_STIPPLE);
 
-	// glXQueryVersion(NULL, NULL, NULL);	// Breakpoint in gDebugger
-	
+	//glXQueryVersion(NULL, NULL, NULL);	// Breakpoint in gDebugger
+
     // Enable Alpha
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
 
+	_manipUtil->drawPreview3D();
 	// update mouse coordinates
 	 short mousex, mousey;
 	 mousePosition(mousex, mousey);
@@ -68,10 +69,7 @@ void MVGCreateManipulator::draw(M3dView & view, const MDagPath & path,
         glFirstHandle(glPickableItem);
         colorAndName(view, glPickableItem, true, mainColor());
 
-        // Preview 3D (while extending edge)
-        _manipUtil->drawPreview3D();
-
-        // Draw	
+        // Draw
         MVGDrawUtil::begin2DDrawing(view);
             MPoint center(0, 0);
             MVGDrawUtil::drawCircle2D(center, _cursorColor, 1, 5); // needed - FIXME
