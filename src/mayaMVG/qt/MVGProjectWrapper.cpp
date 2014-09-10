@@ -103,7 +103,7 @@ void MVGProjectWrapper::loadNewProject(const QString& projectDirectoryPath)
 	qApp->processEvents();
 	
 	// Select the two first cameras for the views
-	if(_cameraList.size() > 1 & _panelList.count() > 1) {
+	if(_cameraList.size() > 1 && _panelList.count() > 1) {
 		QList<MVGCameraWrapper*>& cameras = _cameraList.asQList<MVGCameraWrapper>();
 		setCameraToView(cameras[0], static_cast<MVGPanelWrapper*>(_panelList.get(0))->getName(), false);
 		setCameraToView(cameras[1], static_cast<MVGPanelWrapper*>(_panelList.get(1))->getName(), false);
