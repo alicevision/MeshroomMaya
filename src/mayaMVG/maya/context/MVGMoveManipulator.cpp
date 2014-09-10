@@ -54,14 +54,14 @@ void MVGMoveManipulator::draw(M3dView & view, const MDagPath & path,
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
 
+	// 3D drawing
+	_manipUtil->drawPreview3D();
+	
 	// enable GL picking, this will call manipulator::doPress/doRelease 
 	MGLuint glPickableItem;
 	glFirstHandle(glPickableItem);
 	colorAndName(view, glPickableItem, true, mainColor());
-		
-	// 3D drawing
-	_manipUtil->drawPreview3D();
-	
+			
 	// starts 2D drawing 
 	MVGDrawUtil::begin2DDrawing(view);
     MPoint center(0, 0);
