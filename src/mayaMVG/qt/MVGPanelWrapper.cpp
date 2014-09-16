@@ -4,21 +4,11 @@
 
 namespace mayaMVG {
 
-static void modelEditorChangedCB(void* userData)
-{
-	MVGPanelWrapper* panel = static_cast<MVGPanelWrapper*>(userData);
-	if(!panel)
-		return;
-
-	panel->emitIsPointCloudDisplayedChanged();
-}
-
 MVGPanelWrapper::MVGPanelWrapper(QString name, QString label)
 	: _name(name)
 	, _label(label)
 	, _isVisible(true)
 {
-	_mayaCallbackIds.append(MEventMessage::addEventCallback("modelEditorChanged", modelEditorChangedCB, this));
 }
 
 MVGPanelWrapper::MVGPanelWrapper(QString name)
@@ -28,7 +18,6 @@ MVGPanelWrapper::MVGPanelWrapper(QString name)
 
 MVGPanelWrapper::~MVGPanelWrapper()
 {
-	MMessage::removeCallbacks(_mayaCallbackIds);
 }
 
 void MVGPanelWrapper::setLabel(QString label)

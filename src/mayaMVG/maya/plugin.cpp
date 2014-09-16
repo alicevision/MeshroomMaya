@@ -1,6 +1,7 @@
 #include <maya/MFnPlugin.h>
 #include "mayaMVG/core/MVGLog.h"
 #include "mayaMVG/qt/MVGCameraWrapper.h"
+#include "mayaMVG/qt/MVGPanelWrapper.h"
 #include "mayaMVG/maya/MVGMayaUtil.h"
 #include "mayaMVG/maya/cmd/MVGCmd.h"
 #include "mayaMVG/maya/cmd/MVGEditCmd.h"
@@ -165,6 +166,26 @@ void nodeRemovedCB(MObject &node, void* /*clientData*/)
 	}
 }
 
+void modelEditorChangedCB(void* /*userData*/)
+{
+	QWidget* menuLayout = MVGMayaUtil::getMVGMenuLayout();
+	if(!menuLayout)
+		return;
+	MVGMainWidget* mvgMainWidget = menuLayout->findChild<MVGMainWidget*>("mvgMainWidget");
+	if(!mvgMainWidget)
+		return;	
+	MVGProjectWrapper& project = mvgMainWidget->getProjectWrapper();
+	
+	for(int i = 0; i < project.getPanelList()->count(); ++i)
+	{
+		MVGPanelWrapper* panel = static_cast<MVGPanelWrapper*>(project.getPanelList()->at(i));
+		if(!panel)
+			return;
+		
+		panel->emitIsPointCloudDisplayedChanged();
+	}
+}
+
 MStatus initializePlugin(MObject obj) {
 	MStatus status;
 	MFnPlugin plugin(obj, PLUGIN_COMPANY, "0.1.0", "Any");
@@ -193,7 +214,7 @@ MStatus initializePlugin(MObject obj) {
 	_mayaCallbackIds.append(MEventMessage::addEventCallback("Undo", undoCB));
 	_mayaCallbackIds.append(MEventMessage::addEventCallback("Redo", redoCB));
 	_mayaCallbackIds.append(MEventMessage::addEventCallback("SelectionChanged", selectionChangedCB));
-	
+	_mayaCallbackIds.append(MEventMessage::addEventCallback("modelEditorChanged", modelEditorChangedCB));
 	_mayaCallbackIds.append(MDGMessage::addNodeRemovedCallback(nodeRemovedCB, "camera"));
 
 	if (!status)

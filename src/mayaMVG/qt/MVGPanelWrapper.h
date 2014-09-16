@@ -37,8 +37,7 @@ private:
 	QString _name;
 	QString _label;
 	bool _isVisible;
-	
-	MCallbackIdArray _mayaCallbackIds;
+
 };
 
 } // namespace
