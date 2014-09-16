@@ -139,6 +139,14 @@ MStatus MVGMayaUtil::getCameraInView(MDagPath& path, const MString& viewName)
 	return sList.isEmpty() ? MS::kFailure : sList.getDagPath(0, path);
 }
 
+MStatus MVGMayaUtil::clearCameraInView(const MString& viewName)
+{
+	MGlobal::executePythonCommand("import maya.cmds as cmds");
+	std::stringstream ss; // one line cmd, to get result
+	ss << "cmds.modelPanel('" << viewName << "', e=True, cam='persp')";
+	return MGlobal::executePythonCommand(ss.str().c_str());
+}
+
 MStatus MVGMayaUtil::addToMayaSelection(const MString& objectName)
 {
 	return MGlobal::executePythonCommand(

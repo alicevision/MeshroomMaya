@@ -39,6 +39,7 @@ struct MVGMayaUtil {
 	// cameras
 	static MStatus setCameraInView(const MVGCamera& camera, const MString& viewName);
 	static MStatus getCameraInView(MDagPath& path, const MString& viewName);
+	static MStatus clearCameraInView(const MString& viewName);
 	// maya selection
 	static MStatus addToMayaSelection(const MString& objectName);
 	static MStatus clearMayaSelection();

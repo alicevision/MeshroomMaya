@@ -1,5 +1,6 @@
 #include <maya/MFnPlugin.h>
 #include "mayaMVG/core/MVGLog.h"
+#include "mayaMVG/qt/MVGCameraWrapper.h"
 #include "mayaMVG/maya/MVGMayaUtil.h"
 #include "mayaMVG/maya/cmd/MVGCmd.h"
 #include "mayaMVG/maya/cmd/MVGEditCmd.h"
@@ -12,13 +13,13 @@
 #include <maya/MEventMessage.h>
 #include <maya/MMessage.h>
 #include <maya/MCallbackIdArray.h>
-
+#include <maya/MDGMessage.h>
 
 using namespace mayaMVG;
 
 MCallbackIdArray _mayaCallbackIds;
 
-static void selectionChangedCB(void* /*userData*/) {
+void selectionChangedCB(void* /*userData*/) {
 	QWidget* menuLayout = MVGMayaUtil::getMVGMenuLayout();
 	if(!menuLayout)
 		return;
@@ -71,7 +72,7 @@ void sceneChangedCB(void* /*userData*/)
 	MGlobal::executeCommand("mayaMVGTool -e -rebuild mayaMVGTool1");
 }
 
-static void undoCB(void * /*userData*/)
+void undoCB(void * /*userData*/)
 {
 	// TODO : rebuild only the mesh modified
 	// TODO : don't rebuild on action that don't modify any mesh
@@ -82,9 +83,21 @@ static void undoCB(void * /*userData*/)
 	MString cmdName = redoName.substring(0, spaceIndex - 1);
 	if(cmdName != "select" && cmdName != "miCreateDefaultPresets")
 		MGlobal::executeCommand("mayaMVGTool -e -rebuild mayaMVGTool1");
+	if(cmdName == "doDelete")
+	{
+		QWidget* menuLayout = MVGMayaUtil::getMVGMenuLayout();
+		if(!menuLayout)
+			return;
+		MVGMainWidget* mvgMainWidget = menuLayout->findChild<MVGMainWidget*>("mvgMainWidget");
+		if(!mvgMainWidget)
+			return;
+		MGlobal::executePythonCommand("from mayaMVG import window;\n"
+								"window.mvgReloadPanels()");
+		mvgMainWidget->getProjectWrapper().loadExistingProject();
+	}
 }
 
-static void redoCB(void * /*userData*/)
+void redoCB(void * /*userData*/)
 {
 	MString undoName;
 	MVGMayaUtil::getUndoName(undoName);
@@ -93,8 +106,64 @@ static void redoCB(void * /*userData*/)
 	MString cmdName = undoName.substring(0, spaceIndex - 1);
 	if(cmdName != "select" && cmdName != "miCreateDefaultPresets")
 		MGlobal::executeCommand("mayaMVGTool -e -rebuild mayaMVGTool1");
+	if(cmdName == "doDelete")
+	{
+		QWidget* menuLayout = MVGMayaUtil::getMVGMenuLayout();
+		if(!menuLayout)
+			return;
+		MVGMainWidget* mvgMainWidget = menuLayout->findChild<MVGMainWidget*>("mvgMainWidget");
+		if(!mvgMainWidget)
+			return;
+		MGlobal::executePythonCommand("from mayaMVG import window;\n"
+								"window.mvgReloadPanels()");
+		mvgMainWidget->getProjectWrapper().loadExistingProject();
+	}
 }
 
+void nodeRemovedCB(MObject &node, void* /*clientData*/)
+{
+	MStatus status;
+	
+	//Check that it is one of ours cameras
+	MDagPath cameraPath;
+	status = MDagPath::getAPathTo(node, cameraPath);
+	CHECK_RETURN(status)
+	MVGCamera camera(cameraPath);
+	if(!camera.isValid())
+		return;
+	
+	QWidget* menuLayout = MVGMayaUtil::getMVGMenuLayout();
+	if(!menuLayout)
+		return;
+	MVGMainWidget* mvgMainWidget = menuLayout->findChild<MVGMainWidget*>("mvgMainWidget");
+	if(!mvgMainWidget)
+		return;	
+	MVGProjectWrapper& project = mvgMainWidget->getProjectWrapper();
+
+	// Remove camera from UI model
+	QObjectListModel* camerasList = project.getCameraModel();	
+	for(int i = 0; i < camerasList->count(); ++i)
+	{
+		MVGCameraWrapper* cameraWrapper = static_cast<MVGCameraWrapper*>(camerasList->at(i));
+		if(!cameraWrapper)
+			continue;		
+		if(cameraWrapper->getCamera().getName() != camera.getName())
+			continue;	
+		
+		MDagPath leftCameraPath, rightCameraPath;
+		MVGMayaUtil::getCameraInView(leftCameraPath, "mvgLPanel");
+		leftCameraPath.extendToShape();
+		if(leftCameraPath.fullPathName() == cameraPath.fullPathName())
+			MVGMayaUtil::clearCameraInView("mvgLPanel");
+		MVGMayaUtil::getCameraInView(rightCameraPath, "mvgRPanel");	
+		rightCameraPath.extendToShape();
+		if(rightCameraPath.fullPathName() == cameraPath.fullPathName())
+			MVGMayaUtil::clearCameraInView("mvgRPanel");
+
+		// Remove cameraWrapper
+		camerasList->removeAt(i);
+	}
+}
 
 MStatus initializePlugin(MObject obj) {
 	MStatus status;
@@ -124,6 +193,8 @@ MStatus initializePlugin(MObject obj) {
 	_mayaCallbackIds.append(MEventMessage::addEventCallback("Undo", undoCB));
 	_mayaCallbackIds.append(MEventMessage::addEventCallback("Redo", redoCB));
 	_mayaCallbackIds.append(MEventMessage::addEventCallback("SelectionChanged", selectionChangedCB));
+	
+	_mayaCallbackIds.append(MDGMessage::addNodeRemovedCallback(nodeRemovedCB, "camera"));
 
 	if (!status)
 		LOG_ERROR("unexpected error");
