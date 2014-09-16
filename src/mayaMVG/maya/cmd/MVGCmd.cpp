@@ -2,6 +2,9 @@
 #include "mayaMVG/maya/MVGMayaUtil.h"
 #include "mayaMVG/core/MVGLog.h"
 #include "mayaMVG/qt/MVGMainWidget.h"
+
+#include <QtDeclarative/QDeclarativeView>
+
 #include <maya/MQtUtil.h>
 #include <maya/MArgDatabase.h>
 
