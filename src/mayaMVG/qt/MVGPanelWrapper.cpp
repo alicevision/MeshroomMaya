@@ -28,7 +28,7 @@ MVGPanelWrapper::MVGPanelWrapper(QString name)
 
 MVGPanelWrapper::~MVGPanelWrapper()
 {
-	MMessage::removeCallbacks(_mayaCallbackIds);;
+	MMessage::removeCallbacks(_mayaCallbackIds);
 }
 
 void MVGPanelWrapper::setLabel(QString label)

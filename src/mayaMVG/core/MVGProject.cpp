@@ -69,6 +69,17 @@ bool MVGProject::isValid() const
 	fn.findPlug(_PROJECTPATH, false, &status);
 	if(!status)
 		return false;
+	
+	MDagPath tmpPath;
+	status = MVGMayaUtil::getDagPathByName("cameras", tmpPath);
+	if(!status || tmpPath.childCount() < 1)
+		return false;
+	status = MVGMayaUtil::getDagPathByName("clouds", tmpPath);
+	if(!status || tmpPath.childCount() < 1)
+		return false;
+	status = MVGMayaUtil::getDagPathByName("meshes", tmpPath);
+	if(!status)
+		return false;
 
 	return true;
 }

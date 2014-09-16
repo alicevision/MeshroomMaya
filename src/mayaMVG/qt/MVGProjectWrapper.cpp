@@ -12,7 +12,7 @@ namespace mayaMVG {
 MVGProjectWrapper::MVGProjectWrapper()
 {
 	MVGPanelWrapper* leftPanel = new MVGPanelWrapper("mvgLPanel", "Left");
-	MVGPanelWrapper* rightPanel  = new MVGPanelWrapper("mvgRPanel", "Right");
+	MVGPanelWrapper* rightPanel = new MVGPanelWrapper("mvgRPanel", "Right");
 	_panelList.append(leftPanel);
 	_panelList.append(rightPanel);
 
@@ -90,6 +90,7 @@ void MVGProjectWrapper::loadNewProject(const QString& projectDirectoryPath)
     if(!_project.isValid())
         _project = MVGProject::create(MVGProject::_PROJECT);
 	if(!_project.load(projectDirectoryPath.toStdString())) {
+		setProjectDirectory("");
 		LOG_ERROR("An error occured when loading project.");
 		return;
 	}
@@ -146,7 +147,10 @@ void MVGProjectWrapper::reloadMVGCamerasFromMaya()
 {
 	_cameraList.clear();
 	if(!_project.isValid())
+	{
+		LOG_ERROR("Project is not valid");
 		return;
+	}
 	Q_EMIT projectDirectoryChanged();
 	const std::vector<MVGCamera>& cameraList = _project.getCameras();
 	std::vector<MVGCamera>::const_iterator it = cameraList.begin();

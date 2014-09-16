@@ -110,7 +110,8 @@ std::vector<MVGPointCloudItem> MVGPointCloud::getItems() const
 	std::vector<MVGPointCloudItem> items;
 
 	MFnParticleSystem fnParticle(_dagpath, &status);
-	CHECK(status)
+	if(!status)
+		return items;
 	MVectorArray positionArray;
 	fnParticle.position(positionArray);
 	for(int i = 0; i < positionArray.length(); ++i)
