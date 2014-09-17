@@ -25,9 +25,8 @@ Rectangle {
             State {
                 name: "SELECTED"
                 when: m.camera.isSelected
-                PropertyChanges { target: cameraItem; height: m.baseHeight + 30; }
                 PropertyChanges { target: cameraItem; color: "#004161"; }
-                PropertyChanges { target: loader; sourceComponent: extraInformation; }
+                PropertyChanges { target: loader; visible: true; }
             }
         ]
         transitions: Transition {
@@ -53,7 +52,6 @@ Rectangle {
         }
         // right part: data
         Item {
-            implicitWidth: 100
             Layout.horizontalSizePolicy: Layout.Expanding
             height: parent.height
 
@@ -73,8 +71,9 @@ Rectangle {
                 // title
                 Item {
                     width: parent.width
-                    Layout.verticalSizePolicy: Layout.Expanding
+                    implicitHeight: cameraName.height * 2 // x2 to add vertical margins
                     TextInput {
+                       id: cameraName
                        anchors.verticalCenter: parent.verticalCenter
                        text: m.camera.name
                        font.pointSize: 12
@@ -86,16 +85,17 @@ Rectangle {
                 // extra infos (see component below)
                 Item {
                     width: parent.width
+                    implicitHeight: childrenRect.height
                     Layout.verticalSizePolicy: Layout.Expanding
                     Loader {
                         id: loader
-                        sourceComponent: undefined
+                        visible: false
+                        sourceComponent: extraInformation.status != Component.Ready ? undefined : extraInformation;
                         width: parent.width
                         height: childrenRect.height
                     }
                 }
             }
-
         }
     }
     function convertWeight(weight)
@@ -113,49 +113,60 @@ Rectangle {
     // COMPONENT extraInformation
     Component {
         id: extraInformation
-        ColumnLayout
-        {
-            // file path
-            Item {
+        Item {
+            width: parent.width
+            height: childrenRect.height
+            ColumnLayout
+            {
                 width: parent.width
-                Layout.minimumHeight: childrenRect.height
-                TextInput {
+                height: childrenRect.height
+                spacing: 5
+                // file path
+                Item {
                     width: parent.width
-                    anchors.verticalCenter: parent.verticalCenter
-                    text: m.camera.imagePath
-                    font.pointSize: 10
-                    readOnly: true
-                    selectByMouse: true
-                    color: "#888888"
+                    Layout.minimumHeight: childrenRect.height
+                    TextInput {
+                        width: parent.width
+                        anchors.verticalCenter: parent.verticalCenter
+                        text: m.camera.imagePath
+                        font.pointSize: 10
+                        readOnly: true
+                        selectByMouse: true
+                        color: "#888888"
+                    }
                 }
-            }
-            // file size
-            Item {
-                width: parent.width
-                Layout.minimumHeight: childrenRect.height
-                TextInput {
+                // file size
+                Item {
                     width: parent.width
-                    text: m.camera.sourceSize.width + "x" + m.camera.sourceSize.height
-                    font.pointSize: 10
-                    readOnly: true
-                    selectByMouse: true
-                    color: "#888888"
+                    Layout.minimumHeight: childrenRect.height
+                    TextInput {
+                        width: parent.width
+                        text: m.camera.sourceSize.width + "x" + m.camera.sourceSize.height
+                        font.pointSize: 10
+                        readOnly: true
+                        selectByMouse: true
+                        color: "#888888"
+                    }
                 }
-            }
-            // file weight
-            Item {
-                width: parent.width
-                Layout.minimumHeight: childrenRect.height
-                TextInput {
+                // file weight
+                Item {
                     width: parent.width
-                    text: convertWeight(m.camera.sourceWeight)
-                    font.pointSize: 10
-                    readOnly: true
-                    selectByMouse: true
-                    color: "#888888"
+                    Layout.minimumHeight: childrenRect.height
+                    TextInput {
+                        width: parent.width
+                        text: convertWeight(m.camera.sourceWeight)
+                        font.pointSize: 10
+                        readOnly: true
+                        selectByMouse: true
+                        color: "#888888"
+                    }
+                }
+                // Vertical spacer
+                Item {
+                    width: parent.width
+                    Layout.verticalSizePolicy: Layout.Expanding
                 }
             }
         }
     }
-
 }
