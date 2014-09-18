@@ -4,6 +4,11 @@ import QtDesktop 0.1
 
 Item {
 
+    // Needed to detect top focus changed
+    TopFocusHandler {
+        anchors.fill: parent
+    }
+
     ColumnLayout
     {
         anchors.fill: parent

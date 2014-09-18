@@ -4,6 +4,10 @@
 #include "mayaMVG/maya/MVGMayaUtil.h"
 #include "mayaMVG/qt/MVGCameraWrapper.h"
 
+#include <QtDeclarative/QDeclarativeView>
+#include <QtGui/QFocusEvent>
+
+
 namespace mayaMVG {
 
 MVGMainWidget::MVGMainWidget(QWidget * parent)
@@ -42,7 +46,13 @@ MVGMainWidget::~MVGMainWidget()
 {
 }
 
-QDeclarativeView* MVGMainWidget::getView() const 
+void MVGMainWidget::focusOutEvent(QFocusEvent* event)
+{
+	event->accept();
+	_view->clearFocus();
+}
+
+QDeclarativeView* MVGMainWidget::getView() const
 {
 	return _view;
 }
