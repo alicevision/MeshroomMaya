@@ -34,7 +34,6 @@ class MVGProject : public MVGNodeWrapper {
 		void setProjectDirectory(const std::string&) const;
         bool isProjectDirectoryValid(const std::string&) const;
 		// nodes
-		std::vector<MVGCamera> getCameras() const;
         void selectCameras(std::vector<std::string> cameraNames) const;
 
 	public:

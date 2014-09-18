@@ -23,9 +23,14 @@ bool readPointCloud(std::string filePath)
 	}
 
 	// camera list
-	std::vector<MVGCamera> cameraList = MVGCamera::list();
+	std::vector<MVGCamera> cameraList = MVGCamera::getCameras();
+	if(cameraList.empty())
+	{
+		LOG_ERROR("No valid camera found")
+		return false;
+	}
 	std::sort(cameraList.begin(), cameraList.end()); // sort by camera id
-	
+
 	// items per camera tmp list
 	std::vector<std::vector<MVGPointCloudItem> > itemsPerCam(cameraList.size());
 
