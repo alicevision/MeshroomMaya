@@ -62,7 +62,7 @@ MVGProject::~MVGProject()
 // virtual
 bool MVGProject::isValid() const
 {
-	if(!_dagpath.isValid() || (_dagpath.apiType()!=MFn::kTransform))
+	if(!_dagpath.isValid() || (_dagpath.apiType() != MFn::kTransform))
 		return false;
 	MFnTransform fn(_dagpath);
 	MStatus status;
@@ -231,12 +231,6 @@ bool MVGProject::isProjectDirectoryValid(const std::string& projectDirectoryPath
 	}
 	
 	return true;
-}
-
-std::vector<MVGCamera> MVGProject::getCameras() const
-{
-	// TODO return cameras of this project
-	return MVGCamera::list();
 }
 
 void MVGProject::selectCameras(std::vector<std::string> cameraNames) const

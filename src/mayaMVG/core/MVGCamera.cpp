@@ -43,7 +43,7 @@ MVGCamera::MVGCamera(const int& id)
 		status = MDagPath::getAPathTo(fn.object(), path);
 		CHECK_RETURN(status)
 		MVGCamera camera(path);
-		if(camera.isValid() && (camera.getId()==id)) {
+		if(camera.isValid() && (camera.getId() == id)) {
 			status = MDagPath::getAPathTo(fn.object(), _dagpath);
 			return;
 		}
@@ -125,7 +125,7 @@ MVGCamera MVGCamera::create(const std::string& name)
 }
 
 // static
-std::vector<MVGCamera> MVGCamera::list()
+std::vector<MVGCamera> MVGCamera::getCameras()
 {
 	std::vector<MVGCamera> list;
 	MDagPath path;

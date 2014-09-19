@@ -143,6 +143,35 @@ void MVGProjectWrapper::clear() {
 	Q_EMIT projectDirectoryChanged();
 }
 
+void MVGProjectWrapper::removeCameraFromUI(MDagPath& cameraPath)
+{
+	MVGCamera camera(cameraPath);
+	if(!camera.isValid())
+		return;
+	
+	for(int i = 0; i < _cameraList.count(); ++i)
+	{
+		MVGCameraWrapper* cameraWrapper = static_cast<MVGCameraWrapper*>(_cameraList.at(i));
+		if(!cameraWrapper)
+			continue;		
+		if(cameraWrapper->getCamera().getName() != camera.getName())
+			continue;	
+		
+		MDagPath leftCameraPath, rightCameraPath;
+		MVGMayaUtil::getCameraInView(leftCameraPath, "mvgLPanel");
+		leftCameraPath.extendToShape();
+		if(leftCameraPath.fullPathName() == cameraPath.fullPathName())
+			MVGMayaUtil::clearCameraInView("mvgLPanel");
+		MVGMayaUtil::getCameraInView(rightCameraPath, "mvgRPanel");	
+		rightCameraPath.extendToShape();
+		if(rightCameraPath.fullPathName() == cameraPath.fullPathName())
+			MVGMayaUtil::clearCameraInView("mvgRPanel");
+
+		// Remove cameraWrapper
+		_cameraList.removeAt(i);
+	}
+}
+
 void MVGProjectWrapper::reloadMVGCamerasFromMaya()
 {
 	_cameraList.clear();
@@ -152,7 +181,7 @@ void MVGProjectWrapper::reloadMVGCamerasFromMaya()
 		return;
 	}
 	Q_EMIT projectDirectoryChanged();
-	const std::vector<MVGCamera>& cameraList = _project.getCameras();
+	const std::vector<MVGCamera>& cameraList = MVGCamera::getCameras();
 	std::vector<MVGCamera>::const_iterator it = cameraList.begin();
 	for(; it != cameraList.end(); ++it)
 		_cameraList.append(new MVGCameraWrapper(*it));

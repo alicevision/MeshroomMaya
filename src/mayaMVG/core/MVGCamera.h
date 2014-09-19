@@ -28,7 +28,7 @@ class MVGCamera : public MVGNodeWrapper {
 
 	public:
 		static MVGCamera create(const std::string& name);
-		static std::vector<MVGCamera> list();
+		static std::vector<MVGCamera> getCameras();
 
 	public:
 		int getId() const;
