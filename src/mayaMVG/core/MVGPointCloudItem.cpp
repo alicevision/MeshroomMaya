@@ -1,6 +1,7 @@
 #include "mayaMVG/core/MVGPointCloudItem.h"
 
-namespace mayaMVG {
+namespace mayaMVG
+{
 
 MVGPointCloudItem::MVGPointCloudItem()
 {

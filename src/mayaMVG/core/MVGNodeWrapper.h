@@ -3,28 +3,30 @@
 #include <maya/MDagPath.h>
 #include <string>
 
-namespace mayaMVG {
+namespace mayaMVG
+{
 
-class MVGNodeWrapper {
+class MVGNodeWrapper
+{
 
-	public:
-		MVGNodeWrapper();
-		MVGNodeWrapper(const std::string& name);
-        MVGNodeWrapper(const MString& name);
-		MVGNodeWrapper(const MDagPath& dagPath);
-		virtual ~MVGNodeWrapper();
+public:
+    MVGNodeWrapper();
+    MVGNodeWrapper(const std::string& name);
+    MVGNodeWrapper(const MString& name);
+    MVGNodeWrapper(const MDagPath& dagPath);
+    virtual ~MVGNodeWrapper();
 
-	public:
-		virtual bool isValid() const = 0;
-		void select() const;
+public:
+    virtual bool isValid() const = 0;
+    void select() const;
 
-	public:
-		const MDagPath& getDagPath() const;
-		std::string getName() const;
-		void setName(const std::string&) const;
+public:
+    const MDagPath& getDagPath() const;
+    std::string getName() const;
+    void setName(const std::string&) const;
 
-	protected:
-		MDagPath _dagpath;
+protected:
+    MDagPath _dagpath;
 };
 
 } // namespace

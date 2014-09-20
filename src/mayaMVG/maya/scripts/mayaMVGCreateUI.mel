@@ -1,10 +1,10 @@
 
 global proc mayaMVGCreateUI() {
-	python "from mayaMVG import menu;menu.mvgCreateMenu()";
-	print "\n[MayaMVG] Plugin loaded.\n";
+    python "from mayaMVG import menu;menu.mvgCreateMenu()";
+    print "\n[MayaMVG] Plugin loaded.\n";
 }
 
 global proc mayaMVGDeleteUI() {
-	python "from mayaMVG import menu;menu.mvgDeleteMenu()";
-	print "\n[MayaMVG] Plugin unloaded.\n";
+    python "from mayaMVG import menu;menu.mvgDeleteMenu()";
+    print "\n[MayaMVG] Plugin unloaded.\n";
 }

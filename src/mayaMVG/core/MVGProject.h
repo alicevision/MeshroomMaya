@@ -3,51 +3,50 @@
 #include "mayaMVG/core/MVGNodeWrapper.h"
 #include <vector>
 
-namespace mayaMVG {
+namespace mayaMVG
+{
 
 class MVGCamera;
 class MVGPointCloud;
 
-class MVGProject : public MVGNodeWrapper {
+class MVGProject : public MVGNodeWrapper
+{
 
-	public:
-		MVGProject(const std::string& name = "mayaMVG");
-		MVGProject(const MDagPath& dagPath);
-		virtual ~MVGProject();	
-		
-	public:
-		virtual bool isValid() const;
-	
-	public:
-		static MVGProject create(const std::string& name);
-		static std::vector<MVGProject> list();
+public:
+    MVGProject(const std::string& name = "mayaMVG");
+    MVGProject(const MDagPath& dagPath);
+    virtual ~MVGProject();
 
-	public:
-		bool load(const std::string& projectDirectoryPath);
-		bool loadCameras(const std::string& projectDirectoryPath);
-		bool loadPointCloud(const std::string& projectDirectoryPath);
-		void clear();
+public:
+    virtual bool isValid() const;
 
-	public:
-		// filesystem
-		std::string getProjectDirectory() const;
-		void setProjectDirectory(const std::string&) const;
-        bool isProjectDirectoryValid(const std::string&) const;
-		// nodes
-        void selectCameras(std::vector<std::string> cameraNames) const;
+public:
+    static MVGProject create(const std::string& name);
+    static std::vector<MVGProject> list();
 
-	public:
-		// openMVG node names
-		static std::string _CLOUD;
-		static std::string _MESH;
-		static std::string _PROJECT;
+public:
+    bool load(const std::string& projectDirectoryPath);
+    bool loadCameras(const std::string& projectDirectoryPath);
+    bool loadPointCloud(const std::string& projectDirectoryPath);
+    void clear();
 
-        // dynamic attributes
-        static MString _PROJECTPATH;
-        static std::string _cameraRelativeDirectory;
-        static std::string _imageRelativeDirectory;
-        static std::string _cameraRelativeFile;
-        static std::string _pointCloudRelativeFile;
+public:
+    std::string getProjectDirectory() const;
+    void setProjectDirectory(const std::string&) const;
+    bool isProjectDirectoryValid(const std::string&) const;
+    void selectCameras(std::vector<std::string> cameraNames) const;
+
+public:
+    // openMVG node names
+    static std::string _CLOUD;
+    static std::string _MESH;
+    static std::string _PROJECT;
+    // dynamic attributes
+    static MString _PROJECTPATH;
+    static std::string _cameraRelativeDirectory;
+    static std::string _imageRelativeDirectory;
+    static std::string _cameraRelativeFile;
+    static std::string _pointCloudRelativeFile;
 };
 
 } // namespace

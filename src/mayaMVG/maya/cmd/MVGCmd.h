@@ -3,19 +3,20 @@
 #include <maya/MPxCommand.h>
 #include <maya/MSyntax.h>
 
-namespace mayaMVG {
+namespace mayaMVG
+{
 
-class MVGCmd: public MPxCommand {
-
-public:
-	MVGCmd();
-	virtual ~MVGCmd();
+class MVGCmd : public MPxCommand
+{
 
 public:
-	virtual MStatus doIt(const MArgList& args);
-	static void* creator();
-	static MSyntax newSyntax();
+    MVGCmd();
+    virtual ~MVGCmd();
 
+public:
+    virtual MStatus doIt(const MArgList& args);
+    static void* creator();
+    static MSyntax newSyntax();
 };
 
 } // namespace

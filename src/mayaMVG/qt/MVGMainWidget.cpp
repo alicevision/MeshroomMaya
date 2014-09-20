@@ -7,39 +7,39 @@
 #include <QtDeclarative/QDeclarativeView>
 #include <QtGui/QFocusEvent>
 
-
-namespace mayaMVG {
-
-MVGMainWidget::MVGMainWidget(QWidget * parent)
-	: QWidget(parent)
+namespace mayaMVG
 {
-	setObjectName("mvgMainWidget");
-	
-	qmlRegisterType<MVGCameraWrapper>();
-	qmlRegisterType<QObjectListModel>();
-	qmlRegisterType<QWheelArea>("MyTools", 1, 0, "CustomWheelArea");
 
-	_view = new QDeclarativeView(parent);
-	
-	_projectWrapper.loadExistingProject();
+MVGMainWidget::MVGMainWidget(QWidget* parent)
+    : QWidget(parent)
+{
+    setObjectName("mvgMainWidget");
 
-	QString importDirectory = QString(MVGMayaUtil::getModulePath().asChar())+"/qml";
-	QString sourceDirectory = importDirectory+"/mvg/main.qml";
+    qmlRegisterType<MVGCameraWrapper>();
+    qmlRegisterType<QObjectListModel>();
+    qmlRegisterType<QWheelArea>("MyTools", 1, 0, "CustomWheelArea");
 
-	// QtDesktop Components
-	_view->engine()->addPluginPath(importDirectory);
-	_view->engine()->addImportPath(importDirectory);
+    _view = new QDeclarativeView(parent);
 
-	// Expose Project to QML
-	_view->rootContext()->setContextProperty("_project", &_projectWrapper);
+    _projectWrapper.loadExistingProject();
 
-	// Qml source
-	_view->setSource(QUrl::fromLocalFile(sourceDirectory));
-	_view->setResizeMode(QDeclarativeView::SizeRootObjectToView);
+    QString importDirectory = QString(MVGMayaUtil::getModulePath().asChar()) + "/qml";
+    QString sourceDirectory = importDirectory + "/mvg/main.qml";
 
-	// Instant coding
-	// QmlInstantCoding* qic = new QmlInstantCoding(_view, true);
-	// qic->addFilesFromDirectory(importDirectory, true);
+    // QtDesktop Components
+    _view->engine()->addPluginPath(importDirectory);
+    _view->engine()->addImportPath(importDirectory);
+
+    // Expose Project to QML
+    _view->rootContext()->setContextProperty("_project", &_projectWrapper);
+
+    // Qml source
+    _view->setSource(QUrl::fromLocalFile(sourceDirectory));
+    _view->setResizeMode(QDeclarativeView::SizeRootObjectToView);
+
+    // Instant coding
+    // QmlInstantCoding* qic = new QmlInstantCoding(_view, true);
+    // qic->addFilesFromDirectory(importDirectory, true);
 }
 
 MVGMainWidget::~MVGMainWidget()
@@ -48,13 +48,13 @@ MVGMainWidget::~MVGMainWidget()
 
 void MVGMainWidget::focusOutEvent(QFocusEvent* event)
 {
-	event->accept();
-	_view->clearFocus();
+    event->accept();
+    _view->clearFocus();
 }
 
 QDeclarativeView* MVGMainWidget::getView() const
 {
-	return _view;
+    return _view;
 }
 
 } // namespace

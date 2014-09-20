@@ -7,27 +7,28 @@
 class QWidget;
 class QDeclarativeView;
 
+namespace mayaMVG
+{
 
-namespace mayaMVG {
+class MVGMainWidget : public QWidget
+{
 
-class MVGMainWidget : public QWidget {
+    Q_OBJECT
 
-	Q_OBJECT
+public:
+    MVGMainWidget(QWidget* parent = 0);
+    ~MVGMainWidget();
 
-	public:
-		MVGMainWidget(QWidget * parent = 0);
-		~MVGMainWidget();
+public:
+    QDeclarativeView* getView() const;
+    MVGProjectWrapper& getProjectWrapper() { return _projectWrapper; }
 
-	public:
-		QDeclarativeView* getView() const;
-		MVGProjectWrapper& getProjectWrapper() { return _projectWrapper;}
+    // Needed to pass the focusOutEvent to the view
+    void focusOutEvent(QFocusEvent* event);
 
-		// Needed to pass the focusOutEvent to the view
-		void focusOutEvent(QFocusEvent* event);
-	
-	private:
-		QDeclarativeView* _view;
-		MVGProjectWrapper _projectWrapper;
+private:
+    QDeclarativeView* _view;
+    MVGProjectWrapper _projectWrapper;
 };
 
 } // namespace

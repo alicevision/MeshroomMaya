@@ -15,103 +15,98 @@
 #include <maya/MCommonSystemUtils.h>
 #include <maya/MPointArray.h>
 
-namespace mayaMVG {
+namespace mayaMVG
+{
 
 MStatus MVGMayaUtil::createMVGWindow()
 {
-	return MGlobal::executePythonCommand(
-		"from mayaMVG import window;\n"
-		"window.mvgCreateWindow()");
+    return MGlobal::executePythonCommand("from mayaMVG import window;\n"
+                                         "window.mvgCreateWindow()");
 }
 
 MStatus MVGMayaUtil::deleteMVGWindow()
 {
-	return MGlobal::executePythonCommand(
-		"from mayaMVG import window;\n"
-		"window.mvgDeleteWindow()");
+    return MGlobal::executePythonCommand("from mayaMVG import window;\n"
+                                         "window.mvgDeleteWindow()");
 }
 
 QWidget* MVGMayaUtil::getMVGWindow()
 {
-	return MQtUtil::findWindow("mayaMVG");
+    return MQtUtil::findWindow("mayaMVG");
 }
 
 QWidget* MVGMayaUtil::getMVGMenuLayout()
 {
-	return MQtUtil::findLayout("mvgMenuPanel");
+    return MQtUtil::findLayout("mvgMenuPanel");
 }
 
 QWidget* MVGMayaUtil::getMVGViewportLayout(const MString& viewName)
 {
-	M3dView view;
-	if(M3dView::getM3dViewFromModelPanel(viewName, view))
-		return view.widget();
-	return NULL;
+    M3dView view;
+    if(M3dView::getM3dViewFromModelPanel(viewName, view))
+        return view.widget();
+    return NULL;
 }
 
 MStatus MVGMayaUtil::setFocusOnView(const MString& viewName)
 {
-	return MGlobal::executePythonCommand(
-		"import maya.cmds as cmds\n"
-		"cmds.setFocus('"+viewName+"')\n");
+    return MGlobal::executePythonCommand("import maya.cmds as cmds\n"
+                                         "cmds.setFocus('" +
+                                         viewName + "')\n");
 }
 
-bool MVGMayaUtil::isMVGView(const M3dView & view)
+bool MVGMayaUtil::isMVGView(const M3dView& view)
 {
-	QWidget* leftViewport = MVGMayaUtil::getMVGViewportLayout("mvgLPanel");
-	QWidget* rightViewport = MVGMayaUtil::getMVGViewportLayout("mvgRPanel");
-	if(!leftViewport || !rightViewport)
-		return false;
-	return ((view.widget() == leftViewport) || (view.widget() == rightViewport));
+    QWidget* leftViewport = MVGMayaUtil::getMVGViewportLayout("mvgLPanel");
+    QWidget* rightViewport = MVGMayaUtil::getMVGViewportLayout("mvgRPanel");
+    if(!leftViewport || !rightViewport)
+        return false;
+    return ((view.widget() == leftViewport) || (view.widget() == rightViewport));
 }
 
-bool MVGMayaUtil::isActiveView(const M3dView & view)
+bool MVGMayaUtil::isActiveView(const M3dView& view)
 {
-	M3dView activeView = M3dView::active3dView();
-	return (activeView.widget() == view.widget());
+    M3dView activeView = M3dView::active3dView();
+    return (activeView.widget() == view.widget());
 }
 
 bool MVGMayaUtil::getComplementaryView(const M3dView& view, M3dView& complementaryView)
 {
-	M3dView tmpView;
-	for(size_t i = 0; i < M3dView::numberOf3dViews(); ++i)
-	{
-		M3dView::get3dView(i, tmpView);
-		if(isMVGView(tmpView) && tmpView.widget() != view.widget())
-		{
-			complementaryView = tmpView;
-			return true;
-		}
-	}
-	return false;
+    M3dView tmpView;
+    for(size_t i = 0; i < M3dView::numberOf3dViews(); ++i)
+    {
+        M3dView::get3dView(i, tmpView);
+        if(isMVGView(tmpView) && tmpView.widget() != view.widget())
+        {
+            complementaryView = tmpView;
+            return true;
+        }
+    }
+    return false;
 }
 
 MStatus MVGMayaUtil::createMVGContext()
 {
-	return MGlobal::executePythonCommand(
-		"from mayaMVG import context;\n"
-		"context.mvgCreateContext()");
+    return MGlobal::executePythonCommand("from mayaMVG import context;\n"
+                                         "context.mvgCreateContext()");
 }
 
 MStatus MVGMayaUtil::deleteMVGContext()
 {
-	return MGlobal::executePythonCommand(
-		"from mayaMVG import context;\n"
-		"context.mvgDeleteContext()");
+    return MGlobal::executePythonCommand("from mayaMVG import context;\n"
+                                         "context.mvgDeleteContext()");
 }
 
 MStatus MVGMayaUtil::activeContext()
 {
-	return MGlobal::executePythonCommand(
-		"import maya.cmds as cmds\n"
-		"cmds.setToolTo('mayaMVGTool1')");
+    return MGlobal::executePythonCommand("import maya.cmds as cmds\n"
+                                         "cmds.setToolTo('mayaMVGTool1')");
 }
 
 MStatus MVGMayaUtil::activeSelectionContext()
 {
-	return MGlobal::executePythonCommand(
-		"import maya.cmds as cmds\n"
-		"cmds.setToolTo('selectSuperContext')\n");
+    return MGlobal::executePythonCommand("import maya.cmds as cmds\n"
+                                         "cmds.setToolTo('selectSuperContext')\n");
 }
 
 MStatus MVGMayaUtil::getCurrentContext(MString& context)
@@ -122,249 +117,270 @@ MStatus MVGMayaUtil::getCurrentContext(MString& context)
 
 MStatus MVGMayaUtil::setCameraInView(const MVGCamera& camera, const MString& viewName)
 {
-	MGlobal::executePythonCommand("import maya.cmds as cmds");
-	std::stringstream ss; // one line cmd, to get result
-	ss << "cmds.modelPanel('" << viewName << "', e=True, cam='"
-	   << camera.getName().c_str() << "')";
-	return MGlobal::executePythonCommand(ss.str().c_str());
+    MGlobal::executePythonCommand("import maya.cmds as cmds");
+    std::stringstream ss; // one line cmd, to get result
+    ss << "cmds.modelPanel('" << viewName << "', e=True, cam='" << camera.getName().c_str() << "')";
+    return MGlobal::executePythonCommand(ss.str().c_str());
 }
 
 MStatus MVGMayaUtil::getCameraInView(MDagPath& path, const MString& viewName)
 {
-	MString camera;
-	MGlobal::executePythonCommand("from mayaMVG import camera");
-	MGlobal::executePythonCommand("camera.mvgGetCameraFromView('"+viewName+"')", camera);
-	MSelectionList sList;
-	MGlobal::getSelectionListByName(camera, sList);
-	return sList.isEmpty() ? MS::kFailure : sList.getDagPath(0, path);
+    MString camera;
+    MGlobal::executePythonCommand("from mayaMVG import camera");
+    MGlobal::executePythonCommand("camera.mvgGetCameraFromView('" + viewName + "')", camera);
+    MSelectionList sList;
+    MGlobal::getSelectionListByName(camera, sList);
+    return sList.isEmpty() ? MS::kFailure : sList.getDagPath(0, path);
 }
 
 MStatus MVGMayaUtil::clearCameraInView(const MString& viewName)
 {
-	MGlobal::executePythonCommand("import maya.cmds as cmds");
-	std::stringstream ss; // one line cmd, to get result
-	ss << "cmds.modelPanel('" << viewName << "', e=True, cam='persp')";
-	return MGlobal::executePythonCommand(ss.str().c_str());
+    MGlobal::executePythonCommand("import maya.cmds as cmds");
+    std::stringstream ss; // one line cmd, to get result
+    ss << "cmds.modelPanel('" << viewName << "', e=True, cam='persp')";
+    return MGlobal::executePythonCommand(ss.str().c_str());
 }
 
 MStatus MVGMayaUtil::addToMayaSelection(const MString& objectName)
 {
-	return MGlobal::executePythonCommand(
-		"import maya.cmds as cmds\n"
-		"cmds.select('"+objectName+"', add=True)");
+    return MGlobal::executePythonCommand("import maya.cmds as cmds\n"
+                                         "cmds.select('" +
+                                         objectName + "', add=True)");
 }
 
 MStatus MVGMayaUtil::clearMayaSelection()
 {
-	return MGlobal::executePythonCommand(
-		"import maya.cmds as cmds\n"
-		"cmds.select(cl=True)");
+    return MGlobal::executePythonCommand("import maya.cmds as cmds\n"
+                                         "cmds.select(cl=True)");
 }
 
-MStatus MVGMayaUtil::getIntArrayAttribute(const MObject& object, const MString& param, MIntArray& intArray, bool networked)
+MStatus MVGMayaUtil::getIntArrayAttribute(const MObject& object, const MString& param,
+                                          MIntArray& intArray, bool networked)
 {
-	MStatus status;
-	MFnDependencyNode fn(object, &status);
-	CHECK_RETURN_STATUS(status);
-	MPlug plug(fn.findPlug(param, networked, &status));
-	CHECK_RETURN_STATUS(status);
-	intArray.clear();
-	if (plug.isArray()) {
-		for(size_t i = 0; i < plug.numElements(); ++i) {
-			MPlug plugElmt = plug[i];
-			intArray.append(plugElmt.asInt());
-		}
-	} else {
-		MDataHandle dataHandle = plug.asMDataHandle(MDGContext::fsNormal, &status);
-		CHECK_RETURN_STATUS(status);
-		MFnIntArrayData arrayData(dataHandle.data(), &status);
-		CHECK_RETURN_STATUS(status);
-		status = arrayData.copyTo(intArray);
-	}
-	return status;
+    MStatus status;
+    MFnDependencyNode fn(object, &status);
+    CHECK_RETURN_STATUS(status);
+    MPlug plug(fn.findPlug(param, networked, &status));
+    CHECK_RETURN_STATUS(status);
+    intArray.clear();
+    if(plug.isArray())
+    {
+        for(size_t i = 0; i < plug.numElements(); ++i)
+        {
+            MPlug plugElmt = plug[i];
+            intArray.append(plugElmt.asInt());
+        }
+    }
+    else
+    {
+        MDataHandle dataHandle = plug.asMDataHandle(MDGContext::fsNormal, &status);
+        CHECK_RETURN_STATUS(status);
+        MFnIntArrayData arrayData(dataHandle.data(), &status);
+        CHECK_RETURN_STATUS(status);
+        status = arrayData.copyTo(intArray);
+    }
+    return status;
 }
 
-MStatus MVGMayaUtil::setIntArrayAttribute(const MObject &object, const MString &param, const MIntArray &intArray, bool networked)
+MStatus MVGMayaUtil::setIntArrayAttribute(const MObject& object, const MString& param,
+                                          const MIntArray& intArray, bool networked)
 {
-	MStatus status;
-	MFnDependencyNode fn(object, &status);
-	CHECK_RETURN_STATUS(status);
-	MPlug plug(fn.findPlug(param, networked, &status));
-	CHECK_RETURN_STATUS(status);
-	MFnIntArrayData fnData;
-	MObject obj = fnData.create(intArray, &status);
-	CHECK_RETURN_STATUS(status);
-	status = plug.setValue(obj);
-	return status;
+    MStatus status;
+    MFnDependencyNode fn(object, &status);
+    CHECK_RETURN_STATUS(status);
+    MPlug plug(fn.findPlug(param, networked, &status));
+    CHECK_RETURN_STATUS(status);
+    MFnIntArrayData fnData;
+    MObject obj = fnData.create(intArray, &status);
+    CHECK_RETURN_STATUS(status);
+    status = plug.setValue(obj);
+    return status;
 }
 
-MStatus MVGMayaUtil::getIntAttribute(const MObject& object, const MString& param, int& value, bool networked)
+MStatus MVGMayaUtil::getIntAttribute(const MObject& object, const MString& param, int& value,
+                                     bool networked)
 {
-	MStatus status;
-	MFnDependencyNode fn(object, &status);
-	CHECK_RETURN_STATUS(status);
-	MPlug plug(fn.findPlug(param, networked, &status));
-	CHECK_RETURN_STATUS(status);
-	value = plug.asInt();
-	return status;
+    MStatus status;
+    MFnDependencyNode fn(object, &status);
+    CHECK_RETURN_STATUS(status);
+    MPlug plug(fn.findPlug(param, networked, &status));
+    CHECK_RETURN_STATUS(status);
+    value = plug.asInt();
+    return status;
 }
 
-MStatus MVGMayaUtil::setIntAttribute(const MObject& object, const MString& param, const int& value, bool networked)
+MStatus MVGMayaUtil::setIntAttribute(const MObject& object, const MString& param, const int& value,
+                                     bool networked)
 {
-	MStatus status;
-	MFnDependencyNode fn(object, &status);
-	CHECK_RETURN_STATUS(status);
-	MPlug plug(fn.findPlug(param, networked, &status));
-	CHECK_RETURN_STATUS(status);
-	plug.setInt(value);
-	return status;
+    MStatus status;
+    MFnDependencyNode fn(object, &status);
+    CHECK_RETURN_STATUS(status);
+    MPlug plug(fn.findPlug(param, networked, &status));
+    CHECK_RETURN_STATUS(status);
+    plug.setInt(value);
+    return status;
 }
 
-MStatus MVGMayaUtil::getDoubleArrayAttribute(const MObject& object, const MString& param, MDoubleArray& doubleArray, bool networked)
+MStatus MVGMayaUtil::getDoubleArrayAttribute(const MObject& object, const MString& param,
+                                             MDoubleArray& doubleArray, bool networked)
 {
-	MStatus status;
-	MFnDependencyNode fn(object, &status);
-	CHECK_RETURN_STATUS(status);
-	MPlug plug(fn.findPlug(param, networked, &status));
-	CHECK_RETURN_STATUS(status);
-	doubleArray.clear();
-	if (plug.isArray()) {
-		for(size_t i = 0; i < plug.numElements(); ++i) {
-			MPlug plugElmt = plug[i];
-			doubleArray.append(plugElmt.asDouble());
-		}
-	} else {
-		MDataHandle dataHandle = plug.asMDataHandle(MDGContext::fsNormal, &status);
-		CHECK_RETURN_STATUS(status);
-		if(dataHandle.data() == MObject::kNullObj)
-			return MS::kFailure;
-		MFnDoubleArrayData arrayData(dataHandle.data(), &status);
-		CHECK_RETURN_STATUS(status);
-		status = arrayData.copyTo(doubleArray);
-	}
-	return status;
+    MStatus status;
+    MFnDependencyNode fn(object, &status);
+    CHECK_RETURN_STATUS(status);
+    MPlug plug(fn.findPlug(param, networked, &status));
+    CHECK_RETURN_STATUS(status);
+    doubleArray.clear();
+    if(plug.isArray())
+    {
+        for(size_t i = 0; i < plug.numElements(); ++i)
+        {
+            MPlug plugElmt = plug[i];
+            doubleArray.append(plugElmt.asDouble());
+        }
+    }
+    else
+    {
+        MDataHandle dataHandle = plug.asMDataHandle(MDGContext::fsNormal, &status);
+        CHECK_RETURN_STATUS(status);
+        if(dataHandle.data() == MObject::kNullObj)
+            return MS::kFailure;
+        MFnDoubleArrayData arrayData(dataHandle.data(), &status);
+        CHECK_RETURN_STATUS(status);
+        status = arrayData.copyTo(doubleArray);
+    }
+    return status;
 }
 
-MStatus MVGMayaUtil::setDoubleArrayAttribute(const MObject& object, const MString& param, const MDoubleArray& doubleArray, bool networked)
+MStatus MVGMayaUtil::setDoubleArrayAttribute(const MObject& object, const MString& param,
+                                             const MDoubleArray& doubleArray, bool networked)
 {
-	MStatus status;
-	MFnDependencyNode fn(object, &status);
-	CHECK_RETURN_STATUS(status);
-	MPlug plug(fn.findPlug(param, networked, &status));
-	CHECK_RETURN_STATUS(status);
-	MFnDoubleArrayData fnData;
-	MObject obj = fnData.create(doubleArray, &status);
-	CHECK_RETURN_STATUS(status);
-	status = plug.setValue(obj);
-	return status;
+    MStatus status;
+    MFnDependencyNode fn(object, &status);
+    CHECK_RETURN_STATUS(status);
+    MPlug plug(fn.findPlug(param, networked, &status));
+    CHECK_RETURN_STATUS(status);
+    MFnDoubleArrayData fnData;
+    MObject obj = fnData.create(doubleArray, &status);
+    CHECK_RETURN_STATUS(status);
+    status = plug.setValue(obj);
+    return status;
 }
 
-MStatus MVGMayaUtil::getStringAttribute(const MObject& object, const MString& param, MString& string, bool networked)
+MStatus MVGMayaUtil::getStringAttribute(const MObject& object, const MString& param,
+                                        MString& string, bool networked)
 {
-	MStatus status;
-	MFnDependencyNode fn(object, &status);
-	CHECK_RETURN_STATUS(status);
-	MPlug plug(fn.findPlug(param, networked, &status));
-	CHECK_RETURN_STATUS(status);
-	string = plug.asString();
-	return status;
+    MStatus status;
+    MFnDependencyNode fn(object, &status);
+    CHECK_RETURN_STATUS(status);
+    MPlug plug(fn.findPlug(param, networked, &status));
+    CHECK_RETURN_STATUS(status);
+    string = plug.asString();
+    return status;
 }
 
-MStatus MVGMayaUtil::setStringAttribute(const MObject& object, const MString& param, const MString& string, bool networked)
+MStatus MVGMayaUtil::setStringAttribute(const MObject& object, const MString& param,
+                                        const MString& string, bool networked)
 {
-	MStatus status;
-	MFnDependencyNode fn(object, &status);
-	CHECK_RETURN_STATUS(status);
-	MPlug plug(fn.findPlug(param, networked, &status));
-	CHECK_RETURN_STATUS(status);
-	plug.setString(string);
-	return status;
+    MStatus status;
+    MFnDependencyNode fn(object, &status);
+    CHECK_RETURN_STATUS(status);
+    MPlug plug(fn.findPlug(param, networked, &status));
+    CHECK_RETURN_STATUS(status);
+    plug.setString(string);
+    return status;
 }
 
-MStatus MVGMayaUtil::findConnectedNodes(const MObject& object, const MString& param, std::vector<MObject>& nodes)
+MStatus MVGMayaUtil::findConnectedNodes(const MObject& object, const MString& param,
+                                        std::vector<MObject>& nodes)
 {
-	MStatus status;
-	MFnDependencyNode fn(object, &status);
-	CHECK_RETURN_STATUS(status);
-	MPlug plug = fn.findPlug(param, &status);
-	CHECK_RETURN_STATUS(status);
-	if (plug.isArray()) {
-		plug.evaluateNumElements(&status);
-		CHECK_RETURN_STATUS(status);
-		for (unsigned int i = 0; i < plug.numElements(); ++i) {
-			MPlug plugElmt = plug[i];
-			MPlugArray plugArray;
-			plugElmt.connectedTo(plugArray, true, true, &status);
-			if(plugArray.length() > 0) {
-				for (unsigned int j = 0; j < plugArray.length(); ++j)
-					nodes.push_back(plugArray[j].node(&status));
-			}
-		}
-	} else {
-		MPlugArray plugArray;
-		plug.connectedTo(plugArray, true, true, &status);
-		if(plugArray.length() > 0) {
-			for (unsigned int i=0; i<plugArray.length(); ++i)
-				nodes.push_back(plugArray[i].node(&status));
-		}
-	}
-	CHECK_RETURN_STATUS(status);
-	return status;
+    MStatus status;
+    MFnDependencyNode fn(object, &status);
+    CHECK_RETURN_STATUS(status);
+    MPlug plug = fn.findPlug(param, &status);
+    CHECK_RETURN_STATUS(status);
+    if(plug.isArray())
+    {
+        plug.evaluateNumElements(&status);
+        CHECK_RETURN_STATUS(status);
+        for(unsigned int i = 0; i < plug.numElements(); ++i)
+        {
+            MPlug plugElmt = plug[i];
+            MPlugArray plugArray;
+            plugElmt.connectedTo(plugArray, true, true, &status);
+            if(plugArray.length() > 0)
+            {
+                for(unsigned int j = 0; j < plugArray.length(); ++j)
+                    nodes.push_back(plugArray[j].node(&status));
+            }
+        }
+    }
+    else
+    {
+        MPlugArray plugArray;
+        plug.connectedTo(plugArray, true, true, &status);
+        if(plugArray.length() > 0)
+        {
+            for(unsigned int i = 0; i < plugArray.length(); ++i)
+                nodes.push_back(plugArray[i].node(&status));
+        }
+    }
+    CHECK_RETURN_STATUS(status);
+    return status;
 }
 
 MStatus MVGMayaUtil::getObjectByName(const MString& name, MObject& obj)
 {
-	obj = MObject::kNullObj;
-	MSelectionList list;
-	MStatus status = list.add(name);
-	if (status == MS::kSuccess)
-		status = list.getDependNode(0, obj);
-	return status;
+    obj = MObject::kNullObj;
+    MSelectionList list;
+    MStatus status = list.add(name);
+    if(status == MS::kSuccess)
+        status = list.getDependNode(0, obj);
+    return status;
 }
 
 MStatus MVGMayaUtil::getDagPathByName(const MString& name, MDagPath& path)
 {
-	MSelectionList list;
-	MStatus status = list.add(name);
-	if (status == MS::kSuccess)
-		status = list.getDagPath(0, path);
-	return status;
+    MSelectionList list;
+    MStatus status = list.add(name);
+    if(status == MS::kSuccess)
+        status = list.getDagPath(0, path);
+    return status;
 }
 
 MString MVGMayaUtil::getEnv(const MString& var)
 {
-	MString result;
-	MCommonSystemUtils::getEnv(var, result);
-	return result;
+    MString result;
+    MCommonSystemUtils::getEnv(var, result);
+    return result;
 }
 
 MString MVGMayaUtil::getModulePath()
 {
-	MString result;
-	MGlobal::executeCommand("getModulePath -moduleName \"mayaMVG\";", result);
-	return result;
+    MString result;
+    MGlobal::executeCommand("getModulePath -moduleName \"mayaMVG\";", result);
+    return result;
 }
 
 MStatus MVGMayaUtil::openFileDialog(MString& directory)
 {
-	MStatus status = MGlobal::executePythonCommand("from mayaMVG import window");
-	status = MGlobal::executePythonCommand( // one line cmd, to get result
-		"window.mvgOpenProjectFileDialog()", directory);
-	return status;
+    MStatus status = MGlobal::executePythonCommand("from mayaMVG import window");
+    status = MGlobal::executePythonCommand( // one line cmd, to get result
+        "window.mvgOpenProjectFileDialog()", directory);
+    return status;
 }
 
 MStatus MVGMayaUtil::getUndoName(MString& undoName)
 {
     MStatus status = MGlobal::executePythonCommand("import maya.cmds as cmds");
     status = MGlobal::executePythonCommand( // one line cmd, to get result
-		"cmds.undoInfo( q=True, undoName=True )", undoName);
+        "cmds.undoInfo( q=True, undoName=True )", undoName);
 }
 
 MStatus MVGMayaUtil::getRedoName(MString& redoName)
 {
     MStatus status = MGlobal::executePythonCommand("import maya.cmds as cmds");
     status = MGlobal::executePythonCommand( // one line cmd, to get result
-		"cmds.undoInfo( q=True, redoName=True )", redoName);
+        "cmds.undoInfo( q=True, redoName=True )", redoName);
 }
 
 } // namespace

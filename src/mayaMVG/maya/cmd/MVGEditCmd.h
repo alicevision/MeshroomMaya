@@ -6,36 +6,46 @@
 
 class MDagPath;
 
-namespace mayaMVG {
+namespace mayaMVG
+{
 
-class MVGEditCmd : public MPxToolCommand {
+class MVGEditCmd : public MPxToolCommand
+{
 
-	enum CMD_FLAG {
-		CMD_CREATE = 1 << 0,
-		CMD_MOVE = 1 << 1
-	};
-	public:
-		MVGEditCmd();
-		virtual ~MVGEditCmd();
-	public:
-		static void* creator();
-		virtual MStatus doIt(const MArgList& args);
-		static MSyntax newSyntax();
-	public:
-		MStatus redoIt();
-		MStatus undoIt();
-		bool isUndoable() const;
-		MStatus finalize();
-	public:
-		void doAddPolygon(const MDagPath& meshPath, const MPointArray& points);
-		void doMove(const MDagPath& meshPath, const MPointArray& points, const MIntArray& verticesIndexes);
-	public:
-		static MString name;
-	private:
-		size_t _flags;
-		MString _meshName;
-		MPointArray _points;
-		MIntArray _indexes;
+    enum CMD_FLAG
+    {
+        CMD_CREATE = 1 << 0,
+        CMD_MOVE = 1 << 1
+    };
+
+public:
+    MVGEditCmd();
+    virtual ~MVGEditCmd();
+
+public:
+    static void* creator();
+    virtual MStatus doIt(const MArgList& args);
+    static MSyntax newSyntax();
+
+public:
+    MStatus redoIt();
+    MStatus undoIt();
+    bool isUndoable() const;
+    MStatus finalize();
+
+public:
+    void doAddPolygon(const MDagPath& meshPath, const MPointArray& points);
+    void doMove(const MDagPath& meshPath, const MPointArray& points,
+                const MIntArray& verticesIndexes);
+
+public:
+    static MString name;
+
+private:
+    size_t _flags;
+    MString _meshName;
+    MPointArray _points;
+    MIntArray _indexes;
 };
 
 } // namespace

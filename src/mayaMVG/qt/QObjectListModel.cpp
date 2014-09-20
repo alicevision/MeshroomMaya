@@ -2,12 +2,17 @@
 
 /*!
     \class QObjectListModel
-    \brief The QObjectListModel class provides a model that supplies objects to QML views.
+    \brief The QObjectListModel class provides a model that supplies objects to
+   QML views.
 
-    QObjectListModel provides a more powerful, but still easy to use, alternative to using
-    QObjectList lists as models for QML views. As a QAbstractListModel, it has the ability to
-    automatically notify the view of specific changes to the list, such as adding or removing
-    items. At the same time it provides QList-like convenience functions such as append, at,
+    QObjectListModel provides a more powerful, but still easy to use,
+   alternative to using
+    QObjectList lists as models for QML views. As a QAbstractListModel, it has
+   the ability to
+    automatically notify the view of specific changes to the list, such as
+   adding or removing
+    items. At the same time it provides QList-like convenience functions such as
+   append, at,
     and removeAt for easily working with the model from C++.
 
     \code
@@ -35,9 +40,9 @@
 /*!
     Constructs an object list model with the given \a parent.
 */
-QObjectListModel::QObjectListModel(QObject *parent)
-: QAbstractListModel(parent)
-, _autoEmit(true)
+QObjectListModel::QObjectListModel(QObject* parent)
+    : QAbstractListModel(parent)
+    , _autoEmit(true)
 {
     QHash<int, QByteArray> roles;
     roles[ObjectRole] = "object";
@@ -48,10 +53,10 @@ QObjectListModel::QObjectListModel(QObject *parent)
     Constructs an object list model containing the specified \a objects
     with the given \a parent.
 */
-QObjectListModel::QObjectListModel(QObjectList objects, QObject *parent)
-: QAbstractListModel(parent)
-, _autoEmit(true)
-, _objects(objects)
+QObjectListModel::QObjectListModel(QObjectList objects, QObject* parent)
+    : QAbstractListModel(parent)
+    , _autoEmit(true)
+    , _objects(objects)
 {
     QHash<int, QByteArray> roles;
     roles[ObjectRole] = "object";
@@ -65,12 +70,12 @@ QObjectListModel::QObjectListModel(QObjectList objects, QObject *parent)
     If the view requests an invalid index or role, an invalid variant
     is returned.
 */
-QVariant QObjectListModel::data(const QModelIndex &index, int role) const
+QVariant QObjectListModel::data(const QModelIndex& index, int role) const
 {
-    if (index.row() < 0 || index.row() >= _objects.size())
+    if(index.row() < 0 || index.row() >= _objects.size())
         return QVariant();
 
-    if (role == ObjectRole)
+    if(role == ObjectRole)
         return QVariant::fromValue(_objects.at(index.row()));
 
     return QVariant();
@@ -80,7 +85,7 @@ QVariant QObjectListModel::data(const QModelIndex &index, int role) const
     Returns the number of rows in the model. This value corresponds to the
     number of items in the model's internal object list.
 */
-int QObjectListModel::rowCount(const QModelIndex &parent) const
+int QObjectListModel::rowCount(const QModelIndex& parent) const
 {
     Q_UNUSED(parent);
     return count();
@@ -105,7 +110,7 @@ void QObjectListModel::setObjectList(QObjectList objects)
     _objects = objects;
     endResetModel();
     Q_EMIT dataChanged(index(0), index(_objects.count()));
-    if (_objects.count() != oldCount)
+    if(_objects.count() != oldCount)
         internEmitCountChanged();
 }
 
@@ -116,7 +121,7 @@ void QObjectListModel::setObjectList(QObjectList objects)
 
     \sa insert()
 */
-void QObjectListModel::append(QObject *object)
+void QObjectListModel::append(QObject* object)
 {
     beginInsertRows(QModelIndex(), _objects.count(), _objects.count());
     _objects.append(object);
@@ -126,11 +131,12 @@ void QObjectListModel::append(QObject *object)
 
 /*!
     \overload
-    Appends the items of the \a objects list to this model and notifies any views.
+    Appends the items of the \a objects list to this model and notifies any
+   views.
 */
-void QObjectListModel::append(const QObjectList &objects)
+void QObjectListModel::append(const QObjectList& objects)
 {
-    beginInsertRows(QModelIndex(), _objects.count(), _objects.count()+objects.count()-1);
+    beginInsertRows(QModelIndex(), _objects.count(), _objects.count() + objects.count() - 1);
     _objects.append(objects);
     endInsertRows();
     internEmitCountChanged();
@@ -143,7 +149,7 @@ void QObjectListModel::append(const QObjectList &objects)
 
     \sa append(), replace(), removeAt()
 */
-void QObjectListModel::insert(int i, QObject *object)
+void QObjectListModel::insert(int i, QObject* object)
 {
     beginInsertRows(QModelIndex(), i, i);
     _objects.insert(i, object);
@@ -154,16 +160,17 @@ void QObjectListModel::insert(int i, QObject *object)
 /*!
     \overload
     Inserts the items of the \a objects list at index position \a i in the model
-    and notifies any views. If \a i is 0, the items are prepended to the model. If \a i
+    and notifies any views. If \a i is 0, the items are prepended to the model.
+   If \a i
     is size(), the items are appended to the list.
 */
-void QObjectListModel::insert(int i, const QObjectList &objects)
+void QObjectListModel::insert(int i, const QObjectList& objects)
 {
-    if (objects.isEmpty())
+    if(objects.isEmpty())
         return;
 
-    beginInsertRows(QModelIndex(), i, i+objects.count()-1);
-    for (int j = objects.count() - 1; j > -1; --j)
+    beginInsertRows(QModelIndex(), i, i + objects.count() - 1);
+    for(int j = objects.count() - 1; j > -1; --j)
         _objects.insert(i, objects.at(j));
     endInsertRows();
     internEmitCountChanged();
@@ -176,7 +183,7 @@ void QObjectListModel::insert(int i, const QObjectList &objects)
 
     \sa removeAt()
 */
-void QObjectListModel::replace(int i, QObject *object)
+void QObjectListModel::replace(int i, QObject* object)
 {
     _objects.replace(i, object);
     Q_EMIT dataChanged(index(i), index(i));
@@ -194,15 +201,17 @@ void QObjectListModel::replace(int i, QObject *object)
 
 void QObjectListModel::move(int from, int to)
 {
-    if (!beginMoveRows(QModelIndex(), from, from, QModelIndex(), to > from ? to+1 : to))
-        return; //should only be triggered for our simple case if from == to.
+    if(!beginMoveRows(QModelIndex(), from, from, QModelIndex(), to > from ? to + 1 : to))
+        return; // should only be triggered for our simple case if from == to.
     _objects.move(from, to);
     endMoveRows();
 }
 
 /*!
-    Removes \a count number of items from index position \a i and notifies any views.
-    \a i must be a valid index position in the model (i.e., 0 <= \a i < size()), as
+    Removes \a count number of items from index position \a i and notifies any
+   views.
+    \a i must be a valid index position in the model (i.e., 0 <= \a i < size()),
+   as
     must \c{i + count - 1}.
 
     \sa takeAt()
@@ -210,22 +219,23 @@ void QObjectListModel::move(int from, int to)
 void QObjectListModel::removeAt(int i, int count)
 {
     beginRemoveRows(QModelIndex(), i, i + count - 1);
-    for (int j = 0; j < count; ++j)
+    for(int j = 0; j < count; ++j)
         _objects.removeAt(i);
     endRemoveRows();
     internEmitCountChanged();
 }
 
 /*!
-    Removes the item at index position \a i (notifying any views) and returns it.
+    Removes the item at index position \a i (notifying any views) and returns
+   it.
     \a i must be a valid index position in the model (i.e., 0 <= \a i < size()).
 
     \sa removeAt()
 */
-QObject *QObjectListModel::takeAt(int i)
+QObject* QObjectListModel::takeAt(int i)
 {
     beginRemoveRows(QModelIndex(), i, i);
-    QObject *obj = _objects.takeAt(i);
+    QObject* obj = _objects.takeAt(i);
     endRemoveRows();
     internEmitCountChanged();
     return obj;
@@ -236,7 +246,7 @@ QObject *QObjectListModel::takeAt(int i)
 */
 void QObjectListModel::clear()
 {
-    if (_objects.isEmpty())
+    if(_objects.isEmpty())
         return;
 
     beginRemoveRows(QModelIndex(), 0, _objects.count() - 1);
@@ -249,7 +259,7 @@ void QObjectListModel::clear()
     \internal
     For usage from QML.
 */
-QObject *QObjectListModel::get(int i) const
+QObject* QObjectListModel::get(int i) const
 {
     return _objects.at(i);
 }
@@ -261,72 +271,6 @@ void QObjectListModel::emitModified()
 
 void QObjectListModel::internEmitCountChanged()
 {
-    if( _autoEmit )
+    if(_autoEmit)
         Q_EMIT countChanged();
 }
-
-/*!
-    \fn int QObjectListModel::size() const
-
-    Returns the number of items in the model.
-
-    \sa isEmpty(), count()
-*/
-
-/*! \fn int QObjectListModel::count() const
-
-    Returns the number of items in the model. This is effectively the
-    same as size().
-*/
-
-/*! \fn bool QObjectListModel::isEmpty() const
-
-    Returns true if the model contains no items; otherwise returns
-    false.
-
-    \sa size()
-*/
-
-/*! \fn QObject *QObjectListModel::at(int i) const
-
-    Returns the object at index position \a i in the list. \a i must be
-    a valid index position in the model (i.e., 0 <= \a i < size()).
-
-    \sa operator[]()
-*/
-
-/*! \fn QObject *QObjectListModel::operator[](int i) const
-
-    \overload
-
-    Same as at().
-*/
-
-/*! \fn int QObjectListModel::indexOf(QObject *object, int from = 0) const
-
-    Returns the index position of the first occurrence of \a object in
-    the model, searching forward from index position \a from. Returns
-    -1 if no item matched.
-
-    \sa lastIndexOf(), contains()
-*/
-
-/*! \fn int QObjectListModel::lastIndexOf(QObject *object, int from = -1) const
-
-    Returns the index position of the last occurrence of \a object in
-    the list, searching backward from index position \a from. If \a
-    from is -1 (the default), the search starts at the last item.
-    Returns -1 if no item matched.
-
-    \sa indexOf()
-*/
-
-/*! \fn bool QObjectListModel::contains(Object *object) const
-
-    Returns true if the list contains an occurrence of \a object;
-    otherwise returns false.
-
-    \sa indexOf(), count()
-*/
-
-
