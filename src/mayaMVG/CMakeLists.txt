@@ -18,14 +18,14 @@ endif()
 include_directories(${PROJECT_SOURCE_DIR}/..)
 
 #
-# Maya dependency 
+# Maya dependency
 #
 find_package(Maya REQUIRED)
 include_directories(${MAYA_INCLUDE_DIR})
 link_directories(${MAYA_Foundation_LIBRARY} ${MAYA_OpenMaya_LIBRARY} ${MAYA_OpenMayaUI_LIBRARY} ${MAYA_OpenMayaFX_LIBRARY})
 
 #
-# Qt dependency 
+# Qt dependency
 #
 find_package(Qt4 ${MAYA_QT_VERSION_SHORT} REQUIRED)
 set(QT_USE_QTOPENGL TRUE)
@@ -33,11 +33,17 @@ set(QT_USE_QTDECLARATIVE TRUE)
 include(${QT_USE_FILE})
 
 #
-# OpenMVG dependency 
+# OpenMVG dependency
 #
 include_directories(
 			../openMVG/src
 			../openMVG/src/third_party/eigen)
+
+#
+# OpenGL dependency
+#
+find_package(OpenGL REQUIRED)
+include_directories(${OPENGL_INCLUDE_DIR})
 
 #
 # Plugin name
@@ -68,7 +74,7 @@ include_directories(${CMAKE_CURRENT_BINARY_DIR})
 #
 # Maya plugin properties
 #
-add_library(${project_BIN} SHARED 
+add_library(${project_BIN} SHARED
 				${PLUGIN_SRCS}
 				${MOC_SRCS}
 				../openMVG/src/software/SfMViewer/Ply.cpp)
@@ -78,10 +84,12 @@ target_link_libraries(
 				${MAYA_OpenMaya_LIBRARY}
 				${MAYA_OpenMayaUI_LIBRARY}
 				${MAYA_OpenMayaFX_LIBRARY}
+				${MAYA_OpenMayaRender_LIBRARY}
 				stlplus
 				openMVG_numeric
 				openMVG_multiview
-				${QT_LIBRARIES})
+				${QT_LIBRARIES}
+				${OPENGL_LIBRARIES})
 maya_set_plugin_properties(${project_BIN})
 
 #
@@ -97,8 +105,8 @@ install(TARGETS ${project_BIN}
 		DESTINATION "${CMAKE_INSTALL_PREFIX}/plug-ins")
 
 ### .mod file
-install(CODE "file(WRITE ${CMAKE_INSTALL_PREFIX}/${PROJECT_NAME}.mod 
-		\"+ ${PROJECT_NAME} ${PLUGIN_VERSION_MAJOR}.${PLUGIN_VERSION_MINOR} .\nPYTHONPATH:=scripts\")")
+install(CODE "file(WRITE ${CMAKE_INSTALL_PREFIX}/${PROJECT_NAME}.mod
+\"+ ${PROJECT_NAME} ${PLUGIN_VERSION_MAJOR}.${PLUGIN_VERSION_MINOR} .\nPYTHONPATH+:=scripts\")")
 
 ### scripts
 install(DIRECTORY "${PROJECT_SOURCE_DIR}/maya/scripts"

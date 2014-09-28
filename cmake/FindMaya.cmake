@@ -36,7 +36,7 @@
 #   Post-commnad for correcting Qt library linking on osx
 #   Windows link flags for exporting initializePlugin/uninitializePlugin
 MACRO( MAYA_SET_PLUGIN_PROPERTIES target)
-  SET_TARGET_PROPERTIES( ${target} PROPERTIES 
+  SET_TARGET_PROPERTIES( ${target} PROPERTIES
     SUFFIX ${MAYA_PLUGIN_SUFFIX}
   )
 
@@ -62,7 +62,7 @@ MACRO( MAYA_SET_PLUGIN_PROPERTIES target)
           SET(_changes ${_changes} "-change" "${_lib}/Versions/4/${_shortname}" "@executable_path/${_shortname}")
         ENDIF()
       ENDFOREACH(_lib)
-  
+
       ADD_CUSTOM_COMMAND(
         TARGET ${target}
         POST_BUILD
@@ -83,12 +83,12 @@ MACRO( MAYA_SET_PLUGIN_PROPERTIES target)
       COMPILE_DEFINITIONS "${_maya_DEFINES}"
     )
   ENDIF()
-  
+
 ENDMACRO(MAYA_SET_PLUGIN_PROPERTIES)
 
 
 SET(_maya_TEST_VERSIONS)
-SET(_maya_KNOWN_VERSIONS "2008" "2009" "2010" "2011" "2012" "2013" "2014")
+SET(_maya_KNOWN_VERSIONS "2008" "2009" "2010" "2011" "2012" "2013" "2014" "2015")
 
 IF(APPLE)
   SET(MAYA_PLUGIN_SUFFIX ".bundle")
@@ -150,7 +150,7 @@ IF(MAYA_EXECUTABLE)
   STRING(REGEX REPLACE "/bin/maya.*" "" MAYA_LOCATION "${MAYA_EXECUTABLE}")
 
   STRING(REGEX MATCH "20[0-9][0-9]" MAYA_VERSION "${MAYA_LOCATION}")
-    
+
   IF(Maya_FIND_VERSION)
     # test that we've found a valid version
     LIST(FIND _maya_TEST_VERSIONS ${MAYA_VERSION} _maya_FOUND_INDEX)
