@@ -3,26 +3,39 @@
 #include "mayaMVG/qt/MVGMainWidget.h"
 #include <maya/MFnDependencyNode.h>
 #include <maya/MSelectionList.h>
+#include <maya/MQtUtil.h>
 
 namespace mayaMVG
 {
 
-void selectionChangedCB(void* /*userData*/)
+namespace
+{ // empty namespace
+
+MVGProjectWrapper* getProjectWrapper()
 {
     QWidget* menuLayout = MVGMayaUtil::getMVGMenuLayout();
     if(!menuLayout)
+        return NULL;
+    MVGMainWidget* mainWidget = menuLayout->findChild<MVGMainWidget*>("mvgMainWidget");
+    if(!mainWidget)
+        return NULL;
+    return &mainWidget->getProjectWrapper();
+}
+
+} // empty namespace
+
+static void selectionChangedCB(void*)
+{
+    MVGProjectWrapper* project = getProjectWrapper();
+    if(!project)
         return;
-    MVGMainWidget* mvgMainWidget = menuLayout->findChild<MVGMainWidget*>("mvgMainWidget");
-    if(!mvgMainWidget)
-        return;
-    MDagPath path;
-    MObject component;
     MSelectionList list;
     MGlobal::getActiveSelectionList(list);
+    MDagPath path;
     QList<QString> selectedCameras;
     for(size_t i = 0; i < list.length(); i++)
     {
-        list.getDagPath(i, path, component);
+        list.getDagPath(i, path);
         path.extendToShape();
         if(path.isValid() &&
            ((path.child(0).apiType() == MFn::kCamera) || (path.apiType() == MFn::kCamera)))
@@ -31,64 +44,53 @@ void selectionChangedCB(void* /*userData*/)
             selectedCameras.push_back(fn.name().asChar());
         }
     }
-    mvgMainWidget->getProjectWrapper().selectItems(selectedCameras);
+    project->selectItems(selectedCameras);
 }
 
-void currentContextChangedCB(void* /*userData*/)
+static void currentContextChangedCB(void*)
 {
-    QWidget* menuLayout = MVGMayaUtil::getMVGMenuLayout();
-    if(!menuLayout)
-        return;
-    MVGMainWidget* mvgMainWidget = menuLayout->findChild<MVGMainWidget*>("mvgMainWidget");
-    if(!mvgMainWidget)
+    MVGProjectWrapper* project = getProjectWrapper();
+    if(!project)
         return;
     MString context;
-    MStatus status;
-    status = MVGMayaUtil::getCurrentContext(context);
-    CHECK(status)
-    mvgMainWidget->getProjectWrapper().setCurrentContext(QString(context.asChar()));
+    CHECK(MVGMayaUtil::getCurrentContext(context))
+    project->setCurrentContext(MQtUtil::toQString(context));
 }
 
-void sceneChangedCB(void* /*userData*/)
+static void sceneChangedCB(void*)
 {
-    QWidget* menuLayout = MVGMayaUtil::getMVGMenuLayout();
-    if(!menuLayout)
-        return;
-    MVGMainWidget* mvgMainWidget = menuLayout->findChild<MVGMainWidget*>("mvgMainWidget");
-    if(!mvgMainWidget)
+    MVGProjectWrapper* project = getProjectWrapper();
+    if(!project)
         return;
     MGlobal::executePythonCommand("from mayaMVG import window;\n"
                                   "window.mvgReloadPanels()");
-    mvgMainWidget->getProjectWrapper().loadExistingProject();
+    project->loadExistingProject();
     MGlobal::executeCommand("mayaMVGTool -e -rebuild mayaMVGTool1");
 }
 
-void undoCB(void* /*userData*/)
+static void undoCB(void*)
 {
-    // TODO : rebuild only the mesh modified
+    // TODO : rebuild only the modified mesh
     // TODO : don't rebuild on action that don't modify any mesh
     MString redoName;
     MVGMayaUtil::getRedoName(redoName);
-    // Don't rebuild if selection action
+    // Don't rebuild on selection
     int spaceIndex = redoName.index(' ');
     MString cmdName = redoName.substring(0, spaceIndex - 1);
     if(cmdName != "select" && cmdName != "miCreateDefaultPresets")
         MGlobal::executeCommand("mayaMVGTool -e -rebuild mayaMVGTool1");
     if(cmdName == "doDelete")
     {
-        QWidget* menuLayout = MVGMayaUtil::getMVGMenuLayout();
-        if(!menuLayout)
-            return;
-        MVGMainWidget* mvgMainWidget = menuLayout->findChild<MVGMainWidget*>("mvgMainWidget");
-        if(!mvgMainWidget)
+        MVGProjectWrapper* project = getProjectWrapper();
+        if(!project)
             return;
         MGlobal::executePythonCommand("from mayaMVG import window;\n"
                                       "window.mvgReloadPanels()");
-        mvgMainWidget->getProjectWrapper().loadExistingProject();
+        project->loadExistingProject();
     }
 }
 
-void redoCB(void* /*userData*/)
+static void redoCB(void*)
 {
     MString undoName;
     MVGMayaUtil::getUndoName(undoName);
@@ -99,53 +101,40 @@ void redoCB(void* /*userData*/)
         MGlobal::executeCommand("mayaMVGTool -e -rebuild mayaMVGTool1");
     if(cmdName == "doDelete")
     {
-        QWidget* menuLayout = MVGMayaUtil::getMVGMenuLayout();
-        if(!menuLayout)
-            return;
-        MVGMainWidget* mvgMainWidget = menuLayout->findChild<MVGMainWidget*>("mvgMainWidget");
-        if(!mvgMainWidget)
+        MVGProjectWrapper* project = getProjectWrapper();
+        if(!project)
             return;
         MGlobal::executePythonCommand("from mayaMVG import window;\n"
                                       "window.mvgReloadPanels()");
-        mvgMainWidget->getProjectWrapper().loadExistingProject();
+        project->loadExistingProject();
     }
 }
 
-void nodeRemovedCB(MObject& node, void* /*clientData*/)
+static void nodeRemovedCB(MObject& node, void*)
 {
-    MStatus status;
-
+    MVGProjectWrapper* project = getProjectWrapper();
+    if(!project)
+        return;
     // Check that it is one of ours cameras
     MDagPath cameraPath;
-    status = MDagPath::getAPathTo(node, cameraPath);
-    CHECK_RETURN(status)
+    CHECK_RETURN(MDagPath::getAPathTo(node, cameraPath))
     MVGCamera camera(cameraPath);
     if(!camera.isValid())
         return;
-    QWidget* menuLayout = MVGMayaUtil::getMVGMenuLayout();
-    if(!menuLayout)
-        return;
-    MVGMainWidget* mvgMainWidget = menuLayout->findChild<MVGMainWidget*>("mvgMainWidget");
-    if(!mvgMainWidget)
-        return;
-    MVGProjectWrapper& project = mvgMainWidget->getProjectWrapper();
     // Remove camera from UI model
-    project.removeCameraFromUI(cameraPath);
+    project->removeCameraFromUI(cameraPath);
     // TODO : use project.reloadMVGCamerasFromMaya();
 }
 
-void modelEditorChangedCB(void* /*userData*/)
+static void modelEditorChangedCB(void*)
 {
-    QWidget* menuLayout = MVGMayaUtil::getMVGMenuLayout();
-    if(!menuLayout)
+    MVGProjectWrapper* project = getProjectWrapper();
+    if(!project)
         return;
-    MVGMainWidget* mvgMainWidget = menuLayout->findChild<MVGMainWidget*>("mvgMainWidget");
-    if(!mvgMainWidget)
-        return;
-    MVGProjectWrapper& project = mvgMainWidget->getProjectWrapper();
-    for(int i = 0; i < project.getPanelList()->count(); ++i)
+    for(int i = 0; i < project->getPanelList()->count(); ++i)
     {
-        MVGPanelWrapper* panel = static_cast<MVGPanelWrapper*>(project.getPanelList()->at(i));
+        MVGPanelWrapper* panel =
+            static_cast<MVGPanelWrapper*>(project->getPanelList()->at(i));
         if(!panel)
             return;
         panel->emitIsPointCloudDisplayedChanged();
