@@ -183,7 +183,7 @@ void QmlInstantCoding::onFileChanged(const QString& sourceFile)
     //       creates a new one when saving
     QFile file(sourceFile);
     while(!file.exists() && cpTry < 10)
-        sleep(0.1);
+        usleep(100); // 0.1 ms
 
     LOG_INFO("Reloading " << sourceFile.toStdString());
 

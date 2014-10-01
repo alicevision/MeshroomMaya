@@ -426,6 +426,8 @@ void MVGMoveManipulator::drawIntersections(M3dView& view) const
             }
             break;
         }
+        default:
+            break;
     }
 }
 

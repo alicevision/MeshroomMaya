@@ -51,8 +51,8 @@ int wn_PnPoly(MPoint P, std::vector<MPoint> V)
     return wn;
 }
 
-bool plane_line_intersect(const mayaMVG::PlaneKernel::Model& model, const MPoint& P1, const MPoint& P2,
-                          MPoint& P)
+bool plane_line_intersect(const mayaMVG::PlaneKernel::Model& model, const MPoint& P1,
+                          const MPoint& P2, MPoint& P)
 {
     double u = (model(0) * P1.x + model(1) * P1.y + model(2) * P1.z + model(3)) /
                (model(0) * (P1.x - P2.x) + model(1) * (P1.y - P2.y) + model(2) * (P1.z - P2.z));

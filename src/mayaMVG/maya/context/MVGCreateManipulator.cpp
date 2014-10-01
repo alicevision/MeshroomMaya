@@ -285,6 +285,8 @@ void MVGCreateManipulator::drawIntersections(M3dView& view, const float mousex, 
             MVGDrawUtil::drawLine2D(A, B, _extendColor);
             break;
         }
+        default:
+            break;
     }
 }
 

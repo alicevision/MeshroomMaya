@@ -374,6 +374,7 @@ MStatus MVGMayaUtil::getUndoName(MString& undoName)
     MStatus status = MGlobal::executePythonCommand("import maya.cmds as cmds");
     status = MGlobal::executePythonCommand( // one line cmd, to get result
         "cmds.undoInfo( q=True, undoName=True )", undoName);
+    return status;
 }
 
 MStatus MVGMayaUtil::getRedoName(MString& redoName)
@@ -381,6 +382,7 @@ MStatus MVGMayaUtil::getRedoName(MString& redoName)
     MStatus status = MGlobal::executePythonCommand("import maya.cmds as cmds");
     status = MGlobal::executePythonCommand( // one line cmd, to get result
         "cmds.undoInfo( q=True, redoName=True )", redoName);
+    return status;
 }
 
 } // namespace
