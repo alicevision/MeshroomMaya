@@ -1,10 +1,10 @@
-#include "mayaMVG/maya/context/MVGCreateManipulator.h"
-#include "mayaMVG/maya/context/MVGDrawUtil.h"
-#include "mayaMVG/maya/MVGMayaUtil.h"
-#include "mayaMVG/core/MVGGeometryUtil.h"
-#include "mayaMVG/core/MVGMesh.h"
-#include "mayaMVG/qt/MVGUserLog.h"
-#include "mayaMVG/qt/MVGQt.h"
+#include "mayaMVG/maya/context/MVGCreateManipulator.hpp"
+#include "mayaMVG/maya/context/MVGDrawUtil.hpp"
+#include "mayaMVG/maya/MVGMayaUtil.hpp"
+#include "mayaMVG/core/MVGGeometryUtil.hpp"
+#include "mayaMVG/core/MVGMesh.hpp"
+#include "mayaMVG/qt/MVGUserLog.hpp"
+#include "mayaMVG/qt/MVGQt.hpp"
 
 namespace mayaMVG
 {

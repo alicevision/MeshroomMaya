@@ -1,4 +1,4 @@
-#include "QObjectListModel.h"
+#include "mayaMVG/qt/QObjectListModel.hpp"
 
 /*!
     \class QObjectListModel

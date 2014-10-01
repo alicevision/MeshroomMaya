@@ -1,7 +1,7 @@
 #pragma once
 
 #undef Success // needed by eigen
-#include "mayaMVG/core/MVGNodeWrapper.h"
+#include "mayaMVG/core/MVGNodeWrapper.hpp"
 #include "openMVG/cameras/PinholeCamera.hpp"
 #include <vector>
 

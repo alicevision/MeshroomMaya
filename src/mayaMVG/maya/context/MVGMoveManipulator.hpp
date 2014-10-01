@@ -1,6 +1,6 @@
 #pragma once
 
-#include "mayaMVG/maya/context/MVGManipulatorUtil.h"
+#include "mayaMVG/maya/context/MVGManipulatorUtil.hpp"
 #include <maya/MPxManipulatorNode.h>
 
 namespace mayaMVG

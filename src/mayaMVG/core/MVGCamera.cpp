@@ -1,9 +1,9 @@
-#include "mayaMVG/core/MVGCamera.h"
-#include "mayaMVG/core/MVGProject.h"
-#include "mayaMVG/core/MVGLog.h"
-#include "mayaMVG/core/MVGPointCloud.h"
-#include "mayaMVG/core/MVGPointCloudItem.h"
-#include "mayaMVG/maya/MVGMayaUtil.h"
+#include "mayaMVG/core/MVGCamera.hpp"
+#include "mayaMVG/core/MVGProject.hpp"
+#include "mayaMVG/core/MVGLog.hpp"
+#include "mayaMVG/core/MVGPointCloud.hpp"
+#include "mayaMVG/core/MVGPointCloudItem.hpp"
+#include "mayaMVG/maya/MVGMayaUtil.hpp"
 #include <maya/MMatrix.h>
 #include <maya/MQuaternion.h>
 #include <maya/MFnCamera.h>

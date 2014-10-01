@@ -1,5 +1,5 @@
-#include "mayaMVG/core/MVGNodeWrapper.h"
-#include "mayaMVG/maya/MVGMayaUtil.h"
+#include "mayaMVG/core/MVGNodeWrapper.hpp"
+#include "mayaMVG/maya/MVGMayaUtil.hpp"
 #include <maya/MGlobal.h>
 #include <maya/MFnDagNode.h>
 #include <maya/MSelectionList.h>

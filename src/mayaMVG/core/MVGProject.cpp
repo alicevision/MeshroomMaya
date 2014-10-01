@@ -1,8 +1,8 @@
-#include "mayaMVG/core/MVGProject.h"
-#include "mayaMVG/core/MVGLog.h"
-#include "mayaMVG/io/cameraIO.h"
-#include "mayaMVG/io/pointCloudIO.h"
-#include "mayaMVG/maya/MVGMayaUtil.h"
+#include "mayaMVG/core/MVGProject.hpp"
+#include "mayaMVG/core/MVGLog.hpp"
+#include "mayaMVG/io/cameraIO.hpp"
+#include "mayaMVG/io/pointCloudIO.hpp"
+#include "mayaMVG/maya/MVGMayaUtil.hpp"
 #include <maya/MFnTransform.h>
 #include <maya/MItDependencyNodes.h>
 #include <maya/MDagModifier.h>

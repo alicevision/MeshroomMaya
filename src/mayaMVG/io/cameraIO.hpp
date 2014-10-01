@@ -1,7 +1,7 @@
 #pragma once
 
-#include "mayaMVG/core/MVGCamera.h"
-#include "mayaMVG/core/MVGLog.h"
+#include "mayaMVG/core/MVGCamera.hpp"
+#include "mayaMVG/core/MVGLog.hpp"
 #include <third_party/stlplus3/filesystemSimplified/file_system.hpp>
 #include <fstream>
 

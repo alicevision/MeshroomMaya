@@ -60,13 +60,13 @@ file(GLOB_RECURSE PLUGIN_SRCS
 # Qt MOC
 #
 set(MOC_HDRS
-	qt/MVGMainWidget.h
-	qt/MVGCameraWrapper.h
-	qt/MVGProjectWrapper.h
-	qt/MVGPanelWrapper.h
-	qt/QmlInstantCoding.h
-	qt/QObjectListModel.h
-    qt/QWheelArea.h
+	qt/MVGMainWidget.hpp
+	qt/MVGCameraWrapper.hpp
+	qt/MVGProjectWrapper.hpp
+	qt/MVGPanelWrapper.hpp
+	qt/QmlInstantCoding.hpp
+	qt/QObjectListModel.hpp
+    qt/QWheelArea.hpp
 )
 qt4_wrap_cpp(MOC_SRCS ${MOC_HDRS})
 include_directories(${CMAKE_CURRENT_BINARY_DIR})

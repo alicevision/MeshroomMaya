@@ -2,7 +2,7 @@
 
 #include <QtCore>
 #include <QtDeclarative>
-#include "QtDeclarative/qdeclarativeview.h"
+#include <QtDeclarative/qdeclarativeview.h>
 
 namespace mayaMVG
 {

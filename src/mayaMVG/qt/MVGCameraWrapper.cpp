@@ -1,4 +1,4 @@
-#include "mayaMVG/qt/MVGCameraWrapper.h"
+#include "mayaMVG/qt/MVGCameraWrapper.hpp"
 #include <QImage>
 #include <QFileInfo>
 

@@ -1,7 +1,7 @@
-#include "mayaMVG/maya/cmd/MVGEditCmd.h"
-#include "mayaMVG/qt/MVGUserLog.h"
-#include "mayaMVG/core/MVGMesh.h"
-#include "mayaMVG/core/MVGProject.h"
+#include "mayaMVG/maya/cmd/MVGEditCmd.hpp"
+#include "mayaMVG/qt/MVGUserLog.hpp"
+#include "mayaMVG/core/MVGMesh.hpp"
+#include "mayaMVG/core/MVGProject.hpp"
 #include <maya/MSyntax.h>
 #include <maya/MArgList.h>
 #include <maya/MArgDatabase.h>

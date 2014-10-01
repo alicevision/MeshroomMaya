@@ -1,9 +1,9 @@
 #pragma once
 
+#include "mayaMVG/core/MVGCamera.hpp"
 #include <QObject>
 #include <QSize>
 #include <QStringList>
-#include "mayaMVG/core/MVGCamera.h"
 
 namespace mayaMVG
 {

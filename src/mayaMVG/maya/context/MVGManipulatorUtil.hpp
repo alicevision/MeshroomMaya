@@ -1,6 +1,6 @@
 #pragma once
 
-#include "mayaMVG/core/MVGCamera.h"
+#include "mayaMVG/core/MVGCamera.hpp"
 #include <maya/MPointArray.h>
 #include <maya/MIntArray.h>
 #include <map>

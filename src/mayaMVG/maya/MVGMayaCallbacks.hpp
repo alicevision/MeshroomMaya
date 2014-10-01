@@ -1,6 +1,6 @@
-#include "mayaMVG/core/MVGCamera.h"
-#include "mayaMVG/qt/MVGPanelWrapper.h"
-#include "mayaMVG/qt/MVGMainWidget.h"
+#include "mayaMVG/core/MVGCamera.hpp"
+#include "mayaMVG/qt/MVGPanelWrapper.hpp"
+#include "mayaMVG/qt/MVGMainWidget.hpp"
 #include <maya/MFnDependencyNode.h>
 #include <maya/MSelectionList.h>
 #include <maya/MQtUtil.h>

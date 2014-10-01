@@ -1,6 +1,6 @@
 #pragma once
 
-#include "mayaMVG/core/MVGNodeWrapper.h"
+#include "mayaMVG/core/MVGNodeWrapper.hpp"
 #include <vector>
 
 namespace mayaMVG

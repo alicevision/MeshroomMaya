@@ -1,7 +1,7 @@
 #pragma once
 
-#include "mayaMVG/maya/context/MVGManipulatorUtil.h"
-#include "mayaMVG/qt/MVGEventFilter.h"
+#include "mayaMVG/maya/context/MVGManipulatorUtil.hpp"
+#include "mayaMVG/qt/MVGEventFilter.hpp"
 #include <maya/MPxContext.h>
 #include <maya/MDagPath.h>
 

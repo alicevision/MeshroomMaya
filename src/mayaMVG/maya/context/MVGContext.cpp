@@ -1,8 +1,8 @@
-#include "mayaMVG/maya/context/MVGContext.h"
-#include "mayaMVG/maya/context/MVGCreateManipulator.h"
-#include "mayaMVG/maya/context/MVGMoveManipulator.h"
-#include "mayaMVG/maya/MVGMayaUtil.h"
-#include "mayaMVG/qt/MVGQt.h"
+#include "mayaMVG/maya/context/MVGContext.hpp"
+#include "mayaMVG/maya/context/MVGCreateManipulator.hpp"
+#include "mayaMVG/maya/context/MVGMoveManipulator.hpp"
+#include "mayaMVG/maya/MVGMayaUtil.hpp"
+#include "mayaMVG/qt/MVGQt.hpp"
 #include <maya/MQtUtil.h>
 
 namespace mayaMVG

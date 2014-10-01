@@ -1,4 +1,4 @@
-#include "mayaMVG/core/MVGPointCloudItem.h"
+#include "mayaMVG/core/MVGPointCloudItem.hpp"
 
 namespace mayaMVG
 {

@@ -1,6 +1,6 @@
-#include "mayaMVG/core/MVGMesh.h"
-#include "mayaMVG/core/MVGLog.h"
-#include "mayaMVG/core/MVGProject.h"
+#include "mayaMVG/core/MVGMesh.hpp"
+#include "mayaMVG/core/MVGLog.hpp"
+#include "mayaMVG/core/MVGProject.hpp"
 #include <maya/MFnMesh.h>
 #include <maya/MFnSet.h>
 #include <maya/MSelectionList.h>

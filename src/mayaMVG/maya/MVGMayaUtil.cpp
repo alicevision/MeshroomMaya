@@ -1,6 +1,6 @@
-#include "mayaMVG/maya/MVGMayaUtil.h"
-#include "mayaMVG/core/MVGCamera.h"
-#include "mayaMVG/core/MVGLog.h"
+#include "mayaMVG/maya/MVGMayaUtil.hpp"
+#include "mayaMVG/core/MVGCamera.hpp"
+#include "mayaMVG/core/MVGLog.hpp"
 #include <maya/MFnDependencyNode.h>
 #include <maya/MGlobal.h>
 #include <maya/MQtUtil.h>

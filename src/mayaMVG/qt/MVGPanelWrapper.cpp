@@ -1,6 +1,5 @@
-#include "MVGPanelWrapper.h"
-
-#include "mayaMVG/core/MVGLog.h"
+#include "mayaMVG/qt/MVGPanelWrapper.hpp"
+#include "mayaMVG/core/MVGLog.hpp"
 
 namespace mayaMVG
 {
