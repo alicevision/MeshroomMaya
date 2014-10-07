@@ -38,6 +38,10 @@ protected:
     MPointArray getOnMoveCSEdgePoints(M3dView& view,
                                       const MVGManipulatorCache::EdgeData* onPressEdgeData,
                                       const MPoint& onPressCSPoint);
+    void getTranslatedWSEdgePoints(M3dView& view,
+                                   const MVGManipulatorCache::EdgeData* originEdgeData,
+                                   MPoint& originCSPosition, MPoint& targetWSPosition,
+                                   MPointArray& targetEdgeWSPositions);
     void drawIntersection(M3dView& view) const;
 
 protected:

@@ -6,6 +6,7 @@
 #include "mayaMVG/maya/context/MVGContextCmd.hpp"
 #include "mayaMVG/maya/context/MVGCreateManipulator.hpp"
 #include "mayaMVG/maya/context/MVGMoveManipulator.hpp"
+#include "mayaMVG/maya/mesh/MVGMeshEditNode.hpp"
 #include <maya/MFnPlugin.h>
 #include <maya/MCallbackIdArray.h>
 #include <maya/MEventMessage.h>
@@ -29,7 +30,7 @@ MStatus initializePlugin(MObject obj)
     // Register Maya context, commands & nodes
     CHECK(plugin.registerCommand("MVGCmd", MVGCmd::creator))
     CHECK(plugin.registerContextCommand(MVGContextCmd::name, &MVGContextCmd::creator,
-                                        MVGEditCmd::name, MVGEditCmd::creator,
+                                        MVGEditCmd::_name, MVGEditCmd::creator,
                                         MVGEditCmd::newSyntax))
     CHECK(plugin.registerNode("MVGCreateManipulator", MVGCreateManipulator::_id,
                               &MVGCreateManipulator::creator, &MVGCreateManipulator::initialize,
@@ -37,6 +38,8 @@ MStatus initializePlugin(MObject obj)
     CHECK(plugin.registerNode("MVGMoveManipulator", MVGMoveManipulator::_id,
                               &MVGMoveManipulator::creator, &MVGMoveManipulator::initialize,
                               MPxNode::kManipulatorNode))
+    CHECK(plugin.registerNode("MVGMeshEditNode", MVGMeshEditNode::_id, MVGMeshEditNode::creator,
+                              MVGMeshEditNode::initialize))
 
     // Register Maya callbacks
     MCallbackId id;
@@ -86,9 +89,10 @@ MStatus uninitializePlugin(MObject obj)
 
     // Deregister Maya context, commands & nodes
     CHECK(plugin.deregisterCommand("MVGCmd"))
-    CHECK(plugin.deregisterContextCommand(MVGContextCmd::name, MVGEditCmd::name))
+    CHECK(plugin.deregisterContextCommand(MVGContextCmd::name, MVGEditCmd::_name))
     CHECK(plugin.deregisterNode(MVGCreateManipulator::_id))
     CHECK(plugin.deregisterNode(MVGMoveManipulator::_id))
+    CHECK(plugin.deregisterNode(MVGMeshEditNode::_id))
 
     return status;
 }

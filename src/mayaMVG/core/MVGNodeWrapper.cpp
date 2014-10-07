@@ -18,6 +18,7 @@ MVGNodeWrapper::MVGNodeWrapper(const std::string& name)
     MVGMayaUtil::getDagPathByName(name.c_str(), _dagpath);
     if(_dagpath.apiType() == MFn::kTransform)
         _dagpath.extendToShape();
+    _object = _dagpath.node();
 }
 
 MVGNodeWrapper::MVGNodeWrapper(const MString& name)
@@ -27,6 +28,7 @@ MVGNodeWrapper::MVGNodeWrapper(const MString& name)
     MVGMayaUtil::getDagPathByName(name, _dagpath);
     if(_dagpath.apiType() == MFn::kTransform)
         _dagpath.extendToShape();
+    _object = _dagpath.node();
 }
 
 MVGNodeWrapper::MVGNodeWrapper(const MDagPath& dagPath)
@@ -34,15 +36,15 @@ MVGNodeWrapper::MVGNodeWrapper(const MDagPath& dagPath)
 {
     if(_dagpath.apiType() == MFn::kTransform)
         _dagpath.extendToShape();
+    _object = _dagpath.node();
 }
 
-MVGNodeWrapper::~MVGNodeWrapper()
+MVGNodeWrapper::MVGNodeWrapper(const MObject& object)
+    : _object(object)
 {
-}
-
-bool MVGNodeWrapper::isValid() const
-{
-    return _dagpath.isValid();
+    MDagPath::getAPathTo(object, _dagpath);
+    if(_dagpath.apiType() == MFn::kTransform)
+        _dagpath.extendToShape();
 }
 
 void MVGNodeWrapper::select() const
@@ -57,15 +59,26 @@ const MDagPath& MVGNodeWrapper::getDagPath() const
     return _dagpath;
 }
 
+const MObject& MVGNodeWrapper::getObject() const
+{
+    return _object;
+}
+
 std::string MVGNodeWrapper::getName() const
 {
-    MFnDagNode fn(_dagpath.transform()); // return the transform name
+    MObject obj = _object;
+    if(_dagpath.isValid())
+        obj = _dagpath.transform(); // use the transform node
+    MFnDependencyNode fn(obj);
     return fn.name().asChar();
 }
 
 void MVGNodeWrapper::setName(const std::string& name) const
 {
-    MFnDagNode fn(_dagpath.transform()); // rename the transform node
+    MObject obj = _object;
+    if(_dagpath.isValid())
+        obj = _dagpath.transform(); // use the transform node
+    MFnDependencyNode fn(obj);
     fn.setName(name.c_str());
 }
 

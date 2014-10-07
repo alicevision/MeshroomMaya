@@ -103,9 +103,8 @@ void MVGMoveManipulator::draw(M3dView& view, const MDagPath& path, M3dView::Disp
                                         _finalWSPositions[0], MColor(1, 0, 0));
                 break;
             case MFn::kMeshEdgeComponent:
-                MVGDrawUtil::drawLine3D(
-                    _onPressIntersectedComponent.edge->vertex1->worldPosition,
-                    _finalWSPositions[0], MColor(1, 0, 0));
+                MVGDrawUtil::drawLine3D(_onPressIntersectedComponent.edge->vertex1->worldPosition,
+                                        _finalWSPositions[0], MColor(1, 0, 0));
                 if(_finalWSPositions.length() > 1)
                 {
                     MVGDrawUtil::drawLine3D(
@@ -162,19 +161,15 @@ MStatus MVGMoveManipulator::doRelease(M3dView& view)
     // compute the final vertex/edge position depending on move mode
     computeFinalWSPositions(view);
 
-    // perform edit command : add blind data
-    MVGEditCmd* cmd1 = newEditCmd();
-    if(!cmd1)
-        return MS::kFailure;
-
+    // prepare commands data
     MIntArray indices;
-    MPointArray clickedPoints;
+    MPointArray clickedCSPoints;
     switch(_onPressIntersectedComponent.type)
     {
         case MFn::kMeshVertComponent:
         {
             indices.append(_onPressIntersectedComponent.vertex->index);
-            clickedPoints.append(getMousePosition(view));
+            clickedCSPoints.append(getMousePosition(view));
             break;
         }
         case MFn::kMeshEdgeComponent:
@@ -182,30 +177,20 @@ MStatus MVGMoveManipulator::doRelease(M3dView& view)
             indices.append(_onPressIntersectedComponent.edge->vertex1->index);
             indices.append(_onPressIntersectedComponent.edge->vertex2->index);
             getOnMoveCSEdgePoints(view, _onPressIntersectedComponent.edge, _onPressCSPosition,
-                                  clickedPoints);
+                                  clickedCSPoints);
             break;
         }
         default:
             break;
     }
-
-    assert(clickedPoints.length() == indices.length());
-    cmd1->doLocate(_onPressIntersectedComponent.meshPath, clickedPoints, indices,
-                   _cache->getActiveCamera().getId());
-    if(cmd1->redoIt())
-        cmd1->finalize();
-
-    // perform edit command : move component
-    if(_finalWSPositions.length() > 0)
+    MVGEditCmd* cmd = newEditCmd();
+    if(cmd)
     {
-        MVGEditCmd* cmd2 = newEditCmd();
-        if(cmd2)
-        {
-            assert(_finalWSPositions.length() == indices.length());
-            cmd2->doMove(_onPressIntersectedComponent.meshPath, _finalWSPositions, indices);
-            if(cmd2->redoIt())
-                cmd2->finalize();
-        }
+        cmd->move(_onPressIntersectedComponent.meshPath, indices, _finalWSPositions,
+                  clickedCSPoints, _cache->getActiveCamera().getId());
+        MArgList args;
+        if(cmd->doIt(args))
+            cmd->finalize();
     }
 
     // clear the intersected component (stored on mouse press)
@@ -276,9 +261,8 @@ void MVGMoveManipulator::computeFinalWSPositions(M3dView& view)
                     // in case we can move only one vertex
                     if(_finalWSPositions.length() == 1)
                     {
-                        MVector edgeWS =
-                            _onPressIntersectedComponent.edge->vertex2->worldPosition -
-                            _onPressIntersectedComponent.edge->vertex1->worldPosition;
+                        MVector edgeWS = _onPressIntersectedComponent.edge->vertex2->worldPosition -
+                                         _onPressIntersectedComponent.edge->vertex1->worldPosition;
                         if(vertex1Computed)
                             _finalWSPositions.append(_finalWSPositions[0] + edgeWS);
                         if(vertex2Computed)
@@ -323,7 +307,7 @@ void MVGMoveManipulator::computeFinalWSPositions(M3dView& view)
                     assert(movingVertexIDInThisFace != -1);
                     MPointArray worldSpacePoints;
                     MVGPointCloud cloud(MVGProject::_CLOUD);
-                    if(cloud.projectPolygon(view, cameraSpacePoints, worldSpacePoints))
+                    if(cloud.projectPoints(view, cameraSpacePoints, worldSpacePoints))
                     {
                         // add only the moved vertex position, not the other projected vertices
                         _finalWSPositions.append(worldSpacePoints[movingVertexIDInThisFace]);
@@ -367,7 +351,7 @@ void MVGMoveManipulator::computeFinalWSPositions(M3dView& view)
                     assert(movingVerticesIDInThisFace.length() == 2);
                     MPointArray worldSpacePoints;
                     MVGPointCloud cloud(MVGProject::_CLOUD);
-                    if(cloud.projectPolygon(view, cameraSpacePoints, worldSpacePoints))
+                    if(cloud.projectPoints(view, cameraSpacePoints, worldSpacePoints))
                     {
                         // add only the moved vertices positions, not the other projected vertices
                         _finalWSPositions.append(worldSpacePoints[movingVerticesIDInThisFace[0]]);

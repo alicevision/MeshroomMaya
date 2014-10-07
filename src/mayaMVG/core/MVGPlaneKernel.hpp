@@ -59,6 +59,7 @@ struct PlaneKernel
     const openMVG::Mat& _pt;
 };
 
+// FIXME check return value
 static bool plane_line_intersect(const PlaneKernel::Model& model, const MPoint& P1,
                                  const MPoint& P2, MPoint& P)
 {

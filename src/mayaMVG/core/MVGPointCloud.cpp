@@ -166,8 +166,8 @@ std::vector<MVGPointCloudItem> MVGPointCloud::getItems() const
     return items;
 }
 
-bool MVGPointCloud::projectPolygon(M3dView& view, const MPointArray& cameraSpacePoints,
-                                   MPointArray& worldSpacePoints)
+bool MVGPointCloud::projectPoints(M3dView& view, const MPointArray& cameraSpacePoints,
+                                  MPointArray& worldSpacePoints)
 {
     if(!isValid())
         return false;
@@ -189,7 +189,7 @@ bool MVGPointCloud::projectPolygon(M3dView& view, const MPointArray& cameraSpace
     closedVSPolygon.append(closedVSPolygon[0]); // add an extra point (to describe a closed shape)
 
     // get enclosed items in pointcloud
-    std::vector<MVGPointCloudItem> enclosedItems;
+    MPointArray enclosedWSPoints;
     std::vector<MVGPointCloudItem>::const_iterator it = items.begin();
     int windingNumber = 0;
     for(; it != items.end(); ++it)
@@ -197,35 +197,13 @@ bool MVGPointCloud::projectPolygon(M3dView& view, const MPointArray& cameraSpace
         windingNumber =
             wn_PnPoly(MVGGeometryUtil::worldToViewSpace(view, it->_position), closedVSPolygon);
         if(windingNumber != 0)
-            enclosedItems.push_back(*it);
+            enclosedWSPoints.append(it->_position);
     }
-    if(enclosedItems.size() < 3)
+    if(enclosedWSPoints.length() < 3)
         return false;
 
-    // 3D plane estimation w/ a variant of RANSAC using Least Median of Squares
-    openMVG::Mat enclosedItemsMat(3, enclosedItems.size());
-    for(size_t i = 0; i < enclosedItems.size(); ++i)
-        enclosedItemsMat.col(i) = TO_VEC3(enclosedItems[i]._position);
-
-    PlaneKernel kernel(enclosedItemsMat);
-    PlaneKernel::Model model;
-    double outlierThreshold = std::numeric_limits<double>::infinity();
-    double dBestMedian = openMVG::robust::LeastMedianOfSquares(kernel, &model, &outlierThreshold);
-
-    // Retrieve projected points from this model
-    MPoint P;
-    MPoint worldSpaceCameraCenter = TO_MPOINT(camera.getPinholeCamera()._C);
-    MMatrix inclusiveMatrix = getDagPath().inclusiveMatrix();
-    worldSpaceCameraCenter *= inclusiveMatrix;
-
-    MPoint worldPoint;
-    for(size_t i = 0; i < cameraSpacePoints.length(); ++i)
-    {
-        plane_line_intersect(model, worldSpaceCameraCenter,
-                             MVGGeometryUtil::cameraToWorldSpace(view, cameraSpacePoints[i]), P);
-        worldSpacePoints.append(P);
-    }
-    return true;
+    return MVGGeometryUtil::projectPointsOnPlane(view, cameraSpacePoints, enclosedWSPoints,
+                                                 worldSpacePoints);
 }
 
 } // namespace

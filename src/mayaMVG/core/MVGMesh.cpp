@@ -8,10 +8,11 @@
 #include <maya/MItMeshPolygon.h>
 #include <maya/MItMeshVertex.h>
 #include <maya/MItMeshEdge.h>
-#include <maya/MItDependencyNodes.h>
+#include <maya/MItDag.h>
 #include <maya/MGlobal.h>
 #include <maya/MPointArray.h>
 #include <maya/MFloatPointArray.h>
+#include <cassert>
 
 namespace mayaMVG
 {
@@ -46,16 +47,18 @@ MVGMesh::MVGMesh(const MDagPath& dagPath)
 {
 }
 
-MVGMesh::~MVGMesh()
+MVGMesh::MVGMesh(const MObject& object)
+    : MVGNodeWrapper(object)
 {
 }
 
 bool MVGMesh::isValid() const
 {
-    if(!_dagpath.isValid() || (_dagpath.apiType() != MFn::kMesh))
+    if(_object == MObject::kNullObj ||
+       !(_object.apiType() == MFn::kMesh || _object.apiType() == MFn::kMeshData))
         return false;
-    MFnMesh fn(_dagpath);
-    return !fn.isIntermediateObject();
+    // TODO ? Check if mesh has blind data
+    return true;
 }
 
 MVGMesh MVGMesh::create(const std::string& name)
@@ -113,11 +116,13 @@ std::vector<MVGMesh> MVGMesh::list()
 {
     std::vector<MVGMesh> list;
     MDagPath path;
-    MItDependencyNodes it(MFn::kMesh);
+    MItDag it(MItDag::kDepthFirst, MFn::kMesh);
     for(; !it.isDone(); it.next())
     {
-        MFnDependencyNode fn(it.thisNode());
-        MDagPath::getAPathTo(fn.object(), path);
+        MFnDagNode fn(it.currentItem());
+        if(fn.isIntermediateObject())
+            continue;
+        fn.getPath(path);
         MVGMesh mesh(path);
         if(mesh.isValid())
             list.push_back(mesh);
@@ -128,32 +133,28 @@ std::vector<MVGMesh> MVGMesh::list()
 bool MVGMesh::addPolygon(const MPointArray& pointArray, int& index) const
 {
     MStatus status;
-    MFnMesh fnMesh(_dagpath, &status);
+    MFnMesh fnMesh(_object, &status);
     if(pointArray.length() < 3)
         return false;
-
-    fnMesh.addPolygon(pointArray, index, true, 0.01, MObject::kNullObj, &status);
+    fnMesh.addPolygon(pointArray, index, true, kMFnMeshPointTolerance, MObject::kNullObj, &status);
     CHECK_RETURN_VARIABLE(status, false)
-    fnMesh.updateSurface();
-
     return true;
 }
 
 bool MVGMesh::deletePolygon(const int index) const
 {
     MStatus status;
-    MFnMesh fnMesh(_dagpath, &status);
+    MFnMesh fnMesh(_object, &status);
     CHECK_RETURN_VARIABLE(status, false)
     status = fnMesh.deleteFace(index);
     CHECK_RETURN_VARIABLE(status, false)
-    fnMesh.updateSurface();
     return true;
 }
 
 MStatus MVGMesh::getPoints(MPointArray& pointArray) const
 {
     MStatus status;
-    MFnMesh fnMesh(_dagpath, &status);
+    MFnMesh fnMesh(_object, &status);
     CHECK_RETURN_STATUS(status);
     status = fnMesh.getPoints(pointArray, MSpace::kWorld);
     CHECK_RETURN_STATUS(status)
@@ -163,7 +164,7 @@ MStatus MVGMesh::getPoints(MPointArray& pointArray) const
 int MVGMesh::getPolygonsCount() const
 {
     MStatus status;
-    MFnMesh fnMesh(_dagpath, &status);
+    MFnMesh fnMesh(_object, &status);
     CHECK(status);
     int count = fnMesh.numPolygons(&status);
     CHECK(status);
@@ -173,18 +174,18 @@ int MVGMesh::getPolygonsCount() const
 MStatus MVGMesh::getPolygonVertices(const int polygonId, MIntArray& vertexList) const
 {
     MStatus status;
-    MFnMesh fnMesh(_dagpath, &status);
+    MFnMesh fnMesh(_object, &status);
     CHECK_RETURN_STATUS(status);
     status = fnMesh.getPolygonVertices(polygonId, vertexList);
     CHECK_RETURN_STATUS(status)
     return status;
 }
 
-const MIntArray MVGMesh::getConnectedFacesToVertex(int vertexId) const
+const MIntArray MVGMesh::getConnectedFacesToVertex(int vertexId)
 {
     MIntArray connectedFacesId;
     MStatus status;
-    MItMeshVertex verticesIter(_dagpath, MObject::kNullObj, &status);
+    MItMeshVertex verticesIter(_object, &status);
     CHECK(status);
     int prev;
     status = verticesIter.setIndex(vertexId, prev);
@@ -194,11 +195,11 @@ const MIntArray MVGMesh::getConnectedFacesToVertex(int vertexId) const
     return connectedFacesId;
 }
 
-const MIntArray MVGMesh::getConnectedFacesToEdge(int edgeId) const
+const MIntArray MVGMesh::getConnectedFacesToEdge(int edgeId)
 {
     MIntArray connectedFacesId;
     MStatus status;
-    MItMeshEdge edgesIter(_dagpath, MObject::kNullObj, &status);
+    MItMeshEdge edgesIter(_object, &status);
     CHECK(status);
     int prev;
     status = edgesIter.setIndex(edgeId, prev);
@@ -208,10 +209,10 @@ const MIntArray MVGMesh::getConnectedFacesToEdge(int edgeId) const
     return connectedFacesId;
 }
 
-const MIntArray MVGMesh::getFaceVertices(int faceId) const
+const MIntArray MVGMesh::getFaceVertices(int faceId)
 {
     MStatus status;
-    MItMeshPolygon faceIter(_dagpath);
+    MItMeshPolygon faceIter(_object);
     int prev;
     status = faceIter.setIndex(faceId, prev);
     CHECK(status);
@@ -224,30 +225,16 @@ const MIntArray MVGMesh::getFaceVertices(int faceId) const
 MStatus MVGMesh::setPoint(int vertexId, MPoint& point) const
 {
     MStatus status;
-    MFnMesh fnMesh(_dagpath, &status);
+    MFnMesh fnMesh(_object, &status);
+    fnMesh.setPoint(vertexId, point, MSpace::kWorld);
     CHECK_RETURN_STATUS(status);
-    // FIXME - vertex merge issue
-    //       - don't use the MFnMesh::setPoint
-    MIntArray polygonCounts;
-    MIntArray polygonConnects;
-    status = fnMesh.getVertices(polygonCounts, polygonConnects);
-    MFloatPointArray meshVertices;
-    fnMesh.getPoints(meshVertices, MSpace::kObject);
-    if(vertexId >= meshVertices.length())
-        return MS::kFailure;
-    meshVertices[vertexId] = MFloatPoint(point.x, point.y, point.z);
-    status = fnMesh.createInPlace(fnMesh.numVertices(), fnMesh.numPolygons(), meshVertices,
-                                  polygonCounts, polygonConnects);
-    CHECK(status)
-    fnMesh.updateSurface();
-
-    CHECK_RETURN_STATUS(status)
     return status;
 }
 
 MStatus MVGMesh::getPoint(int vertexId, MPoint& point) const
 {
     MStatus status;
+    assert(_dagpath.isValid());
     MFnMesh fnMesh(_dagpath, &status);
     status = fnMesh.getPoint(vertexId, point, MSpace::kWorld);
     CHECK_RETURN_STATUS(status)
@@ -258,7 +245,7 @@ MStatus MVGMesh::setBlindData(const int vertexId,
                               std::vector<ClickedCSPosition>& clickedCSPositions) const
 {
     MStatus status;
-    MFnMesh fnMesh(_dagpath, &status);
+    MFnMesh fnMesh(_object, &status);
     CHECK_RETURN_STATUS(status);
     char* charData = reinterpret_cast<char*>(clickedCSPositions.data());
     const int binarySize = clickedCSPositions.size() * sizeof(ClickedCSPosition);
@@ -273,7 +260,7 @@ MStatus MVGMesh::getBlindData(const int vertexId,
                               std::vector<ClickedCSPosition>& clickedCSPositions) const
 {
     MStatus status;
-    MFnMesh fnMesh(_dagpath, &status);
+    MFnMesh fnMesh(_object, &status);
     CHECK_RETURN_STATUS(status);
     if(!fnMesh.hasBlindData(MFn::kMeshVertComponent))
         return MS::kFailure;
@@ -306,7 +293,7 @@ MStatus MVGMesh::getBlindData(const int vertexId,
 MStatus MVGMesh::unsetBlindData(const int vertexId) const
 {
     MStatus status;
-    MFnMesh fnMesh(_dagpath, &status);
+    MFnMesh fnMesh(_object, &status);
     CHECK_RETURN_STATUS(status);
     if(!fnMesh.hasBlindData(MFn::kMeshVertComponent))
         return MS::kFailure;

@@ -25,7 +25,8 @@ public:
     MVGMesh(const std::string& name);
     MVGMesh(const MString& name);
     MVGMesh(const MDagPath& dagPath);
-    virtual ~MVGMesh();
+    MVGMesh(const MObject& object);
+    virtual ~MVGMesh() {}
 
 public:
     virtual bool isValid() const;
@@ -40,9 +41,9 @@ public:
     MStatus getPoints(MPointArray& pointArray) const;
     int getPolygonsCount() const;
     MStatus getPolygonVertices(const int polygonId, MIntArray& vertexList) const;
-    const MIntArray getConnectedFacesToVertex(int vertexId) const;
-    const MIntArray getConnectedFacesToEdge(int edgeId) const;
-    const MIntArray getFaceVertices(int faceId) const;
+    const MIntArray getConnectedFacesToVertex(int vertexId);
+    const MIntArray getConnectedFacesToEdge(int edgeId);
+    const MIntArray getFaceVertices(int faceId);
     MStatus getPoint(int vertexId, MPoint& point) const;
     MStatus setPoint(int vertexId, MPoint& point) const;
     MStatus setBlindData(const int vertexId, std::vector<ClickedCSPosition>& data) const;

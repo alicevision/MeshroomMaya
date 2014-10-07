@@ -1,23 +1,17 @@
 #pragma once
 
-#include <maya/MPxToolCommand.h>
-#include <maya/MPointArray.h>
+#include "mayaMVG/maya/cmd/MVGPolyModifierCmd.hpp"
+#include "mayaMVG/maya/mesh/MVGMeshEditFactory.hpp"
 #include <maya/MIntArray.h>
+#include <maya/MPointArray.h>
 
 class MDagPath;
 
 namespace mayaMVG
 {
 
-class MVGEditCmd : public MPxToolCommand
+class MVGEditCmd : public MVGPolyModifierCmd
 {
-
-    enum CMD_FLAG
-    {
-        CMD_CREATE = 1 << 0,
-        CMD_MOVE = 1 << 1,
-        CMD_LOCATE = 1 << 2
-    };
 
 public:
     MVGEditCmd();
@@ -35,20 +29,23 @@ public:
     MStatus finalize();
 
 public:
-    void doAddPolygon(const MDagPath& meshPath, const MPointArray& points);
-    void doMove(const MDagPath& meshPath, const MPointArray& points,
-                const MIntArray& verticesIndexes);
-    void doLocate(const MDagPath& meshPath, const MPointArray& points,
-                  const MIntArray& verticesIndexes, int cameraID);
+    MStatus initModifierNode(MObject modifierNode);
+    void create(const MDagPath& meshPath, const MPointArray& points);
+    void move(const MDagPath& meshPath, const MIntArray& componentIDs,
+              const MPointArray& worldSpacePositions, const MPointArray& cameraSpacePositions,
+              int cameraID);
 
 public:
-    static MString name;
+    static MString _name;
 
 private:
-    size_t _flags;
-    MString _meshName;
-    MPointArray _points;
-    MIntArray _indexes;
+    MVGMeshEditFactory _editFactory;
+    MVGMeshEditFactory::EditType _editType;
+    MDagPath _meshPath;
+    MObject _componentList;
+    MIntArray _componentIDs;
+    MPointArray _worldSpacePositions;
+    MPointArray _cameraSpacePositions;
     int _cameraID;
 };
 

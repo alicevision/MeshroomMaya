@@ -82,6 +82,7 @@ void MVGManipulator::getOnMoveCSEdgePoints(M3dView& view,
                                            const MPoint& onPressCSPoint,
                                            MPointArray& onMoveCSEdgePoints)
 {
+    assert(onPressEdgeData != NULL);
     // vertex 1
     MVector mouseToVertexCSOffset =
         MVGGeometryUtil::worldToCameraSpace(view, onPressEdgeData->vertex1->worldPosition) -
@@ -94,13 +95,33 @@ void MVGManipulator::getOnMoveCSEdgePoints(M3dView& view,
     onMoveCSEdgePoints.append(getMousePosition(view) + mouseToVertexCSOffset);
 }
 
-MPointArray MVGManipulator::getOnMoveCSEdgePoints(M3dView& view,
+MPointArray
+MVGManipulator::getOnMoveCSEdgePoints(M3dView& view,
                                       const MVGManipulatorCache::EdgeData* onPressEdgeData,
                                       const MPoint& onPressCSPoint)
 {
+    assert(onPressEdgeData != NULL);
     MPointArray onMoveCSEdgePoints;
     getOnMoveCSEdgePoints(view, onPressEdgeData, onPressCSPoint, onMoveCSEdgePoints);
     return onMoveCSEdgePoints;
+}
+
+void MVGManipulator::getTranslatedWSEdgePoints(M3dView& view,
+                                               const MVGManipulatorCache::EdgeData* originEdgeData,
+                                               MPoint& originCSPosition, MPoint& targetWSPosition,
+                                               MPointArray& targetEdgeWSPositions)
+{
+    assert(originEdgeData != NULL);
+    MVector edgeWSVector =
+        originEdgeData->vertex1->worldPosition - originEdgeData->vertex2->worldPosition;
+    MVector vertex1ToMouseCSVector =
+        originCSPosition -
+        MVGGeometryUtil::worldToCameraSpace(view, originEdgeData->vertex1->worldPosition);
+    float ratioVertex1 = vertex1ToMouseCSVector.length() / edgeWSVector.length();
+    float ratioVertex2 = 1.f - ratioVertex1;
+
+    targetEdgeWSPositions.append(targetWSPosition + ratioVertex1 * edgeWSVector);
+    targetEdgeWSPositions.append(targetWSPosition - ratioVertex2 * edgeWSVector);
 }
 
 void MVGManipulator::drawIntersection(M3dView& view) const

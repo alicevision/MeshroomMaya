@@ -28,8 +28,8 @@ public:
 public:
     void setItems(const std::vector<MVGPointCloudItem>& items);
     std::vector<MVGPointCloudItem> getItems() const;
-    bool projectPolygon(M3dView& view, const MPointArray& cameraSpacePoints,
-                        MPointArray& worldSpacePoints);
+    bool projectPoints(M3dView& view, const MPointArray& cameraSpacePoints,
+                       MPointArray& worldSpacePoints);
 
 private:
     static MString _RGBPP;
