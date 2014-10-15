@@ -2,6 +2,7 @@
 
 #include "mayaMVG/core/MVGNodeWrapper.hpp"
 #include <vector>
+#include <map>
 
 class MPoint;
 class MPointArray;
@@ -12,6 +13,13 @@ namespace mayaMVG
 
 class MVGMesh : public MVGNodeWrapper
 {
+public:
+    struct ClickedCSPosition
+    {
+        unsigned int cameraId;
+        double x;
+        double y;
+    };
 
 public:
     MVGMesh(const std::string& name);
@@ -33,9 +41,21 @@ public:
     int getPolygonsCount() const;
     MStatus getPolygonVertices(const int polygonId, MIntArray& vertexList) const;
     const MIntArray getConnectedFacesToVertex(int vertexId) const;
+    const MIntArray getConnectedFacesToEdge(int edgeId) const;
     const MIntArray getFaceVertices(int faceId) const;
     MStatus getPoint(int vertexId, MPoint& point) const;
     MStatus setPoint(int vertexId, MPoint& point) const;
+    MStatus setBlindData(const int vertexId, std::vector<ClickedCSPosition>& data) const;
+    MStatus getBlindData(const int vertexId, std::vector<ClickedCSPosition>& data) const;
+    MStatus getBlindData(const int vertexId, std::map<int, MPoint>& cameraToClickedCSPoints) const;
+    MStatus unsetBlindData(const int vertexId) const;
+    MStatus getBlindDataPerCamera(const int vertexId, const int cameraId, MPoint& point2D) const;
+    MStatus setBlindDataPerCamera(const int vertexId, const int cameraId,
+                                  const MPoint& point2D) const;
+    MStatus unsetBlindDataPerCamera(const int vertexId, const int cameraId) const;
+
+private:
+    static int _blindDataID;
 };
 
 } // namespace

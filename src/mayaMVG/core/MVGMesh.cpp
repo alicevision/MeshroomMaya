@@ -7,6 +7,7 @@
 #include <maya/MDagModifier.h>
 #include <maya/MItMeshPolygon.h>
 #include <maya/MItMeshVertex.h>
+#include <maya/MItMeshEdge.h>
 #include <maya/MItDependencyNodes.h>
 #include <maya/MGlobal.h>
 #include <maya/MPointArray.h>
@@ -14,6 +15,21 @@
 
 namespace mayaMVG
 {
+
+namespace
+{ // empty namespace
+
+void binaryToVectorData(const char* binaryData, const int binarySize,
+                        std::vector<MVGMesh::ClickedCSPosition>& vectorData)
+{
+    const size_t nbElements = size_t(binarySize / sizeof(MVGMesh::ClickedCSPosition));
+    vectorData.resize(nbElements);
+    memcpy(vectorData.data(), binaryData, binarySize);
+}
+
+} // empty namespace
+
+int MVGMesh::_blindDataID = 0; // FIXME
 
 MVGMesh::MVGMesh(const std::string& name)
     : MVGNodeWrapper(name)
@@ -56,6 +72,17 @@ MVGMesh MVGMesh::create(const std::string& name)
     MIntArray polygonCounts, polygonConnects;
     MObject transform = fnMesh.create(0, 0, vertexArray, polygonCounts, polygonConnects,
                                       MObject::kNullObj, &status);
+
+    // Create blindData
+    MStringArray longNames, shortNames, formatNames;
+    longNames.append("binarySize");
+    shortNames.append("size");
+    formatNames.append("int");
+    longNames.append("binaryData");
+    shortNames.append("data");
+    formatNames.append("binary");
+    if(!fnMesh.isBlindDataTypeUsed(_blindDataID, &status))
+        CHECK(fnMesh.createBlindDataType(_blindDataID, longNames, shortNames, formatNames))
 
     // register dag path
     MDagPath path;
@@ -167,6 +194,20 @@ const MIntArray MVGMesh::getConnectedFacesToVertex(int vertexId) const
     return connectedFacesId;
 }
 
+const MIntArray MVGMesh::getConnectedFacesToEdge(int edgeId) const
+{
+    MIntArray connectedFacesId;
+    MStatus status;
+    MItMeshEdge edgesIter(_dagpath, MObject::kNullObj, &status);
+    CHECK(status);
+    int prev;
+    status = edgesIter.setIndex(edgeId, prev);
+    CHECK(status);
+    edgesIter.getConnectedFaces(connectedFacesId, &status);
+    CHECK(status);
+    return connectedFacesId;
+}
+
 const MIntArray MVGMesh::getFaceVertices(int faceId) const
 {
     MStatus status;
@@ -185,10 +226,8 @@ MStatus MVGMesh::setPoint(int vertexId, MPoint& point) const
     MStatus status;
     MFnMesh fnMesh(_dagpath, &status);
     CHECK_RETURN_STATUS(status);
-
     // FIXME - vertex merge issue
     //       - don't use the MFnMesh::setPoint
-
     MIntArray polygonCounts;
     MIntArray polygonConnects;
     status = fnMesh.getVertices(polygonCounts, polygonConnects);
@@ -212,6 +251,130 @@ MStatus MVGMesh::getPoint(int vertexId, MPoint& point) const
     MFnMesh fnMesh(_dagpath, &status);
     status = fnMesh.getPoint(vertexId, point, MSpace::kWorld);
     CHECK_RETURN_STATUS(status)
+    return status;
+}
+
+MStatus MVGMesh::setBlindData(const int vertexId,
+                              std::vector<ClickedCSPosition>& clickedCSPositions) const
+{
+    MStatus status;
+    MFnMesh fnMesh(_dagpath, &status);
+    CHECK_RETURN_STATUS(status);
+    char* charData = reinterpret_cast<char*>(clickedCSPositions.data());
+    const int binarySize = clickedCSPositions.size() * sizeof(ClickedCSPosition);
+    CHECK_RETURN_STATUS(
+        fnMesh.setIntBlindData(vertexId, MFn::kMeshVertComponent, _blindDataID, "size", binarySize))
+    CHECK_RETURN_STATUS(fnMesh.setBinaryBlindData(vertexId, MFn::kMeshVertComponent, _blindDataID,
+                                                  "data", charData, binarySize))
+    return status;
+}
+
+MStatus MVGMesh::getBlindData(const int vertexId,
+                              std::vector<ClickedCSPosition>& clickedCSPositions) const
+{
+    MStatus status;
+    MFnMesh fnMesh(_dagpath, &status);
+    CHECK_RETURN_STATUS(status);
+    if(!fnMesh.hasBlindData(MFn::kMeshVertComponent))
+        return MS::kFailure;
+    if(!fnMesh.hasBlindDataComponentId(vertexId, MFn::kMeshVertComponent, _blindDataID))
+        return MS::kFailure;
+    int binarySize;
+    CHECK_RETURN_STATUS(
+        fnMesh.getIntBlindData(vertexId, MFn::kMeshVertComponent, _blindDataID, "size", binarySize))
+    MString stringData;
+    CHECK_RETURN_STATUS(fnMesh.getBinaryBlindData(vertexId, MFn::kMeshVertComponent, _blindDataID,
+                                                  "data", stringData))
+    const char* binData = stringData.asChar(binarySize);
+    binaryToVectorData(binData, binarySize, clickedCSPositions);
+    return status;
+}
+
+MStatus MVGMesh::getBlindData(const int vertexId,
+                              std::map<int, MPoint>& cameraToClickedCSPoints) const
+{
+    MStatus status;
+    std::vector<ClickedCSPosition> data;
+    if(!getBlindData(vertexId, data))
+        return MS::kFailure;
+    std::vector<ClickedCSPosition>::const_iterator it = data.begin();
+    for(; it != data.end(); ++it)
+        cameraToClickedCSPoints[it->cameraId] = MPoint(it->x, it->y);
+    return status;
+}
+
+MStatus MVGMesh::unsetBlindData(const int vertexId) const
+{
+    MStatus status;
+    MFnMesh fnMesh(_dagpath, &status);
+    CHECK_RETURN_STATUS(status);
+    if(!fnMesh.hasBlindData(MFn::kMeshVertComponent))
+        return MS::kFailure;
+    status = fnMesh.clearBlindData(vertexId, MFn::kMeshVertComponent, _blindDataID);
+    CHECK(status)
+    return status;
+}
+
+MStatus MVGMesh::getBlindDataPerCamera(const int vertexId, const int cameraId,
+                                       MPoint& point2D) const
+{
+    MStatus status;
+    std::vector<ClickedCSPosition> data;
+    status = getBlindData(vertexId, data);
+    CHECK_RETURN_STATUS(status)
+    for(std::vector<ClickedCSPosition>::iterator it = data.begin(); it != data.end(); ++it)
+    {
+        if(it->cameraId == cameraId)
+        {
+            point2D.x = it->x;
+            point2D.y = it->y;
+            return MS::kSuccess;
+        }
+    }
+    return MS::kFailure;
+}
+
+MStatus MVGMesh::setBlindDataPerCamera(const int vertexId, const int cameraId,
+                                       const MPoint& point2D) const
+{
+    MStatus status;
+    std::vector<ClickedCSPosition> data;
+    if(getBlindData(vertexId, data))
+    {
+        for(std::vector<ClickedCSPosition>::iterator it = data.begin(); it != data.end(); ++it)
+        {
+            if(it->cameraId == cameraId)
+            {
+                it->x = point2D.x;
+                it->y = point2D.y;
+                status = setBlindData(vertexId, data);
+                CHECK(status)
+                return status;
+            }
+        }
+    }
+    ClickedCSPosition newData;
+    newData.cameraId = cameraId;
+    newData.x = point2D.x;
+    newData.y = point2D.y;
+    data.push_back(newData);
+    status = setBlindData(vertexId, data);
+    CHECK(status)
+    return status;
+}
+
+MStatus MVGMesh::unsetBlindDataPerCamera(const int vertexId, const int cameraId) const
+{
+    MStatus status;
+    std::vector<ClickedCSPosition> data;
+    status = getBlindData(vertexId, data);
+    for(std::vector<ClickedCSPosition>::iterator it = data.begin(); it != data.end(); ++it)
+    {
+        if(it->cameraId == cameraId)
+            data.erase(it);
+    }
+    status = setBlindData(vertexId, data);
+    CHECK(status)
     return status;
 }
 
