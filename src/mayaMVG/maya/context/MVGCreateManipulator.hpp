@@ -1,26 +1,18 @@
 #pragma once
 
-#include "mayaMVG/maya/context/MVGManipulatorUtil.hpp"
-#include <maya/MPxManipulatorNode.h>
+#include "mayaMVG/maya/context/MVGManipulator.hpp"
+#include <maya/MPointArray.h>
 
 namespace mayaMVG
 {
 
 class MVGEditCmd;
-class MVGContext;
 
-class MVGCreateManipulator : public MPxManipulatorNode
+class MVGCreateManipulator : public MVGManipulator
 {
-    enum ECreateState
-    {
-        eCreateNone = 0,
-        eCreateFace,
-        eCreateExtend
-    };
-
 public:
-    MVGCreateManipulator();
-    virtual ~MVGCreateManipulator();
+    MVGCreateManipulator() {}
+    virtual ~MVGCreateManipulator() {}
 
 public:
     static void* creator();
@@ -33,33 +25,13 @@ public:
     virtual MStatus doRelease(M3dView& view);
     virtual MStatus doMove(M3dView& view, bool& refresh);
     virtual MStatus doDrag(M3dView& view);
-    virtual void preDrawUI(const M3dView&);
-    virtual void drawUI(MHWRender::MUIDrawManager&, const MHWRender::MFrameContext&) const;
-
-public:
-    void setManipUtil(MVGManipulatorUtil* m) { _manipUtil = m; }
 
 private:
-    MPoint updateMouse(M3dView& view);
-    // Draw
-    void drawCursor(const float mousex, const float mousey);
-    void drawIntersections(M3dView& view, const float mousex, const float mousey);
-    void drawPreview2D(M3dView& view, const MVGManipulatorUtil::DisplayData* data);
-    void drawOtherPreview2D(M3dView& view, const MVGManipulatorUtil::DisplayData* data);
-    // Compute
-    void computeTmpFaceOnEdgeExtend(M3dView& view, MVGManipulatorUtil::DisplayData* data,
-                                    const MPoint& mousePointInCameraCoord);
-    bool createFace(M3dView& view, MVGManipulatorUtil::DisplayData* data);
+    void computeFinalWSPositions(M3dView& view);
 
 public:
     static MTypeId _id;
-    MVGManipulatorUtil* _manipUtil;
-    ECreateState _createState;
-    MVector _createColor;
-    MVector _neutralCreateColor;
-    MVector _extendColor;
-    MVector _faceColor;
-    MVector _cursorColor;
+    MPointArray _clickedCSPoints;
 };
 
 } // namespace

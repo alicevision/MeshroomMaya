@@ -133,8 +133,7 @@ static void modelEditorChangedCB(void*)
         return;
     for(int i = 0; i < project->getPanelList()->count(); ++i)
     {
-        MVGPanelWrapper* panel =
-            static_cast<MVGPanelWrapper*>(project->getPanelList()->at(i));
+        MVGPanelWrapper* panel = static_cast<MVGPanelWrapper*>(project->getPanelList()->at(i));
         if(!panel)
             return;
         panel->emitIsPointCloudDisplayedChanged();

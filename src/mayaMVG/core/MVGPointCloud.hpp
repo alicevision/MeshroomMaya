@@ -1,6 +1,8 @@
 #pragma once
 
 #include "mayaMVG/core/MVGNodeWrapper.hpp"
+#include <maya/M3dView.h>
+#include <maya/MPointArray.h>
 #include <vector>
 
 namespace mayaMVG
@@ -26,6 +28,8 @@ public:
 public:
     void setItems(const std::vector<MVGPointCloudItem>& items);
     std::vector<MVGPointCloudItem> getItems() const;
+    bool projectPolygon(M3dView& view, const MPointArray& cameraSpacePoints,
+                        MPointArray& worldSpacePoints);
 
 private:
     static MString _RGBPP;

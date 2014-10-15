@@ -1,6 +1,6 @@
 #pragma once
 
-#include "mayaMVG/maya/context/MVGManipulatorUtil.hpp"
+#include "mayaMVG/maya/context/MVGManipulatorCache.hpp"
 #include "mayaMVG/qt/MVGEventFilter.hpp"
 #include <maya/MPxContext.h>
 #include <maya/MDagPath.h>
@@ -36,12 +36,6 @@ public:
         eModeCreate = 0,
         eModeMove
     };
-    enum EKeyPressed
-    {
-        eKeyNone = 0,
-        eKeyCtrl,
-        eKeyShift
-    };
 
 public:
     MVGContext();
@@ -56,7 +50,7 @@ public:
     MVGEditCmd* newCmd();
 
 public:
-    MVGManipulatorUtil& getCache() { return _manipUtil; }
+    MVGManipulatorCache& getCache() { return _manipulatorCache; }
 
 private:
     EventData _eventData;
@@ -64,7 +58,7 @@ private:
     MVGEventFilter<MVGContext> _filterLV;
     MVGEventFilter<MVGContext> _filterRV;
     EditMode _editMode;
-    MVGManipulatorUtil _manipUtil;
+    MVGManipulatorCache _manipulatorCache;
 };
 
 } // namespace

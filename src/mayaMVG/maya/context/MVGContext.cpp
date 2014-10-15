@@ -2,6 +2,7 @@
 #include "mayaMVG/maya/context/MVGCreateManipulator.hpp"
 #include "mayaMVG/maya/context/MVGMoveManipulator.hpp"
 #include "mayaMVG/maya/MVGMayaUtil.hpp"
+#include "mayaMVG/core/MVGCamera.hpp"
 #include "mayaMVG/qt/MVGQt.hpp"
 #include <maya/MQtUtil.h>
 
@@ -13,7 +14,6 @@ MVGContext::MVGContext()
     , _filterLV((QObject*)MVGMayaUtil::getMVGViewportLayout("mvgLPanel"), this)
     , _filterRV((QObject*)MVGMayaUtil::getMVGViewportLayout("mvgRPanel"), this)
     , _editMode(eModeMove)
-    , _manipUtil(this)
 {
     setTitleString("MVG tool");
 }
@@ -21,8 +21,6 @@ MVGContext::MVGContext()
 void MVGContext::toolOnSetup(MEvent& event)
 {
     updateManipulators();
-    _manipUtil.rebuildAllMeshesCacheFromMaya();
-    _manipUtil.rebuild();
 }
 
 void MVGContext::toolOffCleanup()
@@ -55,7 +53,9 @@ void MVGContext::updateManipulators()
                 MPxManipulatorNode::newManipulator("MVGCreateManipulator", manipObject, &status));
             if(!status || !manip)
                 return;
-            manip->setManipUtil(&_manipUtil);
+            _manipulatorCache.rebuildMeshesCache();
+            manip->setContext(this);
+            manip->setCache(&_manipulatorCache);
             break;
         }
         case eModeMove:
@@ -64,8 +64,9 @@ void MVGContext::updateManipulators()
                 MPxManipulatorNode::newManipulator("MVGMoveManipulator", manipObject, &status));
             if(!status || !manip)
                 return;
-            _manipUtil.resetTemporaryData();
-            manip->setManipUtil(&_manipUtil);
+            _manipulatorCache.rebuildMeshesCache();
+            manip->setContext(this);
+            manip->setCache(&_manipulatorCache);
             break;
         }
         default:
@@ -169,7 +170,6 @@ bool MVGContext::eventFilter(QObject* obj, QEvent* e)
     else if(e->type() == QEvent::MouseButtonRelease)
     {
         _eventData.isDragging = false;
-        //		return true;
     }
     // mouse wheel rolled
     else if(e->type() == QEvent::Wheel)
@@ -203,9 +203,6 @@ bool MVGContext::eventFilter(QObject* obj, QEvent* e)
     }
     else if(e->type() == QEvent::Leave)
     {
-        // Reset camera path which is only set in QEvent::Enter (event not detected
-        // for QML
-        // view)
         _eventData.cameraPath = MDagPath();
     }
     // mouse enters widget's boundaries
@@ -222,6 +219,7 @@ bool MVGContext::eventFilter(QObject* obj, QEvent* e)
             {
                 // automagically set focus on this MVG panel
                 MVGMayaUtil::setFocusOnView(MQtUtil::toMString(panelName.toString()));
+                _manipulatorCache.setActiveView(M3dView::active3dView());
                 return true;
             }
         }

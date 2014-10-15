@@ -1,26 +1,26 @@
 #pragma once
 
-#include "mayaMVG/maya/context/MVGManipulatorUtil.hpp"
-#include <maya/MPxManipulatorNode.h>
+#include "mayaMVG/maya/context/MVGManipulator.hpp"
 
 namespace mayaMVG
 {
 
-class MVGEditCmd;
-class MVGContext;
-
-class MVGMoveManipulator : public MPxManipulatorNode
+class MVGMoveManipulator : public MVGManipulator
 {
-    enum EMoveState
+public:
+    enum MoveMode
     {
-        eMoveNone = 0,
-        eMovePoint,
-        eMoveEdge
+        kNViewTriangulation = 0,
+        kPointCloudProjection,
+        kAdjacentFaceProjection
     };
 
 public:
-    MVGMoveManipulator();
-    virtual ~MVGMoveManipulator();
+    MVGMoveManipulator()
+        : _mode(kNViewTriangulation)
+    {
+    }
+    virtual ~MVGMoveManipulator() {}
 
 public:
     static void* creator();
@@ -33,41 +33,15 @@ public:
     virtual MStatus doRelease(M3dView& view);
     virtual MStatus doMove(M3dView& view, bool& refresh);
     virtual MStatus doDrag(M3dView& view);
-    virtual void preDrawUI(const M3dView&);
-    virtual void drawUI(MHWRender::MUIDrawManager&, const MHWRender::MFrameContext&) const;
-
-public:
-    void setManipUtil(MVGManipulatorUtil* m) { _manipUtil = m; }
 
 private:
-    MPoint updateMouse(M3dView& view);
-    // Draw
-    void drawCursor(const float mousex, const float mousey) const;
-    void drawIntersections(M3dView& view) const;
-    void drawTriangulation(M3dView& view, MVGManipulatorUtil::DisplayData* data, const float mousex,
-                           const float mousey) const;
-
-    // Compute
-    void computeTmpFaceOnMovePoint(M3dView& view, MVGManipulatorUtil::DisplayData* data,
-                                   const MPoint& mousePoint, bool recompute = false) const;
-    void computeTmpFaceOnMoveEdge(M3dView& view, MVGManipulatorUtil::DisplayData* data,
-                                  const MPoint& mousePoint, bool recompute = false) const;
-    bool triangulate(M3dView& view, const MVGManipulatorUtil::IntersectionData& intersectionData,
-                     const MPoint& mousePointInCameraCoord, MPoint& resultPoint3D) const;
-    bool triangulateEdge(M3dView& view,
-                         const MVGManipulatorUtil::IntersectionData& intersectionData,
-                         const MPoint& mousePointInCameraCoord, MPointArray& resultPoint3D) const;
+    void computeFinalWSPositions(M3dView& view);
+    bool triangulate(M3dView& view, MVGManipulatorCache::VertexData* vertex,
+                     const MPoint& currentVertexPositionsInActiveView, MPoint& triangulatedWSPoint);
 
 public:
     static MTypeId _id;
-    MVGManipulatorUtil* _manipUtil;
-    EMoveState _moveState;
-    MVector _moveInPlaneColor;
-    MVector _moveRecomputeColor;
-    MVector _triangulateColor;
-    MVector _faceColor;
-    MVector _noMoveColor;
-    MVector _cursorColor;
+    MoveMode _mode;
 };
 
 } // namespace

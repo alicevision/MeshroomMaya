@@ -3,6 +3,8 @@
 #include "mayaMVG/core/MVGCamera.hpp"
 #include "mayaMVG/core/MVGLog.hpp"
 #include "mayaMVG/core/MVGProject.hpp"
+#include "mayaMVG/core/MVGGeometryUtil.hpp"
+#include "mayaMVG/core/MVGPlaneKernel.hpp"
 #include "mayaMVG/maya/MVGMayaUtil.hpp"
 #include <maya/MFnParticleSystem.h>
 #include <maya/MVectorArray.h>
@@ -12,6 +14,7 @@
 #include <maya/MFnTypedAttribute.h>
 #include <maya/MFnVectorArrayData.h>
 #include <maya/MPlug.h>
+#include <maya/MMatrix.h>
 #include <stdexcept>
 
 namespace mayaMVG
@@ -19,6 +22,47 @@ namespace mayaMVG
 
 // dynamic attributes
 MString MVGPointCloud::_RGBPP = "rgbPP";
+
+namespace
+{ // empty namespace
+
+int isLeft(MPoint P0, MPoint P1, MPoint P2)
+{
+    // isLeft(): tests if a point is Left|On|Right of an infinite line.
+    //    Input:  three points P0, P1, and P2
+    //    Return: >0 for P2 left of the line through P0 and P1
+    //            =0 for P2  on the line
+    //            <0 for P2  right of the line
+    //    See: Algorithm 1 "Area of Triangles and Polygons"
+    return ((P1.x - P0.x) * (P2.y - P0.y) - (P2.x - P0.x) * (P1.y - P0.y));
+}
+
+int wn_PnPoly(MPoint P, MPointArray V)
+{
+    // wn_PnPoly(): winding number test for a point in a polygon
+    //      Input:   P = a point,
+    //               V[] = vertex points of a polygon V[n+1] with V[n]=V[0]
+    //      Return:  wn = the winding number (=0 only when P is outside)
+    int wn = 0;
+    for(int i = 0; i < V.length() - 1; i++)
+    {
+        if(V[i].y <= P.y)
+        {
+            if(V[i + 1].y > P.y)
+                if(isLeft(V[i], V[i + 1], P) > 0)
+                    ++wn;
+        }
+        else
+        {
+            if(V[i + 1].y <= P.y)
+                if(isLeft(V[i], V[i + 1], P) < 0)
+                    --wn;
+        }
+    }
+    return wn;
+}
+
+} // empty namespace
 
 MVGPointCloud::MVGPointCloud(const std::string& name)
     : MVGNodeWrapper(name)
@@ -120,6 +164,68 @@ std::vector<MVGPointCloudItem> MVGPointCloud::getItems() const
         items.push_back(item);
     }
     return items;
+}
+
+bool MVGPointCloud::projectPolygon(M3dView& view, const MPointArray& cameraSpacePoints,
+                                   MPointArray& worldSpacePoints)
+{
+    if(!isValid())
+        return false;
+
+    MDagPath cameraPath;
+    view.getCamera(cameraPath);
+    MVGCamera camera(cameraPath);
+    if(!camera.isValid())
+        return false;
+
+    if(cameraSpacePoints.length() < 3)
+        return false;
+
+    std::vector<MVGPointCloudItem> items = camera.getVisibleItems();
+    if(items.size() < 3)
+        return false;
+
+    MPointArray closedVSPolygon(MVGGeometryUtil::cameraToViewSpace(view, cameraSpacePoints));
+    closedVSPolygon.append(closedVSPolygon[0]); // add an extra point (to describe a closed shape)
+
+    // get enclosed items in pointcloud
+    std::vector<MVGPointCloudItem> enclosedItems;
+    std::vector<MVGPointCloudItem>::const_iterator it = items.begin();
+    int windingNumber = 0;
+    for(; it != items.end(); ++it)
+    {
+        windingNumber =
+            wn_PnPoly(MVGGeometryUtil::worldToViewSpace(view, it->_position), closedVSPolygon);
+        if(windingNumber != 0)
+            enclosedItems.push_back(*it);
+    }
+    if(enclosedItems.size() < 3)
+        return false;
+
+    // 3D plane estimation w/ a variant of RANSAC using Least Median of Squares
+    openMVG::Mat enclosedItemsMat(3, enclosedItems.size());
+    for(size_t i = 0; i < enclosedItems.size(); ++i)
+        enclosedItemsMat.col(i) = TO_VEC3(enclosedItems[i]._position);
+
+    PlaneKernel kernel(enclosedItemsMat);
+    PlaneKernel::Model model;
+    double outlierThreshold = std::numeric_limits<double>::infinity();
+    double dBestMedian = openMVG::robust::LeastMedianOfSquares(kernel, &model, &outlierThreshold);
+
+    // Retrieve projected points from this model
+    MPoint P;
+    MPoint worldSpaceCameraCenter = TO_MPOINT(camera.getPinholeCamera()._C);
+    MMatrix inclusiveMatrix = getDagPath().inclusiveMatrix();
+    worldSpaceCameraCenter *= inclusiveMatrix;
+
+    MPoint worldPoint;
+    for(size_t i = 0; i < cameraSpacePoints.length(); ++i)
+    {
+        plane_line_intersect(model, worldSpaceCameraCenter,
+                             MVGGeometryUtil::cameraToWorldSpace(view, cameraSpacePoints[i]), P);
+        worldSpacePoints.append(P);
+    }
+    return true;
 }
 
 } // namespace

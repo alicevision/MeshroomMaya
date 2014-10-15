@@ -15,7 +15,8 @@ class MVGEditCmd : public MPxToolCommand
     enum CMD_FLAG
     {
         CMD_CREATE = 1 << 0,
-        CMD_MOVE = 1 << 1
+        CMD_MOVE = 1 << 1,
+        CMD_LOCATE = 1 << 2
     };
 
 public:
@@ -37,6 +38,8 @@ public:
     void doAddPolygon(const MDagPath& meshPath, const MPointArray& points);
     void doMove(const MDagPath& meshPath, const MPointArray& points,
                 const MIntArray& verticesIndexes);
+    void doLocate(const MDagPath& meshPath, const MPointArray& points,
+                  const MIntArray& verticesIndexes, int cameraID);
 
 public:
     static MString name;
@@ -46,6 +49,7 @@ private:
     MString _meshName;
     MPointArray _points;
     MIntArray _indexes;
+    int _cameraID;
 };
 
 } // namespace
