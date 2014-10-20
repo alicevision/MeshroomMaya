@@ -26,11 +26,18 @@ public:
     virtual MStatus doMove(M3dView& view, bool& refresh);
     virtual MStatus doDrag(M3dView& view);
 
+public:
+    MPointArray getClickedVSPoints() const;
+
 private:
     void computeFinalWSPositions(M3dView& view);
 
 public:
     static MTypeId _id;
+    static MString _drawDbClassification;
+    static MString _drawRegistrantID;
+
+private:
     MPointArray _clickedCSPoints;
 };
 

@@ -72,7 +72,7 @@ bool readCameras(std::string filePath, std::string imageDir, std::string cameraD
             camera = MVGCamera::create(cameraName);
 
         setPinholeFromBinary(camera, stlplus::create_filespec(cameraDir, binaryName));
-        camera.setImagePlane(stlplus::create_filespec(imageDir, imageName));
+        camera.setImagePlane(stlplus::create_filespec(imageDir, imageName), width, height);
         camera.setId(cameraId);
         cameraId++;
 

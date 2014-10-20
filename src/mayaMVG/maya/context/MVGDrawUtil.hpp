@@ -9,14 +9,14 @@ namespace mayaMVG
 struct MVGDrawUtil
 {
 
-    static void begin2DDrawing(M3dView& view)
+    static void begin2DDrawing(int portWidth, int portHeight)
     {
         glPushMatrix();
         glPushAttrib(GL_ALL_ATTRIB_BITS);
         glMatrixMode(GL_PROJECTION);
         glPushMatrix();
         glLoadIdentity();
-        glOrtho(0, view.portWidth(), 0, view.portHeight(), -1, 1);
+        glOrtho(0, portWidth, 0, portHeight, -1, 1);
         glMatrixMode(GL_MODELVIEW);
         glLoadIdentity();
     }
@@ -51,44 +51,6 @@ struct MVGDrawUtil
         glPopAttrib();
     }
 
-    static void drawLineLoop2D(const MPointArray& points, const MColor& color,
-                               const float lineWidth = 1.f, const float alpha = 1.f)
-    {
-        glPushAttrib(GL_ALL_ATTRIB_BITS);
-        glColor4f(color.r, color.g, color.b, alpha);
-        glLineWidth(lineWidth);
-        glBegin(GL_LINE_LOOP);
-        for(int i = 0; i < points.length(); ++i)
-            glVertex2f(points[i].x, points[i].y);
-        glEnd();
-        glPopAttrib();
-    }
-
-    static void drawPolygon2D(const MPointArray& points, const MColor& color,
-                              const float alpha = 1.f)
-    {
-        glPushAttrib(GL_ALL_ATTRIB_BITS);
-        glColor4f(color.r, color.g, color.b, alpha);
-        glBegin(GL_POLYGON);
-        for(int i = 0; i < points.length(); ++i)
-            glVertex2f(points[i].x, points[i].y);
-        glEnd();
-        glPopAttrib();
-    }
-
-    static void drawPoints2D(const MPointArray& points, const MColor& color,
-                             const float pointSize = 1.f, const float alpha = 1.f)
-    {
-        glPushAttrib(GL_ALL_ATTRIB_BITS);
-        glPointSize(pointSize);
-        glColor4f(color.r, color.g, color.b, alpha);
-        glBegin(GL_POINTS);
-        for(int i = 0; i < points.length(); ++i)
-            glVertex2f(points[i].x, points[i].y);
-        glEnd();
-        glPopAttrib();
-    }
-
     static void drawLine3D(const MPoint& A, const MPoint& B, const MColor& color,
                            const float lineWidth = 1.5f, const float alpha = 1.f,
                            bool stipple = false)
@@ -110,6 +72,19 @@ struct MVGDrawUtil
         glPopAttrib();
     }
 
+    static void drawLineLoop2D(const MPointArray& points, const MColor& color,
+                               const float lineWidth = 1.f, const float alpha = 1.f)
+    {
+        glPushAttrib(GL_ALL_ATTRIB_BITS);
+        glColor4f(color.r, color.g, color.b, alpha);
+        glLineWidth(lineWidth);
+        glBegin(GL_LINE_LOOP);
+        for(int i = 0; i < points.length(); ++i)
+            glVertex2f(points[i].x, points[i].y);
+        glEnd();
+        glPopAttrib();
+    }
+
     static void drawLineLoop3D(const MPointArray& points, const MColor& color,
                                const float lineWidth = 1.f, const float alpha = 1.f)
     {
@@ -119,6 +94,18 @@ struct MVGDrawUtil
         glBegin(GL_LINE_LOOP);
         for(int i = 0; i < points.length(); ++i)
             glVertex3f(points[i].x, points[i].y, points[i].z);
+        glEnd();
+        glPopAttrib();
+    }
+
+    static void drawPolygon2D(const MPointArray& points, const MColor& color,
+                              const float alpha = 1.f)
+    {
+        glPushAttrib(GL_ALL_ATTRIB_BITS);
+        glColor4f(color.r, color.g, color.b, alpha);
+        glBegin(GL_POLYGON);
+        for(int i = 0; i < points.length(); ++i)
+            glVertex2f(points[i].x, points[i].y);
         glEnd();
         glPopAttrib();
     }
@@ -135,6 +122,19 @@ struct MVGDrawUtil
         glPopAttrib();
     }
 
+    static void drawPoints2D(const MPointArray& points, const MColor& color,
+                             const float pointSize = 1.f, const float alpha = 1.f)
+    {
+        glPushAttrib(GL_ALL_ATTRIB_BITS);
+        glPointSize(pointSize);
+        glColor4f(color.r, color.g, color.b, alpha);
+        glBegin(GL_POINTS);
+        for(int i = 0; i < points.length(); ++i)
+            glVertex2f(points[i].x, points[i].y);
+        glEnd();
+        glPopAttrib();
+    }
+
     static void drawCircle2D(const MPoint& center, const MColor& color, const int r,
                              const int segments)
     {
@@ -146,6 +146,22 @@ struct MVGDrawUtil
         {
             float const t = 2 * M_PI * (float)n / (float)segments;
             glVertex2f(center.x + sin(t) * r, center.y + cos(t) * r);
+        }
+        glEnd();
+        glPopAttrib();
+    }
+
+    static void drawCircle3D(const MPoint& center, const MColor& color, const int r,
+                             const int segments)
+    {
+        glPushAttrib(GL_ALL_ATTRIB_BITS);
+        glColor3f(color.r, color.g, color.b);
+        glLineWidth(1.5f);
+        glBegin(GL_LINE_LOOP);
+        for(int n = 0; n <= segments; ++n)
+        {
+            float const t = 2 * M_PI * (float)n / (float)segments;
+            glVertex3f(center.x + sin(t) * r, center.y + cos(t) * r, center.z);
         }
         glEnd();
         glPopAttrib();

@@ -6,12 +6,15 @@
 #include "mayaMVG/maya/context/MVGContextCmd.hpp"
 #include "mayaMVG/maya/context/MVGCreateManipulator.hpp"
 #include "mayaMVG/maya/context/MVGMoveManipulator.hpp"
+#include "mayaMVG/maya/context/MVGCreateManipulatorDrawOverride.hpp"
+#include "mayaMVG/maya/context/MVGMoveManipulatorDrawOverride.hpp"
 #include "mayaMVG/maya/mesh/MVGMeshEditNode.hpp"
 #include <maya/MFnPlugin.h>
 #include <maya/MCallbackIdArray.h>
 #include <maya/MEventMessage.h>
 #include <maya/MMessage.h>
 #include <maya/MDGMessage.h>
+#include <maya/MDrawRegistry.h>
 
 using namespace mayaMVG;
 
@@ -34,12 +37,22 @@ MStatus initializePlugin(MObject obj)
                                         MVGEditCmd::newSyntax))
     CHECK(plugin.registerNode("MVGCreateManipulator", MVGCreateManipulator::_id,
                               &MVGCreateManipulator::creator, &MVGCreateManipulator::initialize,
-                              MPxNode::kManipulatorNode))
+                              MPxNode::kManipulatorNode,
+                              &MVGCreateManipulator::_drawDbClassification))
     CHECK(plugin.registerNode("MVGMoveManipulator", MVGMoveManipulator::_id,
                               &MVGMoveManipulator::creator, &MVGMoveManipulator::initialize,
-                              MPxNode::kManipulatorNode))
+                              MPxNode::kManipulatorNode,
+                              &MVGMoveManipulator::_drawDbClassification))
     CHECK(plugin.registerNode("MVGMeshEditNode", MVGMeshEditNode::_id, MVGMeshEditNode::creator,
                               MVGMeshEditNode::initialize))
+
+    // Register draw overrides
+    CHECK(MHWRender::MDrawRegistry::registerDrawOverrideCreator(
+        MVGCreateManipulator::_drawDbClassification, MVGCreateManipulator::_drawRegistrantID,
+        MVGCreateManipulatorDrawOverride::creator))
+    CHECK(MHWRender::MDrawRegistry::registerDrawOverrideCreator(
+        MVGMoveManipulator::_drawDbClassification, MVGMoveManipulator::_drawRegistrantID,
+        MVGMoveManipulatorDrawOverride::creator))
 
     // Register Maya callbacks
     MCallbackId id;
@@ -93,6 +106,12 @@ MStatus uninitializePlugin(MObject obj)
     CHECK(plugin.deregisterNode(MVGCreateManipulator::_id))
     CHECK(plugin.deregisterNode(MVGMoveManipulator::_id))
     CHECK(plugin.deregisterNode(MVGMeshEditNode::_id))
+
+    // Deregister draw overrides
+    CHECK(MHWRender::MDrawRegistry::deregisterDrawOverrideCreator(
+        MVGCreateManipulator::_drawDbClassification, MVGCreateManipulator::_drawRegistrantID))
+    CHECK(MHWRender::MDrawRegistry::deregisterDrawOverrideCreator(
+        MVGMoveManipulator::_drawDbClassification, MVGMoveManipulator::_drawRegistrantID))
 
     return status;
 }

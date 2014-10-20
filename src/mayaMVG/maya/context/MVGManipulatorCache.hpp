@@ -68,8 +68,8 @@ public:
 public:
     // views
     void setActiveView(const M3dView&);
-    M3dView getActiveView() const;
-    MVGCamera getActiveCamera() const;
+    M3dView& getActiveView();
+    const MVGCamera& getActiveCamera() const;
 
     // intersections tests
     bool checkIntersection(double, const MPoint&);

@@ -49,6 +49,8 @@ void triangulatePoint(const std::map<int, MPoint>& cameraToClickedCSPoints,
 } // empty namespace
 
 MTypeId MVGMoveManipulator::_id(0x99222); // FIXME
+MString MVGMoveManipulator::_drawDbClassification("drawdb/geometry/moveManipulator");
+MString MVGMoveManipulator::_drawRegistrantID("moveManipulatorNode");
 
 void* MVGMoveManipulator::creator()
 {
@@ -78,7 +80,7 @@ void MVGMoveManipulator::draw(M3dView& view, const MDagPath& path, M3dView::Disp
     glFirstHandle(glPickableItem);
     colorAndName(view, glPickableItem, true, mainColor());
     // FIXME should not do these kind of things
-    MVGDrawUtil::begin2DDrawing(view);
+    MVGDrawUtil::begin2DDrawing(view.portWidth(), view.portHeight());
     MVGDrawUtil::drawCircle2D(MPoint(0, 0), MColor(0, 0, 0), 1, 5);
     MVGDrawUtil::end2DDrawing();
 
@@ -88,10 +90,14 @@ void MVGMoveManipulator::draw(M3dView& view, const MDagPath& path, M3dView::Disp
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-    MVGDrawUtil::begin2DDrawing(view);
-    // draw potential intersection
-    drawIntersection(view);
-    MVGDrawUtil::end2DDrawing();
+    { // 2D drawing
+        MVGDrawUtil::begin2DDrawing(view.portWidth(), view.portHeight());
+        // draw intersection
+        MPointArray intersectedVSPoints;
+        getIntersectedPositions(view, intersectedVSPoints, MVGManipulator::kView);
+        MVGManipulator::drawIntersection2D(intersectedVSPoints);
+        MVGDrawUtil::end2DDrawing();
+    }
 
     // draw the final vertex/edge position depending on move mode
     if(_finalWSPositions.length() > 0)
@@ -115,12 +121,6 @@ void MVGMoveManipulator::draw(M3dView& view, const MDagPath& path, M3dView::Disp
             default:
                 break;
         }
-
-        MVGDrawUtil::begin2DDrawing(view);
-        for(size_t i = 0; i < _finalWSPositions.length(); ++i)
-            MVGDrawUtil::drawCircle2D(MVGGeometryUtil::worldToViewSpace(view, _finalWSPositions[i]),
-                                      MColor(0, 1, 0), 1, 30);
-        MVGDrawUtil::end2DDrawing();
     }
 
     glDisable(GL_BLEND);

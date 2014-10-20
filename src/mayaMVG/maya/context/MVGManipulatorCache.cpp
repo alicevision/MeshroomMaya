@@ -43,12 +43,12 @@ void MVGManipulatorCache::setActiveView(const M3dView& view)
     _activeCamera = MVGCamera(cameraPath);
 }
 
-M3dView MVGManipulatorCache::getActiveView() const
+M3dView& MVGManipulatorCache::getActiveView()
 {
     return _activeView;
 }
 
-MVGCamera MVGManipulatorCache::getActiveCamera() const
+const MVGCamera& MVGManipulatorCache::getActiveCamera() const
 {
     return _activeCamera;
 }

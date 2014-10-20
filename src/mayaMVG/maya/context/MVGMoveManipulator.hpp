@@ -41,6 +41,8 @@ private:
 
 public:
     static MTypeId _id;
+    static MString _drawDbClassification;
+    static MString _drawRegistrantID;
     MoveMode _mode;
 };
 

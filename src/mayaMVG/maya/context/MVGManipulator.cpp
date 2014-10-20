@@ -4,11 +4,6 @@
 namespace mayaMVG
 {
 
-MVGEditCmd* MVGManipulator::newEditCmd()
-{
-    return dynamic_cast<MVGEditCmd*>(_context->newCmd());
-}
-
 void MVGManipulator::getMousePosition(M3dView& view, MPoint& point, MVGManipulator::Space space)
 {
     short x, y;
@@ -35,7 +30,7 @@ MPoint MVGManipulator::getMousePosition(M3dView& view, MVGManipulator::Space spa
 }
 
 void MVGManipulator::getIntersectedPositions(M3dView& view, MPointArray& positions,
-                                             MVGManipulator::Space space)
+                                             MVGManipulator::Space space) const
 {
     MPointArray intersectedPositions;
     MVGManipulatorCache::IntersectedComponent intersectedComponent =
@@ -52,7 +47,7 @@ void MVGManipulator::getIntersectedPositions(M3dView& view, MPointArray& positio
         default:
             break;
     }
-    if(intersectedPositions.length() == 0)
+    if(intersectedPositions.length() <= 0)
         return;
     switch(space)
     {
@@ -63,14 +58,14 @@ void MVGManipulator::getIntersectedPositions(M3dView& view, MPointArray& positio
             intersectedPositions = MVGGeometryUtil::worldToViewSpace(view, intersectedPositions);
             break;
         case kWorld:
-        default:
             break;
     }
     for(size_t i = 0; i < intersectedPositions.length(); ++i)
         positions.append(intersectedPositions[i]);
 }
 
-MPointArray MVGManipulator::getIntersectedPositions(M3dView& view, MVGManipulator::Space space)
+MPointArray MVGManipulator::getIntersectedPositions(M3dView& view,
+                                                    MVGManipulator::Space space) const
 {
     MPointArray positions;
     getIntersectedPositions(view, positions, space);
@@ -109,7 +104,7 @@ MVGManipulator::getOnMoveCSEdgePoints(M3dView& view,
 void MVGManipulator::getTranslatedWSEdgePoints(M3dView& view,
                                                const MVGManipulatorCache::EdgeData* originEdgeData,
                                                MPoint& originCSPosition, MPoint& targetWSPosition,
-                                               MPointArray& targetEdgeWSPositions)
+                                               MPointArray& targetEdgeWSPositions) const
 {
     assert(originEdgeData != NULL);
     MVector edgeWSVector =
@@ -124,34 +119,25 @@ void MVGManipulator::getTranslatedWSEdgePoints(M3dView& view,
     targetEdgeWSPositions.append(targetWSPosition - ratioVertex2 * edgeWSVector);
 }
 
-void MVGManipulator::drawIntersection(M3dView& view) const
+MVGEditCmd* MVGManipulator::newEditCmd()
 {
-    MVGManipulatorCache::IntersectedComponent intersectedComponent =
-        _cache->getIntersectedComponent();
-    switch(intersectedComponent.type)
+    return dynamic_cast<MVGEditCmd*>(_context->newCmd());
+}
+
+// static
+void MVGManipulator::drawIntersection2D(const MPointArray& intersectedVSPoints)
+{
+    assert(intersectedVSPoints.length() < 3);
+    if(intersectedVSPoints.length() <= 0)
+        return;
+    // draw vertex
+    if(intersectedVSPoints.length() < 2)
     {
-        case MFn::kMeshVertComponent:
-        {
-            MPoint realVSVertexPosition;
-            MVGGeometryUtil::worldToViewSpace(view, intersectedComponent.vertex->worldPosition,
-                                              realVSVertexPosition);
-            MVGDrawUtil::drawCircle2D(realVSVertexPosition, MColor(1, 1, 1), 10, 30);
-            break;
-        }
-        case MFn::kMeshEdgeComponent:
-        {
-            MPoint edgeVSPosition1;
-            MPoint edgeVSPosition2;
-            MVGGeometryUtil::worldToViewSpace(
-                view, intersectedComponent.edge->vertex1->worldPosition, edgeVSPosition1);
-            MVGGeometryUtil::worldToViewSpace(
-                view, intersectedComponent.edge->vertex2->worldPosition, edgeVSPosition2);
-            MVGDrawUtil::drawLine2D(edgeVSPosition1, edgeVSPosition2, MColor(1, 1, 1));
-            break;
-        }
-        default:
-            break;
+        MVGDrawUtil::drawCircle2D(intersectedVSPoints[0], MColor(1, 1, 1), 10, 30);
+        return;
     }
+    // draw edge
+    MVGDrawUtil::drawLine2D(intersectedVSPoints[0], intersectedVSPoints[1], MColor(1, 1, 1));
 }
 
 } // namespace

@@ -13,6 +13,8 @@ namespace mayaMVG
 {
 
 MTypeId MVGCreateManipulator::_id(0x99111); // FIXME
+MString MVGCreateManipulator::_drawDbClassification("drawdb/geometry/createManipulator");
+MString MVGCreateManipulator::_drawRegistrantID("createManipulatorNode");
 
 void* MVGCreateManipulator::creator()
 {
@@ -42,7 +44,7 @@ void MVGCreateManipulator::draw(M3dView& view, const MDagPath& path, M3dView::Di
     glFirstHandle(glPickableItem);
     colorAndName(view, glPickableItem, true, mainColor());
     // FIXME should not do these kind of things
-    MVGDrawUtil::begin2DDrawing(view);
+    MVGDrawUtil::begin2DDrawing(view.portWidth(), view.portHeight());
     MVGDrawUtil::drawCircle2D(MPoint(0, 0), MColor(0, 0, 0), 1, 5);
     MVGDrawUtil::end2DDrawing();
 
@@ -52,14 +54,18 @@ void MVGCreateManipulator::draw(M3dView& view, const MDagPath& path, M3dView::Di
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-    MVGDrawUtil::begin2DDrawing(view);
-    // draw potential intersection
-    drawIntersection(view);
-    // draw clicked points
-    if(_clickedCSPoints.length() > 0)
-        MVGDrawUtil::drawPoints2D(MVGGeometryUtil::cameraToViewSpace(view, _clickedCSPoints),
-                                  MColor(1, 1, 1), 4.0);
-    MVGDrawUtil::end2DDrawing();
+    { // 2D drawing
+        MVGDrawUtil::begin2DDrawing(view.portWidth(), view.portHeight());
+        // draw clicked points
+        if(_clickedCSPoints.length() > 0)
+            MVGDrawUtil::drawPoints2D(MVGGeometryUtil::cameraToViewSpace(view, _clickedCSPoints),
+                                      MColor(1, 1, 1), 4.0);
+        // draw intersection
+        MPointArray intersectedVSPoints;
+        getIntersectedPositions(view, intersectedVSPoints, MVGManipulator::kView);
+        MVGManipulator::drawIntersection2D(intersectedVSPoints);
+        MVGDrawUtil::end2DDrawing();
+    }
 
     if(_finalWSPositions.length() > 3)
         MVGDrawUtil::drawPolygon3D(_finalWSPositions, MColor(1.f, 0.f, 0.f), 1.f);
@@ -229,6 +235,11 @@ void MVGCreateManipulator::computeFinalWSPositions(M3dView& view)
             _finalWSPositions.append(projectedWSPoints[0]);
         }
     }
+}
+
+MPointArray MVGCreateManipulator::getClickedVSPoints() const
+{
+    return MVGGeometryUtil::cameraToViewSpace(_cache->getActiveView(), _clickedCSPoints);
 }
 
 } // namespace
