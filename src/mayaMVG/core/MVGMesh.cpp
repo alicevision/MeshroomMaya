@@ -66,10 +66,6 @@ MVGMesh MVGMesh::create(const std::string& name)
     MStatus status;
     MFnMesh fnMesh;
 
-    // get project root node
-    MVGProject project(MVGProject::_PROJECT);
-    MObject rootObj = project.getDagPath().child(2); // meshes transform
-
     // create empty mesh
     MPointArray vertexArray;
     MIntArray polygonCounts, polygonConnects;
@@ -100,11 +96,6 @@ MVGMesh MVGMesh::create(const std::string& name)
     MFnSet fnSet(sgObj, &status);
     status = fnSet.addMember(path);
     CHECK(status)
-
-    // reparent under root node
-    MDagModifier dagModifier;
-    dagModifier.reparentNode(transform, rootObj);
-    dagModifier.doIt();
 
     // rename and return
     MVGMesh mesh(path);
