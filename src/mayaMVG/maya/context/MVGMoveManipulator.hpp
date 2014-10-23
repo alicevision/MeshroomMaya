@@ -16,10 +16,7 @@ public:
     };
 
 public:
-    MVGMoveManipulator()
-    //        : _mode(kNViewTriangulation)
-    {
-    }
+    MVGMoveManipulator() {}
     virtual ~MVGMoveManipulator() {}
 
 public:

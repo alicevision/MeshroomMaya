@@ -25,16 +25,39 @@ void triangulatePoint(const std::map<int, MPoint>& cameraToClickedCSPoints,
     openMVG::Mat2X imagePoints(2, cameraCount);
     std::vector<openMVG::Mat34> projectiveCameras;
 
+    // Retrieve rotation matrix and inclusive matrix
+    MVGPointCloud cloud(MVGProject::_CLOUD);
+    MMatrix inclusiveMatrix = MMatrix::identity;
+    if(cloud.isValid() && cloud.getDagPath().isValid())
+        inclusiveMatrix = cloud.getDagPath().inclusiveMatrix();
+    MTransformationMatrix transformMatrix(inclusiveMatrix);
+    MMatrix rotationMatrix = transformMatrix.asRotateMatrix();
+    openMVG::Mat3 rotation;
+    for(int i = 0; i < 3; ++i)
+    {
+        for(int j = 0; j < 3; ++j)
+            rotation(i, j) = rotationMatrix[i][j];
+    }
+
     std::map<int, MPoint>::const_iterator it = cameraToClickedCSPoints.begin();
     for(size_t i = 0; it != cameraToClickedCSPoints.end(); ++i, ++it)
     {
+        // projective camera vector
         MVGCamera camera(it->first);
+        MPoint cameraCenter = TO_MPOINT(camera.getPinholeCamera()._C);
+        cameraCenter *= inclusiveMatrix;
+        const openMVG::Mat3 K = camera.getPinholeCamera()._K;
+        const openMVG::Mat3 R = camera.getPinholeCamera()._R;
+        openMVG::Vec3 C = TO_VEC3(cameraCenter);
+        const openMVG::Vec3 t = -R * rotation * C;
+        openMVG::Mat34 P;
+        openMVG::P_From_KRt(K, R * rotation, t, &P);
+        projectiveCameras.push_back(P);
+
         // clicked point matrix (image space)
         MPoint clickedISPosition;
         MVGGeometryUtil::cameraToImageSpace(camera, it->second, clickedISPosition);
         imagePoints.col(i) = openMVG::Vec2(clickedISPosition.x, clickedISPosition.y);
-        // projective camera vector
-        projectiveCameras.push_back(camera.getPinholeCamera()._P);
     }
     // call n-view triangulation function
     openMVG::Vec4 result;
