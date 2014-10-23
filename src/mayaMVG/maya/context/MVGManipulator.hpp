@@ -31,13 +31,17 @@ public:
 public:
     MPoint getMousePosition(M3dView&, Space = kCamera);
     void getMousePosition(M3dView&, MPoint&, Space = kCamera);
+    const MPointArray& getFinalWSPositions() const;
+    const MPointArray& getIntermediateCSPositions() const;
     MPointArray getIntersectedPositions(M3dView&, Space = kCamera) const;
     void getIntersectedPositions(M3dView&, MPointArray&, Space = kCamera) const;
-    void getOnMoveCSEdgePoints(M3dView& view, const MVGManipulatorCache::EdgeData* onPressEdgeData,
-                               const MPoint& onPressCSPoint, MPointArray& onMoveCSEdgePoints);
-    MPointArray getOnMoveCSEdgePoints(M3dView& view,
-                                      const MVGManipulatorCache::EdgeData* onPressEdgeData,
-                                      const MPoint& onPressCSPoint);
+    void getIntermediateCSEdgePoints(M3dView& view,
+                                     const MVGManipulatorCache::EdgeData* onPressEdgeData,
+                                     const MPoint& onPressCSPoint,
+                                     MPointArray& intermediateCSEdgePoints);
+    MPointArray getIntermediateCSEdgePoints(M3dView& view,
+                                            const MVGManipulatorCache::EdgeData* onPressEdgeData,
+                                            const MPoint& onPressCSPoint);
     void getTranslatedWSEdgePoints(M3dView& view,
                                    const MVGManipulatorCache::EdgeData* originEdgeData,
                                    MPoint& originCSPosition, MPoint& targetWSPosition,

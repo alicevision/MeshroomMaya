@@ -68,7 +68,14 @@ const MVGManipulatorCache::IntersectedComponent& MVGManipulatorCache::getInterse
 {
     return _intersectedComponent;
 }
-
+const std::map<std::string, MVGManipulatorCache::MeshData>& MVGManipulatorCache::getMeshData() const
+{
+    return _meshData;
+}
+const MVGManipulatorCache::MeshData& MVGManipulatorCache::getMeshData(const std::string meshName)
+{
+    return _meshData[meshName];
+}
 void MVGManipulatorCache::rebuildMeshesCache()
 {
     // clear cache & other associated data

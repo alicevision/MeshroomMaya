@@ -17,7 +17,7 @@ public:
 
 public:
     MVGMoveManipulator()
-        : _mode(kNViewTriangulation)
+    //        : _mode(kNViewTriangulation)
     {
     }
     virtual ~MVGMoveManipulator() {}
@@ -40,10 +40,14 @@ private:
                      const MPoint& currentVertexPositionsInActiveView, MPoint& triangulatedWSPoint);
 
 public:
+    static void drawCursor(const MPoint& originVS);
+    static void drawPlacedPoints(M3dView& view, MVGManipulatorCache* cache);
+
+public:
     static MTypeId _id;
     static MString _drawDbClassification;
     static MString _drawRegistrantID;
-    MoveMode _mode;
+    static MoveMode _mode;
 };
 
 } // namespace

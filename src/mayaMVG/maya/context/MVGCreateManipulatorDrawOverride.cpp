@@ -23,21 +23,20 @@ MHWRender::MPxDrawOverride* MVGCreateManipulatorDrawOverride::creator(const MObj
 }
 
 bool MVGCreateManipulatorDrawOverride::isBounded(const MDagPath& objPath,
-                                               const MDagPath& cameraPath) const
+                                                 const MDagPath& cameraPath) const
 {
     return false;
 }
 
 MBoundingBox MVGCreateManipulatorDrawOverride::boundingBox(const MDagPath& /*objPath*/,
-                                                         const MDagPath& /*cameraPath*/) const
+                                                           const MDagPath& /*cameraPath*/) const
 {
     return MBoundingBox();
 }
 
-MUserData*
-MVGCreateManipulatorDrawOverride::prepareForDraw(const MDagPath& objPath, const MDagPath& cameraPath,
-                                               const MHWRender::MFrameContext& frameContext,
-                                               MUserData* oldData)
+MUserData* MVGCreateManipulatorDrawOverride::prepareForDraw(
+    const MDagPath& objPath, const MDagPath& cameraPath,
+    const MHWRender::MFrameContext& frameContext, MUserData* oldData)
 {
     MStatus status;
     MObject node = objPath.node(&status);
@@ -64,15 +63,21 @@ MVGCreateManipulatorDrawOverride::prepareForDraw(const MDagPath& objPath, const 
     data->doDraw = (activeCameraPath == cameraPath);
     data->portWidth = width;
     data->portHeight = height;
+    data->mouseVSPoint =
+        manipulator->getMousePosition(cache->getActiveView(), MVGManipulator::kView);
+    data->cache = cache;
     data->intersectedVSPoints.clear();
     manipulator->getIntersectedPositions(cache->getActiveView(), data->intersectedVSPoints,
                                          MVGManipulator::kView);
+    data->finalWSPoints = manipulator->getFinalWSPositions();
     data->clickedVSPoints = manipulator->getClickedVSPoints();
+    // add mouse position
+    data->clickedVSPoints.append(data->mouseVSPoint);
     return data;
 }
 
 void MVGCreateManipulatorDrawOverride::draw(const MHWRender::MDrawContext& /*context*/,
-                                          const MUserData* data)
+                                            const MUserData* data)
 {
 
     // get draw data
@@ -83,8 +88,11 @@ void MVGCreateManipulatorDrawOverride::draw(const MHWRender::MDrawContext& /*con
         return;
 
     MVGDrawUtil::begin2DDrawing(userdata->portWidth, userdata->portHeight);
+    MVGCreateManipulator::drawCursor(userdata->mouseVSPoint, userdata->cache);
+    MVGDrawUtil::drawClickedPoints(userdata->clickedVSPoints);
     MVGManipulator::drawIntersection2D(userdata->intersectedVSPoints);
-    MVGDrawUtil::drawPoints2D(userdata->clickedVSPoints, MColor(1,0,0), 4);
+    if(userdata->finalWSPoints.length() > 3)
+        MVGDrawUtil::drawPolygon3D(userdata->finalWSPoints, MVGDrawUtil::_faceColor);
     MVGDrawUtil::end2DDrawing();
 }
 

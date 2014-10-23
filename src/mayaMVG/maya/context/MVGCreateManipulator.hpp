@@ -33,6 +33,9 @@ private:
     void computeFinalWSPositions(M3dView& view);
 
 public:
+    static void drawCursor(const MPoint& originVS, MVGManipulatorCache* cache);
+
+public:
     static MTypeId _id;
     static MString _drawDbClassification;
     static MString _drawRegistrantID;

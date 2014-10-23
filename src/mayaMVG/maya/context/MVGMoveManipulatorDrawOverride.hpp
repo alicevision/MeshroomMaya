@@ -1,4 +1,6 @@
 #pragma once
+
+#include "mayaMVG/maya/context/MVGManipulatorCache.hpp"
 #include <maya/MPxDrawOverride.h>
 #include <maya/MUserData.h>
 #include <maya/MPointArray.h>
@@ -12,6 +14,7 @@ public:
     MoveDrawData()
         : MUserData(false) // don't delete after draw
         , doDraw(false)
+        , cache(NULL)
     {
     }
     virtual ~MoveDrawData() {}
@@ -20,8 +23,10 @@ public:
     bool doDraw;
     int portWidth;
     int portHeight;
+    MPoint mouseVSPoint;
     MPointArray finalWSPoints;
     MPointArray intersectedVSPoints;
+    MVGManipulatorCache* cache;
 };
 
 class MVGMoveManipulatorDrawOverride : public MHWRender::MPxDrawOverride

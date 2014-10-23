@@ -13,6 +13,7 @@
 #include <maya/MPointArray.h>
 #include <maya/MFloatPointArray.h>
 #include <cassert>
+#include <cstring>
 
 namespace mayaMVG
 {

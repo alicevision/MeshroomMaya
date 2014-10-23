@@ -64,6 +64,9 @@ MVGMoveManipulatorDrawOverride::prepareForDraw(const MDagPath& objPath, const MD
     data->doDraw = (activeCameraPath == cameraPath);
     data->portWidth = width;
     data->portHeight = height;
+    data->cache = cache;
+    data->mouseVSPoint =
+        manipulator->getMousePosition(cache->getActiveView(), MVGManipulator::kView);
     data->intersectedVSPoints.clear();
     manipulator->getIntersectedPositions(cache->getActiveView(), data->intersectedVSPoints,
                                          MVGManipulator::kView);
@@ -82,8 +85,16 @@ void MVGMoveManipulatorDrawOverride::draw(const MHWRender::MDrawContext& /*conte
         return;
 
     MVGDrawUtil::begin2DDrawing(userdata->portWidth, userdata->portHeight);
+    MVGMoveManipulator::drawCursor(userdata->mouseVSPoint);
     MVGManipulator::drawIntersection2D(userdata->intersectedVSPoints);
+    //        if(MVGMoveManipulator::_mode == MVGMoveManipulator::kNViewTriangulation)
+    //            MVGDrawUtil::drawTriangulation(
+    //                userdata->cache->getActiveView(), userdata->onPressWSPoints,
+    //                userdata->intermediateVSPositions);
     MVGDrawUtil::end2DDrawing();
+
+    //        if(userdata->finalWSPoints.length() > 3)
+    //            MVGDrawUtil::drawPolygon3D(userdata->finalWSPoints, MVGDrawUtil::_faceColor);
 }
 
 } // namespace

@@ -100,10 +100,12 @@ bool MVGContext::eventFilter(QObject* obj, QEvent* e)
                     updateManipulators();
                     return true;
                 case Qt::Key_Control:
-                case Qt::Key_Shift:
+                    if(_editMode == eModeCreate)
+                        break;
+                    MVGMoveManipulator::_mode = static_cast<MVGMoveManipulator::MoveMode>(
+                        (MVGMoveManipulator::_mode + 1) % 3);
                 case Qt::Key_Escape:
                     updateManipulators();
-                    return true;
                 default:
                     break;
             }
@@ -121,8 +123,6 @@ bool MVGContext::eventFilter(QObject* obj, QEvent* e)
                     _editMode = eModeMove;
                     updateManipulators();
                     return true;
-                case Qt::Key_Control:
-                case Qt::Key_Shift:
                 case Qt::Key_Escape:
                     updateManipulators();
                     return true;

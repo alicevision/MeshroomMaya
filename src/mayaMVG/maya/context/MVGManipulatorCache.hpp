@@ -76,6 +76,8 @@ public:
     const IntersectedComponent& getIntersectedComponent();
 
     // mesh & view relative data
+    const std::map<std::string, MeshData>& getMeshData() const;
+    const MeshData& getMeshData(const std::string meshName);
     void rebuildMeshesCache();
     void rebuildMeshCache(const MDagPath&);
 

@@ -1,6 +1,5 @@
 #include "mayaMVG/maya/context/MVGManipulator.hpp"
 #include "mayaMVG/maya/context/MVGDrawUtil.hpp"
-
 namespace mayaMVG
 {
 
@@ -27,6 +26,11 @@ MPoint MVGManipulator::getMousePosition(M3dView& view, MVGManipulator::Space spa
     MPoint position;
     getMousePosition(view, position, space);
     return position;
+}
+
+const MPointArray& MVGManipulator::getFinalWSPositions() const
+{
+    return _finalWSPositions;
 }
 
 void MVGManipulator::getIntersectedPositions(M3dView& view, MPointArray& positions,
@@ -72,33 +76,32 @@ MPointArray MVGManipulator::getIntersectedPositions(M3dView& view,
     return positions;
 }
 
-void MVGManipulator::getOnMoveCSEdgePoints(M3dView& view,
-                                           const MVGManipulatorCache::EdgeData* onPressEdgeData,
-                                           const MPoint& onPressCSPoint,
-                                           MPointArray& onMoveCSEdgePoints)
+void MVGManipulator::getIntermediateCSEdgePoints(
+    M3dView& view, const MVGManipulatorCache::EdgeData* onPressEdgeData,
+    const MPoint& onPressCSPoint, MPointArray& intermediateCSEdgePoints)
 {
     assert(onPressEdgeData != NULL);
     // vertex 1
     MVector mouseToVertexCSOffset =
         MVGGeometryUtil::worldToCameraSpace(view, onPressEdgeData->vertex1->worldPosition) -
         onPressCSPoint;
-    onMoveCSEdgePoints.append(getMousePosition(view) + mouseToVertexCSOffset);
+    intermediateCSEdgePoints.append(getMousePosition(view) + mouseToVertexCSOffset);
     // vertex 2
     mouseToVertexCSOffset =
         MVGGeometryUtil::worldToCameraSpace(view, onPressEdgeData->vertex2->worldPosition) -
         onPressCSPoint;
-    onMoveCSEdgePoints.append(getMousePosition(view) + mouseToVertexCSOffset);
+    intermediateCSEdgePoints.append(getMousePosition(view) + mouseToVertexCSOffset);
 }
 
 MPointArray
-MVGManipulator::getOnMoveCSEdgePoints(M3dView& view,
-                                      const MVGManipulatorCache::EdgeData* onPressEdgeData,
-                                      const MPoint& onPressCSPoint)
+MVGManipulator::getIntermediateCSEdgePoints(M3dView& view,
+                                            const MVGManipulatorCache::EdgeData* onPressEdgeData,
+                                            const MPoint& onPressCSPoint)
 {
     assert(onPressEdgeData != NULL);
-    MPointArray onMoveCSEdgePoints;
-    getOnMoveCSEdgePoints(view, onPressEdgeData, onPressCSPoint, onMoveCSEdgePoints);
-    return onMoveCSEdgePoints;
+    MPointArray intermediateCSEdgePoints;
+    getIntermediateCSEdgePoints(view, onPressEdgeData, onPressCSPoint, intermediateCSEdgePoints);
+    return intermediateCSEdgePoints;
 }
 
 void MVGManipulator::getTranslatedWSEdgePoints(M3dView& view,
@@ -107,14 +110,17 @@ void MVGManipulator::getTranslatedWSEdgePoints(M3dView& view,
                                                MPointArray& targetEdgeWSPositions) const
 {
     assert(originEdgeData != NULL);
-    MVector edgeWSVector =
-        originEdgeData->vertex1->worldPosition - originEdgeData->vertex2->worldPosition;
+    MVector edgeCSVector =
+        MVGGeometryUtil::worldToCameraSpace(view, originEdgeData->vertex1->worldPosition) -
+        MVGGeometryUtil::worldToCameraSpace(view, originEdgeData->vertex2->worldPosition);
     MVector vertex1ToMouseCSVector =
         originCSPosition -
         MVGGeometryUtil::worldToCameraSpace(view, originEdgeData->vertex1->worldPosition);
-    float ratioVertex1 = vertex1ToMouseCSVector.length() / edgeWSVector.length();
+    float ratioVertex1 = vertex1ToMouseCSVector.length() / edgeCSVector.length();
     float ratioVertex2 = 1.f - ratioVertex1;
 
+    MVector edgeWSVector =
+        originEdgeData->vertex1->worldPosition - originEdgeData->vertex2->worldPosition;
     targetEdgeWSPositions.append(targetWSPosition + ratioVertex1 * edgeWSVector);
     targetEdgeWSPositions.append(targetWSPosition - ratioVertex2 * edgeWSVector);
 }
