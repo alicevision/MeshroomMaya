@@ -163,6 +163,16 @@ int MVGMesh::getPolygonsCount() const
     return count;
 }
 
+int MVGMesh::getVerticesCount() const
+{
+    MStatus status;
+    MFnMesh fnMesh(_object, &status);
+    CHECK(status);
+    int count = fnMesh.numVertices(&status);
+    CHECK(status);
+    return count;
+}
+
 MStatus MVGMesh::getPolygonVertices(const int polygonId, MIntArray& vertexList) const
 {
     MStatus status;

@@ -132,9 +132,16 @@ MStatus MVGCreateManipulator::doRelease(M3dView& view)
 
     MVGPointCloud cloud(MVGProject::_CLOUD);
     if(_onPressIntersectedComponent.type == MFn::kInvalid)
-        cmd->create(MDagPath(), _finalWSPositions);
+        cmd->create(MDagPath(), _finalWSPositions, _clickedCSPoints,
+                    _cache->getActiveCamera().getId());
     else
-        cmd->create(_onPressIntersectedComponent.meshPath, _finalWSPositions);
+    {
+        MPointArray edgeCSPositions;
+        edgeCSPositions.append(MVGGeometryUtil::worldToCameraSpace(view, _finalWSPositions[2]));
+        edgeCSPositions.append(MVGGeometryUtil::worldToCameraSpace(view, _finalWSPositions[3]));
+        cmd->create(_onPressIntersectedComponent.meshPath, _finalWSPositions, edgeCSPositions,
+                    _cache->getActiveCamera().getId());
+    }
     MArgList args;
     if(cmd->doIt(args))
     {

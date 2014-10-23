@@ -66,15 +66,16 @@ MStatus MVGMeshEditFactory::doIt()
         case kCreate:
         {
             int index;
+            int verticesCountBeforeAddPolygon = mesh.getVerticesCount();
             mesh.addPolygon(_worldPositions, index);
+            // Update componentIDs
+            _componentIDs.clear();
+            for(int i = 0; i < _cameraPositions.length(); ++i)
+                _componentIDs.append(verticesCountBeforeAddPolygon + i);
             break;
         }
         case kMove:
         {
-            assert(_componentIDs.length() == _cameraPositions.length());
-            // set blind data
-            for(size_t i = 0; i < _componentIDs.length(); ++i)
-                CHECK(mesh.setBlindDataPerCamera(_componentIDs[i], _cameraID, _cameraPositions[i]))
             // move
             if(_componentIDs.length() == _worldPositions.length())
             {
@@ -84,6 +85,11 @@ MStatus MVGMeshEditFactory::doIt()
             break;
         }
     }
+
+    // set blind data
+    assert(_componentIDs.length() == _cameraPositions.length());
+    for(size_t i = 0; i < _componentIDs.length(); ++i)
+        CHECK(mesh.setBlindDataPerCamera(_componentIDs[i], _cameraID, _cameraPositions[i]))
     return status;
 }
 

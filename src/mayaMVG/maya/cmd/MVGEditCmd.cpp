@@ -96,11 +96,14 @@ MStatus MVGEditCmd::initModifierNode(MObject node)
     return status;
 }
 
-void MVGEditCmd::create(const MDagPath& meshPath, const MPointArray& worldSpacePositions)
+void MVGEditCmd::create(const MDagPath& meshPath, const MPointArray& worldSpacePositions,
+                        const MPointArray& cameraSpacePositions, int cameraID)
 {
     _editType = MVGMeshEditFactory::kCreate;
     _meshPath = meshPath;
     _worldSpacePositions = worldSpacePositions;
+    _cameraSpacePositions = cameraSpacePositions;
+    _cameraID = cameraID;
 
     // TODO remove from here, should always be valid
     if(!meshPath.isValid())

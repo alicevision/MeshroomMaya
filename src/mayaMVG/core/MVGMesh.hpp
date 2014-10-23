@@ -40,6 +40,7 @@ public:
     bool deletePolygon(const int index) const;
     MStatus getPoints(MPointArray& pointArray) const;
     int getPolygonsCount() const;
+    int getVerticesCount() const;
     MStatus getPolygonVertices(const int polygonId, MIntArray& vertexList) const;
     const MIntArray getConnectedFacesToVertex(int vertexId);
     const MIntArray getConnectedFacesToEdge(int edgeId);
