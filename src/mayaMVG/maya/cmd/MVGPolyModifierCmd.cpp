@@ -87,12 +87,17 @@ MStatus MVGPolyModifierCmd::redoModifyPoly()
     }
     else
     {
+        MObject modifierNode;
+        createModifierNode(modifierNode);
+        initModifierNode(modifierNode);
+        status = connectNodes(modifierNode);
+
         // Call the redo on the DG and DAG modifiers
-        if(!fHasHistory)
-        {
-            fDagModifier.doIt();
-        }
-        status = fDGModifier.doIt();
+        //        if(!fHasHistory)
+        //        {
+        //            fDagModifier.doIt();
+        //        }
+        //        status = fDGModifier.doIt();
     }
     return status;
 }

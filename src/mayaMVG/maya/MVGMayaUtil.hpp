@@ -8,6 +8,7 @@ class MObject;
 class MIntArray;
 class MDoubleArray;
 class MPointArray;
+class MVectorArray;
 class MPoint;
 class MDagPath;
 class M3dView;
@@ -55,6 +56,14 @@ struct MVGMayaUtil
                                            bool = false);
     static MStatus setDoubleArrayAttribute(const MObject&, const MString&, const MDoubleArray&,
                                            bool = false);
+    static MStatus getVectorArrayAttribute(const MObject&, const MString&, MVectorArray&,
+                                           bool = false);
+    static MStatus setVectorArrayAttribute(const MObject&, const MString&, const MVectorArray&,
+                                           bool = false);
+    static MStatus getPointArrayAttribute(const MObject&, const MString&, MPointArray&,
+                                          bool = false);
+    static MStatus setPointArrayAttribute(const MObject&, const MString&, const MPointArray&,
+                                          bool = false);
     static MStatus getStringAttribute(const MObject&, const MString&, MString&, bool = false);
     static MStatus setStringAttribute(const MObject&, const MString&, const MString&, bool = false);
     static MStatus findConnectedNodes(const MObject&, const MString&, std::vector<MObject>&);

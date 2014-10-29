@@ -9,6 +9,9 @@
 #include "mayaMVG/qt/MVGQt.hpp"
 #include <openMVG/multiview/triangulation_nview.hpp>
 #include <maya/MArgList.h>
+#include <maya/MFnPointArrayData.h>
+#include <maya/MFnTypedAttribute.h>
+#include <maya/MVectorArray.h>
 
 namespace mayaMVG
 {
@@ -200,6 +203,45 @@ MStatus MVGMoveManipulator::doPress(M3dView& view)
     // compute final positions
     computeFinalWSPositions(view);
 
+    MStatus status;
+    MDagPath meshPath = _onPressIntersectedComponent.meshPath;
+    meshPath.extendToShape();
+    MObject meshNodeShape = meshPath.node();
+    MFnDependencyNode depNodeFn;
+    depNodeFn.setObject(meshNodeShape);
+    // Create tweak plug if it does not exist
+    MPlug tweakPlug = depNodeFn.findPlug("twi");
+    if(tweakPlug.isNull())
+    {
+        MDagModifier dagModifier;
+        MFnTypedAttribute tAttr;
+        MObject tweakIndicesAttr = tAttr.create("tweakIndices", "twi", MFnData::kIntArray);
+        dagModifier.addAttribute(meshNodeShape, tweakIndicesAttr);
+        MObject tweakVectorsAttr = tAttr.create("tweakVectors", "twv", MFnData::kVectorArray);
+        dagModifier.addAttribute(meshNodeShape, tweakVectorsAttr);
+        dagModifier.doIt();
+    }
+    // Store tweak information in new attributes
+    MIntArray logicalIndices;
+    MVectorArray tweakVectors;
+    MPlug pntsPlug = depNodeFn.findPlug("pnts");
+    MPlug tweak;
+    MVector vector;
+    for(int i = 0; i < pntsPlug.numElements(); ++i)
+    {
+        tweak = pntsPlug.elementByPhysicalIndex(i);
+        if(tweak.isNull())
+            continue;
+        logicalIndices.append(tweak.logicalIndex());
+        vector =
+            MVector(tweak.child(0).asFloat(), tweak.child(1).asFloat(), tweak.child(2).asFloat());
+        tweakVectors.append(vector);
+    }
+    status = MVGMayaUtil::setIntArrayAttribute(meshNodeShape, "twi", logicalIndices);
+    CHECK(status)
+    status = MVGMayaUtil::setVectorArrayAttribute(meshNodeShape, "twv", tweakVectors);
+    CHECK(status)
+
     return MPxManipulatorNode::doPress(view);
 }
 
@@ -236,6 +278,34 @@ MStatus MVGMoveManipulator::doRelease(M3dView& view)
         default:
             break;
     }
+
+    // Retrieve tweak information
+    MStatus status;
+    MDagPath meshPath = _onPressIntersectedComponent.meshPath;
+    meshPath.extendToShape();
+    MObject meshNodeShape = meshPath.node();
+    MFnDependencyNode depNodeFn;
+    depNodeFn.setObject(meshNodeShape);
+    MIntArray logicalIndices;
+    MVGMayaUtil::getIntArrayAttribute(meshNodeShape, "twi", logicalIndices);
+    MVectorArray tweakVectors;
+    MVGMayaUtil::getVectorArrayAttribute(meshNodeShape, "twv", tweakVectors);
+    MPlug tweakPlug = depNodeFn.findPlug("pnts");
+    MPlug tweak;
+    assert(logicalIndices.length() == tweakVectors.length());
+    // Clear and fill "pnts" attribute
+    MPointArray emptyArray;
+    MVGMayaUtil::setPointArrayAttribute(meshNodeShape, "pnts", emptyArray);
+    for(int i = 0; i < logicalIndices.length(); i++)
+    {
+        tweak = tweakPlug.elementByLogicalIndex(logicalIndices[i], &status);
+        CHECK(status);
+        tweak.child(0).setValue(tweakVectors[i].x);
+        tweak.child(1).setValue(tweakVectors[i].y);
+        tweak.child(2).setValue(tweakVectors[i].z);
+    }
+
+    // Create command
     MVGEditCmd* cmd = newEditCmd();
     if(cmd)
     {
@@ -257,13 +327,32 @@ MStatus MVGMoveManipulator::doRelease(M3dView& view)
 MStatus MVGMoveManipulator::doMove(M3dView& view, bool& refresh)
 {
     _cache->checkIntersection(10.0, getMousePosition(view));
-    //    _onMoveIntersectedComponent = _cache->getIntersectedComponent();
     return MPxManipulatorNode::doMove(view, refresh);
 }
 
 MStatus MVGMoveManipulator::doDrag(M3dView& view)
 {
+    // Fill verticesIDs
+    MIntArray verticesID;
+    switch(_onPressIntersectedComponent.type)
+    {
+        case MFn::kMeshVertComponent:
+            verticesID.append(_onPressIntersectedComponent.vertex->index);
+            break;
+        case MFn::kMeshEdgeComponent:
+            verticesID.append(_onPressIntersectedComponent.edge->vertex1->index);
+            verticesID.append(_onPressIntersectedComponent.edge->vertex2->index);
+            break;
+    }
+
     computeFinalWSPositions(view);
+
+    // Set points
+    if(_finalWSPositions.length() > 0)
+    {
+        MVGMesh mesh(_onPressIntersectedComponent.meshPath);
+        mesh.setPoints(verticesID, _finalWSPositions);
+    }
     return MPxManipulatorNode::doDrag(view);
 }
 
@@ -559,6 +648,7 @@ void MVGMoveManipulator::drawPlacedPoints(M3dView& view, MVGManipulatorCache* ca
             // Number of placed points
             MString nbView;
             nbView += (int)(verticesIt->blindData.size());
+            view.setDrawColor(MColor(0.9f, 0.3f, 0.f));
             view.drawText(nbView,
                           MVGGeometryUtil::viewToWorldSpace(view, clickedVSPoint + MPoint(5, 5)));
         }

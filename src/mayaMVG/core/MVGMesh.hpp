@@ -42,11 +42,12 @@ public:
     int getPolygonsCount() const;
     int getVerticesCount() const;
     MStatus getPolygonVertices(const int polygonId, MIntArray& vertexList) const;
-    const MIntArray getConnectedFacesToVertex(int vertexId);
-    const MIntArray getConnectedFacesToEdge(int edgeId);
-    const MIntArray getFaceVertices(int faceId);
-    MStatus getPoint(int vertexId, MPoint& point) const;
-    MStatus setPoint(int vertexId, MPoint& point) const;
+    const MIntArray getConnectedFacesToVertex(const int vertexId);
+    const MIntArray getConnectedFacesToEdge(const int edgeId);
+    const MIntArray getFaceVertices(const int faceId);
+    MStatus getPoint(const int vertexId, MPoint& point) const;
+    MStatus setPoint(const int vertexId, const MPoint& point) const;
+    MStatus setPoints(const MIntArray& verticesIds, const MPointArray& points) const;
     MStatus setBlindData(const int vertexId, std::vector<ClickedCSPosition>& data) const;
     MStatus getBlindData(const int vertexId, std::vector<ClickedCSPosition>& data) const;
     MStatus getBlindData(const int vertexId, std::map<int, MPoint>& cameraToClickedCSPoints) const;

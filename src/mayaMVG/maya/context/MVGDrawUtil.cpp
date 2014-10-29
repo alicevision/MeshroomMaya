@@ -369,14 +369,14 @@ void MVGDrawUtil::drawPlaneCursorItem(const MPoint& originVS, const MColor& colo
 // static
 void MVGDrawUtil::drawClickedPoints(const MPointArray& clickedVSPoints)
 {
-    MVGDrawUtil::drawPoints2D(clickedVSPoints, _createColor, 4.0);
+    MVGDrawUtil::drawPoints2D(clickedVSPoints, _faceColor, 4.0);
     if(clickedVSPoints.length() == 2)
-        MVGDrawUtil::drawLine2D(clickedVSPoints[0], clickedVSPoints[1], _createColor);
+        MVGDrawUtil::drawLine2D(clickedVSPoints[0], clickedVSPoints[1], _faceColor);
     if(clickedVSPoints.length() == 3)
         MVGDrawUtil::drawPolygon2D(clickedVSPoints, _faceColor, 0.2f);
 }
-// Move manipulator
 
+// Move manipulator
 // static
 void MVGDrawUtil::drawTriangulatedPoint(M3dView& view, const MPoint& draggedVSPoint,
                                         const MPoint& worldPoint, MColor color)

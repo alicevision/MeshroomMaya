@@ -183,7 +183,7 @@ MStatus MVGMesh::getPolygonVertices(const int polygonId, MIntArray& vertexList) 
     return status;
 }
 
-const MIntArray MVGMesh::getConnectedFacesToVertex(int vertexId)
+const MIntArray MVGMesh::getConnectedFacesToVertex(const int vertexId)
 {
     MIntArray connectedFacesId;
     MStatus status;
@@ -197,7 +197,7 @@ const MIntArray MVGMesh::getConnectedFacesToVertex(int vertexId)
     return connectedFacesId;
 }
 
-const MIntArray MVGMesh::getConnectedFacesToEdge(int edgeId)
+const MIntArray MVGMesh::getConnectedFacesToEdge(const int edgeId)
 {
     MIntArray connectedFacesId;
     MStatus status;
@@ -211,7 +211,7 @@ const MIntArray MVGMesh::getConnectedFacesToEdge(int edgeId)
     return connectedFacesId;
 }
 
-const MIntArray MVGMesh::getFaceVertices(int faceId)
+const MIntArray MVGMesh::getFaceVertices(const int faceId)
 {
     MStatus status;
     MItMeshPolygon faceIter(_object);
@@ -224,12 +224,27 @@ const MIntArray MVGMesh::getFaceVertices(int faceId)
     return vertices;
 }
 
-MStatus MVGMesh::setPoint(int vertexId, MPoint& point) const
+MStatus MVGMesh::setPoint(const int vertexId, const MPoint& point) const
 {
     MStatus status;
     MFnMesh fnMesh(_object, &status);
-    fnMesh.setPoint(vertexId, point, MSpace::kWorld);
+    status = fnMesh.setPoint(vertexId, point, MSpace::kWorld);
     CHECK_RETURN_STATUS(status);
+    return status;
+}
+
+MStatus MVGMesh::setPoints(const MIntArray& verticesIds, const MPointArray& points) const
+{
+    MStatus status;
+    assert(verticesIds.length() == points.length());
+    assert(_dagpath.isValid());
+    MFnMesh fnMesh(_dagpath, &status);
+    for(int i = 0; i < verticesIds.length(); ++i)
+    {
+        status = fnMesh.setPoint(verticesIds[i], points[i], MSpace::kWorld);
+        CHECK_RETURN_STATUS(status);
+    }
+    fnMesh.syncObject();
     return status;
 }
 
