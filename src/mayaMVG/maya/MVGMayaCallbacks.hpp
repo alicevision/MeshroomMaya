@@ -2,6 +2,7 @@
 #include "mayaMVG/qt/MVGPanelWrapper.hpp"
 #include "mayaMVG/qt/MVGMainWidget.hpp"
 #include <maya/MFnDependencyNode.h>
+#include <maya/MFnDagNode.h>
 #include <maya/MSelectionList.h>
 #include <maya/MQtUtil.h>
 
@@ -115,15 +116,33 @@ static void nodeRemovedCB(MObject& node, void*)
     MVGProjectWrapper* project = getProjectWrapper();
     if(!project)
         return;
-    // Check that it is one of ours cameras
-    MDagPath cameraPath;
-    CHECK_RETURN(MDagPath::getAPathTo(node, cameraPath))
-    MVGCamera camera(cameraPath);
-    if(!camera.isValid())
-        return;
-    // Remove camera from UI model
-    project->removeCameraFromUI(cameraPath);
-    // TODO : use project.reloadMVGCamerasFromMaya();
+
+    switch(node.apiType())
+    {
+        case MFn::kCamera:
+        {
+            // Check that it is one of ours cameras
+            MDagPath cameraPath;
+            CHECK_RETURN(MDagPath::getAPathTo(node, cameraPath))
+            MVGCamera camera(cameraPath);
+            if(!camera.isValid())
+                return;
+            // Remove camera from UI model
+            project->removeCameraFromUI(cameraPath);
+            break;
+        }
+        case MFn::kMesh:
+        {
+            MFnDagNode fn(node);
+            if(fn.isIntermediateObject())
+                return;
+            // TODO : remove only this mesh from cache
+            MGlobal::executeCommand("mayaMVGTool -e -rebuild mayaMVGTool1");
+            break;
+        }
+        default:
+            break;
+    }
 }
 
 static void modelEditorChangedCB(void*)
