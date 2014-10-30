@@ -49,7 +49,7 @@ struct MVGDrawUtil
 
     // Points
     // Lines and polygons on create
-    static void drawClickedPoints(const MPointArray& clickedVSPoints);
+    static void drawClickedPoints(const MPointArray& clickedVSPoints, const MColor color);
     // Association between 2D and 3D point
     static void drawTriangulatedPoint(M3dView& view, const MPoint& draggedVSPoint,
                                       const MPoint& worldPoint, MColor color);
@@ -59,7 +59,8 @@ struct MVGDrawUtil
                                   const MPointArray& onPressWSPositions);
 
     // Colors
-    static const MColor _faceColor;
+    static const MColor _okayColor;
+    static const MColor _errorColor;
     static const MColor _cursorColor;
     static const MColor _createColor;
     static const MColor _triangulateColor;

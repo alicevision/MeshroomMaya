@@ -34,9 +34,9 @@ void MVGCreateManipulator::postConstructor()
 void MVGCreateManipulator::draw(M3dView& view, const MDagPath& path, M3dView::DisplayStyle style,
                                 M3dView::DisplayStatus dispStatus)
 {
-    if(!MVGMayaUtil::isActiveView(view))
-        return;
 
+    if(!MVGMayaUtil::isMVGView(view))
+        return;
     view.beginGL();
 
     // enable gl picking (this will enable the calls to doPress/doRelease)
@@ -57,6 +57,25 @@ void MVGCreateManipulator::draw(M3dView& view, const MDagPath& path, M3dView::Di
     { // 2D drawing
         MPoint mouseVSPositions = getMousePosition(view, kView);
         MVGDrawUtil::begin2DDrawing(view.portWidth(), view.portHeight());
+        // draw clicked points
+        MDagPath cameraPath;
+        view.getCamera(cameraPath);
+        MVGCamera camera(cameraPath);
+        if(_cameraIDToClickedCSPoints.first == camera.getId())
+        {
+            MColor drawColor = MVGDrawUtil::_errorColor;
+            MPointArray _clickedVSPoints =
+                MVGGeometryUtil::cameraToViewSpace(view, _cameraIDToClickedCSPoints.second);
+            if(_cameraIDToClickedCSPoints.first == _cache->getActiveCamera().getId())
+            {
+                _clickedVSPoints.append(mouseVSPositions);
+                if(_finalWSPositions.length() == 4)
+                    drawColor = MVGDrawUtil::_okayColor;
+            }
+            MVGDrawUtil::drawClickedPoints(_clickedVSPoints, drawColor);
+        }
+        if(!MVGMayaUtil::isActiveView(view))
+            return;
         // draw cursor
         drawCursor(mouseVSPositions, _cache);
         if(!MVGMayaUtil::isMVGView(view))
@@ -66,19 +85,14 @@ void MVGCreateManipulator::draw(M3dView& view, const MDagPath& path, M3dView::Di
             view.endGL();
             return;
         }
-        // draw clicked points
-        MPointArray _clickedVSPoints = MVGGeometryUtil::cameraToViewSpace(view, _clickedCSPoints);
-        _clickedVSPoints.append(mouseVSPositions);
-        MVGDrawUtil::drawClickedPoints(_clickedVSPoints);
         // draw intersection
         MPointArray intersectedVSPoints;
         getIntersectedPositions(view, intersectedVSPoints, MVGManipulator::kView);
         MVGManipulator::drawIntersection2D(intersectedVSPoints);
         MVGDrawUtil::end2DDrawing();
     }
-
-    if(_finalWSPositions.length() > 3)
-        MVGDrawUtil::drawPolygon3D(_finalWSPositions, MVGDrawUtil::_faceColor);
+    if(_cameraIDToClickedCSPoints.second.length() == 0 && _finalWSPositions.length() > 3)
+        MVGDrawUtil::drawPolygon3D(_finalWSPositions, MVGDrawUtil::_okayColor);
 
     glDisable(GL_BLEND);
     view.endGL();
@@ -92,6 +106,11 @@ MStatus MVGCreateManipulator::doPress(M3dView& view)
     if(!(QApplication::mouseButtons() & Qt::LeftButton))
         return MS::kFailure;
 
+    if(_cache->getActiveCamera().getId() != _cameraIDToClickedCSPoints.first)
+    {
+        _cameraIDToClickedCSPoints.first = _cache->getActiveCamera().getId();
+        _cameraIDToClickedCSPoints.second.clear();
+    }
     // set this view as the active view
     _cache->setActiveView(view);
 
@@ -114,9 +133,9 @@ MStatus MVGCreateManipulator::doRelease(M3dView& view)
     // we are intersecting w/ a mesh component: retrieve the component properties and add its
     // coordinates to the clicked CS points array
     if(_onPressIntersectedComponent.type == MFn::kInvalid)
-        _clickedCSPoints.append(getMousePosition(view));
+        _cameraIDToClickedCSPoints.second.append(getMousePosition(view));
     else
-        getIntersectedPositions(view, _clickedCSPoints);
+        getIntersectedPositions(view, _cameraIDToClickedCSPoints.second);
 
     // FIXME remove potential extra points
 
@@ -130,9 +149,8 @@ MStatus MVGCreateManipulator::doRelease(M3dView& view)
     if(!cmd)
         return MS::kFailure;
 
-    MVGPointCloud cloud(MVGProject::_CLOUD);
     if(_onPressIntersectedComponent.type == MFn::kInvalid)
-        cmd->create(MDagPath(), _finalWSPositions, _clickedCSPoints,
+        cmd->create(MDagPath(), _finalWSPositions, _cameraIDToClickedCSPoints.second,
                     _cache->getActiveCamera().getId());
     else
     {
@@ -151,7 +169,7 @@ MStatus MVGCreateManipulator::doRelease(M3dView& view)
         _cache->rebuildMeshesCache();
     }
 
-    _clickedCSPoints.clear();
+    _cameraIDToClickedCSPoints.second.clear();
     _finalWSPositions.clear();
     return MPxManipulatorNode::doRelease(view);
 }
@@ -172,7 +190,8 @@ MStatus MVGCreateManipulator::doDrag(M3dView& view)
 
 MPointArray MVGCreateManipulator::getClickedVSPoints() const
 {
-    return MVGGeometryUtil::cameraToViewSpace(_cache->getActiveView(), _clickedCSPoints);
+    return MVGGeometryUtil::cameraToViewSpace(_cache->getActiveView(),
+                                              _cameraIDToClickedCSPoints.second);
 }
 
 void MVGCreateManipulator::computeFinalWSPositions(M3dView& view)
@@ -180,17 +199,17 @@ void MVGCreateManipulator::computeFinalWSPositions(M3dView& view)
     _finalWSPositions.clear();
 
     // create polygon
-    if(_clickedCSPoints.length() > 2)
+    if(_cameraIDToClickedCSPoints.second.length() > 2)
     {
         // add mouse point to the clicked points
-        MPointArray previewCSPoints = _clickedCSPoints;
+        MPointArray previewCSPoints = _cameraIDToClickedCSPoints.second;
         previewCSPoints.append(getMousePosition(view));
         // project clicked points on point cloud
         MVGPointCloud cloud(MVGProject::_CLOUD);
         cloud.projectPoints(view, previewCSPoints, _finalWSPositions);
         return;
     }
-    if(_clickedCSPoints.length() > 0)
+    if(_cameraIDToClickedCSPoints.second.length() > 0)
         return;
 
     // extrude edge

@@ -41,7 +41,7 @@ public:
     static MString _drawRegistrantID;
 
 private:
-    MPointArray _clickedCSPoints;
+    std::pair<int, MPointArray> _cameraIDToClickedCSPoints; // cameraID to clicked points
 };
 
 } // namespace

@@ -6,8 +6,8 @@
 
 namespace mayaMVG
 {
-
-MColor const MVGDrawUtil::_faceColor = MColor(1.f, 1.f, 1.f);
+MColor const MVGDrawUtil::_okayColor = MColor(0.5f, 0.7f, 0.4f);
+MColor const MVGDrawUtil::_errorColor = MColor(0.8f, 0.5f, 0.4f);
 MColor const MVGDrawUtil::_cursorColor = MColor(0.f, 0.f, 0.f);
 MColor const MVGDrawUtil::_createColor = MColor(0.9f, 0.9f, 0.1f);
 MColor const MVGDrawUtil::_triangulateColor = MColor(0.9f, 0.5f, 0.4f);
@@ -367,13 +367,13 @@ void MVGDrawUtil::drawPlaneCursorItem(const MPoint& originVS, const MColor& colo
 
 // Create manipulator
 // static
-void MVGDrawUtil::drawClickedPoints(const MPointArray& clickedVSPoints)
+void MVGDrawUtil::drawClickedPoints(const MPointArray& clickedVSPoints, const MColor color)
 {
-    MVGDrawUtil::drawPoints2D(clickedVSPoints, _faceColor, 4.0);
+    MVGDrawUtil::drawPoints2D(clickedVSPoints, color, 4.0);
     if(clickedVSPoints.length() == 2)
-        MVGDrawUtil::drawLine2D(clickedVSPoints[0], clickedVSPoints[1], _faceColor);
-    if(clickedVSPoints.length() == 3)
-        MVGDrawUtil::drawPolygon2D(clickedVSPoints, _faceColor, 0.2f);
+        MVGDrawUtil::drawLine2D(clickedVSPoints[0], clickedVSPoints[1], color);
+    if(clickedVSPoints.length() > 2)
+        MVGDrawUtil::drawPolygon2D(clickedVSPoints, color, 0.2f);
 }
 
 // Move manipulator
