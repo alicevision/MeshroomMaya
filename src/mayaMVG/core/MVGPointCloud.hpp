@@ -29,7 +29,7 @@ public:
     void setItems(const std::vector<MVGPointCloudItem>& items);
     std::vector<MVGPointCloudItem> getItems() const;
     bool projectPoints(M3dView& view, const MPointArray& cameraSpacePoints,
-                       MPointArray& worldSpacePoints);
+                       MPointArray& worldSpacePoints, const int index = -1);
 
 private:
     static MString _RGBPP;

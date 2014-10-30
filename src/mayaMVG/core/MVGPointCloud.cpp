@@ -167,7 +167,7 @@ std::vector<MVGPointCloudItem> MVGPointCloud::getItems() const
 }
 
 bool MVGPointCloud::projectPoints(M3dView& view, const MPointArray& cameraSpacePoints,
-                                  MPointArray& worldSpacePoints)
+                                  MPointArray& worldSpacePoints, const int index)
 {
     if(!isValid())
         return false;
@@ -202,7 +202,15 @@ bool MVGPointCloud::projectPoints(M3dView& view, const MPointArray& cameraSpaceP
     if(enclosedWSPoints.length() < 3)
         return false;
 
-    return MVGGeometryUtil::projectPointsOnPlane(view, cameraSpacePoints, enclosedWSPoints,
+    if(index == -1)
+        return MVGGeometryUtil::projectPointsOnPlane(view, cameraSpacePoints, enclosedWSPoints,
+                                                     worldSpacePoints);
+
+    assert(index < cameraSpacePoints.length());
+    // Only project the specified point
+    MPointArray pointsCSToProject;
+    pointsCSToProject.append(cameraSpacePoints[index]);
+    return MVGGeometryUtil::projectPointsOnPlane(view, pointsCSToProject, enclosedWSPoints,
                                                  worldSpacePoints);
 }
 

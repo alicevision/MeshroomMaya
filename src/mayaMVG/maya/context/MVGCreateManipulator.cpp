@@ -234,14 +234,13 @@ void MVGCreateManipulator::computeFinalWSPositions(M3dView& view)
             // we need mousePosition in world space to compute the right offset
             cameraSpacePoints.append(getMousePosition(view));
             MPointArray projectedWSPoints;
-            if(cloud.projectPoints(view, cameraSpacePoints, projectedWSPoints))
+            if(cloud.projectPoints(view, cameraSpacePoints, projectedWSPoints,
+                                   cameraSpacePoints.length() - 1))
             {
-                MPoint mouseWSPosition = projectedWSPoints[projectedWSPoints.length() - 1];
                 MPointArray translatedWSEdgePoints;
                 getTranslatedWSEdgePoints(view, _onPressIntersectedComponent.edge,
-                                          _onPressCSPosition, mouseWSPosition,
+                                          _onPressCSPosition, projectedWSPoints[0],
                                           translatedWSEdgePoints);
-
                 _finalWSPositions.append(_onPressIntersectedComponent.edge->vertex1->worldPosition);
                 _finalWSPositions.append(_onPressIntersectedComponent.edge->vertex2->worldPosition);
                 _finalWSPositions.append(translatedWSEdgePoints[1]);

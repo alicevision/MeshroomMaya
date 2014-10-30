@@ -286,6 +286,7 @@ bool MVGGeometryUtil::projectPointsOnPlane(M3dView& view, const MPointArray& toP
                              projectedWSPoint);
         projectedWSPoints.append(projectedWSPoint);
     }
+    assert(toProjectCSPoints.length() == projectedWSPoints.length());
     return true;
 }
 

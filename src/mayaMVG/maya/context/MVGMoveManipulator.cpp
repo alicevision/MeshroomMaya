@@ -172,7 +172,7 @@ void MVGMoveManipulator::draw(M3dView& view, const MDagPath& path, M3dView::Disp
         MVGDrawUtil::end2DDrawing();
     }
 
-    MVGDrawUtil::drawFinalWSPoints(_finalWSPositions, onPressWSPoints);
+    //    MVGDrawUtil::drawFinalWSPoints(_finalWSPositions, onPressWSPoints);
 
     glDisable(GL_BLEND);
     view.endGL();
@@ -473,22 +473,18 @@ void MVGMoveManipulator::computeFinalWSPositions(M3dView& view)
                     getIntermediateCSEdgePoints(view, _onPressIntersectedComponent.edge,
                                                 _onPressCSPosition, intermediateCSPositions);
                     MPointArray cameraSpacePoints;
-                    MIntArray movingVerticesIDInThisFace;
                     for(size_t i = 0; i < verticesIDs.length(); ++i)
                     {
                         // replace the moved vertex position with the current mouse position (camera
                         // space)
                         if(verticesIDs[i] == _onPressIntersectedComponent.edge->vertex1->index)
                         {
-
                             cameraSpacePoints.append(intermediateCSPositions[0]);
-                            movingVerticesIDInThisFace.append(i);
                             continue;
                         }
                         if(verticesIDs[i] == _onPressIntersectedComponent.edge->vertex2->index)
                         {
                             cameraSpacePoints.append(intermediateCSPositions[1]);
-                            movingVerticesIDInThisFace.append(i);
                             continue;
                         }
                         MPoint vertexWSPoint;
@@ -496,22 +492,20 @@ void MVGMoveManipulator::computeFinalWSPositions(M3dView& view)
                         cameraSpacePoints.append(
                             MVGGeometryUtil::worldToCameraSpace(view, vertexWSPoint));
                     }
-                    assert(movingVerticesIDInThisFace.length() == 2);
-                    // Switch order if necessary
-                    if(movingVerticesIDInThisFace[0] == 0 &&
-                       movingVerticesIDInThisFace[1] == verticesIDs.length() - 1)
-                    {
-                        MIntArray tmp = movingVerticesIDInThisFace;
-                        movingVerticesIDInThisFace[0] = tmp[1];
-                        movingVerticesIDInThisFace[1] = tmp[0];
-                    }
+                    // we need mousePosition in world space to compute the right offset
+                    cameraSpacePoints.append(getMousePosition(view));
                     MPointArray worldSpacePoints;
                     MVGPointCloud cloud(MVGProject::_CLOUD);
-                    if(cloud.projectPoints(view, cameraSpacePoints, worldSpacePoints))
+                    if(cloud.projectPoints(view, cameraSpacePoints, worldSpacePoints,
+                                           cameraSpacePoints.length() - 1))
                     {
+                        MPointArray translatedWSEdgePoints;
+                        getTranslatedWSEdgePoints(view, _onPressIntersectedComponent.edge,
+                                                  _onPressCSPosition, worldSpacePoints[0],
+                                                  translatedWSEdgePoints);
                         // add only the moved vertices positions, not the other projected vertices
-                        _finalWSPositions.append(worldSpacePoints[movingVerticesIDInThisFace[0]]);
-                        _finalWSPositions.append(worldSpacePoints[movingVerticesIDInThisFace[1]]);
+                        _finalWSPositions.append(translatedWSEdgePoints[0]);
+                        _finalWSPositions.append(translatedWSEdgePoints[1]);
                     }
                     break;
                 }
