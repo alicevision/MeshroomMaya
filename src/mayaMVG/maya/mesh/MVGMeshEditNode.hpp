@@ -26,6 +26,7 @@ public:
     static MObject aInWorldPositions;
     static MObject aInCameraPositions;
     static MObject aInCameraID;
+    static MObject aInClearBlindData;
     static MObject aInEditType;
     static MObject aOutMesh;
 

@@ -310,11 +310,9 @@ MStatus MVGMesh::getBlindData(const int vertexId,
 MStatus MVGMesh::unsetBlindData(const int vertexId) const
 {
     MStatus status;
-    MFnMesh fnMesh(_object, &status);
-    CHECK_RETURN_STATUS(status);
-    if(!fnMesh.hasBlindData(MFn::kMeshVertComponent))
-        return MS::kFailure;
-    status = fnMesh.clearBlindData(vertexId, MFn::kMeshVertComponent, _blindDataID);
+    // TODO : use clearBlindData function in MFnMesh
+    std::vector<ClickedCSPosition> vector;
+    status = setBlindData(vertexId, vector);
     CHECK(status)
     return status;
 }

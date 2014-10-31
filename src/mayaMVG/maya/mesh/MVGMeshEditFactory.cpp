@@ -49,6 +49,11 @@ void MVGMeshEditFactory::setCameraID(const int cameraID)
     _cameraID = cameraID;
 }
 
+void MVGMeshEditFactory::setClearBlindData(const bool clear)
+{
+    _clearBD = clear;
+}
+
 void MVGMeshEditFactory::setEditType(const EditType type)
 {
     _editType = type;
@@ -80,7 +85,11 @@ MStatus MVGMeshEditFactory::doIt()
             if(_componentIDs.length() == _worldPositions.length())
             {
                 for(size_t i = 0; i < _componentIDs.length(); ++i)
+                {
+                    if(_clearBD)
+                        CHECK(mesh.unsetBlindData(_componentIDs[i]));
                     CHECK(mesh.setPoint(_componentIDs[i], _worldPositions[i]))
+                }
             }
             break;
         }

@@ -309,8 +309,9 @@ MStatus MVGMoveManipulator::doRelease(M3dView& view)
     MVGEditCmd* cmd = newEditCmd();
     if(cmd)
     {
+        bool clearBD = !(_mode == kNViewTriangulation);
         cmd->move(_onPressIntersectedComponent.meshPath, indices, _finalWSPositions,
-                  clickedCSPoints, _cache->getActiveCamera().getId());
+                  clickedCSPoints, _cache->getActiveCamera().getId(), clearBD);
         MArgList args;
         if(cmd->doIt(args))
             cmd->finalize();

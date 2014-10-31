@@ -31,6 +31,7 @@ public:
     void setWorldPositions(const MPointArray& worldPositions);
     void setCameraPositions(const MPointArray& cameraPositions);
     void setCameraID(const int cameraID);
+    void setClearBlindData(const bool clear);
     void setEditType(const EditType type);
 
 public:
@@ -43,6 +44,7 @@ private:
     MPointArray _worldPositions;
     MPointArray _cameraPositions;
     int _cameraID;
+    bool _clearBD;
     EditType _editType;
 };
 

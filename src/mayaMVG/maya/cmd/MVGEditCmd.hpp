@@ -34,7 +34,7 @@ public:
                 const MPointArray& cameraSpacePositions, int cameraID);
     void move(const MDagPath& meshPath, const MIntArray& componentIDs,
               const MPointArray& worldSpacePositions, const MPointArray& cameraSpacePositions,
-              int cameraID);
+              const int cameraID, const bool clearBD = false);
 
 public:
     static MString _name;
@@ -48,6 +48,7 @@ private:
     MPointArray _worldSpacePositions;
     MPointArray _cameraSpacePositions;
     int _cameraID;
+    bool _clearBD;
 };
 
 } // namespace

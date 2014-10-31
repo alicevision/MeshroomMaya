@@ -68,10 +68,6 @@ MStatus MVGEditCmd::finalize()
 MStatus MVGEditCmd::initModifierNode(MObject node)
 {
     MStatus status;
-    MFnDependencyNode depFn(node);
-    // // componentList
-    // MPlug componentsPlug(node, MVGMeshEditNode::aComponentList);
-    // status = componentsPlug.setValue(_componentList);
     MFnIntArrayData intArrayFn;
     MFnPointArrayData pointArrayFn;
     MObject attributeObject;
@@ -90,6 +86,9 @@ MStatus MVGEditCmd::initModifierNode(MObject node)
     // camera id
     MPlug cameraIDPlug(node, MVGMeshEditNode::aInCameraID);
     cameraIDPlug.setValue(_cameraID);
+    // clear blind data
+    MPlug clearBDPlug(node, MVGMeshEditNode::aInClearBlindData);
+    clearBDPlug.setValue(_clearBD);
     // edit type
     MPlug editTypePlug(node, MVGMeshEditNode::aInEditType);
     editTypePlug.setValue(_editType);
@@ -115,7 +114,8 @@ void MVGEditCmd::create(const MDagPath& meshPath, const MPointArray& worldSpaceP
 
 void MVGEditCmd::move(const MDagPath& meshPath, const MIntArray& componentIDs,
                       const MPointArray& worldSpacePositions,
-                      const MPointArray& cameraSpacePositions, int cameraID)
+                      const MPointArray& cameraSpacePositions, const int cameraID,
+                      const bool clearBD)
 {
     _editType = MVGMeshEditFactory::kMove;
     _meshPath = meshPath;
@@ -123,6 +123,7 @@ void MVGEditCmd::move(const MDagPath& meshPath, const MIntArray& componentIDs,
     _worldSpacePositions = worldSpacePositions;
     _cameraSpacePositions = cameraSpacePositions;
     _cameraID = cameraID;
+    _clearBD = clearBD;
 
     // TODO remove from here, should always be valid
     if(!meshPath.isValid())

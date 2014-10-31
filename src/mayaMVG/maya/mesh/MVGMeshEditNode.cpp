@@ -26,6 +26,7 @@ MObject MVGMeshEditNode::aInIndices;
 MObject MVGMeshEditNode::aInWorldPositions;
 MObject MVGMeshEditNode::aInCameraPositions;
 MObject MVGMeshEditNode::aInCameraID;
+MObject MVGMeshEditNode::aInClearBlindData;
 MObject MVGMeshEditNode::aInEditType;
 MObject MVGMeshEditNode::aOutMesh;
 
@@ -79,6 +80,12 @@ MStatus MVGMeshEditNode::initialize()
     CHECK_RETURN_STATUS(status)
     nAttr.setStorable(true);
     CHECK_RETURN_STATUS(addAttribute(aInCameraID))
+
+    aInClearBlindData =
+        nAttr.create("inClearBlindData", "icb", MFnNumericData::kBoolean, false, &status);
+    CHECK_RETURN_STATUS(status)
+    nAttr.setStorable(true);
+    CHECK_RETURN_STATUS(addAttribute(aInClearBlindData))
 
     aInEditType = eAttr.create("inEditType", "iet", 0, &status);
     CHECK_RETURN_STATUS(status)
@@ -148,6 +155,9 @@ MStatus MVGMeshEditNode::compute(const MPlug& plug, MDataBlock& data)
     // retrieve camera id
     MDataHandle cameraIDHandle = data.outputValue(aInCameraID, &status);
 
+    // retrieve clearBD
+    MDataHandle clearBlindDataHandle = data.outputValue(aInClearBlindData, &status);
+
     // retrieve edit type
     MDataHandle editTypeHandle = data.outputValue(aInEditType, &status);
 
@@ -159,6 +169,7 @@ MStatus MVGMeshEditNode::compute(const MPlug& plug, MDataBlock& data)
     _editFactory.setWorldPositions(worldPositionArray);
     _editFactory.setCameraPositions(cameraPositionArray);
     _editFactory.setCameraID(cameraIDHandle.asInt());
+    _editFactory.setClearBlindData(clearBlindDataHandle.asBool());
     _editFactory.setEditType(static_cast<MVGMeshEditFactory::EditType>(editTypeHandle.asShort()));
     // perform mesh operation
     CHECK_RETURN_STATUS(_editFactory.doIt())
