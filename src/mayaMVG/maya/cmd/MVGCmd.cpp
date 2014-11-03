@@ -43,10 +43,6 @@ MStatus MVGCmd::doIt(const MArgList& args)
 {
     MStatus status = MS::kSuccess;
 
-    // parsing ARGS
-    MSyntax syntax = MVGCmd::newSyntax();
-    MArgDatabase argData(syntax, args);
-
     // create maya window
     status = MVGMayaUtil::createMVGWindow();
     if(!status)

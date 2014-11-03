@@ -59,7 +59,7 @@ MStatus initializePlugin(MObject obj)
     id = MEventMessage::addEventCallback("PostToolChanged", currentContextChangedCB, &status);
     if(status)
         _callbacks.append(id);
-    MEventMessage::addEventCallback("NewSceneOpened", sceneChangedCB, &status);
+    MEventMessage::addEventCallback("NewSceneOpened", newSceneCB, &status);
     if(status)
         _callbacks.append(id);
     MEventMessage::addEventCallback("SceneOpened", sceneChangedCB, &status);

@@ -69,6 +69,11 @@ static void sceneChangedCB(void*)
     MGlobal::executeCommand("mayaMVGTool -e -rebuild mayaMVGTool1");
 }
 
+static void newSceneCB(void*)
+{
+    MVGMayaUtil::deleteMVGWindow();
+}
+
 static void undoCB(void*)
 {
     // TODO : rebuild only the modified mesh
