@@ -148,8 +148,7 @@ void MVGMoveManipulator::draw(M3dView& view, const MDagPath& path, M3dView::Disp
             view.endGL();
             return;
         }
-        drawPlacedPoints(view, _cache);
-
+        drawPlacedPoints(view, _cache->getMeshData(), _onPressIntersectedComponent);
         // Draw in active MayaMVG viewport
         if(!MVGMayaUtil::isActiveView(view))
         {
@@ -158,21 +157,27 @@ void MVGMoveManipulator::draw(M3dView& view, const MDagPath& path, M3dView::Disp
             view.endGL();
             return;
         }
+        // Draw vertex information on hover
+        drawVertexOnHover(view, _cache, getMousePosition(view, kView));
         // draw intersection
-        MPointArray intersectedVSPoints;
-        getIntersectedPositions(view, intersectedVSPoints, MVGManipulator::kView);
-        MVGManipulator::drawIntersection2D(intersectedVSPoints);
-
+        if(!_doDrag)
+        {
+            MPointArray intersectedVSPoints;
+            getIntersectedPositions(view, intersectedVSPoints, MVGManipulator::kView);
+            MVGManipulator::drawIntersection2D(intersectedVSPoints);
+        }
         // draw triangulation
         if(_mode == kNViewTriangulation)
+        {
+            MPointArray triangulatedWSPoints = onPressWSPoints;
+            if(_finalWSPositions.length() > 0)
+                triangulatedWSPoints = _finalWSPositions;
             MVGDrawUtil::drawTriangulatedPoints(
-                view, onPressWSPoints,
+                view, triangulatedWSPoints,
                 MVGGeometryUtil::cameraToViewSpace(view, intermediateCSPoints));
-
+        }
         MVGDrawUtil::end2DDrawing();
     }
-
-    //    MVGDrawUtil::drawFinalWSPoints(_finalWSPositions, onPressWSPoints);
 
     glDisable(GL_BLEND);
     view.endGL();
@@ -242,11 +247,13 @@ MStatus MVGMoveManipulator::doPress(M3dView& view)
     status = MVGMayaUtil::setVectorArrayAttribute(meshNodeShape, "twv", tweakVectors);
     CHECK(status)
 
+    _doDrag = true;
     return MPxManipulatorNode::doPress(view);
 }
 
 MStatus MVGMoveManipulator::doRelease(M3dView& view)
 {
+    _doDrag = false;
     if(!MVGMayaUtil::isActiveView(view) || !MVGMayaUtil::isMVGView(view))
         return MPxManipulatorNode::doRelease(view);
 
@@ -258,21 +265,23 @@ MStatus MVGMoveManipulator::doRelease(M3dView& view)
 
     // prepare commands data
     MIntArray indices;
-    MPointArray clickedCSPoints;
+    MPointArray clickedCSPoints = MVGGeometryUtil::worldToCameraSpace(view, _finalWSPositions);
     switch(_onPressIntersectedComponent.type)
     {
         case MFn::kMeshVertComponent:
         {
             indices.append(_onPressIntersectedComponent.vertex->index);
-            clickedCSPoints.append(getMousePosition(view));
+            if(_finalWSPositions.length() == 0)
+                clickedCSPoints.append(getMousePosition(view));
             break;
         }
         case MFn::kMeshEdgeComponent:
         {
             indices.append(_onPressIntersectedComponent.edge->vertex1->index);
             indices.append(_onPressIntersectedComponent.edge->vertex2->index);
-            getIntermediateCSEdgePoints(view, _onPressIntersectedComponent.edge, _onPressCSPosition,
-                                        clickedCSPoints);
+            if(_finalWSPositions.length() == 0)
+                getIntermediateCSEdgePoints(view, _onPressIntersectedComponent.edge,
+                                            _onPressCSPosition, clickedCSPoints);
             break;
         }
         default:
@@ -333,6 +342,7 @@ MStatus MVGMoveManipulator::doMove(M3dView& view, bool& refresh)
 
 MStatus MVGMoveManipulator::doDrag(M3dView& view)
 {
+    _cache->checkIntersection(10.0, getMousePosition(view));
     // Fill verticesIDs
     MIntArray verticesID;
     switch(_onPressIntersectedComponent.type)
@@ -610,42 +620,100 @@ void MVGMoveManipulator::drawCursor(const MPoint& originVS)
     }
 }
 // static
-void MVGMoveManipulator::drawPlacedPoints(M3dView& view, MVGManipulatorCache* cache)
+void MVGMoveManipulator::drawPlacedPoints(
+    M3dView& view, const std::map<std::string, MVGManipulatorCache::MeshData>& meshData,
+    const MVGManipulatorCache::IntersectedComponent& onPressIntersectedComponent)
 {
     MDagPath cameraPath;
     view.getCamera(cameraPath);
     MVGCamera camera(cameraPath);
 
-    std::map<std::string, MVGManipulatorCache::MeshData> meshData = cache->getMeshData();
     // browse meshes
-    std::map<std::string, MVGManipulatorCache::MeshData>::iterator it = meshData.begin();
+    std::map<std::string, MVGManipulatorCache::MeshData>::const_iterator it = meshData.begin();
     for(; it != meshData.end(); ++it)
     {
         // browse vertices
-        std::vector<MVGManipulatorCache::VertexData>& vertices = it->second.vertices;
-        for(std::vector<MVGManipulatorCache::VertexData>::iterator verticesIt = vertices.begin();
+        const std::vector<MVGManipulatorCache::VertexData>& vertices = it->second.vertices;
+        for(std::vector<MVGManipulatorCache::VertexData>::const_iterator verticesIt =
+                vertices.begin();
             verticesIt != vertices.end(); ++verticesIt)
         {
-            std::map<int, MPoint>::iterator currentData =
+            std::map<int, MPoint>::const_iterator currentData =
                 verticesIt->blindData.find(camera.getId());
             if(currentData == verticesIt->blindData.end())
                 continue;
 
+            // Don't draw if point is currently moving
+            if(onPressIntersectedComponent.type == MFn::kMeshVertComponent)
+            {
+                if(onPressIntersectedComponent.vertex->index == verticesIt->index)
+                    continue;
+            }
+            if(onPressIntersectedComponent.type == MFn::kMeshEdgeComponent)
+            {
+                if(onPressIntersectedComponent.edge->vertex1->index == verticesIt->index)
+                    continue;
+                if(onPressIntersectedComponent.edge->vertex2->index == verticesIt->index)
+                    continue;
+            }
+
             // 2D position
             MPoint clickedVSPoint =
-                MVGGeometryUtil::cameraToViewSpace(view, verticesIt->blindData[camera.getId()]);
-            MVGDrawUtil::drawFullCross(clickedVSPoint, 10, 1.5, MVGDrawUtil::_triangulateColor);
+                MVGGeometryUtil::cameraToViewSpace(view, verticesIt->blindData.at(camera.getId()));
+            MVGDrawUtil::drawFullCross(clickedVSPoint, 7, 1, MVGDrawUtil::_triangulateColor);
             // Link between 2D/3D positions
             MPoint vertexVS = MVGGeometryUtil::worldToViewSpace(view, verticesIt->worldPosition);
             MVGDrawUtil::drawLine2D(clickedVSPoint, vertexVS, MVGDrawUtil::_triangulateColor, 1.5f,
                                     1.f, true);
-
             // Number of placed points
             MString nbView;
             nbView += (int)(verticesIt->blindData.size());
             view.setDrawColor(MColor(0.9f, 0.3f, 0.f));
             view.drawText(nbView,
                           MVGGeometryUtil::viewToWorldSpace(view, clickedVSPoint + MPoint(5, 5)));
+        }
+    }
+}
+
+void MVGMoveManipulator::drawVertexOnHover(M3dView& view, MVGManipulatorCache* cache,
+                                           const MPoint& mouseVSPosition)
+{
+    MString nbView;
+    const MVGManipulatorCache::IntersectedComponent& intersectedComponent =
+        cache->getIntersectedComponent();
+    const int cameraID = cache->getActiveCamera().getId();
+    std::map<int, MPoint> intersectedBD;
+    switch(intersectedComponent.type)
+    {
+        case MFn::kMeshVertComponent:
+        {
+            intersectedBD = intersectedComponent.vertex->blindData;
+            if(intersectedBD.find(cameraID) != intersectedBD.end())
+                break;
+            nbView += (int)(intersectedBD.size());
+            view.setDrawColor(MColor(0.9f, 0.3f, 0.f));
+            view.drawText(
+                nbView, MVGGeometryUtil::viewToWorldSpace(view, mouseVSPosition + MPoint(12, 12)));
+            break;
+        }
+        case MFn::kMeshEdgeComponent:
+        {
+            intersectedBD = intersectedComponent.edge->vertex1->blindData;
+            if(intersectedBD.find(cameraID) == intersectedBD.end())
+            {
+                nbView += (int)(intersectedBD.size());
+                view.setDrawColor(MColor(0.9f, 0.3f, 0.f));
+                view.drawText(nbView, intersectedComponent.edge->vertex1->worldPosition);
+            }
+            intersectedBD = intersectedComponent.edge->vertex2->blindData;
+            if(intersectedBD.find(cameraID) == intersectedBD.end())
+            {
+                nbView.clear();
+                nbView += (int)(intersectedBD.size());
+                view.setDrawColor(MColor(0.9f, 0.3f, 0.f));
+                view.drawText(nbView, intersectedComponent.edge->vertex2->worldPosition);
+            }
+            break;
         }
     }
 }

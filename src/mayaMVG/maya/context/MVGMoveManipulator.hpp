@@ -38,13 +38,19 @@ private:
 
 public:
     static void drawCursor(const MPoint& originVS);
-    static void drawPlacedPoints(M3dView& view, MVGManipulatorCache* cache);
+    static void
+    drawPlacedPoints(M3dView& view,
+                     const std::map<std::string, MVGManipulatorCache::MeshData>& meshData,
+                     const MVGManipulatorCache::IntersectedComponent& onPressIntersectedComponent);
+    static void drawVertexOnHover(M3dView& view, MVGManipulatorCache* cache,
+                                  const MPoint& mouseVSPosition);
 
 public:
     static MTypeId _id;
     static MString _drawDbClassification;
     static MString _drawRegistrantID;
     static MoveMode _mode;
+    bool _doDrag;
 };
 
 } // namespace
