@@ -1,8 +1,8 @@
 import QtQuick 1.1
 import QtDesktop 0.1
 
-Rectangle {
 
+Rectangle {
     id: cameraItem
     border.color: "black"
     height: m.baseHeight
@@ -43,6 +43,7 @@ Rectangle {
         Component.onCompleted: {
             visible = true
         }
+
         CameraThumbnail {
             implicitWidth: height * m.thumbRatio
             height: parent.height
@@ -50,7 +51,8 @@ Rectangle {
             project: m.project
             camera: m.camera
         }
-        // right part: data
+
+        // Right part : data
         Item {
             Layout.horizontalSizePolicy: Layout.Expanding
             height: parent.height
@@ -72,13 +74,11 @@ Rectangle {
                 Item {
                     width: parent.width
                     implicitHeight: cameraName.height * 2 // x2 to add vertical margins
-                    TextInput {
+                    Text{
                        id: cameraName
                        anchors.verticalCenter: parent.verticalCenter
                        text: m.camera.name
                        font.pointSize: 12
-                       readOnly: true
-                       selectByMouse: true
                        color: "white"
                     }
                 }
@@ -98,6 +98,7 @@ Rectangle {
             }
         }
     }
+
     function convertWeight(weight)
     {
         // TODO: constants
@@ -109,7 +110,6 @@ Rectangle {
             return (Math.ceil(weight/1024)) + " ko"
         return Math.ceil((weight/1024).toString()) + " octets"
     }
-
     // COMPONENT extraInformation
     Component {
         id: extraInformation
@@ -125,13 +125,11 @@ Rectangle {
                 Item {
                     width: parent.width
                     Layout.minimumHeight: childrenRect.height
-                    TextInput {
+                    Text {
                         width: parent.width
                         anchors.verticalCenter: parent.verticalCenter
                         text: m.camera.imagePath
                         font.pointSize: 10
-                        readOnly: true
-                        selectByMouse: true
                         color: "#888888"
                     }
                 }
@@ -139,12 +137,10 @@ Rectangle {
                 Item {
                     width: parent.width
                     Layout.minimumHeight: childrenRect.height
-                    TextInput {
+                    Text {
                         width: parent.width
                         text: m.camera.sourceSize.width + "x" + m.camera.sourceSize.height
                         font.pointSize: 10
-                        readOnly: true
-                        selectByMouse: true
                         color: "#888888"
                     }
                 }
@@ -152,12 +148,10 @@ Rectangle {
                 Item {
                     width: parent.width
                     Layout.minimumHeight: childrenRect.height
-                    TextInput {
+                    Text {
                         width: parent.width
                         text: convertWeight(m.camera.sourceWeight)
                         font.pointSize: 10
-                        readOnly: true
-                        selectByMouse: true
                         color: "#888888"
                     }
                 }

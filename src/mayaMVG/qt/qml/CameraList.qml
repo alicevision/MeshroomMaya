@@ -3,7 +3,6 @@ import QtDesktop 0.1
 
 
 Item {
-
     id: cameraList
     property alias thumbSize: m.thumbSize
     property alias project: m.project
@@ -63,5 +62,4 @@ Item {
         position: cameraListView.visibleArea.yPosition
         pageSize: cameraListView.visibleArea.heightRatio
     }
-    
 }
