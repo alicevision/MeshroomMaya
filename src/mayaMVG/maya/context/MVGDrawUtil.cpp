@@ -111,8 +111,10 @@ void MVGDrawUtil::drawLineLoop3D(const MPointArray& points, const MColor& color,
 void MVGDrawUtil::drawPolygon2D(const MPointArray& points, const MColor& color, const float alpha)
 {
     assert(points.length() > 2);
+//    glXQueryVersion(NULL, NULL, NULL);
     glPushAttrib(GL_ALL_ATTRIB_BITS);
-    glColor4f(color.r, color.g, color.b, alpha);
+//    glColor4f(color.r, color.g, color.b, alpha);
+    glColor4f(color.r, color.g, color.b, 0.f);
     glBegin(GL_POLYGON);
     for(int i = 0; i < points.length(); ++i)
         glVertex2f(points[i].x, points[i].y);
@@ -124,8 +126,10 @@ void MVGDrawUtil::drawPolygon2D(const MPointArray& points, const MColor& color, 
 void MVGDrawUtil::drawPolygon3D(const MPointArray& points, const MColor& color, const float alpha)
 {
     assert(points.length() > 2);
+//    glXQueryVersion(NULL, NULL, NULL);
     glPushAttrib(GL_ALL_ATTRIB_BITS);
-    glColor4f(color.r, color.g, color.b, alpha);
+//    glColor4f(color.r, color.g, color.b, alpha);
+    glColor4f(color.r, color.g, color.b, 0.f);
     glBegin(GL_POLYGON);
     for(int i = 0; i < points.length(); ++i)
         glVertex3f(points[i].x, points[i].y, points[i].z);
@@ -373,7 +377,7 @@ void MVGDrawUtil::drawClickedPoints(const MPointArray& clickedVSPoints, const MC
     if(clickedVSPoints.length() == 2)
         MVGDrawUtil::drawLine2D(clickedVSPoints[0], clickedVSPoints[1], color);
     if(clickedVSPoints.length() > 2)
-        MVGDrawUtil::drawPolygon2D(clickedVSPoints, color, 0.2f);
+        MVGDrawUtil::drawPolygon2D(clickedVSPoints, color);
 }
 
 // Move manipulator

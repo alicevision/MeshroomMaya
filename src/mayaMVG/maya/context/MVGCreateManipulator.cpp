@@ -75,7 +75,12 @@ void MVGCreateManipulator::draw(M3dView& view, const MDagPath& path, M3dView::Di
             MVGDrawUtil::drawClickedPoints(_clickedVSPoints, drawColor);
         }
         if(!MVGMayaUtil::isActiveView(view))
+        {
+            MVGDrawUtil::end2DDrawing();
+            glDisable(GL_BLEND);
+            view.endGL();
             return;
+        }
         // draw cursor
         drawCursor(mouseVSPositions, _cache);
         if(!MVGMayaUtil::isMVGView(view))
