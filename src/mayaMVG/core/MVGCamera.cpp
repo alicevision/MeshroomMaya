@@ -1,9 +1,9 @@
-#include "mayaMVG/core/MVGCamera.h"
-#include "mayaMVG/core/MVGProject.h"
-#include "mayaMVG/core/MVGLog.h"
-#include "mayaMVG/core/MVGPointCloud.h"
-#include "mayaMVG/core/MVGPointCloudItem.h"
-#include "mayaMVG/maya/MVGMayaUtil.h"
+#include "mayaMVG/core/MVGCamera.hpp"
+#include "mayaMVG/core/MVGProject.hpp"
+#include "mayaMVG/core/MVGLog.hpp"
+#include "mayaMVG/core/MVGPointCloud.hpp"
+#include "mayaMVG/core/MVGPointCloudItem.hpp"
+#include "mayaMVG/maya/MVGMayaUtil.hpp"
 #include <maya/MMatrix.h>
 #include <maya/MQuaternion.h>
 #include <maya/MFnCamera.h>
@@ -172,7 +172,7 @@ std::string MVGCamera::getImagePlane() const
     return fnImage.findPlug(_DEFERRED).asString().asChar();
 }
 
-void MVGCamera::setImagePlane(const std::string& img) const
+void MVGCamera::setImagePlane(const std::string& img, int width, int height) const
 {
     if(img.empty())
         return;
@@ -181,8 +181,10 @@ void MVGCamera::setImagePlane(const std::string& img) const
     MFnDagNode fnImage(getImagePath());
     fnImage.findPlug("depth").setValue(50);
     fnImage.findPlug("dic").setValue(1);
-    fnImage.findPlug("displayOnlyIfCurrent").setValue(1);
     fnImage.findPlug("fit").setValue(2);
+    fnImage.findPlug("width").setValue(width);
+    fnImage.findPlug("height").setValue(height);
+    fnImage.findPlug("displayOnlyIfCurrent").setValue(1);
 
     // handling deferred loading
     if(fnImage.findPlug(_DEFERRED).isNull())

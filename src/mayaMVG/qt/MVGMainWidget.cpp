@@ -1,9 +1,8 @@
-#include "mayaMVG/qt/MVGMainWidget.h"
-#include "mayaMVG/qt/QmlInstantCoding.h"
-#include "mayaMVG/qt/QWheelArea.h"
-#include "mayaMVG/maya/MVGMayaUtil.h"
-#include "mayaMVG/qt/MVGCameraWrapper.h"
-
+#include "mayaMVG/qt/MVGMainWidget.hpp"
+#include "mayaMVG/qt/QmlInstantCoding.hpp"
+#include "mayaMVG/qt/QWheelArea.hpp"
+#include "mayaMVG/maya/MVGMayaUtil.hpp"
+#include "mayaMVG/qt/MVGCameraWrapper.hpp"
 #include <QtDeclarative/QDeclarativeView>
 #include <QtGui/QFocusEvent>
 

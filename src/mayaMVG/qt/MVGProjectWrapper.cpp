@@ -1,9 +1,8 @@
+#include "mayaMVG/qt/MVGProjectWrapper.hpp"
 #include <QCoreApplication>
-
-#include "mayaMVG/qt/MVGProjectWrapper.h"
-#include "mayaMVG/qt/MVGCameraWrapper.h"
-#include "mayaMVG/maya/MVGMayaUtil.h"
-#include "mayaMVG/core/MVGLog.h"
+#include "mayaMVG/qt/MVGCameraWrapper.hpp"
+#include "mayaMVG/maya/MVGMayaUtil.hpp"
+#include "mayaMVG/core/MVGLog.hpp"
 #include <maya/MQtUtil.h>
 
 namespace mayaMVG

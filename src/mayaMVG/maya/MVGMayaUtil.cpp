@@ -1,6 +1,6 @@
-#include "mayaMVG/maya/MVGMayaUtil.h"
-#include "mayaMVG/core/MVGCamera.h"
-#include "mayaMVG/core/MVGLog.h"
+#include "mayaMVG/maya/MVGMayaUtil.hpp"
+#include "mayaMVG/core/MVGCamera.hpp"
+#include "mayaMVG/core/MVGLog.hpp"
 #include <maya/MFnDependencyNode.h>
 #include <maya/MGlobal.h>
 #include <maya/MQtUtil.h>
@@ -14,9 +14,35 @@
 #include <maya/MPlugArray.h>
 #include <maya/MCommonSystemUtils.h>
 #include <maya/MPointArray.h>
+#include <maya/MVectorArray.h>
+#include <maya/MFnVectorArrayData.h>
 
 namespace mayaMVG
 {
+
+namespace
+{
+MStatus getFloat3PlugValue(MPlug plug, MVector& value)
+{
+    // Retrieve the value as an MObject
+    MObject object;
+    plug.getValue(object);
+    // Convert the MObject to a float3
+    MFnNumericData numDataFn(object);
+    numDataFn.getData(value[0], value[1], value[2]);
+    return MS::kSuccess;
+}
+
+MStatus getFloat3asMObject(MVector value, MObject& object)
+{
+    // Convert the float value into an MObject
+    MFnNumericData numDataFn;
+    numDataFn.create(MFnNumericData::k3Float);
+    numDataFn.setData(value[0], value[1], value[2]);
+    object = numDataFn.object();
+    return MS::kSuccess;
+}
+}
 
 MStatus MVGMayaUtil::createMVGWindow()
 {
@@ -261,6 +287,100 @@ MStatus MVGMayaUtil::setDoubleArrayAttribute(const MObject& object, const MStrin
     CHECK_RETURN_STATUS(status);
     MFnDoubleArrayData fnData;
     MObject obj = fnData.create(doubleArray, &status);
+    CHECK_RETURN_STATUS(status);
+    status = plug.setValue(obj);
+    return status;
+}
+
+MStatus MVGMayaUtil::getVectorArrayAttribute(const MObject& object, const MString& param,
+                                             MVectorArray& vectorArray, bool networked)
+{
+    MStatus status;
+    MFnDependencyNode fn(object, &status);
+    CHECK_RETURN_STATUS(status);
+    MPlug plug(fn.findPlug(param, networked, &status));
+    CHECK_RETURN_STATUS(status);
+    vectorArray.clear();
+    if(plug.isArray())
+    {
+        for(size_t i = 0; i < plug.numElements(); ++i)
+        {
+            MPlug plugElmt = plug[i];
+            MVector vector;
+            getFloat3PlugValue(plugElmt, vector);
+            vectorArray.append(vector);
+        }
+    }
+    else
+    {
+        MDataHandle dataHandle = plug.asMDataHandle(MDGContext::fsNormal, &status);
+        CHECK_RETURN_STATUS(status);
+        if(dataHandle.data() == MObject::kNullObj)
+            return MS::kFailure;
+        MFnVectorArrayData arrayData(dataHandle.data(), &status);
+        CHECK_RETURN_STATUS(status);
+        status = arrayData.copyTo(vectorArray);
+    }
+    return status;
+}
+
+MStatus MVGMayaUtil::setVectorArrayAttribute(const MObject& object, const MString& param,
+                                             const MVectorArray& vectorArray, bool networked)
+{
+    MStatus status;
+    MFnDependencyNode fn(object, &status);
+    CHECK_RETURN_STATUS(status);
+    MPlug plug(fn.findPlug(param, networked, &status));
+    CHECK_RETURN_STATUS(status);
+    MFnVectorArrayData fnData;
+    MObject obj = fnData.create(vectorArray, &status);
+    CHECK_RETURN_STATUS(status);
+    status = plug.setValue(obj);
+    return status;
+}
+
+MStatus MVGMayaUtil::getPointArrayAttribute(const MObject& object, const MString& param,
+                                            MPointArray& pointArray, bool networked)
+{
+    MStatus status;
+    MFnDependencyNode fn(object, &status);
+    CHECK_RETURN_STATUS(status);
+    MPlug plug(fn.findPlug(param, networked, &status));
+    CHECK_RETURN_STATUS(status);
+    pointArray.clear();
+    if(plug.isArray())
+    {
+        for(size_t i = 0; i < plug.numElements(); ++i)
+        {
+            MPlug plugElmt = plug[i];
+            pointArray.append(MPoint(plugElmt.child(0).asFloat(), plugElmt.child(1).asFloat(),
+                                     plugElmt.child(2).asFloat(), plugElmt.child(3).asFloat()));
+        }
+    }
+    else
+    {
+        MDataHandle dataHandle = plug.asMDataHandle(MDGContext::fsNormal, &status);
+        CHECK_RETURN_STATUS(status);
+        if(dataHandle.data() == MObject::kNullObj)
+            return MS::kFailure;
+        MFnPointArrayData arrayData(dataHandle.data(), &status);
+        CHECK_RETURN_STATUS(status);
+        status = arrayData.copyTo(pointArray);
+        CHECK_RETURN_STATUS(status);
+    }
+    return status;
+}
+
+MStatus MVGMayaUtil::setPointArrayAttribute(const MObject& object, const MString& param,
+                                            const MPointArray& pointArray, bool networked)
+{
+    MStatus status;
+    MFnDependencyNode fn(object, &status);
+    CHECK_RETURN_STATUS(status);
+    MPlug plug(fn.findPlug(param, networked, &status));
+    CHECK_RETURN_STATUS(status);
+    MFnPointArrayData fnData;
+    MObject obj = fnData.create(pointArray, &status);
     CHECK_RETURN_STATUS(status);
     status = plug.setValue(obj);
     return status;

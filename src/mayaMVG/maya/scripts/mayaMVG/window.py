@@ -23,8 +23,9 @@ def mvgCreateWindow():
         cmds.modelPanel('mvgLPanel', e=True, p='leftPane')
     else:
         cmds.modelPanel('mvgLPanel', mbv=False, l='MVG leftView')
-        cmds.modelEditor('mvgLPanel', e=True, grid=False, cameras=False, dynamics=False)
+        cmds.modelEditor('mvgLPanel', e=True, allObjects=False, grid=False, hud=False, polymeshes=True, imagePlane=True)
         cmds.modelEditor('mvgLPanel', e=True, xray=1, displayAppearance='smoothShaded', wireframeOnShaded=True)
+        #cmds.modelEditor('mvgLPanel', e=True, rendererName="vp2Renderer")
     cmds.setParent('..')
     cmds.setParent('..')
     # second modelPanel
@@ -33,8 +34,9 @@ def mvgCreateWindow():
         cmds.modelPanel('mvgRPanel', e=True, p='rightPane')
     else:
         cmds.modelPanel('mvgRPanel', mbv=False, l='MVG rightView')
-        cmds.modelEditor('mvgRPanel', e=True, grid=False, cameras=False, dynamics=False)
+        cmds.modelEditor('mvgRPanel', e=True, allObjects=False, grid=False, hud=False, polymeshes=True, imagePlane=True)
         cmds.modelEditor('mvgRPanel', e=True, xray=1, displayAppearance='smoothShaded', wireframeOnShaded=True)
+        #cmds.modelEditor('mvgRPanel', e=True, rendererName="vp2Renderer")
     cmds.setParent('..')
     cmds.setParent('..')
     # custom Qt content
@@ -49,9 +51,15 @@ def mvgReloadPanels():
     import maya.cmds as cmds
     if(cmds.paneLayout('leftPane', ex=True)):
         if not cmds.modelPanel('mvgLPanel', ex=True):
-            cmds.modelPanel('mvgLPanel', mbv=False, l='MVG leftView', p='leftPane')
-            cmds.modelEditor('mvgLPanel', e=True, grid=False, cameras=False, dynamics=False)
+			cmds.modelPanel('mvgLPanel', mbv=False, l='MVG leftView', p='leftPane')
+			cmds.modelEditor('mvgLPanel', e=True, allObjects=False, grid=False, hud=False, polymeshes=True, imagePlane=True)
+			cmds.modelEditor('mvgLPanel', e=True, xray=1, displayAppearance='smoothShaded', wireframeOnShaded=True)
+            #cmds.modelPanel('mvgLPanel', mbv=False, l='MVG leftView', p='leftPane')
+            #cmds.modelEditor('mvgLPanel', e=True, grid=False, cameras=False, dynamics=False)
     if(cmds.paneLayout('rightPane', ex=True)):
         if not cmds.modelPanel('mvgRPanel', ex=True):
-            cmds.modelPanel('mvgRPanel', mbv=False, l='MVG rightView', p='rightPane')
-            cmds.modelEditor('mvgRPanel', e=True, grid=False, cameras=False, dynamics=False)
+			cmds.modelPanel('mvgRPanel', mbv=False, l='MVG rightView', p='rightPane')
+			cmds.modelEditor('mvgRPanel', e=True, allObjects=False, grid=False, hud=False, polymeshes=True, imagePlane=True)
+			cmds.modelEditor('mvgRPanel', e=True, xray=1, displayAppearance='smoothShaded', wireframeOnShaded=True)
+            #cmds.modelPanel('mvgRPanel', mbv=False, l='MVG rightView', p='rightPane')
+            #cmds.modelEditor('mvgRPanel', e=True, grid=False, cameras=False, dynamics=False)

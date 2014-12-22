@@ -1,36 +1,24 @@
 #pragma once
-
-#include "openMVG/numeric/numeric.h"
-#include <maya/MVector.h>
-
-class MPoint;
-class MPointArray;
-class M3dView;
+#include <maya/MPoint.h>
+#include <openMVG/numeric/numeric.h>
+#include <openMVG/robust_estimation/robust_estimator_LMeds.hpp>
 
 namespace mayaMVG
 {
-
-#define AS_MPOINT(a) MPoint(a(0), a(1), a(2))
-
-#define AS_VEC3(a) openMVG::Vec3(a.x, a.y, a.z)
 
 // Should be part of OpenMVG
 struct PlaneKernel
 {
     typedef openMVG::Vec4 Model;
-
     enum
     {
         MINIMUM_SAMPLES = 3
     };
-
     PlaneKernel(const openMVG::Mat& pt)
         : _pt(pt)
     {
     }
-
     size_t NumSamples() const { return _pt.cols(); }
-
     void Fit(const std::vector<size_t>& samples, std::vector<Model>* equation) const
     {
         assert(samples.size() >= MINIMUM_SAMPLES);
@@ -59,7 +47,6 @@ struct PlaneKernel
         m[3] = -1.0 * (m.head<3>().dot(p0));
         equation->push_back(m);
     }
-
     double Error(size_t sample, const Model& model) const
     {
         // Calculate the distance from the point to the plane normal as the dot
@@ -69,30 +56,17 @@ struct PlaneKernel
         openMVG::Vec4 pt4(pt3(0), pt3(1), pt3(2), 1.0);
         return fabs(model.dot(pt4));
     }
-
     const openMVG::Mat& _pt;
 };
 
-class MVGPointCloud;
-class MVGCamera;
-
-struct MVGGeometryUtil
+// FIXME check return value
+static bool plane_line_intersect(const PlaneKernel::Model& model, const MPoint& P1,
+                                 const MPoint& P2, MPoint& P)
 {
-    static MPoint worldToView(M3dView&, const MPoint&);
-    static MPoint viewToWorld(M3dView&, const MPoint&);
-    static void viewToCamera(M3dView& view, const MPoint& viewPoint, MPoint& point);
-    static void worldToCamera(M3dView& view, const MPoint& worldPoint, MPoint& point);
-    static void cameraToView(M3dView& view, const MPoint& point, MPoint& viewPoint);
-    static void cameraToImage(const MVGCamera& camera, const MPoint& point, MPoint& image);
-    static bool projectFace2D(M3dView& view, MPointArray& face3DPoints, const MVGCamera& camera,
-                              const MPointArray& face2DPoints, MVector height = MVector(0, 0, 0));
-    static bool computePlane(MPointArray& facePoints3D, PlaneKernel::Model& model);
-    static void projectPointOnPlane(const MPoint& point, M3dView& view, PlaneKernel::Model& model,
-                                    const MVGCamera&, MPoint& projectedPoint);
-    static void triangulatePoint(MPointArray& points2D, std::vector<MVGCamera>& cameras,
-                                 MPoint& resultPoint3D);
-    static double crossProduct2D(MVector& A, MVector& B);
-    static bool edgesIntersection(MPoint A, MPoint B, MVector AD, MVector BC);
-};
+    double u = (model(0) * P1.x + model(1) * P1.y + model(2) * P1.z + model(3)) /
+               (model(0) * (P1.x - P2.x) + model(1) * (P1.y - P2.y) + model(2) * (P1.z - P2.z));
+    P = P1 + u * (P2 - P1);
+    return (0 < u && u < 1);
+}
 
 } // namespace

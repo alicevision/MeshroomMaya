@@ -1,7 +1,7 @@
 #pragma once
 
 #undef Success // needed by eigen
-#include "mayaMVG/core/MVGNodeWrapper.h"
+#include "mayaMVG/core/MVGNodeWrapper.hpp"
 #include "openMVG/cameras/PinholeCamera.hpp"
 #include <vector>
 
@@ -37,7 +37,7 @@ public:
     void setId(const int&) const;
     MDagPath getImagePath() const;
     std::string getImagePlane() const;
-    void setImagePlane(const std::string&) const;
+    void setImagePlane(const std::string&, int width, int height) const;
     void loadImagePlane() const;
     openMVG::PinholeCamera getPinholeCamera() const;
     void setPinholeCamera(const openMVG::PinholeCamera&) const;

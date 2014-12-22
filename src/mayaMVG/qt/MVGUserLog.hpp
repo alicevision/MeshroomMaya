@@ -1,6 +1,6 @@
 #pragma once
 
-#include "mayaMVG/core/MVGLog.h"
+#include "mayaMVG/core/MVGLog.hpp"
 #include <sstream>
 
 namespace mayaMVG

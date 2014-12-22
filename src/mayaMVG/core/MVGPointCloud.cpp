@@ -1,9 +1,11 @@
-#include "mayaMVG/core/MVGPointCloud.h"
-#include "mayaMVG/core/MVGPointCloudItem.h"
-#include "mayaMVG/core/MVGCamera.h"
-#include "mayaMVG/core/MVGLog.h"
-#include "mayaMVG/core/MVGProject.h"
-#include "mayaMVG/maya/MVGMayaUtil.h"
+#include "mayaMVG/core/MVGPointCloud.hpp"
+#include "mayaMVG/core/MVGPointCloudItem.hpp"
+#include "mayaMVG/core/MVGCamera.hpp"
+#include "mayaMVG/core/MVGLog.hpp"
+#include "mayaMVG/core/MVGProject.hpp"
+#include "mayaMVG/core/MVGGeometryUtil.hpp"
+#include "mayaMVG/core/MVGPlaneKernel.hpp"
+#include "mayaMVG/maya/MVGMayaUtil.hpp"
 #include <maya/MFnParticleSystem.h>
 #include <maya/MVectorArray.h>
 #include <maya/MPointArray.h>
@@ -12,6 +14,7 @@
 #include <maya/MFnTypedAttribute.h>
 #include <maya/MFnVectorArrayData.h>
 #include <maya/MPlug.h>
+#include <maya/MMatrix.h>
 #include <stdexcept>
 
 namespace mayaMVG
@@ -19,6 +22,47 @@ namespace mayaMVG
 
 // dynamic attributes
 MString MVGPointCloud::_RGBPP = "rgbPP";
+
+namespace
+{ // empty namespace
+
+int isLeft(MPoint P0, MPoint P1, MPoint P2)
+{
+    // isLeft(): tests if a point is Left|On|Right of an infinite line.
+    //    Input:  three points P0, P1, and P2
+    //    Return: >0 for P2 left of the line through P0 and P1
+    //            =0 for P2  on the line
+    //            <0 for P2  right of the line
+    //    See: Algorithm 1 "Area of Triangles and Polygons"
+    return ((P1.x - P0.x) * (P2.y - P0.y) - (P2.x - P0.x) * (P1.y - P0.y));
+}
+
+int wn_PnPoly(MPoint P, MPointArray V)
+{
+    // wn_PnPoly(): winding number test for a point in a polygon
+    //      Input:   P = a point,
+    //               V[] = vertex points of a polygon V[n+1] with V[n]=V[0]
+    //      Return:  wn = the winding number (=0 only when P is outside)
+    int wn = 0;
+    for(int i = 0; i < V.length() - 1; i++)
+    {
+        if(V[i].y <= P.y)
+        {
+            if(V[i + 1].y > P.y)
+                if(isLeft(V[i], V[i + 1], P) > 0)
+                    ++wn;
+        }
+        else
+        {
+            if(V[i + 1].y <= P.y)
+                if(isLeft(V[i], V[i + 1], P) < 0)
+                    --wn;
+        }
+    }
+    return wn;
+}
+
+} // empty namespace
 
 MVGPointCloud::MVGPointCloud(const std::string& name)
     : MVGNodeWrapper(name)
@@ -120,6 +164,54 @@ std::vector<MVGPointCloudItem> MVGPointCloud::getItems() const
         items.push_back(item);
     }
     return items;
+}
+
+bool MVGPointCloud::projectPoints(M3dView& view, const MPointArray& cameraSpacePoints,
+                                  MPointArray& worldSpacePoints, const int index)
+{
+    if(!isValid())
+        return false;
+
+    MDagPath cameraPath;
+    view.getCamera(cameraPath);
+    MVGCamera camera(cameraPath);
+    if(!camera.isValid())
+        return false;
+
+    if(cameraSpacePoints.length() < 3)
+        return false;
+
+    std::vector<MVGPointCloudItem> items = camera.getVisibleItems();
+    if(items.size() < 3)
+        return false;
+
+    MPointArray closedVSPolygon(MVGGeometryUtil::cameraToViewSpace(view, cameraSpacePoints));
+    closedVSPolygon.append(closedVSPolygon[0]); // add an extra point (to describe a closed shape)
+
+    // get enclosed items in pointcloud
+    MPointArray enclosedWSPoints;
+    std::vector<MVGPointCloudItem>::const_iterator it = items.begin();
+    int windingNumber = 0;
+    for(; it != items.end(); ++it)
+    {
+        windingNumber =
+            wn_PnPoly(MVGGeometryUtil::worldToViewSpace(view, it->_position), closedVSPolygon);
+        if(windingNumber != 0)
+            enclosedWSPoints.append(it->_position);
+    }
+    if(enclosedWSPoints.length() < 3)
+        return false;
+
+    if(index == -1)
+        return MVGGeometryUtil::projectPointsOnPlane(view, cameraSpacePoints, enclosedWSPoints,
+                                                     worldSpacePoints);
+
+    assert(index < cameraSpacePoints.length());
+    // Only project the specified point
+    MPointArray pointsCSToProject;
+    pointsCSToProject.append(cameraSpacePoints[index]);
+    return MVGGeometryUtil::projectPointsOnPlane(view, pointsCSToProject, enclosedWSPoints,
+                                                 worldSpacePoints);
 }
 
 } // namespace

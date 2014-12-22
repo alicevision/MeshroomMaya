@@ -1,10 +1,9 @@
 #pragma once
 
+#include "mayaMVG/qt/QObjectListModel.hpp"
+#include "mayaMVG/qt/MVGPanelWrapper.hpp"
+#include "mayaMVG/core/MVGProject.hpp"
 #include <QObject>
-#include <QStringList>
-#include "mayaMVG/core/MVGProject.h"
-#include "mayaMVG/qt/QObjectListModel.h"
-#include "mayaMVG/qt/MVGPanelWrapper.h"
 
 namespace mayaMVG
 {

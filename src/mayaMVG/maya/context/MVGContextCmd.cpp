@@ -1,5 +1,5 @@
-#include "mayaMVG/maya/context/MVGContextCmd.h"
-#include "mayaMVG/maya/context/MVGContext.h"
+#include "mayaMVG/maya/context/MVGContextCmd.hpp"
+#include "mayaMVG/maya/context/MVGContext.hpp"
 
 namespace
 { // empty namespace
@@ -36,9 +36,9 @@ MStatus MVGContextCmd::doEditFlags()
     // -rebuild: rebuild cache
     if(argData.isFlagSet(rebuildFlag))
     {
-        MVGManipulatorUtil& cache = _context->getCache();
-        cache.rebuildAllMeshesCacheFromMaya();
-        cache.rebuild();
+        // TODO rebuild cache
+        MVGManipulatorCache& cache = _context->getCache();
+        cache.rebuildMeshesCache();
     }
     return MS::kSuccess;
 }

@@ -14,7 +14,8 @@ public:
     MVGNodeWrapper(const std::string& name);
     MVGNodeWrapper(const MString& name);
     MVGNodeWrapper(const MDagPath& dagPath);
-    virtual ~MVGNodeWrapper();
+    MVGNodeWrapper(const MObject& object);
+    virtual ~MVGNodeWrapper() {}
 
 public:
     virtual bool isValid() const = 0;
@@ -22,11 +23,13 @@ public:
 
 public:
     const MDagPath& getDagPath() const;
+    const MObject& getObject() const;
     std::string getName() const;
     void setName(const std::string&) const;
 
 protected:
     MDagPath _dagpath;
+    MObject _object;
 };
 
 } // namespace

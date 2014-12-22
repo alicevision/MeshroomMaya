@@ -1,7 +1,6 @@
 #pragma once
 
-#include "mayaMVG/qt/MVGProjectWrapper.h"
-
+#include "mayaMVG/qt/MVGProjectWrapper.hpp"
 #include <QtGui/QWidget>
 
 class QWidget;

@@ -1,7 +1,7 @@
 #pragma once
 
-#include "mayaMVG/core/MVGPointCloud.h"
-#include "mayaMVG/core/MVGPointCloudItem.h"
+#include "mayaMVG/core/MVGPointCloud.hpp"
+#include "mayaMVG/core/MVGPointCloudItem.hpp"
 #include <software/SfMViewer/Ply.h>
 
 namespace mayaMVG
