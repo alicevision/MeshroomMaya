@@ -2,11 +2,14 @@
 
 #include "mayaMVG/qt/QObjectListModel.hpp"
 #include "mayaMVG/qt/MVGPanelWrapper.hpp"
+#include "mayaMVG/qt/MVGCameraWrapper.hpp"
 #include "mayaMVG/core/MVGProject.hpp"
 #include <QObject>
 
 namespace mayaMVG
 {
+
+#define IMAGE_CACHE_SIZE 3
 
 class MVGProjectWrapper : public QObject
 {
@@ -47,7 +50,8 @@ public:
     Q_INVOKABLE void loadExistingProject();
     Q_INVOKABLE void loadNewProject(const QString& projectDirectoryPath);
     Q_INVOKABLE void setCameraToView(QObject* camera, const QString& viewName,
-                                     bool rebuildCache = true) const;
+                                     bool rebuildCache = true);
+    void pushImageInCache(const std::string& imageName);
     void clear();
     void removeCameraFromUI(MDagPath& cameraPath);
 
@@ -59,6 +63,12 @@ private:
     MVGProject _project;
     QObjectListModel _panelList;
     QString _currentContext;
+
+    std::map<std::string, MVGCameraWrapper*> _camerasByName;
+    /// map view to active camera
+    std::map<std::string, std::string> _activeCameraNameByView;
+    /// FIFO queue indicating the list of images/cameras keept in memory
+    std::list<std::string> _cachedImagePlanes;
 };
 
 } // namespace

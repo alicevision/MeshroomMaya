@@ -130,21 +130,73 @@ void MVGProjectWrapper::selectCameras(const QStringList& cameraNames) const
     _project.selectCameras(cameras);
 }
 
-void MVGProjectWrapper::setCameraToView(QObject* camera, const QString& viewName,
-                                        bool rebuildCache) const
+void MVGProjectWrapper::pushImageInCache(const std::string& cameraName)
 {
+    std::list<std::string>::iterator camera =
+        std::find(_cachedImagePlanes.begin(), _cachedImagePlanes.end(), cameraName);
+    if(camera != _cachedImagePlanes.end()) // Camera is already in the list
+        return;
+
+    if(_cachedImagePlanes.size() == IMAGE_CACHE_SIZE)
+    {
+        _camerasByName[_cachedImagePlanes.front()]->getCamera().unloadImagePlane();
+        _cachedImagePlanes.pop_front();
+    }
+    _cachedImagePlanes.push_back(cameraName);
+}
+void MVGProjectWrapper::setCameraToView(QObject* camera, const QString& viewName, bool rebuildCache)
+{
+    MVGCameraWrapper* cameraWrapper = static_cast<MVGCameraWrapper*>(camera);
+
+    // Load new active camera
+    cameraWrapper->getCamera().loadImagePlane();
+
+    // If new camera is in cache remove from cacheList
+    std::list<std::string>::iterator cameraIt =
+        std::find(_cachedImagePlanes.begin(), _cachedImagePlanes.end(),
+                  cameraWrapper->getName().toStdString());
+    if(cameraIt != _cachedImagePlanes.end())
+        _cachedImagePlanes.remove(cameraWrapper->getName().toStdString());
+
+    // Add old active camera to cached image list
+    std::map<std::string, std::string>::iterator cameraInViewIt =
+        _activeCameraNameByView.find(viewName.toStdString());
+    if(cameraInViewIt != _activeCameraNameByView.end())
+    {
+        if(cameraInViewIt->second != cameraWrapper->getName().toStdString())
+        {
+            const std::string activeCameraName = cameraInViewIt->second;
+            if(_camerasByName[activeCameraName]->getViews().size() < 2)
+                pushImageInCache(activeCameraName);
+        }
+    }
+
+    // Set UI
     foreach(MVGCameraWrapper* c, _cameraList.asQList<MVGCameraWrapper>())
         c->setInView(viewName, false);
     MVGCameraWrapper* cam = qobject_cast<MVGCameraWrapper*>(camera);
     cam->setInView(viewName, true);
+
+    // Update active camera   _activeCameraNameByView[viewName.toStdString()] =
+    // cameraWrapper->getName().toStdString();
+
     // rebuild cache
     if(rebuildCache)
         MGlobal::executeCommand("mayaMVGTool -e -rebuild mayaMVGTool1");
+
+    //    LOG_INFO(" ### CACHE ### ")
+    //    for(std::list<std::string>::iterator it = _cachedImagePlanes.begin(); it !=
+    //    _cachedImagePlanes.end(); ++it)
+    //        LOG_INFO("* " << *it)
 }
 
 void MVGProjectWrapper::clear()
 {
     _cameraList.clear();
+    _camerasByName.clear();
+    while(!_cachedImagePlanes.empty())
+        _cachedImagePlanes.pop_back();
+
     Q_EMIT projectDirectoryChanged();
 }
 
@@ -178,6 +230,7 @@ void MVGProjectWrapper::removeCameraFromUI(MDagPath& cameraPath)
 void MVGProjectWrapper::reloadMVGCamerasFromMaya()
 {
     _cameraList.clear();
+    _camerasByName.clear();
     if(!_project.isValid())
     {
         LOG_ERROR("Project is not valid");
@@ -187,7 +240,11 @@ void MVGProjectWrapper::reloadMVGCamerasFromMaya()
     const std::vector<MVGCamera>& cameraList = MVGCamera::getCameras();
     std::vector<MVGCamera>::const_iterator it = cameraList.begin();
     for(; it != cameraList.end(); ++it)
-        _cameraList.append(new MVGCameraWrapper(*it));
+    {
+        MVGCameraWrapper* cameraWrapper = new MVGCameraWrapper(*it);
+        _cameraList.append(cameraWrapper);
+        _camerasByName[it->getName()] = cameraWrapper;
+    }
     Q_EMIT cameraModelChanged();
     // TODO : Camera selection
 }

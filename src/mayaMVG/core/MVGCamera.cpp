@@ -195,21 +195,32 @@ void MVGCamera::setImagePlane(const std::string& img, int width, int height) con
         dagModifier.addAttribute(getImagePath().node(), dynAttr);
         dagModifier.doIt();
         fnImage.findPlug(_DEFERRED).setValue(img.c_str());
-    }
-    else
-    {
-        fnImage.findPlug(_DEFERRED).setValue(img.c_str());
-        fnImage.findPlug("imageName").setValue(img.c_str());
-    }
+    } /*
+     else
+     {
+         fnImage.findPlug(_DEFERRED).setValue(img.c_str());
+         fnImage.findPlug("imageName").setValue(img.c_str());
+     }*/
 }
 
 void MVGCamera::loadImagePlane() const
 {
     MFnDagNode fnImage(getImagePath());
     MString deferred = fnImage.findPlug(_DEFERRED).asString();
-    MString name = fnImage.findPlug("imageName").asString();
+    MPlug imageNamePlug = fnImage.findPlug("imageName");
+    MString name = imageNamePlug.asString();
     if(name != deferred)
-        fnImage.findPlug("imageName").setValue(deferred);
+        imageNamePlug.setValue(deferred);
+}
+
+void MVGCamera::unloadImagePlane() const
+{
+    MFnDagNode fnImage(getImagePath());
+    MPlug imageNamePlug = fnImage.findPlug("imageName");
+    MString name = imageNamePlug.asString();
+    if(name.length() == 0)
+        return;
+    imageNamePlug.setValue("");
 }
 
 openMVG::PinholeCamera MVGCamera::getPinholeCamera() const
@@ -368,7 +379,7 @@ void MVGCamera::resetZoomAndPan() const
 
 void MVGCamera::setInView(const std::string& viewName) const
 {
-    loadImagePlane();
+    //    loadImagePlane();
     MVGMayaUtil::setCameraInView(*this, viewName.c_str());
 }
 

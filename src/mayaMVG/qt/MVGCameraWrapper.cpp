@@ -40,10 +40,12 @@ void MVGCameraWrapper::setInView(const QString& viewName, const bool value)
             Q_EMIT viewsChanged();
         }
         _camera.setInView(viewName.toStdString());
-        return;
     }
-    if(_views.removeOne(viewName))
-        Q_EMIT viewsChanged();
+    else
+    {
+        if(_views.removeOne(viewName))
+            Q_EMIT viewsChanged();
+    }
 }
 
 const QSize MVGCameraWrapper::getSourceSize()
