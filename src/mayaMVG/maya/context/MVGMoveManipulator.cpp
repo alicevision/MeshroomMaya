@@ -265,13 +265,16 @@ MStatus MVGMoveManipulator::doRelease(M3dView& view)
 
     // prepare commands data
     MIntArray indices;
-    MPointArray clickedCSPoints = MVGGeometryUtil::worldToCameraSpace(view, _finalWSPositions);
+    // clickedCSPoints contains : 
+    //  - mouse positions if triangulation mode, 
+    //  - final positions projected into camera space else
+    MPointArray clickedCSPoints;
     switch(_onPressIntersectedComponent.type)
     {
         case MFn::kMeshVertComponent:
         {
             indices.append(_onPressIntersectedComponent.vertex->index);
-            if(_finalWSPositions.length() == 0)
+            if(_mode == kNViewTriangulation)
                 clickedCSPoints.append(getMousePosition(view));
             break;
         }
@@ -279,7 +282,7 @@ MStatus MVGMoveManipulator::doRelease(M3dView& view)
         {
             indices.append(_onPressIntersectedComponent.edge->vertex1->index);
             indices.append(_onPressIntersectedComponent.edge->vertex2->index);
-            if(_finalWSPositions.length() == 0)
+            if(_mode == kNViewTriangulation)
                 getIntermediateCSEdgePoints(view, _onPressIntersectedComponent.edge,
                                             _onPressCSPosition, clickedCSPoints);
             break;
@@ -287,6 +290,9 @@ MStatus MVGMoveManipulator::doRelease(M3dView& view)
         default:
             break;
     }
+    
+    if(clickedCSPoints.length() == 0)
+        clickedCSPoints = MVGGeometryUtil::worldToCameraSpace(view, _finalWSPositions);
 
     // Retrieve tweak information
     MStatus status;
