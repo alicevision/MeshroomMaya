@@ -2,7 +2,7 @@
 
 #include "mayaMVG/core/MVGCamera.hpp"
 #include "mayaMVG/core/MVGLog.hpp"
-#include <third_party/stlplus3/filesystemSimplified/file_system.hpp>
+#include <stlplus3/filesystemSimplified/file_system.hpp>
 #include <fstream>
 
 namespace
@@ -38,7 +38,8 @@ bool setPinholeFromBinary(mayaMVG::MVGCamera& camera, const std::string& binaryP
 namespace mayaMVG
 {
 
-bool readCameras(std::string filePath, std::string imageDir, std::string cameraDir)
+bool readCameras(const std::string& filePath, const std::string& imageDir,
+                 const std::string& cameraDir)
 {
     std::ifstream infile(filePath.c_str());
     if(!infile.is_open())
@@ -56,14 +57,20 @@ bool readCameras(std::string filePath, std::string imageDir, std::string cameraD
     // cameras description
     int cameraId = 0;
     std::string line;
-    while(std::getline(infile, line))
+    for(unsigned int i = 0; std::getline(infile, line); ++i)
     {
         std::istringstream iss(line);
         std::string imageName, binaryName;
         size_t width, height;
-        float near, far;
-        if(!(iss >> imageName >> width >> height >> binaryName >> near >> far))
-            break;
+        // double near, far;
+        iss >> imageName >> width >> height >> binaryName; // >> near >> far;
+
+        if(iss.fail())
+        {
+            LOG_ERROR("Invalid file format. Can't parse image at line " << i << ".")
+            LOG_ERROR("Line is: \"" << line << "\"")
+            continue;
+        }
 
         // get or create camera
         std::string cameraName = getCameraName(binaryName);
@@ -73,6 +80,7 @@ bool readCameras(std::string filePath, std::string imageDir, std::string cameraD
 
         setPinholeFromBinary(camera, stlplus::create_filespec(cameraDir, binaryName));
         camera.setImagePlane(stlplus::create_filespec(imageDir, imageName), width, height);
+        // TODO: camera.setImageName(imageName)
         camera.setId(cameraId);
         cameraId++;
 
