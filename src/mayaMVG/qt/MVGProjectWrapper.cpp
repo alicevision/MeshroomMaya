@@ -18,6 +18,17 @@ MVGProjectWrapper::MVGProjectWrapper()
     MString context;
     MVGMayaUtil::getCurrentContext(context);
     _currentContext = context.asChar();
+
+    // Init unit map
+    _unitMap[MDistance::kInches] = "in";
+    _unitMap[MDistance::kFeet] = "ft";
+    _unitMap[MDistance::kYards] = "yd";
+    _unitMap[MDistance::kMiles] = "mi";
+    _unitMap[MDistance::kMillimeters] = "mm";
+    _unitMap[MDistance::kCentimeters] = "cm";
+    _unitMap[MDistance::kKilometers] = "km";
+    _unitMap[MDistance::kMeters] = "m";
+    assert(_unitMap.size() == MDistance::kLast); // First value is MDistance::kInvalid
 }
 
 MVGProjectWrapper::~MVGProjectWrapper()
@@ -40,6 +51,12 @@ void MVGProjectWrapper::setCurrentContext(const QString& context)
 {
     _currentContext = context;
     Q_EMIT currentContextChanged();
+}
+
+const QString MVGProjectWrapper::getCurrentUnit() const
+{
+    MDistance::Unit currentUnit = MDistance::uiUnit();
+    return _unitMap[currentUnit];
 }
 
 void MVGProjectWrapper::setProjectDirectory(const QString& directory)
@@ -190,6 +207,12 @@ void MVGProjectWrapper::setCameraToView(QObject* camera, const QString& viewName
     //        LOG_INFO("* " << *it)
 }
 
+void MVGProjectWrapper::scaleScene(const double scaleSize) const
+{
+    if(!_project.scaleScene(scaleSize))
+        LOG_ERROR("Cannot scale scene")
+}
+
 void MVGProjectWrapper::clear()
 {
     _cameraList.clear();
@@ -225,6 +248,11 @@ void MVGProjectWrapper::removeCameraFromUI(MDagPath& cameraPath)
         // Remove cameraWrapper
         _cameraList.removeAt(i);
     }
+}
+
+void MVGProjectWrapper::emitCurrentUnitChanged()
+{
+    Q_EMIT currentUnitChanged();
 }
 
 void MVGProjectWrapper::reloadMVGCamerasFromMaya()

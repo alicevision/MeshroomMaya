@@ -50,6 +50,10 @@ void triangulatePoint(const std::map<int, MPoint>& cameraToClickedCSPoints,
         MPoint cameraCenter = TO_MPOINT(camera.getPinholeCamera()._C);
         cameraCenter *= inclusiveMatrix;
         const openMVG::Mat3 K = camera.getPinholeCamera()._K;
+        // TODO : remettre le centre au centre (comme dans Maya) et compenser avec l'offset de
+        // l'image
+        //        K(0, 2) = width * 0.5;
+        //        K(1, 2) = height * 0.5;
         const openMVG::Mat3 R = camera.getPinholeCamera()._R;
         openMVG::Vec3 C = TO_VEC3(cameraCenter);
         const openMVG::Vec3 t = -R * rotation * C;
@@ -265,8 +269,8 @@ MStatus MVGMoveManipulator::doRelease(M3dView& view)
 
     // prepare commands data
     MIntArray indices;
-    // clickedCSPoints contains : 
-    //  - mouse positions if triangulation mode, 
+    // clickedCSPoints contains :
+    //  - mouse positions if triangulation mode,
     //  - final positions projected into camera space else
     MPointArray clickedCSPoints;
     switch(_onPressIntersectedComponent.type)
@@ -290,7 +294,7 @@ MStatus MVGMoveManipulator::doRelease(M3dView& view)
         default:
             break;
     }
-    
+
     if(clickedCSPoints.length() == 0)
         clickedCSPoints = MVGGeometryUtil::worldToCameraSpace(view, _finalWSPositions);
 

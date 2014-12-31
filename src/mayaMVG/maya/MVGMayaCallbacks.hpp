@@ -164,4 +164,11 @@ static void modelEditorChangedCB(void*)
     }
 }
 
+static void linearUnitChanged(void*)
+{
+    MVGProjectWrapper* project = getProjectWrapper();
+    if(!project)
+        return;
+    project->emitCurrentUnitChanged();
+}
 } // namespace

@@ -3,7 +3,6 @@ import QtDesktop 0.1
 
 
 Item {
-
     id: settings
     property alias project: m.project
     property alias isOpen: m.isOpen
@@ -33,7 +32,7 @@ Item {
             State {
                 name: "OPEN"
                 when: m.isOpen
-                PropertyChanges { target: settings; height: 120; }
+                PropertyChanges { target: settings; height: 150; }
                 PropertyChanges { target: settings; opacity: 1; }
             }
         ]
@@ -55,14 +54,13 @@ Item {
                 // browse button
                 BrowseDirectory {
                     project: m.project
-                    implicitHeight: 35
+                    Layout.minimumHeight: 25
                     implicitWidth: parent.width
-
                     onBrowserProjectLoaded: settingProjectLoaded()
                 }
                 // thumbnail slider
                 Item {
-                    implicitHeight: 35
+                    Layout.minimumHeight: 25
                     implicitWidth: parent.width
                     RowLayout {
                         anchors.fill: parent
@@ -90,7 +88,7 @@ Item {
 
                 Item {
                     id: displayPointCloudItem
-                    implicitHeight: 35
+                    Layout.minimumHeight: 25
                     implicitWidth: parent.width
                     property variant leftPanel: m.project.panelList.get(0)
                     property variant rightPanel: m.project.panelList.get(1)
@@ -149,6 +147,64 @@ Item {
                                 onClicked: displayPointCloudItem.rightPanel.isPointCloudDisplayed = !pointCloudRCheckBox.checked
                             }
                         }
+                    }
+                }
+
+                // Scale
+                Item {
+                    implicitWidth: parent.width
+                    Layout.minimumHeight: 25
+                    RowLayout {
+                        anchors.fill: parent
+                        Text {
+                            width: 25
+                            height: parent.height
+                            text: "Scene scale : "
+                            verticalAlignment: Text.AlignVCenter
+                            color: "white"
+                            font.pointSize: 11
+                        }
+                        Rectangle {
+                            implicitWidth: 35
+                            height: parent.height
+                            color: "grey"
+                            radius: 2
+                            TextInput {
+                                id: scaleValue
+                                anchors.fill: parent
+                                selectByMouse: true
+                                font.pointSize: 10
+                                text: "1"
+                                validator: DoubleValidator{bottom: 0.1;}
+                            }
+                        }
+                        Text {
+                            text: m.project.currentUnit
+                            color: m.textColor
+                            font.pointSize: m.textSize
+                        }
+                        Button {
+                            text: "Apply"
+                            height: parent.height
+                            MouseArea {
+                                anchors.fill: parent
+                                onClicked:
+                                {
+                                    m.project.scaleScene(scaleValue.text)
+                                    scaleValue.text = "1"
+                                }
+                            }
+                        }
+
+                        Rectangle {
+                            implicitWidth: 80
+                            Layout.horizontalSizePolicy: Layout.Expanding
+                            color: "blue"
+                        }
+                    }
+                    TooltipArea {
+                        anchors.fill: parent
+                        text: "Scene scale"
                     }
                 }
             }

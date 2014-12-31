@@ -111,9 +111,9 @@ void MVGDrawUtil::drawLineLoop3D(const MPointArray& points, const MColor& color,
 void MVGDrawUtil::drawPolygon2D(const MPointArray& points, const MColor& color, const float alpha)
 {
     assert(points.length() > 2);
-//    glXQueryVersion(NULL, NULL, NULL);
+    //    glXQueryVersion(NULL, NULL, NULL);
     glPushAttrib(GL_ALL_ATTRIB_BITS);
-//    glColor4f(color.r, color.g, color.b, alpha);
+    //    glColor4f(color.r, color.g, color.b, alpha);
     glColor4f(color.r, color.g, color.b, 0.f);
     glBegin(GL_POLYGON);
     for(int i = 0; i < points.length(); ++i)
@@ -126,9 +126,9 @@ void MVGDrawUtil::drawPolygon2D(const MPointArray& points, const MColor& color, 
 void MVGDrawUtil::drawPolygon3D(const MPointArray& points, const MColor& color, const float alpha)
 {
     assert(points.length() > 2);
-//    glXQueryVersion(NULL, NULL, NULL);
+    //    glXQueryVersion(NULL, NULL, NULL);
     glPushAttrib(GL_ALL_ATTRIB_BITS);
-//    glColor4f(color.r, color.g, color.b, alpha);
+    //    glColor4f(color.r, color.g, color.b, alpha);
     glColor4f(color.r, color.g, color.b, 0.f);
     glBegin(GL_POLYGON);
     for(int i = 0; i < points.length(); ++i)

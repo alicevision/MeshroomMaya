@@ -28,13 +28,16 @@ public:
     bool load(const std::string& projectDirectoryPath);
     bool loadCameras(const std::string& projectDirectoryPath);
     bool loadPointCloud(const std::string& projectDirectoryPath);
+    bool scaleScene(const double scaleSize) const;
     void clear();
 
 public:
-    std::string getProjectDirectory() const;
+    const std::string getProjectDirectory() const;
     void setProjectDirectory(const std::string&) const;
-    bool isProjectDirectoryValid(const std::string&) const;
+    const bool isProjectDirectoryValid(const std::string&) const;
     void selectCameras(std::vector<std::string> cameraNames) const;
+    void unlockProject() const;
+    void lockProject() const;
 
 public:
     // openMVG node names

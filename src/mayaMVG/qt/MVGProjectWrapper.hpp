@@ -4,6 +4,7 @@
 #include "mayaMVG/qt/MVGPanelWrapper.hpp"
 #include "mayaMVG/qt/MVGCameraWrapper.hpp"
 #include "mayaMVG/core/MVGProject.hpp"
+#include "maya/MDistance.h"
 #include <QObject>
 
 namespace mayaMVG
@@ -20,7 +21,8 @@ class MVGProjectWrapper : public QObject
     Q_PROPERTY(QObjectListModel* cameraModel READ getCameraModel NOTIFY cameraModelChanged);
     Q_PROPERTY(QString currentContext READ getCurrentContext WRITE setCurrentContext NOTIFY
                    currentContextChanged);
-    Q_PROPERTY(QObjectListModel* panelList READ getPanelList NOTIFY panelListChanged)
+    Q_PROPERTY(QObjectListModel* panelList READ getPanelList NOTIFY panelListChanged);
+    Q_PROPERTY(QString currentUnit READ getCurrentUnit NOTIFY currentUnitChanged);
 
 public:
     MVGProjectWrapper();
@@ -33,6 +35,7 @@ public slots:
     QObjectListModel* getPanelList() { return &_panelList; }
     const QString getCurrentContext() const;
     void setCurrentContext(const QString&);
+    const QString getCurrentUnit() const;
 
 signals:
     void projectDirectoryChanged();
@@ -40,6 +43,8 @@ signals:
     void panelModelChanged();
     void currentContextChanged();
     void panelListChanged();
+    void currentUnitChanged();
+    void unitModelChanged();
 
 public:
     void selectItems(const QList<QString>& cameraNames) const;
@@ -51,9 +56,11 @@ public:
     Q_INVOKABLE void loadNewProject(const QString& projectDirectoryPath);
     Q_INVOKABLE void setCameraToView(QObject* camera, const QString& viewName,
                                      bool rebuildCache = true);
+    Q_INVOKABLE void scaleScene(const double scaleSize) const;
     void pushImageInCache(const std::string& imageName);
     void clear();
     void removeCameraFromUI(MDagPath& cameraPath);
+    void emitCurrentUnitChanged();
 
 private:
     void reloadMVGCamerasFromMaya();
@@ -69,6 +76,7 @@ private:
     std::map<std::string, std::string> _activeCameraNameByView;
     /// FIFO queue indicating the list of images/cameras keept in memory
     std::list<std::string> _cachedImagePlanes;
+    QMap<MDistance::Unit, QString> _unitMap;
 };
 
 } // namespace

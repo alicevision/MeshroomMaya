@@ -77,6 +77,9 @@ MStatus initializePlugin(MObject obj)
     MEventMessage::addEventCallback("modelEditorChanged", modelEditorChangedCB, &status);
     if(status)
         _callbacks.append(id);
+    MEventMessage::addEventCallback("linearUnitChanged", linearUnitChanged, &status);
+    if(status)
+        _callbacks.append(id);
     MDGMessage::addNodeRemovedCallback(nodeRemovedCB, "camera", &status);
     if(status)
         _callbacks.append(id);
