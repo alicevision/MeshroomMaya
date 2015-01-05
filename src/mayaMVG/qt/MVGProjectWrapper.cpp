@@ -28,7 +28,7 @@ MVGProjectWrapper::MVGProjectWrapper()
     _unitMap[MDistance::kCentimeters] = "cm";
     _unitMap[MDistance::kKilometers] = "km";
     _unitMap[MDistance::kMeters] = "m";
-    assert(_unitMap.size() == MDistance::kLast); // First value is MDistance::kInvalid
+    assert(_unitMap.size() == MDistance::kLast - 1); // First value is MDistance::kInvalid
 }
 
 MVGProjectWrapper::~MVGProjectWrapper()
@@ -161,6 +161,7 @@ void MVGProjectWrapper::pushImageInCache(const std::string& cameraName)
     }
     _cachedImagePlanes.push_back(cameraName);
 }
+
 void MVGProjectWrapper::setCameraToView(QObject* camera, const QString& viewName, bool rebuildCache)
 {
     MVGCameraWrapper* cameraWrapper = static_cast<MVGCameraWrapper*>(camera);
