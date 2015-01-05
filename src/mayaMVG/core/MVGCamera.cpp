@@ -186,6 +186,13 @@ void MVGCamera::setImagePlane(const std::string& img, int width, int height) con
     fnImage.findPlug("height").setValue(height);
     fnImage.findPlug("displayOnlyIfCurrent").setValue(1);
 
+    openMVG::PinholeCamera pinhole = getPinholeCamera();
+    double offsetX = width * 0.5 - pinhole._K(0, 2);
+    double offsetY = height * 0.5 - pinhole._K(1, 2);
+    double hAperture = getHorizontalFilmAperture();
+    fnImage.findPlug("offsetX").setValue(offsetX / width * hAperture);
+    fnImage.findPlug("offsetY").setValue(-offsetY / width * hAperture);
+
     // handling deferred loading
     if(fnImage.findPlug(_DEFERRED).isNull())
     {
@@ -381,6 +388,16 @@ void MVGCamera::setInView(const std::string& viewName) const
 {
     //    loadImagePlane();
     MVGMayaUtil::setCameraInView(*this, viewName.c_str());
+}
+
+const std::pair<double, double> MVGCamera::getImageSize() const
+{
+    std::pair<double, double> size;
+    MFnDagNode fnImage(getImagePath());
+    size.first = fnImage.findPlug("coverageX").asDouble();
+    size.second = fnImage.findPlug("coverageY").asDouble();
+
+    return size;
 }
 
 } // namespace

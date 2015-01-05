@@ -55,6 +55,8 @@ public:
     void resetZoomAndPan() const;
     void setInView(const std::string& viewName) const;
 
+    const std::pair<double, double> getImageSize() const;
+
 private:
     static MString _ID;
     static MString _PINHOLE;

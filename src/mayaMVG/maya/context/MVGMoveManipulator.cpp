@@ -19,21 +19,27 @@ namespace mayaMVG
 namespace // empty namespace
 {
 
-void triangulatePoint(const std::map<int, MPoint>& cameraToClickedCSPoints,
-                      MPoint& triangulatedWSPoint)
+/**
+ * @brief N-View triangulation.
+ *
+ * @param point2dPerCamera_CS map of 2d points per camera in Camera Space
+ * @param outTriangulatedPoint_WS 3D triangulated point in World Space
+ */
+void triangulatePoint(const std::map<int, MPoint>& point2dPerCamera_CS,
+                      MPoint& outTriangulatedPoint_WS)
 {
-    size_t cameraCount = cameraToClickedCSPoints.size();
+    size_t cameraCount = point2dPerCamera_CS.size();
     assert(cameraCount > 1);
     // prepare n-view triangulation data
     openMVG::Mat2X imagePoints(2, cameraCount);
     std::vector<openMVG::Mat34> projectiveCameras;
 
-    // Retrieve rotation matrix and inclusive matrix
+    // Retrieve transformation matrix of the Maya full DAG.
     MVGPointCloud cloud(MVGProject::_CLOUD);
-    MMatrix inclusiveMatrix = MMatrix::identity;
+    MMatrix mayaInclusiveMatrix = MMatrix::identity;
     if(cloud.isValid() && cloud.getDagPath().isValid())
-        inclusiveMatrix = cloud.getDagPath().inclusiveMatrix();
-    MTransformationMatrix transformMatrix(inclusiveMatrix);
+        mayaInclusiveMatrix = cloud.getDagPath().inclusiveMatrix();
+    MTransformationMatrix transformMatrix(mayaInclusiveMatrix);
     MMatrix rotationMatrix = transformMatrix.asRotateMatrix();
     openMVG::Mat3 rotation;
     for(int i = 0; i < 3; ++i)
@@ -42,38 +48,60 @@ void triangulatePoint(const std::map<int, MPoint>& cameraToClickedCSPoints,
             rotation(i, j) = rotationMatrix[i][j];
     }
 
-    std::map<int, MPoint>::const_iterator it = cameraToClickedCSPoints.begin();
-    for(size_t i = 0; it != cameraToClickedCSPoints.end(); ++i, ++it)
     {
-        // projective camera vector
-        MVGCamera camera(it->first);
-        MPoint cameraCenter = TO_MPOINT(camera.getPinholeCamera()._C);
-        cameraCenter *= inclusiveMatrix;
-        const openMVG::Mat3 K = camera.getPinholeCamera()._K;
-        // TODO : remettre le centre au centre (comme dans Maya) et compenser avec l'offset de
-        // l'image
-        //        K(0, 2) = width * 0.5;
-        //        K(1, 2) = height * 0.5;
-        const openMVG::Mat3 R = camera.getPinholeCamera()._R;
-        openMVG::Vec3 C = TO_VEC3(cameraCenter);
-        const openMVG::Vec3 t = -R * rotation * C;
-        openMVG::Mat34 P;
-        openMVG::P_From_KRt(K, R * rotation, t, &P);
-        projectiveCameras.push_back(P);
+        std::map<int, MPoint>::const_iterator it = point2dPerCamera_CS.begin();
+        for(size_t i = 0; it != point2dPerCamera_CS.end(); ++i, ++it)
+        {
+            MVGCamera camera(it->first);
+            const MPoint& point2d_CS = it->second;
 
-        // clicked point matrix (image space)
-        MPoint clickedISPosition;
-        MVGGeometryUtil::cameraToImageSpace(camera, it->second, clickedISPosition);
-        imagePoints.col(i) = openMVG::Vec2(clickedISPosition.x, clickedISPosition.y);
+            // Retrieve the intrinsic matrix.
+            //
+            // K Matrix:
+            // f*k_u     0      c_u
+            //   0     f*k_v    c_v
+            //   0       0       1
+            // c_u, c_v : the principal point, which would be ideally in the centre of the image.
+            //
+            // In maya we keep the camera with an ideal optical center at the center
+            // of the camera sensor: c_u = width/2 and c_v = height/2
+            // We compensate this offset on the image plane.
+            // So here, for the triangulation, we should use the ideal K.
+            openMVG::Mat3 K = camera.getPinholeCamera()._K;
+            std::pair<double, double> imageSize = camera.getImageSize();
+            K(0, 2) = imageSize.first * 0.5;
+            K(1, 2) = imageSize.second * 0.5;
+
+            // Recompute the full Projection Matric P with the maya parent
+            // transformations applied.
+            MPoint cameraCenter = TO_MPOINT(camera.getPinholeCamera()._C);
+            cameraCenter *= mayaInclusiveMatrix;
+            const openMVG::Mat3 R = camera.getPinholeCamera()._R;
+            openMVG::Vec3 C = TO_VEC3(cameraCenter);
+            const openMVG::Vec3 t = -R * rotation * C;
+            openMVG::Mat34 P;
+            openMVG::P_From_KRt(K, R * rotation, t, &P);
+            projectiveCameras.push_back(P);
+
+            // clicked point matrix (image space)
+            MPoint clickedISPosition;
+            MVGGeometryUtil::cameraToImageSpace(camera, point2d_CS, clickedISPosition);
+            imagePoints.col(i) = openMVG::Vec2(clickedISPosition.x, clickedISPosition.y);
+        }
     }
+
     // call n-view triangulation function
     openMVG::Vec4 result;
     openMVG::TriangulateNViewAlgebraic(imagePoints, projectiveCameras, &result);
-    triangulatedWSPoint.x = result(0);
-    triangulatedWSPoint.y = result(1);
-    triangulatedWSPoint.z = result(2);
-    assert(result(3) != 0.0);
-    triangulatedWSPoint = triangulatedWSPoint / result(3);
+    outTriangulatedPoint_WS.x = result(0);
+    outTriangulatedPoint_WS.y = result(1);
+    outTriangulatedPoint_WS.z = result(2);
+    if(result(3) == 0.0)
+    {
+        LOG_ERROR("Triangulated point w = 0")
+        return;
+    }
+    outTriangulatedPoint_WS = outTriangulatedPoint_WS / result(3);
 }
 
 } // empty namespace
