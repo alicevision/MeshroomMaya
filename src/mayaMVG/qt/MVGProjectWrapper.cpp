@@ -195,17 +195,12 @@ void MVGProjectWrapper::setCameraToView(QObject* camera, const QString& viewName
     MVGCameraWrapper* cam = qobject_cast<MVGCameraWrapper*>(camera);
     cam->setInView(viewName, true);
 
-    // Update active camera   _activeCameraNameByView[viewName.toStdString()] =
-    // cameraWrapper->getName().toStdString();
+    //     Update active camera
+    _activeCameraNameByView[viewName.toStdString()] = cameraWrapper->getName().toStdString();
 
     // rebuild cache
     if(rebuildCache)
-        MGlobal::executeCommand("mayaMVGTool -e -rebuild mayaMVGTool1");
-
-    //    LOG_INFO(" ### CACHE ### ")
-    //    for(std::list<std::string>::iterator it = _cachedImagePlanes.begin(); it !=
-    //    _cachedImagePlanes.end(); ++it)
-    //        LOG_INFO("* " << *it)
+        MGlobal::executeCommandOnIdle("mayaMVGTool -e -rebuild mayaMVGTool1");
 }
 
 void MVGProjectWrapper::scaleScene(const double scaleSize) const
