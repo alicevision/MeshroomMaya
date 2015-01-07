@@ -45,7 +45,7 @@ public:
     const MVGCamera& getCamera() const;
     Q_INVOKABLE bool isInView(const QString& viewName) const { return _views.contains(viewName); }
     Q_INVOKABLE void setInView(const QString& viewName, const bool value);
-    Q_INVOKABLE void select() const;
+    Q_INVOKABLE void selectCameraNode() const;
 
 private:
     const MVGCamera _camera;

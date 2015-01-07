@@ -50,6 +50,7 @@ void MVGCameraWrapper::setInView(const QString& viewName, const bool value)
 
 const QSize MVGCameraWrapper::getSourceSize()
 {
+    // TODO : do not load image
     if(!_imageLoaded)
     {
         QImage image(getImagePath());
@@ -65,9 +66,9 @@ const qint64 MVGCameraWrapper::getSourceWeight() const
     return info.size();
 }
 
-void MVGCameraWrapper::select() const
+void MVGCameraWrapper::selectCameraNode() const
 {
-    _camera.select();
+    _camera.selectNode();
 }
 
 } // namespace

@@ -47,7 +47,7 @@ MVGNodeWrapper::MVGNodeWrapper(const MObject& object)
         _dagpath.extendToShape();
 }
 
-void MVGNodeWrapper::select() const
+void MVGNodeWrapper::selectNode() const
 {
     MSelectionList list;
     list.add(_dagpath);

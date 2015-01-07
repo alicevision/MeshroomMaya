@@ -169,7 +169,7 @@ MDagPath MVGCamera::getImagePath() const
 std::string MVGCamera::getImagePlane() const
 {
     MFnDagNode fnImage(getImagePath());
-    return fnImage.findPlug(_DEFERRED).asString().asChar();
+    return std::string(fnImage.findPlug(_DEFERRED).asString().asChar());
 }
 
 void MVGCamera::setImagePlane(const std::string& img, int width, int height) const
@@ -202,12 +202,12 @@ void MVGCamera::setImagePlane(const std::string& img, int width, int height) con
         dagModifier.addAttribute(getImagePath().node(), dynAttr);
         dagModifier.doIt();
         fnImage.findPlug(_DEFERRED).setValue(img.c_str());
-    } /*
-     else
-     {
-         fnImage.findPlug(_DEFERRED).setValue(img.c_str());
-         fnImage.findPlug("imageName").setValue(img.c_str());
-     }*/
+    }
+    else
+    {
+        fnImage.findPlug(_DEFERRED).setValue(img.c_str());
+        fnImage.findPlug("imageName").setValue(img.c_str());
+    }
 }
 
 void MVGCamera::loadImagePlane() const

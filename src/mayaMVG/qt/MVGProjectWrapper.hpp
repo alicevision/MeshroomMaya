@@ -54,9 +54,9 @@ public:
     Q_INVOKABLE void activeMVGContext();
     Q_INVOKABLE void loadExistingProject();
     Q_INVOKABLE void loadNewProject(const QString& projectDirectoryPath);
+    Q_INVOKABLE void scaleScene(const double scaleSize) const;
     Q_INVOKABLE void setCameraToView(QObject* camera, const QString& viewName,
                                      bool rebuildCache = true);
-    Q_INVOKABLE void scaleScene(const double scaleSize) const;
     void pushImageInCache(const std::string& imageName);
     void clear();
     void removeCameraFromUI(MDagPath& cameraPath);

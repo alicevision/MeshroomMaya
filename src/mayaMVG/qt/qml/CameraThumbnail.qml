@@ -56,7 +56,7 @@ Rectangle {
             model: m.project.panelList
             anchors.fill: parent
             orientation: ListView.Horizontal
-            interactive: false;
+            interactive: false
             property int itemWidth: (parent.width - spacing) / m.project.panelList.count
             spacing: 2
             delegate: Rectangle {
@@ -86,9 +86,7 @@ Rectangle {
                     id: camMouseArea
                     anchors.fill: parent
                     hoverEnabled: true
-                    onClicked: {
-                        m.project.setCameraToView(m.camera, model.modelData.name);
-                    }
+                    onClicked: m.project.setCameraToView(m.camera, model.modelData.name)
                 }
             }
         }

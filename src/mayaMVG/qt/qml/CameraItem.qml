@@ -26,7 +26,7 @@ Rectangle {
                 name: "SELECTED"
                 when: m.camera.isSelected
                 PropertyChanges { target: cameraItem; color: "#004161"; }
-                PropertyChanges { target: loader; visible: true; }
+                PropertyChanges { target: loader; sourceComponent: extraInformation; }
             }
         ]
         transitions: Transition {
@@ -63,7 +63,7 @@ Rectangle {
                     if(mouse.modifiers & Qt.ShiftModifier)
                         multipleSelection(index)
                     else {
-                        m.camera.select();
+                        m.camera.selectCameraNode();
                         selection(index)
                     }
                 }
@@ -89,8 +89,7 @@ Rectangle {
                     Layout.verticalSizePolicy: Layout.Expanding
                     Loader {
                         id: loader
-                        visible: false
-                        sourceComponent: extraInformation.status != Component.Ready ? undefined : extraInformation;
+                        sourceComponent: undefined
                         width: parent.width
                         height: childrenRect.height
                     }
@@ -114,8 +113,6 @@ Rectangle {
     Component {
         id: extraInformation
         Item {
-            width: parent.width
-            height: childrenRect.height
             ColumnLayout
             {
                 width: parent.width
@@ -133,7 +130,8 @@ Rectangle {
                         color: "#888888"
                     }
                 }
-                // file size
+                // Image size
+                /*
                 Item {
                     width: parent.width
                     Layout.minimumHeight: childrenRect.height
@@ -143,7 +141,7 @@ Rectangle {
                         font.pointSize: 10
                         color: "#888888"
                     }
-                }
+                }*/
                 // file weight
                 Item {
                     width: parent.width

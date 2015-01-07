@@ -19,7 +19,7 @@ public:
 
 public:
     virtual bool isValid() const = 0;
-    void select() const;
+    void selectNode() const;
 
 public:
     const MDagPath& getDagPath() const;
