@@ -58,6 +58,9 @@ public:
     Q_INVOKABLE void setCameraToView(QObject* camera, const QString& viewName,
                                      bool rebuildCache = true);
     void pushImageInCache(const std::string& imageName);
+    Q_INVOKABLE void setCamerasNear(const double near);
+    Q_INVOKABLE void setCamerasFar(const double far);
+    Q_INVOKABLE void setCameraLocatorScale(const double scale);
     void clear();
     void removeCameraFromUI(MDagPath& cameraPath);
     void emitCurrentUnitChanged();

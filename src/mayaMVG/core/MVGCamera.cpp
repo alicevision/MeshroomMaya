@@ -148,28 +148,37 @@ std::vector<MVGCamera> MVGCamera::getCameras()
 int MVGCamera::getId() const
 {
     int id = -1;
-    MVGMayaUtil::getIntAttribute(_dagpath.node(), _ID, id);
+    MStatus status;
+    status = MVGMayaUtil::getIntAttribute(_dagpath.node(), _ID, id);
+    CHECK(status)
     return id;
 }
 
 void MVGCamera::setId(const int& id) const
 {
-    MVGMayaUtil::setIntAttribute(_dagpath.node(), _ID, id);
+    MStatus status;
+    status = MVGMayaUtil::setIntAttribute(_dagpath.node(), _ID, id);
+    CHECK(status)
 }
 
 MDagPath MVGCamera::getImagePath() const
 {
     // FIXME, use node connections
     MDagPath path;
-    MFnDagNode fn(_dagpath.transform());
-    MDagPath::getAPathTo(fn.child(1), path);
+    MStatus status;
+    MFnDagNode fn(_dagpath.transform(), &status);
+    CHECK(status)
+    status = MDagPath::getAPathTo(fn.child(1), path);
     return path;
 }
 
 std::string MVGCamera::getImagePlane() const
 {
-    MFnDagNode fnImage(getImagePath());
-    return std::string(fnImage.findPlug(_DEFERRED).asString().asChar());
+    MStatus status;
+    MFnDagNode fnImage(getImagePath(), &status);
+    CHECK(status)
+    std::string imageName(fnImage.findPlug(_DEFERRED).asString().asChar());
+    return imageName;
 }
 
 void MVGCamera::setImagePlane(const std::string& img, int width, int height) const
@@ -178,7 +187,10 @@ void MVGCamera::setImagePlane(const std::string& img, int width, int height) con
         return;
 
     // image plane parameters
-    MFnDagNode fnImage(getImagePath());
+    MStatus status;
+    MDagPath imagePath = getImagePath();
+    MFnDagNode fnImage(imagePath, &status);
+    CHECK_RETURN(status)
     fnImage.findPlug("depth").setValue(50);
     fnImage.findPlug("dic").setValue(1);
     fnImage.findPlug("fit").setValue(2);
@@ -199,7 +211,7 @@ void MVGCamera::setImagePlane(const std::string& img, int width, int height) con
         MDagModifier dagModifier;
         MFnTypedAttribute tAttr;
         MObject dynAttr = tAttr.create(_DEFERRED, "def", MFnData::kString);
-        dagModifier.addAttribute(getImagePath().node(), dynAttr);
+        dagModifier.addAttribute(imagePath.node(), dynAttr);
         dagModifier.doIt();
         fnImage.findPlug(_DEFERRED).setValue(img.c_str());
     }
@@ -212,22 +224,32 @@ void MVGCamera::setImagePlane(const std::string& img, int width, int height) con
 
 void MVGCamera::loadImagePlane() const
 {
+    MStatus status;
     MFnDagNode fnImage(getImagePath());
-    MString deferred = fnImage.findPlug(_DEFERRED).asString();
-    MPlug imageNamePlug = fnImage.findPlug("imageName");
+    MString deferred = fnImage.findPlug(_DEFERRED, &status).asString();
+    CHECK_RETURN(status)
+    MPlug imageNamePlug = fnImage.findPlug("imageName", &status);
+    CHECK_RETURN(status)
     MString name = imageNamePlug.asString();
     if(name != deferred)
-        imageNamePlug.setValue(deferred);
+    {
+        status = imageNamePlug.setValue(deferred);
+        CHECK_RETURN(status)
+    }
 }
 
 void MVGCamera::unloadImagePlane() const
 {
-    MFnDagNode fnImage(getImagePath());
-    MPlug imageNamePlug = fnImage.findPlug("imageName");
+    MStatus status;
+    MFnDagNode fnImage(getImagePath(), &status);
+    CHECK_RETURN(status)
+    MPlug imageNamePlug = fnImage.findPlug("imageName", &status);
+    CHECK_RETURN(status)
     MString name = imageNamePlug.asString();
     if(name.length() == 0)
         return;
-    imageNamePlug.setValue("");
+    status = imageNamePlug.setValue("");
+    CHECK_RETURN(status)
 }
 
 openMVG::PinholeCamera MVGCamera::getPinholeCamera() const
@@ -329,56 +351,74 @@ void MVGCamera::setVisibleItems(const std::vector<MVGPointCloudItem>& items) con
 
 double MVGCamera::getZoom() const
 {
-    MFnCamera fnCamera(getDagPath());
+    MStatus status;
+    MFnCamera fnCamera(getDagPath(), &status);
+    CHECK(status)
     return fnCamera.zoom();
 }
 
 void MVGCamera::setZoom(const double zoom) const
 {
-    MFnCamera fnCamera(getDagPath());
+    MStatus status;
+    MFnCamera fnCamera(getDagPath(), &status);
+    CHECK(status)
     fnCamera.setZoom(zoom);
 }
 
 double MVGCamera::getHorizontalPan() const
 {
-    MFnCamera fnCamera(getDagPath());
+    MStatus status;
+    MFnCamera fnCamera(getDagPath(), &status);
+    CHECK(status)
     return fnCamera.horizontalPan();
 }
 
 void MVGCamera::setHorizontalPan(const double pan) const
 {
-    MFnCamera fnCamera(getDagPath());
+    MStatus status;
+    MFnCamera fnCamera(getDagPath(), &status);
+    CHECK(status)
     fnCamera.setHorizontalPan(pan);
 }
 
 double MVGCamera::getVerticalPan() const
 {
-    MFnCamera fnCamera(getDagPath());
+    MStatus status;
+    MFnCamera fnCamera(getDagPath(), &status);
+    CHECK(status)
     return fnCamera.verticalPan();
 }
 
 void MVGCamera::setVerticalPan(const double pan) const
 {
-    MFnCamera fnCamera(getDagPath());
+    MStatus status;
+    MFnCamera fnCamera(getDagPath(), &status);
+    CHECK(status)
     fnCamera.setVerticalPan(pan);
 }
 
 void MVGCamera::setPan(const double hpan, const double vpan) const
 {
-    MFnCamera fnCamera(getDagPath());
+    MStatus status;
+    MFnCamera fnCamera(getDagPath(), &status);
+    CHECK(status)
     fnCamera.setHorizontalPan(hpan);
     fnCamera.setVerticalPan(vpan);
 }
 
 double MVGCamera::getHorizontalFilmAperture() const
 {
-    MFnCamera fnCamera(getDagPath());
+    MStatus status;
+    MFnCamera fnCamera(getDagPath(), &status);
+    CHECK(status)
     return fnCamera.horizontalFilmAperture();
 }
 
 void MVGCamera::resetZoomAndPan() const
 {
-    MFnCamera fnCamera(getDagPath());
+    MStatus status;
+    MFnCamera fnCamera(getDagPath(), &status);
+    CHECK(status)
     fnCamera.setZoom(1.f);
     fnCamera.setHorizontalPan(0.f);
     fnCamera.setVerticalPan(0.f);
@@ -386,17 +426,46 @@ void MVGCamera::resetZoomAndPan() const
 
 void MVGCamera::setInView(const std::string& viewName) const
 {
-    //    loadImagePlane();
-    MVGMayaUtil::setCameraInView(*this, viewName.c_str());
+    MStatus status;
+    status = MVGMayaUtil::setCameraInView(*this, viewName.c_str());
+    CHECK_RETURN(status)
+}
+
+void MVGCamera::setNear(const double near) const
+{
+    MStatus status;
+    MFnCamera fnCamera(getDagPath(), &status);
+    CHECK_RETURN(status)
+    status = fnCamera.setNearClippingPlane(near);
+    CHECK_RETURN(status)
+}
+
+void MVGCamera::setFar(const double far) const
+{
+    MStatus status;
+    MFnCamera fnCamera(getDagPath(), &status);
+    CHECK_RETURN(status)
+    status = fnCamera.setFarClippingPlane(far);
+    CHECK_RETURN(status)
+}
+
+void MVGCamera::setLocatorScale(const double scale) const
+{
+    MStatus status;
+    MFnCamera fnCamera(getDagPath(), &status);
+    CHECK_RETURN(status)
+    status = fnCamera.findPlug("locatorScale").setValue(scale);
+    CHECK_RETURN(status)
 }
 
 const std::pair<double, double> MVGCamera::getImageSize() const
 {
     std::pair<double, double> size;
-    MFnDagNode fnImage(getImagePath());
+    MStatus status;
+    MFnDagNode fnImage(getImagePath(), &status);
+    CHECK(status)
     size.first = fnImage.findPlug("coverageX").asDouble();
     size.second = fnImage.findPlug("coverageY").asDouble();
-
     return size;
 }
 

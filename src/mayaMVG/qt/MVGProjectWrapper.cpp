@@ -201,6 +201,27 @@ void MVGProjectWrapper::setCameraToView(QObject* camera, const QString& viewName
     // rebuild cache
     if(rebuildCache)
         MGlobal::executeCommandOnIdle("mayaMVGTool -e -rebuild mayaMVGTool1");
+void MVGProjectWrapper::setCamerasNear(const double near)
+{
+    // TODO : undoable ?
+    for(std::map<std::string, MVGCameraWrapper*>::const_iterator it = _camerasByName.begin();
+        it != _camerasByName.end(); ++it)
+        it->second->getCamera().setNear(near);
+}
+void MVGProjectWrapper::setCamerasFar(const double far)
+{
+    // TODO : undoable ?
+    for(std::map<std::string, MVGCameraWrapper*>::const_iterator it = _camerasByName.begin();
+        it != _camerasByName.end(); ++it)
+        it->second->getCamera().setFar(far);
+}
+
+void MVGProjectWrapper::setCameraLocatorScale(const double scale)
+{
+    // TODO : undoable ?
+    for(std::map<std::string, MVGCameraWrapper*>::const_iterator it = _camerasByName.begin();
+        it != _camerasByName.end(); ++it)
+        it->second->getCamera().setLocatorScale(scale);
 }
 
 void MVGProjectWrapper::scaleScene(const double scaleSize) const

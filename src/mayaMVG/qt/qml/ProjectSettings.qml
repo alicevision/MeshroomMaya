@@ -17,6 +17,8 @@ Item {
         property int thumbSize
         property int sliderMinValue
         property int sliderMaxValue
+        property color textColor: "white"
+        property int textSize: 11
     }
     opacity: 0  // needed for animation
 
@@ -32,7 +34,7 @@ Item {
             State {
                 name: "OPEN"
                 when: m.isOpen
-                PropertyChanges { target: settings; height: 150; }
+                PropertyChanges { target: settings; height: 280; }
                 PropertyChanges { target: settings; opacity: 1; }
             }
         ]
@@ -66,8 +68,8 @@ Item {
                         anchors.fill: parent
                         Text {
                             text: "Thumbnail size"
-                            color: "white"
-                            font.pointSize: 11
+                            color: m.textColor
+                            font.pointSize: m.textSize
                         }
                         Slider {
                             Layout.horizontalSizePolicy: Layout.Expanding
@@ -95,14 +97,12 @@ Item {
 
                     RowLayout {
                         anchors.fill: parent
-
                         Text {
                             width: text.length
                             text: "Display point cloud : "
-                            color: "white"
-                            font.pointSize: 11
+                            color: m.textColor
+                            font.pointSize: m.textSize
                         }
-
                         CheckBox {
                             id: pointCloudLCheckBox
                             implicitHeight: parent.height
@@ -113,18 +113,16 @@ Item {
                                 onClicked: displayPointCloudItem.leftPanel.isPointCloudDisplayed = !pointCloudLCheckBox.checked
                             }
                         }
-
                         Text {
                             width: text.length
                             text: displayPointCloudItem.leftPanel.label
-                            color: "white"
-                            font.pointSize: 11
+                            color: m.textColor
+                            font.pointSize: m.textSize
                             MouseArea {
                                 anchors.fill: parent
                                 onClicked: displayPointCloudItem.leftPanel.isPointCloudDisplayed = !pointCloudLCheckBox.checked
                             }
                         }
-
                         CheckBox {
                             id: pointCloudRCheckBox
                             implicitHeight: parent.height
@@ -135,13 +133,12 @@ Item {
                                 onClicked: displayPointCloudItem.rightPanel.isPointCloudDisplayed = !pointCloudRCheckBox.checked
                             }
                         }
-
                         Text {
                             Layout.horizontalSizePolicy: Layout.Expanding
                             width: text.length
                             text: displayPointCloudItem.rightPanel.label
-                            color: "white"
-                            font.pointSize: 11
+                            color: m.textColor
+                            font.pointSize: m.textSize
                             MouseArea {
                                 anchors.fill: parent
                                 onClicked: displayPointCloudItem.rightPanel.isPointCloudDisplayed = !pointCloudRCheckBox.checked
@@ -149,7 +146,6 @@ Item {
                         }
                     }
                 }
-
                 // Scale
                 Item {
                     implicitWidth: parent.width
@@ -161,19 +157,19 @@ Item {
                             height: parent.height
                             text: "Scene scale : "
                             verticalAlignment: Text.AlignVCenter
-                            color: "white"
-                            font.pointSize: 11
+                            color: m.textColor
+                            font.pointSize: m.textSize
                         }
                         Rectangle {
                             implicitWidth: 35
-                            height: parent.height
+                            height: parent.height -2
                             color: "grey"
                             radius: 2
                             TextInput {
                                 id: scaleValue
                                 anchors.fill: parent
                                 selectByMouse: true
-                                font.pointSize: 10
+                                font.pointSize: m.textSize
                                 text: "1"
                                 validator: DoubleValidator{bottom: 0.1;}
                             }
@@ -206,6 +202,12 @@ Item {
                         anchors.fill: parent
                         text: "Scene scale"
                     }
+                }
+                // Camera parameters
+                CameraSettings {
+                    implicitWidth: parent.width
+                    Layout.minimumHeight: 130
+                    project: m.project
                 }
             }
         }
