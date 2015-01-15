@@ -2,9 +2,11 @@
 
 #include "mayaMVG/core/MVGNodeWrapper.hpp"
 #include <vector>
+#include <list>
 
 namespace mayaMVG
 {
+#define IMAGE_CACHE_SIZE 3
 
 class MVGCamera;
 class MVGPointCloud;
@@ -38,6 +40,8 @@ public:
     void selectCameras(std::vector<std::string> cameraNames) const;
     void unlockProject() const;
     void lockProject() const;
+    void pushImageInCache(const std::string& cameraName);
+    void updateImageCache(const std::string& newCameraName, const std::string& oldCameraName);
 
 public:
     // openMVG node names
@@ -50,6 +54,10 @@ public:
     static std::string _imageRelativeDirectory;
     static std::string _cameraRelativeFile;
     static std::string _pointCloudRelativeFile;
+
+private:
+    /// FIFO queue indicating the list of images/cameras keept in memory
+    std::list<std::string> _cachedImagePlanes;
 };
 
 } // namespace

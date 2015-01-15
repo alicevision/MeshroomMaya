@@ -375,4 +375,34 @@ void MVGProject::lockProject() const
 {
     lockNode(getObject());
 }
+
+void MVGProject::pushImageInCache(const std::string& cameraName)
+{
+    std::list<std::string>::iterator camera =
+        std::find(_cachedImagePlanes.begin(), _cachedImagePlanes.end(), cameraName);
+    if(camera != _cachedImagePlanes.end()) // Camera is already in the list
+        return;
+
+    if(_cachedImagePlanes.size() == IMAGE_CACHE_SIZE)
+    {
+        MVGCamera camera(cameraName);
+        camera.unloadImagePlane();
+        _cachedImagePlanes.pop_front();
+    }
+    _cachedImagePlanes.push_back(cameraName);
+}
+
+void MVGProject::updateImageCache(const std::string& newCameraName,
+                                  const std::string& oldCameraName)
+{
+    // If new camera is in cache remove from cacheList
+    std::list<std::string>::iterator cameraIt =
+        std::find(_cachedImagePlanes.begin(), _cachedImagePlanes.end(), newCameraName);
+    if(cameraIt != _cachedImagePlanes.end())
+        _cachedImagePlanes.remove(newCameraName);
+
+    if(oldCameraName.length() > 0)
+        pushImageInCache(oldCameraName);
+}
+
 } // namespace

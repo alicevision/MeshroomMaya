@@ -10,8 +10,6 @@
 namespace mayaMVG
 {
 
-#define IMAGE_CACHE_SIZE 3
-
 class MVGProjectWrapper : public QObject
 {
     Q_OBJECT
@@ -57,7 +55,6 @@ public:
     Q_INVOKABLE void scaleScene(const double scaleSize) const;
     Q_INVOKABLE void setCameraToView(QObject* camera, const QString& viewName,
                                      bool rebuildCache = true);
-    void pushImageInCache(const std::string& imageName);
     Q_INVOKABLE void setCamerasNear(const double near);
     Q_INVOKABLE void setCamerasFar(const double far);
     Q_INVOKABLE void setCameraLocatorScale(const double scale);
@@ -77,8 +74,6 @@ private:
     std::map<std::string, MVGCameraWrapper*> _camerasByName;
     /// map view to active camera
     std::map<std::string, std::string> _activeCameraNameByView;
-    /// FIFO queue indicating the list of images/cameras keept in memory
-    std::list<std::string> _cachedImagePlanes;
     QMap<MDistance::Unit, QString> _unitMap;
 };
 
