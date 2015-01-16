@@ -28,7 +28,7 @@ MCallbackIdArray _callbacks;
 MStatus initializePlugin(MObject obj)
 {
     MStatus status;
-    MFnPlugin plugin(obj, PLUGIN_COMPANY, "0.1.0", "Any");
+    MFnPlugin plugin(obj, PLUGIN_COMPANY, "0.2.0", "Any");
 
     // Register Maya context, commands & nodes
     CHECK(plugin.registerCommand("MVGCmd", MVGCmd::creator))
@@ -69,9 +69,6 @@ MStatus initializePlugin(MObject obj)
     if(status)
         _callbacks.append(id);
     MEventMessage::addEventCallback("Redo", redoCB, &status);
-    if(status)
-        _callbacks.append(id);
-    MEventMessage::addEventCallback("SelectionChanged", selectionChangedCB, &status);
     if(status)
         _callbacks.append(id);
     MEventMessage::addEventCallback("modelEditorChanged", modelEditorChangedCB, &status);

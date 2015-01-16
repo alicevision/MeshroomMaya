@@ -25,6 +25,7 @@ Item {
         {
             qlist[qlist.length] = m.project.cameraModel.get(i).name;
         }
+        m.project.selectItems(qlist)
         m.project.selectCameras(qlist);
     }
     ListView {
@@ -40,7 +41,10 @@ Item {
             color: altColor(index%2)
             camera: model.modelData
             project: m.project
-            onSelection: m.currentIndex = index
+            onSelection: {
+                m.currentIndex = index
+                selectCameras(index, index) //m.currentIndex = index
+            }
             onMultipleSelection: selectCameras(m.currentIndex, index)
         }
         clip: true

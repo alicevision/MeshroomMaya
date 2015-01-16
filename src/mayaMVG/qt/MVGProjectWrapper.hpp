@@ -45,7 +45,7 @@ signals:
     void unitModelChanged();
 
 public:
-    void selectItems(const QList<QString>& cameraNames) const;
+    Q_INVOKABLE void selectItems(const QStringList& cameraNames) const;
     Q_INVOKABLE void selectCameras(const QStringList& cameraNames) const;
     Q_INVOKABLE QString openFileDialog() const;
     Q_INVOKABLE void activeSelectionContext() const;

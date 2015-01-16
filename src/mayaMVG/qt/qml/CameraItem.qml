@@ -63,7 +63,6 @@ Rectangle {
                     if(mouse.modifiers & Qt.ShiftModifier)
                         multipleSelection(index)
                     else {
-                        m.camera.selectCameraNode();
                         selection(index)
                     }
                 }

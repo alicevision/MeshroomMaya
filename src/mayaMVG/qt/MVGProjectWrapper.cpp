@@ -131,7 +131,7 @@ void MVGProjectWrapper::loadNewProject(const QString& projectDirectoryPath)
     }
 }
 
-void MVGProjectWrapper::selectItems(const QList<QString>& cameraNames) const
+void MVGProjectWrapper::selectItems(const QStringList& cameraNames) const
 {
     foreach(MVGCameraWrapper* camera, _cameraList.asQList<MVGCameraWrapper>())
         camera->setIsSelected(cameraNames.contains(camera->getName()));
