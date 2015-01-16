@@ -9,6 +9,7 @@
 #include <maya/MFnCamera.h>
 #include <maya/MFnTransform.h>
 #include <maya/MPlug.h>
+#include <maya/MPlugArray.h>
 #include <maya/MDagModifier.h>
 #include <maya/MFnNumericAttribute.h>
 #include <maya/MFnTypedAttribute.h>
@@ -119,12 +120,11 @@ MVGCamera MVGCamera::create(const std::string& name)
     dagModifier.doIt();
 
     // create, reparent & connect image plane
-    MObject imagePlane = dagModifier.createNode("imagePlane", transform, &status);
-    dagModifier.doIt();
-    MFnDependencyNode fnImage(imagePlane);
-    status = dagModifier.connect(fnImage.findPlug("message"), fnCamera.findPlug("imagePlane"));
-    CHECK(status)
-    dagModifier.doIt();
+    MString cmd;
+    MGlobal::executePythonCommand("from mayaMVG import camera");
+    MString fileName = "";
+    cmd.format("camera.mvgSetImagePlane(\'^1s\', \'^2s\')", path.fullPathName(), fileName);
+    MGlobal::executePythonCommand(cmd);
 
     return camera;
 }
@@ -163,12 +163,23 @@ void MVGCamera::setId(const int& id) const
 
 MDagPath MVGCamera::getImagePath() const
 {
-    // FIXME, use node connections
-    MDagPath path;
+
     MStatus status;
-    MFnDagNode fn(_dagpath.transform(), &status);
+    MDagPath path;
+    MFnDagNode fn(_dagpath, &status);
+    MPlug imagePlanePlug = fn.findPlug("imagePlane", status);
     CHECK(status)
-    status = MDagPath::getAPathTo(fn.child(1), path);
+    MPlug imagePlug = imagePlanePlug.elementByLogicalIndex(0, &status);
+    MPlugArray connectedPlugs;
+    imagePlug.connectedTo(connectedPlugs, true, true, &status);
+    CHECK(status)
+    if(connectedPlugs.length() == 0)
+    {
+        LOG_ERROR("No plug connected to the plug")
+        return path;
+    }
+    status = MDagPath::getAPathTo(connectedPlugs[0].node(), path);
+    CHECK(status)
     return path;
 }
 
