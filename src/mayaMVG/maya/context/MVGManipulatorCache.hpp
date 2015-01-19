@@ -72,7 +72,7 @@ public:
     const MVGCamera& getActiveCamera() const;
 
     // intersections tests
-    bool checkIntersection(double, const MPoint&);
+    bool checkIntersection(const double, const MPoint&, const bool checkBlindData = false);
     const IntersectedComponent& getIntersectedComponent();
 
     // mesh & view relative data
@@ -82,8 +82,9 @@ public:
     void rebuildMeshCache(const MDagPath&);
 
 private:
-    bool isIntersectingPoint(double, const MPoint&);
-    bool isIntersectingEdge(double, const MPoint&);
+    bool isIntersectingBlindData(const double, const MPoint&);
+    bool isIntersectingPoint(const double, const MPoint&);
+    bool isIntersectingEdge(const double, const MPoint&);
 
 private:
     M3dView _activeView;

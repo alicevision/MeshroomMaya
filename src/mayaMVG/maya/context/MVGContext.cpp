@@ -104,6 +104,7 @@ bool MVGContext::eventFilter(QObject* obj, QEvent* e)
                         break;
                     MVGMoveManipulator::_mode = static_cast<MVGMoveManipulator::MoveMode>(
                         (MVGMoveManipulator::_mode + 1) % 3);
+                    break;
                 case Qt::Key_Escape:
                     updateManipulators();
                 default:

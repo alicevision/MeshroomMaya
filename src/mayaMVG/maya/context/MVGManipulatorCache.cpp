@@ -53,8 +53,15 @@ const MVGCamera& MVGManipulatorCache::getActiveCamera() const
     return _activeCamera;
 }
 
-bool MVGManipulatorCache::checkIntersection(double tolerance, const MPoint& mouseCSPosition)
+bool MVGManipulatorCache::checkIntersection(const double tolerance, const MPoint& mouseCSPosition,
+                                            const bool checkBlindData)
 {
+    // Check
+    if(checkBlindData)
+    {
+        if(isIntersectingBlindData(tolerance, mouseCSPosition))
+            return true;
+    }
     if(isIntersectingPoint(tolerance, mouseCSPosition))
         return true;
     if(isIntersectingEdge(tolerance, mouseCSPosition))
@@ -140,7 +147,47 @@ void MVGManipulatorCache::rebuildMeshCache(const MDagPath& path)
     }
 }
 
-bool MVGManipulatorCache::isIntersectingPoint(double tolerance, const MPoint& mouseCSPosition)
+bool MVGManipulatorCache::isIntersectingBlindData(const double tolerance,
+                                                  const MPoint& mouseCSPosition)
+{
+    if(_meshData.empty())
+        return false;
+    // compute tolerance
+    const double threshold =
+        (tolerance * _activeCamera.getZoom()) / (double)_activeView.portWidth();
+    const int cameraID = _activeCamera.getId();
+    // check each mesh vertices
+    std::map<std::string, MeshData>::iterator meshIt = _meshData.begin();
+    for(; meshIt != _meshData.end(); ++meshIt)
+    {
+        std::vector<VertexData>& vertices = meshIt->second.vertices;
+        std::vector<VertexData>::iterator vertexIt = vertices.begin();
+        for(; vertexIt < vertices.end(); ++vertexIt)
+        {
+            std::map<int, MPoint>::const_iterator blindDataIt = vertexIt->blindData.find(cameraID);
+            if(blindDataIt == vertexIt->blindData.end())
+                continue;
+            MPoint pointCSPosition = blindDataIt->second;
+            // check if we intersect w/ the vertex position
+            if(mouseCSPosition.x <= pointCSPosition.x + threshold &&
+               mouseCSPosition.x >= pointCSPosition.x - threshold &&
+               mouseCSPosition.y <= pointCSPosition.y + threshold &&
+               mouseCSPosition.y >= pointCSPosition.y - threshold)
+            {
+                MDagPath meshPath;
+                MVGMayaUtil::getDagPathByName(meshIt->first.c_str(), meshPath);
+                _intersectedComponent.type = MFn::kBlindData;
+                _intersectedComponent.meshPath = meshPath;
+                _intersectedComponent.vertex = &(*vertexIt);
+                _intersectedComponent.edge = NULL;
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+bool MVGManipulatorCache::isIntersectingPoint(const double tolerance, const MPoint& mouseCSPosition)
 {
     if(_meshData.empty())
         return false;
@@ -176,7 +223,7 @@ bool MVGManipulatorCache::isIntersectingPoint(double tolerance, const MPoint& mo
     return false;
 }
 
-bool MVGManipulatorCache::isIntersectingEdge(double tolerance, const MPoint& mouseCSPosition)
+bool MVGManipulatorCache::isIntersectingEdge(const double tolerance, const MPoint& mouseCSPosition)
 {
     if(_meshData.empty())
         return false;

@@ -41,6 +41,13 @@ void MVGManipulator::getIntersectedPositions(M3dView& view, MPointArray& positio
         _cache->getIntersectedComponent();
     switch(intersectedComponent.type)
     {
+        case MFn::kBlindData:
+        {
+            MPoint pointCSPosition =
+            intersectedComponent.vertex->blindData[_cache->getActiveCamera().getId()];
+            intersectedPositions.append(MVGGeometryUtil::cameraToWorldSpace(view, pointCSPosition));
+            break;
+        }
         case MFn::kMeshVertComponent:
             intersectedPositions.append(intersectedComponent.vertex->worldPosition);
             break;

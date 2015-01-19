@@ -150,6 +150,9 @@ void MVGMoveManipulator::draw(M3dView& view, const MDagPath& path, M3dView::Disp
     MPointArray intermediateCSPoints;
     switch(_onPressIntersectedComponent.type)
     {
+        case MFn::kBlindData:
+            if(_mode != kNViewTriangulation)
+                break;
         case MFn::kMeshVertComponent:
             intermediateCSPoints.append(getMousePosition(view));
             onPressWSPoints.append(_onPressIntersectedComponent.vertex->worldPosition);
@@ -228,7 +231,8 @@ MStatus MVGMoveManipulator::doPress(M3dView& view)
 
     // check if we intersect w/ a mesh component
     _onPressCSPosition = getMousePosition(view);
-    if(!_cache->checkIntersection(10.0, _onPressCSPosition))
+    bool triangulationMode = (_mode == kNViewTriangulation);
+    if(!_cache->checkIntersection(10.0, _onPressCSPosition, triangulationMode))
     {
         _onPressIntersectedComponent = _cache->getIntersectedComponent();
         return MPxManipulatorNode::doPress(view);
@@ -303,6 +307,9 @@ MStatus MVGMoveManipulator::doRelease(M3dView& view)
     MPointArray clickedCSPoints;
     switch(_onPressIntersectedComponent.type)
     {
+        case MFn::kBlindData:
+            if(_mode != kNViewTriangulation)
+                break;
         case MFn::kMeshVertComponent:
         {
             indices.append(_onPressIntersectedComponent.vertex->index);
@@ -374,17 +381,22 @@ MStatus MVGMoveManipulator::doRelease(M3dView& view)
 
 MStatus MVGMoveManipulator::doMove(M3dView& view, bool& refresh)
 {
-    _cache->checkIntersection(10.0, getMousePosition(view));
+    bool triangulationMode = (_mode == kNViewTriangulation);
+    _cache->checkIntersection(10.0, getMousePosition(view), triangulationMode);
     return MPxManipulatorNode::doMove(view, refresh);
 }
 
 MStatus MVGMoveManipulator::doDrag(M3dView& view)
 {
-    _cache->checkIntersection(10.0, getMousePosition(view));
+    bool triangulationMode = (_mode == kNViewTriangulation);
+    _cache->checkIntersection(10.0, getMousePosition(view), triangulationMode);
     // Fill verticesIDs
     MIntArray verticesID;
     switch(_onPressIntersectedComponent.type)
     {
+        case MFn::kBlindData:
+            if(_mode != kNViewTriangulation)
+                break;
         case MFn::kMeshVertComponent:
             verticesID.append(_onPressIntersectedComponent.vertex->index);
             break;
@@ -420,6 +432,7 @@ void MVGMoveManipulator::computeFinalWSPositions(M3dView& view)
         {
             switch(_onPressIntersectedComponent.type)
             {
+                case MFn::kBlindData:
                 case MFn::kMeshVertComponent:
                 {
                     MPointArray intermediateCSPositions;
@@ -682,7 +695,9 @@ void MVGMoveManipulator::drawPlacedPoints(
                 continue;
 
             // Don't draw if point is currently moving
-            if(onPressIntersectedComponent.type == MFn::kMeshVertComponent)
+            if(onPressIntersectedComponent.type == MFn::kMeshVertComponent ||
+               (onPressIntersectedComponent.type == MFn::kBlindData &&
+                _mode == kNViewTriangulation))
             {
                 if(onPressIntersectedComponent.vertex->index == verticesIt->index)
                     continue;
