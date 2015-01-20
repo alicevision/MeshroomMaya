@@ -183,10 +183,12 @@ void MVGMoveManipulator::draw(M3dView& view, const MDagPath& path, M3dView::Disp
             view.endGL();
             return;
         }
-        drawPlacedPoints(view, _cache->getMeshData(), _onPressIntersectedComponent);
+        drawPlacedPoints(view, _cache, _onPressIntersectedComponent);
+        MFn::Type intersectedComponentType = _cache->getIntersectiontType();
         // Draw in active MayaMVG viewport
         if(!MVGMayaUtil::isActiveView(view))
         {
+            drawComplementaryIntersectedBlindData(view, _cache->getIntersectedComponent());
             MVGDrawUtil::end2DDrawing();
             glDisable(GL_BLEND);
             view.endGL();
@@ -199,7 +201,7 @@ void MVGMoveManipulator::draw(M3dView& view, const MDagPath& path, M3dView::Disp
         {
             MPointArray intersectedVSPoints;
             getIntersectedPositions(view, intersectedVSPoints, MVGManipulator::kView);
-            MVGManipulator::drawIntersection2D(intersectedVSPoints);
+            MVGManipulator::drawIntersection2D(intersectedVSPoints, intersectedComponentType);
         }
         // draw triangulation
         if(_mode == kNViewTriangulation)
@@ -672,7 +674,7 @@ void MVGMoveManipulator::drawCursor(const MPoint& originVS)
 }
 // static
 void MVGMoveManipulator::drawPlacedPoints(
-    M3dView& view, const std::map<std::string, MVGManipulatorCache::MeshData>& meshData,
+    M3dView& view, MVGManipulatorCache* cache,
     const MVGManipulatorCache::IntersectedComponent& onPressIntersectedComponent)
 {
     MDagPath cameraPath;
@@ -680,6 +682,7 @@ void MVGMoveManipulator::drawPlacedPoints(
     MVGCamera camera(cameraPath);
 
     // browse meshes
+    const std::map<std::string, MVGManipulatorCache::MeshData>& meshData = cache->getMeshData();
     std::map<std::string, MVGManipulatorCache::MeshData>::const_iterator it = meshData.begin();
     for(; it != meshData.end(); ++it)
     {
@@ -728,6 +731,24 @@ void MVGMoveManipulator::drawPlacedPoints(
     }
 }
 
+// static
+void MVGMoveManipulator::drawComplementaryIntersectedBlindData(
+    M3dView& view, const MVGManipulatorCache::IntersectedComponent& intersectedComponent)
+{
+    if(intersectedComponent.type != MFn::kBlindData)
+        return;
+    MDagPath cameraPath;
+    view.getCamera(cameraPath);
+    MVGCamera camera(cameraPath);
+    const std::map<int, MPoint>::const_iterator it =
+        intersectedComponent.vertex->blindData.find(camera.getId());
+    if(it != intersectedComponent.vertex->blindData.end())
+    {
+        MPoint intersectedVSPoint = MVGGeometryUtil::cameraToViewSpace(view, it->second);
+        MVGDrawUtil::drawEmptyCross(intersectedVSPoint, 7, 2, MVGDrawUtil::_intersectionColor, 1.5);
+    }
+}
+// static
 void MVGMoveManipulator::drawVertexOnHover(M3dView& view, MVGManipulatorCache* cache,
                                            const MPoint& mouseVSPosition)
 {

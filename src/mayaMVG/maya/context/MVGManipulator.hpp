@@ -33,22 +33,23 @@ public:
     void getMousePosition(M3dView&, MPoint&, Space = kCamera);
     const MPointArray& getFinalWSPositions() const;
     const MPointArray& getIntermediateCSPositions() const;
-    MPointArray getIntersectedPositions(M3dView&, Space = kCamera) const;
+    const MPointArray getIntersectedPositions(M3dView&, Space = kCamera) const;
     void getIntersectedPositions(M3dView&, MPointArray&, Space = kCamera) const;
     void getIntermediateCSEdgePoints(M3dView& view,
                                      const MVGManipulatorCache::EdgeData* onPressEdgeData,
                                      const MPoint& onPressCSPoint,
                                      MPointArray& intermediateCSEdgePoints);
-    MPointArray getIntermediateCSEdgePoints(M3dView& view,
-                                            const MVGManipulatorCache::EdgeData* onPressEdgeData,
-                                            const MPoint& onPressCSPoint);
+    const MPointArray
+    getIntermediateCSEdgePoints(M3dView& view, const MVGManipulatorCache::EdgeData* onPressEdgeData,
+                                const MPoint& onPressCSPoint);
     void getTranslatedWSEdgePoints(M3dView& view,
                                    const MVGManipulatorCache::EdgeData* originEdgeData,
                                    MPoint& originCSPosition, MPoint& targetWSPosition,
                                    MPointArray& targetEdgeWSPositions) const;
 
 public:
-    static void drawIntersection2D(const MPointArray& intersectedVSPoints);
+    static void drawIntersection2D(const MPointArray& intersectedVSPoints,
+                                   const MFn::Type intersectionType);
 
 protected:
     MVGEditCmd* newEditCmd();

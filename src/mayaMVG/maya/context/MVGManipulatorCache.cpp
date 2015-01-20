@@ -71,9 +71,15 @@ bool MVGManipulatorCache::checkIntersection(const double tolerance, const MPoint
     return false;
 }
 
-const MVGManipulatorCache::IntersectedComponent& MVGManipulatorCache::getIntersectedComponent()
+const MVGManipulatorCache::IntersectedComponent&
+MVGManipulatorCache::getIntersectedComponent() const
 {
     return _intersectedComponent;
+}
+
+const MFn::Type MVGManipulatorCache::getIntersectiontType() const
+{
+    return _intersectedComponent.type;
 }
 const std::map<std::string, MVGManipulatorCache::MeshData>& MVGManipulatorCache::getMeshData() const
 {

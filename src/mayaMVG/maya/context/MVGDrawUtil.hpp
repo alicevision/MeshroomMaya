@@ -36,7 +36,7 @@ struct MVGDrawUtil
                              const int segments);
 
     static void drawEmptyCross(const MPoint& originVS, const float width, const float thickness,
-                               const MColor& color);
+                               const MColor& color, const float lineWidth = 1.0);
     static void drawFullCross(const MPoint& originVS, const float width, const float thickness,
                               const MColor& color);
 
@@ -66,6 +66,7 @@ struct MVGDrawUtil
     static const MColor _triangulateColor;
     static const MColor _pointCloudColor;
     static const MColor _adjacentFaceColor;
+    static const MColor _intersectionColor;
 };
 
 } // namespace

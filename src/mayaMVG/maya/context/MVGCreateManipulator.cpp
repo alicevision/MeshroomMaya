@@ -93,7 +93,7 @@ void MVGCreateManipulator::draw(M3dView& view, const MDagPath& path, M3dView::Di
         // draw intersection
         MPointArray intersectedVSPoints;
         getIntersectedPositions(view, intersectedVSPoints, MVGManipulator::kView);
-        MVGManipulator::drawIntersection2D(intersectedVSPoints);
+        MVGManipulator::drawIntersection2D(intersectedVSPoints, _cache->getIntersectiontType());
         MVGDrawUtil::end2DDrawing();
     }
     if(_cameraIDToClickedCSPoints.second.length() == 0 && _finalWSPositions.length() > 3)

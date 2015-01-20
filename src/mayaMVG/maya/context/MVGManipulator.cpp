@@ -1,5 +1,6 @@
 #include "mayaMVG/maya/context/MVGManipulator.hpp"
 #include "mayaMVG/maya/context/MVGDrawUtil.hpp"
+
 namespace mayaMVG
 {
 
@@ -44,7 +45,7 @@ void MVGManipulator::getIntersectedPositions(M3dView& view, MPointArray& positio
         case MFn::kBlindData:
         {
             MPoint pointCSPosition =
-            intersectedComponent.vertex->blindData[_cache->getActiveCamera().getId()];
+                intersectedComponent.vertex->blindData[_cache->getActiveCamera().getId()];
             intersectedPositions.append(MVGGeometryUtil::cameraToWorldSpace(view, pointCSPosition));
             break;
         }
@@ -75,8 +76,8 @@ void MVGManipulator::getIntersectedPositions(M3dView& view, MPointArray& positio
         positions.append(intersectedPositions[i]);
 }
 
-MPointArray MVGManipulator::getIntersectedPositions(M3dView& view,
-                                                    MVGManipulator::Space space) const
+const MPointArray MVGManipulator::getIntersectedPositions(M3dView& view,
+                                                          MVGManipulator::Space space) const
 {
     MPointArray positions;
     getIntersectedPositions(view, positions, space);
@@ -100,7 +101,7 @@ void MVGManipulator::getIntermediateCSEdgePoints(
     intermediateCSEdgePoints.append(getMousePosition(view) + mouseToVertexCSOffset);
 }
 
-MPointArray
+const MPointArray
 MVGManipulator::getIntermediateCSEdgePoints(M3dView& view,
                                             const MVGManipulatorCache::EdgeData* onPressEdgeData,
                                             const MPoint& onPressCSPoint)
@@ -138,19 +139,34 @@ MVGEditCmd* MVGManipulator::newEditCmd()
 }
 
 // static
-void MVGManipulator::drawIntersection2D(const MPointArray& intersectedVSPoints)
+void MVGManipulator::drawIntersection2D(const MPointArray& intersectedVSPoints,
+                                        const MFn::Type intersectionType)
 {
-    assert(intersectedVSPoints.length() < 3);
+    const int arrayLength = intersectedVSPoints.length();
+    assert(arrayLength < 3);
     if(intersectedVSPoints.length() <= 0)
         return;
-    // draw vertex
-    if(intersectedVSPoints.length() < 2)
+
+    switch(intersectionType)
     {
-        MVGDrawUtil::drawCircle2D(intersectedVSPoints[0], MColor(1, 1, 1), 10, 30);
-        return;
+        case MFn::kBlindData:
+            assert(arrayLength == 1);
+            MVGDrawUtil::drawEmptyCross(intersectedVSPoints[0], 7, 2,
+                                        MVGDrawUtil::_intersectionColor, 1.5);
+            break;
+        case MFn::kMeshVertComponent:
+            assert(arrayLength == 1);
+            MVGDrawUtil::drawCircle2D(intersectedVSPoints[0], MVGDrawUtil::_intersectionColor, 10,
+                                      30);
+            break;
+        case MFn::kMeshEdgeComponent:
+            assert(arrayLength == 2);
+            MVGDrawUtil::drawLine2D(intersectedVSPoints[0], intersectedVSPoints[1],
+                                    MVGDrawUtil::_intersectionColor);
+            break;
+        default:
+            break;
     }
-    // draw edge
-    MVGDrawUtil::drawLine2D(intersectedVSPoints[0], intersectedVSPoints[1], MColor(1, 1, 1));
 }
 
 } // namespace

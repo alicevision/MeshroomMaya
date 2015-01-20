@@ -39,9 +39,10 @@ private:
 public:
     static void drawCursor(const MPoint& originVS);
     static void
-    drawPlacedPoints(M3dView& view,
-                     const std::map<std::string, MVGManipulatorCache::MeshData>& meshData,
+    drawPlacedPoints(M3dView& view, MVGManipulatorCache* cache,
                      const MVGManipulatorCache::IntersectedComponent& onPressIntersectedComponent);
+    static void drawComplementaryIntersectedBlindData(
+        M3dView& view, const MVGManipulatorCache::IntersectedComponent& intersectedComponent);
     static void drawVertexOnHover(M3dView& view, MVGManipulatorCache* cache,
                                   const MPoint& mouseVSPosition);
 

@@ -73,7 +73,8 @@ public:
 
     // intersections tests
     bool checkIntersection(const double, const MPoint&, const bool checkBlindData = false);
-    const IntersectedComponent& getIntersectedComponent();
+    const IntersectedComponent& getIntersectedComponent() const;
+    const MFn::Type getIntersectiontType() const;
 
     // mesh & view relative data
     const std::map<std::string, MeshData>& getMeshData() const;

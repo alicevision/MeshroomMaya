@@ -13,6 +13,7 @@ MColor const MVGDrawUtil::_createColor = MColor(0.9f, 0.9f, 0.1f);
 MColor const MVGDrawUtil::_triangulateColor = MColor(0.9f, 0.5f, 0.4f);
 MColor const MVGDrawUtil::_pointCloudColor = MColor(0.f, 1.f, 1.f);
 MColor const MVGDrawUtil::_adjacentFaceColor = MColor(0.f, 0.f, 1.f);
+MColor const MVGDrawUtil::_intersectionColor = MColor(1.f, 1.f, 1.f);
 
 // static
 void MVGDrawUtil::begin2DDrawing(const int portWidth, const int portHeight)
@@ -201,10 +202,11 @@ void MVGDrawUtil::drawCircle3D(const MPoint& center, const MColor& color, const 
 
 // static
 void MVGDrawUtil::drawEmptyCross(const MPoint& originVS, const float width, const float thickness,
-                                 const MColor& color)
+                                 const MColor& color, const float lineWidth)
 {
     glPushAttrib(GL_ALL_ATTRIB_BITS);
     glColor3f(color.r, color.g, color.b);
+    glLineWidth(lineWidth);
     glBegin(GL_LINE_LOOP);
     glVertex2f(originVS.x + width, originVS.y - thickness);
     glVertex2f(originVS.x + width, originVS.y + thickness);

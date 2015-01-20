@@ -90,7 +90,7 @@ void MVGCreateManipulatorDrawOverride::draw(const MHWRender::MDrawContext& /*con
     MVGDrawUtil::begin2DDrawing(userdata->portWidth, userdata->portHeight);
     MVGCreateManipulator::drawCursor(userdata->mouseVSPoint, userdata->cache);
     MVGDrawUtil::drawClickedPoints(userdata->clickedVSPoints, MVGDrawUtil::_okayColor);
-    MVGManipulator::drawIntersection2D(userdata->intersectedVSPoints);
+    //    MVGManipulator::drawIntersection2D(userdata->intersectedVSPoints);
     if(userdata->finalWSPoints.length() > 3)
         MVGDrawUtil::drawPolygon3D(userdata->finalWSPoints, MVGDrawUtil::_okayColor);
     MVGDrawUtil::end2DDrawing();
