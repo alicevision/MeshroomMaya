@@ -33,6 +33,8 @@ public:
 
 private:
     void computeFinalWSPositions(M3dView& view);
+    MStatus storeTweakInformation();
+    MStatus resetTweakInformation();
     bool triangulate(M3dView& view, MVGManipulatorCache::VertexData* vertex,
                      const MPoint& currentVertexPositionsInActiveView, MPoint& triangulatedWSPoint);
 
