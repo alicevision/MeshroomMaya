@@ -246,10 +246,11 @@ void MVGCreateManipulator::computeFinalWSPositions(M3dView& view)
                 getTranslatedWSEdgePoints(view, _onPressIntersectedComponent.edge,
                                           _onPressCSPosition, projectedWSPoints[0],
                                           translatedWSEdgePoints);
-                _finalWSPositions.append(_onPressIntersectedComponent.edge->vertex1->worldPosition);
+                // Begin with second edge's vertex to keep normal
                 _finalWSPositions.append(_onPressIntersectedComponent.edge->vertex2->worldPosition);
-                _finalWSPositions.append(translatedWSEdgePoints[1]);
+                _finalWSPositions.append(_onPressIntersectedComponent.edge->vertex1->worldPosition);
                 _finalWSPositions.append(translatedWSEdgePoints[0]);
+                _finalWSPositions.append(translatedWSEdgePoints[1]);
                 return;
             }
         }
@@ -277,10 +278,11 @@ void MVGCreateManipulator::computeFinalWSPositions(M3dView& view)
                                                       projectedWSPoints))
                 return;
             assert(projectedWSPoints.length() == 2);
-            _finalWSPositions.append(_onPressIntersectedComponent.edge->vertex1->worldPosition);
+            // Begin with second edge's vertex to keep normal
             _finalWSPositions.append(_onPressIntersectedComponent.edge->vertex2->worldPosition);
-            _finalWSPositions.append(projectedWSPoints[1]);
+            _finalWSPositions.append(_onPressIntersectedComponent.edge->vertex1->worldPosition);
             _finalWSPositions.append(projectedWSPoints[0]);
+            _finalWSPositions.append(projectedWSPoints[1]);
         }
     }
 }
