@@ -189,6 +189,7 @@ MStatus MVGCreateManipulator::doMove(M3dView& view, bool& refresh)
 MStatus MVGCreateManipulator::doDrag(M3dView& view)
 {
     // TODO : snap w/ current intersection
+    _cache->checkIntersection(10.0, getMousePosition(view));
     computeFinalWSPositions(view);
     return MPxManipulatorNode::doDrag(view);
 }
@@ -220,6 +221,29 @@ void MVGCreateManipulator::computeFinalWSPositions(M3dView& view)
     // extrude edge
     if(_onPressIntersectedComponent.type == MFn::kMeshEdgeComponent)
     {
+        // Snap to intersected edge
+        const MVGManipulatorCache::IntersectedComponent& intersectedComponent =
+            _cache->getIntersectedComponent();
+        if(intersectedComponent.type == _onPressIntersectedComponent.type)
+        {
+            _finalWSPositions.append(_onPressIntersectedComponent.edge->vertex2->worldPosition);
+            _finalWSPositions.append(_onPressIntersectedComponent.edge->vertex1->worldPosition);
+            _finalWSPositions.append(intersectedComponent.edge->vertex2->worldPosition);
+            _finalWSPositions.append(intersectedComponent.edge->vertex1->worldPosition);
+
+            // Check points order
+            MVector AD = _finalWSPositions[3] - _finalWSPositions[0];
+            MVector BC = _finalWSPositions[2] - _finalWSPositions[1];
+
+            if(MVGGeometryUtil::doEdgesIntersect(_finalWSPositions[0], _finalWSPositions[1], AD,
+                                                 BC))
+            {
+                MPointArray tmp = _finalWSPositions;
+                _finalWSPositions[3] = tmp[2];
+                _finalWSPositions[2] = tmp[3];
+            }
+            return;
+        }
         MPointArray intermediateCSEdgePoints;
         getIntermediateCSEdgePoints(view, _onPressIntersectedComponent.edge, _onPressCSPosition,
                                     intermediateCSEdgePoints);

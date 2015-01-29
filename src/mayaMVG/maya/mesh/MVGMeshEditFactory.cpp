@@ -71,12 +71,17 @@ MStatus MVGMeshEditFactory::doIt()
         case kCreate:
         {
             int index;
-            int verticesCountBeforeAddPolygon = mesh.getVerticesCount();
             mesh.addPolygon(_worldPositions, index);
+            MIntArray facePointsIndexes = mesh.getFaceVertices(index);
             // Update componentIDs
             _componentIDs.clear();
-            for(int i = 0; i < _cameraPositions.length(); ++i)
-                _componentIDs.append(verticesCountBeforeAddPolygon + i);
+            _componentIDs = facePointsIndexes;
+            if(_cameraPositions.length() == 2)
+            {
+                _componentIDs.clear();
+                _componentIDs.append(facePointsIndexes[2]);
+                _componentIDs.append(facePointsIndexes[3]);
+            }
             break;
         }
         case kMove:

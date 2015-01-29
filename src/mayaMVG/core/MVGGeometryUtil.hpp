@@ -66,6 +66,10 @@ struct MVGGeometryUtil
                                      MPointArray& projectedWSPoints);
     static bool projectPointOnPlane(M3dView& view, const MPoint& toProjectCSPoint,
                                     const MPointArray& faceWSPoints, MPoint& projectedWSPoint);
+
+    // intersections
+    static double crossProduct2D(MVector& A, MVector& B);
+    static bool doEdgesIntersect(MPoint A, MPoint B, MVector AD, MVector BC);
 };
 
 } // namespace

@@ -627,6 +627,8 @@ MStatus MVGMoveManipulator::storeTweakInformation()
 
 MStatus MVGMoveManipulator::resetTweakInformation()
 {
+    if(_onPressIntersectedComponent.type == MFn::kInvalid)
+        return MS::kFailure;
     // Retrieve tweak information
     MStatus status;
     MDagPath meshPath = _onPressIntersectedComponent.meshPath;
