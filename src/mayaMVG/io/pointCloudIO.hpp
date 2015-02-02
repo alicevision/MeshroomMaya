@@ -2,7 +2,7 @@
 
 #include "mayaMVG/core/MVGPointCloud.hpp"
 #include "mayaMVG/core/MVGPointCloudItem.hpp"
-#include <software/SfMViewer/Ply.h>
+#include "mayaMVG/io/Ply.hpp"
 
 namespace mayaMVG
 {

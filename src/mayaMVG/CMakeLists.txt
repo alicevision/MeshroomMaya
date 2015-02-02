@@ -77,7 +77,7 @@ include_directories(${CMAKE_CURRENT_BINARY_DIR})
 add_library(${project_BIN} SHARED
 				${PLUGIN_SRCS}
 				${MOC_SRCS}
-				../openMVG/src/software/SfMViewer/Ply.cpp)
+                                ./io/Ply.cpp)
 target_link_libraries(
 				${project_BIN}
 				${MAYA_Foundation_LIBRARY}

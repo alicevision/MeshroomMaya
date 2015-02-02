@@ -62,16 +62,12 @@ std::string MVGProject::_PROJECT = "mayaMVG";
 MString MVGProject::_PROJECTPATH = "projectPath";
 
 std::string MVGProject::_cameraRelativeDirectory =
-    stlplus::folder_append_separator("outIncremental") +
     stlplus::folder_append_separator("SfM_output") + stlplus::folder_append_separator("cameras");
 std::string MVGProject::_imageRelativeDirectory =
-    stlplus::folder_append_separator("outIncremental") +
     stlplus::folder_append_separator("SfM_output") + stlplus::folder_append_separator("images");
-std::string MVGProject::_cameraRelativeFile = stlplus::folder_append_separator("outIncremental") +
-                                              stlplus::folder_append_separator("SfM_output") +
+std::string MVGProject::_cameraRelativeFile = stlplus::folder_append_separator("SfM_output") +
                                               "views.txt";
 std::string MVGProject::_pointCloudRelativeFile =
-    stlplus::folder_append_separator("outIncremental") +
     stlplus::folder_append_separator("SfM_output") + stlplus::folder_append_separator("clouds") +
     "calib.ply";
 
