@@ -210,7 +210,8 @@ void MVGProjectWrapper::setCameraLocatorScale(const double scale)
 
 void MVGProjectWrapper::scaleScene(const double scaleSize) const
 {
-    if(!_project.scaleScene(scaleSize))
+    double internalUnit = MDistance::uiToInternal(scaleSize);
+    if(!_project.scaleScene(internalUnit))
         LOG_ERROR("Cannot scale scene")
 }
 
