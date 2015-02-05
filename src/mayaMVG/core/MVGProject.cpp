@@ -65,11 +65,11 @@ std::string MVGProject::_cameraRelativeDirectory =
     stlplus::folder_append_separator("SfM_output") + stlplus::folder_append_separator("cameras");
 std::string MVGProject::_imageRelativeDirectory =
     stlplus::folder_append_separator("SfM_output") + stlplus::folder_append_separator("images");
-std::string MVGProject::_cameraRelativeFile = stlplus::folder_append_separator("SfM_output") +
-                                              "views.txt";
-std::string MVGProject::_pointCloudRelativeFile =
-    stlplus::folder_append_separator("SfM_output") + stlplus::folder_append_separator("clouds") +
-    "calib.ply";
+std::string MVGProject::_cameraRelativeFile =
+    stlplus::folder_append_separator("SfM_output") + "views.txt";
+std::string MVGProject::_pointCloudRelativeFile = stlplus::folder_append_separator("SfM_output") +
+                                                  stlplus::folder_append_separator("clouds") +
+                                                  "calib.ply";
 
 MVGProject::MVGProject(const std::string& name)
     : MVGNodeWrapper(name)
@@ -271,20 +271,14 @@ bool MVGProject::scaleScene(const double scaleSize) const
         for(int j = 0; j < 4; ++j)
         {
             matrix += transformMatrix[i][j];
-            matrix += " ";
+            if(!(i == 3 && j == 3))
+                matrix += " ";
         }
     }
-    MString cmd;
-    MString meshName(_MESH.c_str());
-    MString projectName(_PROJECT.c_str());
-    unlockProject();
-
-    // MakeIdentity/Freeze transform to reset transformation and use directly world coordinates
-    cmd.format("xform -r -m ^1s ^2s; makeIdentity -a true ^2s; xform -r -m ^1s ^3s; makeIdentity "
-               "-a true ^3s",
-               matrix, projectName, meshName);
-    MGlobal::executeCommand(cmd, false, true);
-    lockProject();
+    MGlobal::executePythonCommand("from mayaMVG import scale");
+    MGlobal::executePythonCommand("scale.scaleScene('" + matrix + "', '" + _PROJECT.c_str() +
+                                      "', '" + _MESH.c_str() + "')",
+                                  false, true);
 
     // Update cache
     MGlobal::executeCommand("mayaMVGTool -e -rebuild mayaMVGTool1");
