@@ -30,7 +30,8 @@ Item {
         }
 
         ToolButton {
-            iconSource: (m.settingsVisibility ? "img/down_arrow.png" : "img/right_arrow.png")
+            iconSource: "img/settings.png"
+            checked: m.settingsVisibility
             tooltip: (m.settingsVisibility ? "Close settings" : "Show settings")
             onClicked: m.settingsVisibility = !m.settingsVisibility
         }
