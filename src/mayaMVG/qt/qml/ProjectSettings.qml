@@ -167,7 +167,9 @@ Item {
                             radius: 2
                             TextInput {
                                 id: scaleValue
-                                anchors.fill: parent
+                                width: parent.width
+                                horizontalAlignment: TextInput.AlignHCenter
+                                anchors.verticalCenter: parent.verticalCenter
                                 selectByMouse: true
                                 font.pointSize: m.textSize
                                 text: "1"
@@ -182,6 +184,7 @@ Item {
                         Button {
                             text: "Apply"
                             height: parent.height
+                            implicitWidth: 50
                             MouseArea {
                                 anchors.fill: parent
                                 onClicked:

@@ -43,7 +43,9 @@ Item {
 
                             TextInput {
                                 id: nearValue
-                                anchors.fill: parent
+                                width: parent.width
+                                horizontalAlignment: TextInput.AlignHCenter
+                                anchors.verticalCenter: parent.verticalCenter
                                 selectByMouse: true
                                 font.pointSize: m.textSize
                                 validator: DoubleValidator{bottom: 0.001;}
@@ -52,7 +54,7 @@ Item {
                         Button {
                             text: "Set"
                             height: parent.height
-
+                            implicitWidth: 30
                             MouseArea {
                                 anchors.fill: parent
                                 onClicked: {
@@ -95,7 +97,9 @@ Item {
 
                             TextInput {
                                 id: farValue
-                                anchors.fill: parent
+                                width: parent.width
+                                horizontalAlignment: TextInput.AlignHCenter
+                                anchors.verticalCenter: parent.verticalCenter
                                 selectByMouse: true
                                 font.pointSize: m.textSize
                                 validator: DoubleValidator{bottom: 0.001;}
@@ -104,7 +108,7 @@ Item {
                         Button {
                             text: "Set"
                             height: parent.height
-
+                            implicitWidth: 30
                             MouseArea {
                                 anchors.fill: parent
                                 onClicked: {
@@ -146,7 +150,9 @@ Item {
 
                             TextInput {
                                 id: locatorScaleValue
-                                anchors.fill: parent
+                                width: parent.width
+                                horizontalAlignment: TextInput.AlignHCenter
+                                anchors.verticalCenter: parent.verticalCenter
                                 selectByMouse: true
                                 font.pointSize: m.textSize
                                 validator: DoubleValidator{bottom: 0.0;}
@@ -155,7 +161,7 @@ Item {
                         Button {
                             text: "Set"
                             height: parent.height
-
+                            implicitWidth: 30
                             MouseArea {
                                 anchors.fill: parent
                                 onClicked:
