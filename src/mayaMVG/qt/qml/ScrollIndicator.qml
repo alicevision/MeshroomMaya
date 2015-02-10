@@ -3,9 +3,12 @@ import QtQuick 1.0
 Item  {
     id: scrollBar
     signal positionUpdated(double value)
+    signal moveFromStep(string direction)
     property alias position: m.position
     property alias pageSize: m.pageSize
     property alias orientation: m.orientation
+    property alias upLimit: m.upLimit       // ReadOnly
+    property alias downLimit: m.downLimit   // ReadOnly
     // TODO : Handle horizontal scrollBar
     QtObject {
         id: m
@@ -13,6 +16,8 @@ Item  {
         property real pageSize
         property variant orientation : Qt.Vertical
         property real step: 0.1
+        property real downLimit : (scrollBar.height - scrollElement.height)/scrollBar.height
+        property real upLimit: scrollElement.height/scrollBar.height
     }
     opacity: 0.8
     visible: !(pageSize == 1)
@@ -28,16 +33,10 @@ Item  {
             anchors.fill: parent
             onClicked:
             {
-                // Move bar of +/- step
-                var upLimit = (scrollBar.height - scrollElement.height)/scrollBar.height
-                var downLimit = scrollElement.height/scrollBar.height
-                var proportionalY = mouseY/scrollBar.height
-                var newPosition
-                if(proportionalY > position)
-                    newPosition = (position + m.step < upLimit) ? position + m.step : upLimit
+                if(mouseY/scrollBar.height > position)
+                    moveFromStep("down")
                 else
-                    newPosition = (position + m.step > downLimit) ? position - m.step : 0
-                positionUpdated(newPosition)
+                    moveFromStep("up")
             }
         }
     }
@@ -60,4 +59,5 @@ Item  {
             onPositionChanged: positionUpdated(scrollElement.y/scrollBar.height)
         }
     }
+
 }

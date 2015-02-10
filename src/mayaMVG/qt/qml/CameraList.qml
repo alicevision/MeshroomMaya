@@ -4,6 +4,7 @@ import QtDesktop 0.1
 
 Item {
     id: cameraList
+    signal keyPressed(string value)
     property alias thumbSize: m.thumbSize
     property alias project: m.project
     QtObject {
@@ -28,6 +29,14 @@ Item {
         m.project.selectItems(qlist)
         m.project.selectCameras(qlist);
     }
+    function computeListPosition(direction, upLimit, downLimit, currentPosition, step)
+    {
+        if(direction == "up")
+            return (currentPosition - step > upLimit) ? currentPosition - step : 0
+
+        return (currentPosition + step < downLimit) ? currentPosition + step : downLimit
+    }
+
     RowLayout {
         anchors.fill: parent
         spacing: 0
@@ -66,7 +75,16 @@ Item {
                 position: cameraListView.visibleArea.yPosition
                 pageSize: cameraListView.visibleArea.heightRatio
                 onPositionUpdated: cameraListView.contentY = value * cameraListView.contentHeight
+                onMoveFromStep: {
+                    var newPosition = computeListPosition(direction, verticalScrollBar.upLimit, verticalScrollBar.downLimit, cameraListView.visibleArea.yPosition, 0.1)
+                    cameraListView.contentY = newPosition * cameraListView.contentHeight
+                }
             }
         }
+    }
+    onKeyPressed:
+    {
+        var newPosition = computeListPosition(value, verticalScrollBar.upLimit, verticalScrollBar.downLimit, cameraListView.visibleArea.yPosition, 0.1)
+        cameraListView.contentY = newPosition * cameraListView.contentHeight
     }
 }
