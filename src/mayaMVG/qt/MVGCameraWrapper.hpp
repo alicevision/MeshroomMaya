@@ -33,7 +33,7 @@ public slots:
         _isSelected = isSelected;
         Q_EMIT isSelectedChanged();
     }
-    const QStringList getViews() const { return _views; }
+    const QStringList& getViews() const { return _views; }
     const QSize getSourceSize();
     const qint64 getSourceWeight() const;
 

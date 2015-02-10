@@ -218,6 +218,7 @@ void MVGProjectWrapper::clear()
 {
     _cameraList.clear();
     _camerasByName.clear();
+    _activeCameraNameByView.clear();
     Q_EMIT projectDirectoryChanged();
 }
 
@@ -257,6 +258,7 @@ void MVGProjectWrapper::reloadMVGCamerasFromMaya()
 {
     _cameraList.clear();
     _camerasByName.clear();
+    _activeCameraNameByView.clear();
     if(!_project.isValid())
     {
         LOG_ERROR("Project is not valid");
