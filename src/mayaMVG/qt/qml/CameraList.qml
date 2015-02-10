@@ -28,42 +28,45 @@ Item {
         m.project.selectItems(qlist)
         m.project.selectCameras(qlist);
     }
-    ListView {
-        id: cameraListView
+    RowLayout {
         anchors.fill: parent
-        currentIndex: -1  // don't use ListView selection mechanism
-        boundsBehavior: Flickable.StopAtBounds
-        flickableDirection: Flickable.VerticalFlick
-        model: m.project.cameraModel
-        delegate: CameraItem {
-            width: cameraList.width
-            baseHeight: m.thumbSize
-            color: altColor(index%2)
-            camera: model.modelData
-            project: m.project
-            onSelection: {
-                m.currentIndex = index
-                selectCameras(index, index) //m.currentIndex = index
+        spacing: 0
+        ListView {
+            id: cameraListView
+            height: parent.height
+            Layout.horizontalSizePolicy:  Layout.Expanding
+            currentIndex: -1  // don't use ListView selection mechanism
+            boundsBehavior: Flickable.StopAtBounds
+            flickableDirection: Flickable.VerticalFlick
+            model: m.project.cameraModel
+            delegate: CameraItem {
+                width: cameraList.width
+                baseHeight: m.thumbSize
+                color: altColor(index%2)
+                camera: model.modelData
+                project: m.project
+                onSelection: {
+                    m.currentIndex = index
+                    selectCameras(index, index) //m.currentIndex = index
+                }
+                onMultipleSelection: selectCameras(m.currentIndex, index)
             }
-            onMultipleSelection: selectCameras(m.currentIndex, index)
+            clip: true
+            transitions: Transition  {
+                NumberAnimation { properties: "opacity"; duration: 200 }
+            }
         }
-        clip: true
-        states: State  {
-            when: cameraListView.movingVertically
-            PropertyChanges { target: verticalScrollBar; opacity: 0.8 }
+        Item {
+            height: parent.height
+            implicitWidth: 12
+            ScrollIndicator  {
+                id: verticalScrollBar
+                anchors.fill: parent
+                orientation: Qt.Vertical
+                position: cameraListView.visibleArea.yPosition
+                pageSize: cameraListView.visibleArea.heightRatio
+                onPositionUpdated: cameraListView.contentY = value * cameraListView.contentHeight
+            }
         }
-        transitions: Transition  {
-            NumberAnimation { properties: "opacity"; duration: 200 }
-        }
-    }
-    ScrollIndicator  {
-        id: verticalScrollBar
-        width: 12;
-        height: cameraListView.height
-        anchors.right: cameraListView.right
-        opacity: 0
-        orientation: Qt.Vertical
-        position: cameraListView.visibleArea.yPosition
-        pageSize: cameraListView.visibleArea.heightRatio
     }
 }
