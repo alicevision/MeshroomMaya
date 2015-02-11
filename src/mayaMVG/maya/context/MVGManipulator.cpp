@@ -4,6 +4,11 @@
 namespace mayaMVG
 {
 
+MVGManipulator::MVGManipulator()
+{
+    _cameraIDToVisibleItems.first = -1;
+}
+
 void MVGManipulator::getMousePosition(M3dView& view, MPoint& point, MVGManipulator::Space space)
 {
     short x, y;

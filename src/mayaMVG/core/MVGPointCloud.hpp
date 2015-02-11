@@ -1,10 +1,12 @@
 #pragma once
 
 #include "mayaMVG/core/MVGNodeWrapper.hpp"
-#include <maya/M3dView.h>
-#include <maya/MPointArray.h>
+#include "mayaMVG/core/MVGPointCloudItem.hpp"
 #include <vector>
 
+class MIntArray;
+class MPointArray;
+class M3dView;
 namespace mayaMVG
 {
 
@@ -27,9 +29,11 @@ public:
 
 public:
     void setItems(const std::vector<MVGPointCloudItem>& items);
-    std::vector<MVGPointCloudItem> getItems() const;
-    bool projectPoints(M3dView& view, const MPointArray& cameraSpacePoints,
-                       MPointArray& worldSpacePoints, const int index = -1);
+    const std::vector<MVGPointCloudItem> getAllItems() const;
+    const std::vector<MVGPointCloudItem> getItems(const MIntArray& indexes) const;
+    bool projectPoints(M3dView& view, std::vector<MVGPointCloudItem>& visibleItems,
+                       const MPointArray& cameraSpacePoints, MPointArray& worldSpacePoints,
+                       const int index = -1);
 
 private:
     static MString _RGBPP;

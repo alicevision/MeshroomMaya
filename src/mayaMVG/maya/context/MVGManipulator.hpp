@@ -2,6 +2,7 @@
 
 #include "mayaMVG/maya/context/MVGManipulatorCache.hpp"
 #include "mayaMVG/maya/context/MVGContext.hpp"
+#include "mayaMVG/core/MVGPointCloudItem.hpp"
 #include "mayaMVG/maya/cmd/MVGEditCmd.hpp"
 #include "mayaMVG/core/MVGGeometryUtil.hpp"
 #include <maya/MPxManipulatorNode.h>
@@ -20,7 +21,7 @@ public:
     };
 
 public:
-    MVGManipulator() {}
+    MVGManipulator();
     virtual ~MVGManipulator() {}
 
 public:
@@ -61,6 +62,8 @@ protected:
     MVGManipulatorCache::IntersectedComponent _onPressIntersectedComponent;
     MPoint _onPressCSPosition;
     MPointArray _finalWSPositions;
+    std::pair<int, std::vector<MVGPointCloudItem> >
+        _cameraIDToVisibleItems; // cameraID to visible items
 
 private:
     MVGContext* _context;

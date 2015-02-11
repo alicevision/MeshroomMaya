@@ -116,6 +116,11 @@ MStatus MVGCreateManipulator::doPress(M3dView& view)
         _cameraIDToClickedCSPoints.first = _cache->getActiveCamera().getId();
         _cameraIDToClickedCSPoints.second.clear();
     }
+    if(_cache->getActiveCamera().getId() != _cameraIDToVisibleItems.first)
+    {
+        _cameraIDToVisibleItems.first = _cache->getActiveCamera().getId();
+        _cameraIDToVisibleItems.second = _cache->getActiveCamera().getVisibleItems();
+    }
     // set this view as the active view
     _cache->setActiveView(view);
 
@@ -212,7 +217,8 @@ void MVGCreateManipulator::computeFinalWSPositions(M3dView& view)
         previewCSPoints.append(getMousePosition(view));
         // project clicked points on point cloud
         MVGPointCloud cloud(MVGProject::_CLOUD);
-        cloud.projectPoints(view, previewCSPoints, _finalWSPositions);
+        cloud.projectPoints(view, _cameraIDToVisibleItems.second, previewCSPoints,
+                            _finalWSPositions);
         return;
     }
     if(_cameraIDToClickedCSPoints.second.length() > 0)
@@ -263,8 +269,8 @@ void MVGCreateManipulator::computeFinalWSPositions(M3dView& view)
             // we need mousePosition in world space to compute the right offset
             cameraSpacePoints.append(getMousePosition(view));
             MPointArray projectedWSPoints;
-            if(cloud.projectPoints(view, cameraSpacePoints, projectedWSPoints,
-                                   cameraSpacePoints.length() - 1))
+            if(cloud.projectPoints(view, _cameraIDToVisibleItems.second, cameraSpacePoints,
+                                   projectedWSPoints, cameraSpacePoints.length() - 1))
             {
                 MPointArray translatedWSEdgePoints;
                 getTranslatedWSEdgePoints(view, _onPressIntersectedComponent.edge,

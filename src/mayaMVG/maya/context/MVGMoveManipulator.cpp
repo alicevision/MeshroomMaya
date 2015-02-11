@@ -228,6 +228,11 @@ MStatus MVGMoveManipulator::doPress(M3dView& view)
     if(!(QApplication::mouseButtons() & Qt::LeftButton))
         return MS::kFailure;
 
+    if(_cache->getActiveCamera().getId() != _cameraIDToVisibleItems.first)
+    {
+        _cameraIDToVisibleItems.first = _cache->getActiveCamera().getId();
+        _cameraIDToVisibleItems.second = _cache->getActiveCamera().getVisibleItems();
+    }
     // set this view as the active view
     _cache->setActiveView(view);
 
@@ -466,7 +471,8 @@ void MVGMoveManipulator::computeFinalWSPositions(M3dView& view)
                     assert(movingVertexIDInThisFace != -1);
                     MPointArray worldSpacePoints;
                     MVGPointCloud cloud(MVGProject::_CLOUD);
-                    if(cloud.projectPoints(view, cameraSpacePoints, worldSpacePoints))
+                    if(cloud.projectPoints(view, _cameraIDToVisibleItems.second, cameraSpacePoints,
+                                           worldSpacePoints))
                     {
                         // add only the moved vertex position, not the other projected vertices
                         _finalWSPositions.append(worldSpacePoints[movingVertexIDInThisFace]);
@@ -507,8 +513,8 @@ void MVGMoveManipulator::computeFinalWSPositions(M3dView& view)
                     cameraSpacePoints.append(getMousePosition(view));
                     MPointArray worldSpacePoints;
                     MVGPointCloud cloud(MVGProject::_CLOUD);
-                    if(cloud.projectPoints(view, cameraSpacePoints, worldSpacePoints,
-                                           cameraSpacePoints.length() - 1))
+                    if(cloud.projectPoints(view, _cameraIDToVisibleItems.second, cameraSpacePoints,
+                                           worldSpacePoints, cameraSpacePoints.length() - 1))
                     {
                         MPointArray translatedWSEdgePoints;
                         getTranslatedWSEdgePoints(view, _onPressIntersectedComponent.edge,
