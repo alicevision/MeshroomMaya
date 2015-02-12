@@ -42,7 +42,7 @@ public:
     void unloadImagePlane() const;
     openMVG::PinholeCamera getPinholeCamera() const;
     void setPinholeCamera(const openMVG::PinholeCamera&) const;
-    std::vector<MVGPointCloudItem> getVisibleItems() const;
+    void getVisibleItems(std::vector<MVGPointCloudItem>& visibleItems) const;
     void setVisibleItems(const std::vector<MVGPointCloudItem>& item) const;
     double getZoom() const;
     void setZoom(const double zoom) const;

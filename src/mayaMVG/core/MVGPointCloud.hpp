@@ -29,10 +29,10 @@ public:
 
 public:
     void setItems(const std::vector<MVGPointCloudItem>& items);
-    const std::vector<MVGPointCloudItem> getAllItems() const;
-    const std::vector<MVGPointCloudItem> getItems(const MIntArray& indexes) const;
-    bool projectPoints(M3dView& view, std::vector<MVGPointCloudItem>& visibleItems,
-                       const MPointArray& cameraSpacePoints, MPointArray& worldSpacePoints,
+    MStatus getAllItems(std::vector<MVGPointCloudItem>& items) const;
+    MStatus getItems(std::vector<MVGPointCloudItem>& items, const MIntArray& indexes) const;
+    bool projectPoints(M3dView& view, const std::vector<MVGPointCloudItem>& visibleItems,
+                       const MPointArray& faceCSPoints, MPointArray& faceWSPoints,
                        const int index = -1);
 
 private:

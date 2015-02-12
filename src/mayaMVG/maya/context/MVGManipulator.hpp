@@ -60,10 +60,10 @@ protected:
 protected:
     MVGManipulatorCache* _cache;
     MVGManipulatorCache::IntersectedComponent _onPressIntersectedComponent;
-    MPoint _onPressCSPosition;
-    MPointArray _finalWSPositions;
-    std::pair<int, std::vector<MVGPointCloudItem> >
-        _cameraIDToVisibleItems; // cameraID to visible items
+    MPoint _onPressCSPoint;
+    MPointArray _finalWSPoints;
+    int _cameraID;
+    std::vector<MVGPointCloudItem> _visiblePointCloudItems;
 
 private:
     MVGContext* _context;

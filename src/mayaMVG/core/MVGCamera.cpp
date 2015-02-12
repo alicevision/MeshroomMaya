@@ -330,15 +330,12 @@ void MVGCamera::setPinholeCamera(const openMVG::PinholeCamera& pinhole) const
     MVGMayaUtil::setDoubleArrayAttribute(_dagpath.node(), _PINHOLE, doubleArray);
 }
 
-std::vector<MVGPointCloudItem> MVGCamera::getVisibleItems() const
+void MVGCamera::getVisibleItems(std::vector<MVGPointCloudItem>& visibleItems) const
 {
     MIntArray visibleIndexes;
     MVGMayaUtil::getIntArrayAttribute(_dagpath.node(), _ITEMS, visibleIndexes);
-    if(visibleIndexes.length() == 0)
-        LOG_WARNING("No visibility information in pointCloud.");
-
     MVGPointCloud pointCloud(MVGProject::_CLOUD);
-    return pointCloud.getItems(visibleIndexes);
+    pointCloud.getItems(visibleItems, visibleIndexes);
 }
 
 void MVGCamera::setVisibleItems(const std::vector<MVGPointCloudItem>& items) const

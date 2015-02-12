@@ -148,31 +148,32 @@ void MVGPointCloud::setItems(const std::vector<MVGPointCloudItem>& items)
     CHECK(status)
 }
 
-const std::vector<MVGPointCloudItem> MVGPointCloud::getAllItems() const
+MStatus MVGPointCloud::getAllItems(std::vector<MVGPointCloudItem>& items) const
 {
     MStatus status;
-    std::vector<MVGPointCloudItem> items;
+    items.clear();
     MFnParticleSystem fnParticle(_dagpath, &status);
-    if(!status)
-        return items;
+    CHECK_RETURN_STATUS(status)
     MVectorArray positionArray;
     fnParticle.position(positionArray);
+    items.reserve(positionArray.length());
     for(int i = 0; i < positionArray.length(); ++i)
     {
         MVGPointCloudItem item;
         item._position = positionArray[i];
         items.push_back(item);
     }
-    return items;
+    return status;
 }
 
-const std::vector<MVGPointCloudItem> MVGPointCloud::getItems(const MIntArray& indexes) const
+MStatus MVGPointCloud::getItems(std::vector<MVGPointCloudItem>& items,
+                                const MIntArray& indexes) const
 {
     MStatus status;
-    std::vector<MVGPointCloudItem> items;
+    items.clear();
+    items.reserve(indexes.length());
     MFnParticleSystem fnParticle(_dagpath, &status);
-    if(!status)
-        return items;
+    CHECK_RETURN_STATUS(status)
     MVectorArray positionArray;
     fnParticle.position(positionArray);
     for(int i = 0; i < indexes.length(); ++i)
@@ -181,21 +182,31 @@ const std::vector<MVGPointCloudItem> MVGPointCloud::getItems(const MIntArray& in
         item._position = positionArray[indexes[i]];
         items.push_back(item);
     }
-    return items;
+    return status;
 }
 
-bool MVGPointCloud::projectPoints(M3dView& view, std::vector<MVGPointCloudItem>& visibleItems,
-                                  const MPointArray& cameraSpacePoints,
-                                  MPointArray& worldSpacePoints, const int index)
+/**
+ *
+ * @param[in] view
+ * @param[in] visibleItems : pointcloud items visible for the current camera
+ * @param[in] faceCSPoints : points describing the face in camera space coordinates
+ * @param[out] faceWSPoints : cameraSpacePoints projected on computed plane in world space
+ *coordinates
+ * @param[in] index : index of the point in the cameraSpacePoints to be projected (-1 = all)
+ * @return
+ */
+bool MVGPointCloud::projectPoints(M3dView& view, const std::vector<MVGPointCloudItem>& visibleItems,
+                                  const MPointArray& faceCSPoints, MPointArray& faceWSPoints,
+                                  const int index)
 {
     if(!isValid())
         return false;
-    if(cameraSpacePoints.length() < 3)
+    if(faceCSPoints.length() < 3)
         return false;
     if(visibleItems.size() < 3)
         return false;
 
-    MPointArray closedVSPolygon(MVGGeometryUtil::cameraToViewSpace(view, cameraSpacePoints));
+    MPointArray closedVSPolygon(MVGGeometryUtil::cameraToViewSpace(view, faceCSPoints));
     closedVSPolygon.append(closedVSPolygon[0]); // add an extra point (to describe a closed shape)
 
     // get enclosed items in pointcloud
@@ -213,15 +224,15 @@ bool MVGPointCloud::projectPoints(M3dView& view, std::vector<MVGPointCloudItem>&
         return false;
 
     if(index == -1)
-        return MVGGeometryUtil::projectPointsOnPlane(view, cameraSpacePoints, enclosedWSPoints,
-                                                     worldSpacePoints);
+        return MVGGeometryUtil::projectPointsOnPlane(view, faceCSPoints, enclosedWSPoints,
+                                                     faceWSPoints);
 
-    assert(index < cameraSpacePoints.length());
+    assert(index < faceCSPoints.length());
     // Only project the specified point
     MPointArray pointsCSToProject;
-    pointsCSToProject.append(cameraSpacePoints[index]);
+    pointsCSToProject.append(faceCSPoints[index]);
     return MVGGeometryUtil::projectPointsOnPlane(view, pointsCSToProject, enclosedWSPoints,
-                                                 worldSpacePoints);
+                                                 faceWSPoints);
 }
 
 } // namespace
