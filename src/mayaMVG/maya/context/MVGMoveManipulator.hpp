@@ -54,6 +54,11 @@ public:
     static MString _drawRegistrantID;
     static MoveMode _mode;
     bool _doDrag;
+
+private:
+    /// 2D view space points of the moved face.
+    /// It's needed to draw face wireframe even if no plane is found.
+    MPointArray _intermediateVSPoints;
 };
 
 } // namespace
