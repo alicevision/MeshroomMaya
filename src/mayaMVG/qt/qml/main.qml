@@ -75,8 +75,5 @@ Item {
             }
         }
     }
-    Keys.onDownPressed: cameraList.keyPressed("down")
-    Keys.onUpPressed: cameraList.keyPressed("up")
-
-
+    Keys.onPressed: cameraList.keyPressed(event.key)
 }

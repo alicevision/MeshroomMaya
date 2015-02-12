@@ -3,7 +3,7 @@ import QtQuick 1.0
 Item  {
     id: scrollBar
     signal positionUpdated(double value)
-    signal moveFromStep(string direction)
+    signal moveFromStep(variant direction)
     property alias position: m.position
     property alias pageSize: m.pageSize
     property alias orientation: m.orientation
@@ -34,9 +34,9 @@ Item  {
             onClicked:
             {
                 if(mouseY/scrollBar.height > position)
-                    moveFromStep("down")
+                    moveFromStep(Qt.Key_Down)
                 else
-                    moveFromStep("up")
+                    moveFromStep(Qt.Key_Up)
             }
         }
     }

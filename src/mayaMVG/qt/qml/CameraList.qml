@@ -4,7 +4,7 @@ import QtDesktop 0.1
 
 Item {
     id: cameraList
-    signal keyPressed(string value)
+    signal keyPressed(variant value)
     property alias thumbSize: m.thumbSize
     property alias project: m.project
     QtObject {
@@ -29,12 +29,15 @@ Item {
         m.project.selectItems(qlist)
         m.project.selectCameras(qlist);
     }
-    function computeListPosition(direction, upLimit, downLimit, currentPosition, step)
+    function computeListPosition(keyValue, upLimit, downLimit, currentPosition, step)
     {
-        if(direction == "up")
-            return (currentPosition - step > upLimit) ? currentPosition - step : 0
-
-        return (currentPosition + step < downLimit) ? currentPosition + step : downLimit
+        switch(keyValue)
+        {
+            case Qt.Key_Up:
+                return (currentPosition - step > upLimit) ? currentPosition - step : 0
+            case Qt.Key_Down:
+                return (currentPosition + step < downLimit) ? currentPosition + step : downLimit
+        }
     }
 
     RowLayout {
@@ -84,7 +87,19 @@ Item {
     }
     onKeyPressed:
     {
-        var newPosition = computeListPosition(value, verticalScrollBar.upLimit, verticalScrollBar.downLimit, cameraListView.visibleArea.yPosition, 0.1)
-        cameraListView.contentY = newPosition * cameraListView.contentHeight
+        switch(value)
+        {
+            case Qt.Key_Up:
+            case Qt.Key_Down:
+                var newPosition = computeListPosition(value, verticalScrollBar.upLimit, verticalScrollBar.downLimit, cameraListView.visibleArea.yPosition, 0.1);
+                cameraListView.contentY = newPosition * cameraListView.contentHeight;
+                break;
+            case Qt.Key_Home:
+                cameraListView.positionViewAtBeginning();
+                break;
+            case Qt.Key_End:
+                cameraListView.positionViewAtEnd();
+                break;
+        }
     }
 }
