@@ -65,11 +65,11 @@ std::string MVGProject::_cameraRelativeDirectory =
     stlplus::folder_append_separator("SfM_output") + stlplus::folder_append_separator("cameras");
 std::string MVGProject::_imageRelativeDirectory =
     stlplus::folder_append_separator("SfM_output") + stlplus::folder_append_separator("images");
-std::string MVGProject::_cameraRelativeFile = stlplus::folder_append_separator("SfM_output") +
-                                              "views.txt";
-std::string MVGProject::_pointCloudRelativeFile =
-    stlplus::folder_append_separator("SfM_output") + stlplus::folder_append_separator("clouds") +
-    "calib.ply";
+std::string MVGProject::_cameraRelativeFile =
+    stlplus::folder_append_separator("SfM_output") + "views.txt";
+std::string MVGProject::_pointCloudRelativeFile = stlplus::folder_append_separator("SfM_output") +
+                                                  stlplus::folder_append_separator("clouds") +
+                                                  "calib.ply";
 
 MVGProject::MVGProject(const std::string& name)
     : MVGNodeWrapper(name)
