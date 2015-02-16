@@ -40,6 +40,7 @@ Item {
         //     thumbSize: settings.thumbSize
         // }
         CameraList {
+            id: cameraList
             implicitWidth: parent.width
             Layout.verticalSizePolicy: Layout.Expanding
             thumbSize: settings.thumbSize
@@ -74,4 +75,5 @@ Item {
             }
         }
     }
+    Keys.onPressed: cameraList.keyPressed(event.key)
 }
