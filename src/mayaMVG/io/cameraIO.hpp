@@ -4,6 +4,7 @@
 #include "mayaMVG/core/MVGLog.hpp"
 #include <third_party/stlplus3/filesystemSimplified/file_system.hpp>
 #include <fstream>
+#include <maya/MFnCamera.h>
 
 namespace
 { // empty namespace
@@ -72,6 +73,17 @@ bool readCameras(std::string filePath, std::string imageDir, std::string cameraD
             camera = MVGCamera::create(cameraName);
 
         setPinholeFromBinary(camera, stlplus::create_filespec(cameraDir, binaryName));
+
+        // Set camera parameters
+        MFnCamera fnCamera(camera.getDagPath());
+        double focalLengthPixel = camera.getPinholeCamera()._K(0, 0);
+        fnCamera.setHorizontalFieldOfView(
+            (2.0 * atan((double)width / (2.0 * (double)focalLengthPixel))));
+        fnCamera.setPanZoomEnabled(true);
+        fnCamera.setFilmFit(MFnCamera::kHorizontalFilmFit);
+        // TODO : set camera aperture according to camera model
+        fnCamera.setAspectRatio((double)width / (double)height);
+
         camera.setImagePlane(stlplus::create_filespec(imageDir, imageName), width, height);
         camera.setId(cameraId);
         cameraId++;

@@ -51,6 +51,7 @@ public:
     double getVerticalPan() const;
     void setVerticalPan(const double pan) const;
     void setPan(const double hpan, const double vpan) const;
+    void setAspectRatio(const double ratio) const;
     double getHorizontalFilmAperture() const;
     void resetZoomAndPan() const;
     void setInView(const std::string& viewName) const;

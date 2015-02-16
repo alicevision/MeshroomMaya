@@ -303,17 +303,6 @@ void MVGCamera::setPinholeCamera(const openMVG::PinholeCamera& pinhole) const
     quaternion = m;
     fnTransform.setRotation(quaternion, MSpace::kTransform);
 
-    // set maya camera intrinsic parameters
-    size_t focal = pinhole._K(0, 0);
-    size_t width = pinhole._K(0, 2) * 2;
-    size_t height = pinhole._K(1, 2) * 2;
-    MFnCamera fnCamera(_dagpath);
-    fnCamera.setVerticalFilmAperture(fnCamera.horizontalFilmAperture() *
-                                     ((double)height / (double)width));
-    fnCamera.setHorizontalFieldOfView((2.0 * atan((double)width / (2.0 * (double)focal))));
-    fnCamera.setPanZoomEnabled(true);
-    fnCamera.setFilmFit(MFnCamera::kHorizontalFilmFit);
-
     // lock maya camera transform attributes
     fnTransform.findPlug("translateX").setLocked(true);
     fnTransform.findPlug("translateY").setLocked(true);
@@ -415,6 +404,14 @@ void MVGCamera::setPan(const double hpan, const double vpan) const
     CHECK(status)
     fnCamera.setHorizontalPan(hpan);
     fnCamera.setVerticalPan(vpan);
+}
+
+void MVGCamera::setAspectRatio(const double ratio) const
+{
+    MStatus status;
+    MFnCamera fnCamera(getDagPath(), &status);
+    CHECK(status)
+    fnCamera.setAspectRatio(ratio);
 }
 
 double MVGCamera::getHorizontalFilmAperture() const
