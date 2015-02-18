@@ -71,6 +71,9 @@ MStatus initializePlugin(MObject obj)
     MEventMessage::addEventCallback("Redo", redoCB, &status);
     if(status)
         _callbacks.append(id);
+    MEventMessage::addEventCallback("SelectionChanged", selectionChangedCB, &status);
+    if(status)
+        _callbacks.append(id);
     MEventMessage::addEventCallback("modelEditorChanged", modelEditorChangedCB, &status);
     if(status)
         _callbacks.append(id);

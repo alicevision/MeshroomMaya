@@ -241,25 +241,23 @@ void MVGCamera::loadImagePlane() const
     CHECK_RETURN(status)
     MPlug imageNamePlug = fnImage.findPlug("imageName", &status);
     CHECK_RETURN(status)
-    MString name = imageNamePlug.asString();
-    if(name != deferred)
-    {
-        status = imageNamePlug.setValue(deferred);
-        CHECK_RETURN(status)
-    }
+
+    MString cmd;
+    cmd.format("setAttr \"^1s\" -type \"string\" \"^2s\"", imageNamePlug.name(), deferred);
+    status = MGlobal::executeCommandOnIdle(cmd);
+    CHECK_RETURN(status)
 }
 
 void MVGCamera::unloadImagePlane() const
 {
     MStatus status;
-    MFnDagNode fnImage(getImagePath(), &status);
-    CHECK_RETURN(status)
+    MFnDagNode fnImage(getImagePath());
     MPlug imageNamePlug = fnImage.findPlug("imageName", &status);
     CHECK_RETURN(status)
-    MString name = imageNamePlug.asString();
-    if(name.length() == 0)
-        return;
-    status = imageNamePlug.setValue("");
+
+    MString cmd;
+    cmd.format("setAttr \"^1s\" -type \"string\" \"\"", imageNamePlug.name());
+    status = MGlobal::executeCommandOnIdle(cmd);
     CHECK_RETURN(status)
 }
 

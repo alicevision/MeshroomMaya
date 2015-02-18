@@ -30,6 +30,7 @@ public slots:
     const QString getProjectDirectory() const;
     void setProjectDirectory(const QString& directory);
     QObjectListModel* getCameraModel() { return &_cameraList; }
+    QStringList& getSelectedCameras() { return _selectedCameras; }
     QObjectListModel* getPanelList() { return &_panelList; }
     const QString getCurrentContext() const;
     void setCurrentContext(const QString&);
@@ -43,10 +44,11 @@ signals:
     void panelListChanged();
     void currentUnitChanged();
     void unitModelChanged();
+    void centerCameraListByIndex(const int cameraIndex);
 
 public:
-    Q_INVOKABLE void selectItems(const QStringList& cameraNames) const;
-    Q_INVOKABLE void selectCameras(const QStringList& cameraNames) const;
+    Q_INVOKABLE void addCamerasToIHMSelection(const QStringList& cameraNames, bool center = false);
+    Q_INVOKABLE void addCamerasToMayaSelection(const QStringList& cameraNames) const;
     Q_INVOKABLE QString openFileDialog() const;
     Q_INVOKABLE void activeSelectionContext() const;
     Q_INVOKABLE void activeMVGContext();
@@ -67,6 +69,9 @@ private:
 
 private:
     QObjectListModel _cameraList;
+    /// Names of the selected cameras
+    /// Selection already stored in camera but this list is needed for a faster access
+    QStringList _selectedCameras;
     MVGProject _project;
     QObjectListModel _panelList;
     QString _currentContext;

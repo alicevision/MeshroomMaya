@@ -131,13 +131,37 @@ void MVGProjectWrapper::loadNewProject(const QString& projectDirectoryPath)
     }
 }
 
-void MVGProjectWrapper::selectItems(const QStringList& cameraNames) const
+void MVGProjectWrapper::addCamerasToIHMSelection(const QStringList& selectedCameraNames,
+                                                 bool center)
 {
-    foreach(MVGCameraWrapper* camera, _cameraList.asQList<MVGCameraWrapper>())
-        camera->setIsSelected(cameraNames.contains(camera->getName()));
+    // Reset old selection to false
+    for(QStringList::const_iterator it = _selectedCameras.begin(); it != _selectedCameras.end();
+        ++it)
+    {
+        MVGCameraWrapper* camera = _camerasByName[it->toStdString()];
+        camera->setIsSelected(false);
+    }
+    _selectedCameras.clear();
+    // Set new selection to true
+    for(QStringList::const_iterator it = selectedCameraNames.begin();
+        it != selectedCameraNames.end(); ++it)
+    {
+        if(_camerasByName.count(it->toStdString()) == 0)
+            continue;
+        MVGCameraWrapper* camera = _camerasByName[it->toStdString()];
+        camera->setIsSelected(true);
+        _selectedCameras.append(camera->getName());
+        // Replace listView and set image in first viewort
+        // TODO : let the user define in which viewport he wants to display the selected camera
+        if(center && camera->getName() == selectedCameraNames[0])
+        {
+            setCameraToView(camera, static_cast<MVGPanelWrapper*>(_panelList.get(0))->getName());
+            Q_EMIT centerCameraListByIndex(_cameraList.indexOf(camera));
+        }
+    }
 }
 
-void MVGProjectWrapper::selectCameras(const QStringList& cameraNames) const
+void MVGProjectWrapper::addCamerasToMayaSelection(const QStringList& cameraNames) const
 {
     if(!_project.isValid())
         return;

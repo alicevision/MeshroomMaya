@@ -30,6 +30,8 @@ public slots:
     bool isSelected() const { return _isSelected; }
     void setIsSelected(const bool isSelected)
     {
+        if(_isSelected == isSelected)
+            return;
         _isSelected = isSelected;
         Q_EMIT isSelectedChanged();
     }
