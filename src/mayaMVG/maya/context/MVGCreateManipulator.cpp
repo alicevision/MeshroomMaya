@@ -96,8 +96,9 @@ void MVGCreateManipulator::draw(M3dView& view, const MDagPath& path, M3dView::Di
         MVGManipulator::drawIntersection2D(intersectedVSPoints, _cache->getIntersectiontType());
         MVGDrawUtil::end2DDrawing();
     }
+    // TODO : draw alpha poly
     if(_cameraIDToClickedCSPoints.second.length() == 0 && _finalWSPositions.length() > 3)
-        MVGDrawUtil::drawPolygon3D(_finalWSPositions, MVGDrawUtil::_okayColor);
+        MVGDrawUtil::drawLineLoop3D(_finalWSPositions, MVGDrawUtil::_okayColor, 3.0);
 
     glDisable(GL_BLEND);
     view.endGL();
@@ -144,8 +145,14 @@ MStatus MVGCreateManipulator::doRelease(M3dView& view)
 
     // FIXME remove potential extra points
 
+    // If we did not found a plane, remove last clicked point
     if(_finalWSPositions.length() < 4)
+    {
+        if(_cameraIDToClickedCSPoints.second.length() == 4)
+            _cameraIDToClickedCSPoints.second.remove(_cameraIDToClickedCSPoints.second.length() -
+                                                     1);
         return MPxManipulatorNode::doRelease(view);
+    }
 
     // FIXME ensure the polygon is convex
 

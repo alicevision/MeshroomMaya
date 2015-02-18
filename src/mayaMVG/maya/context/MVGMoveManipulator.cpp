@@ -146,22 +146,28 @@ void MVGMoveManipulator::draw(M3dView& view, const MDagPath& path, M3dView::Disp
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-    MPointArray onPressWSPoints;
-    MPointArray intermediateCSPoints;
+    // World space coordinates of edge/vertex intersected on press
+    MPointArray onPressIntersectedWSPoints;
+    // Camera space positions needed to draw the new element
+    // - Mouse position if vertex intersection
+    // - Edges points with right offset if edge intersection
+    MPointArray intermediateIntersectedCSPoints;
     switch(_onPressIntersectedComponent.type)
     {
         case MFn::kBlindData:
             if(_mode != kNViewTriangulation)
                 break;
         case MFn::kMeshVertComponent:
-            intermediateCSPoints.append(getMousePosition(view));
-            onPressWSPoints.append(_onPressIntersectedComponent.vertex->worldPosition);
+            intermediateIntersectedCSPoints.append(getMousePosition(view));
+            onPressIntersectedWSPoints.append(_onPressIntersectedComponent.vertex->worldPosition);
             break;
         case MFn::kMeshEdgeComponent:
             getIntermediateCSEdgePoints(view, _onPressIntersectedComponent.edge, _onPressCSPosition,
-                                        intermediateCSPoints);
-            onPressWSPoints.append(_onPressIntersectedComponent.edge->vertex1->worldPosition);
-            onPressWSPoints.append(_onPressIntersectedComponent.edge->vertex2->worldPosition);
+                                        intermediateIntersectedCSPoints);
+            onPressIntersectedWSPoints.append(
+                _onPressIntersectedComponent.edge->vertex1->worldPosition);
+            onPressIntersectedWSPoints.append(
+                _onPressIntersectedComponent.edge->vertex2->worldPosition);
             break;
         default:
             break;
@@ -206,13 +212,15 @@ void MVGMoveManipulator::draw(M3dView& view, const MDagPath& path, M3dView::Disp
         // draw triangulation
         if(_mode == kNViewTriangulation)
         {
-            MPointArray triangulatedWSPoints = onPressWSPoints;
+            MPointArray triangulatedWSPoints = onPressIntersectedWSPoints;
             if(_finalWSPositions.length() > 0)
                 triangulatedWSPoints = _finalWSPositions;
             MVGDrawUtil::drawTriangulatedPoints(
                 view, triangulatedWSPoints,
-                MVGGeometryUtil::cameraToViewSpace(view, intermediateCSPoints));
+                MVGGeometryUtil::cameraToViewSpace(view, intermediateIntersectedCSPoints));
         }
+        if(_doDrag)
+            MVGDrawUtil::drawLineLoop2D(_intermediateVSPoints, MVGDrawUtil::_errorColor, 3.0);
         MVGDrawUtil::end2DDrawing();
     }
 
@@ -370,6 +378,7 @@ void MVGMoveManipulator::computeFinalWSPositions(M3dView& view)
 {
     // clear last computed positions
     _finalWSPositions.clear();
+    _intermediateVSPoints.clear();
 
     // TODO in case we are intersecting a component of the same type, return this component
     // positions
@@ -471,6 +480,12 @@ void MVGMoveManipulator::computeFinalWSPositions(M3dView& view)
                         // add only the moved vertex position, not the other projected vertices
                         _finalWSPositions.append(worldSpacePoints[movingVertexIDInThisFace]);
                     }
+                    else
+                    {
+                        // Save positions for error display
+                        _intermediateVSPoints =
+                            MVGGeometryUtil::cameraToViewSpace(view, cameraSpacePoints);
+                    }
                     break;
                 }
                 case MFn::kMeshEdgeComponent:
@@ -517,6 +532,13 @@ void MVGMoveManipulator::computeFinalWSPositions(M3dView& view)
                         // add only the moved vertices positions, not the other projected vertices
                         _finalWSPositions.append(translatedWSEdgePoints[0]);
                         _finalWSPositions.append(translatedWSEdgePoints[1]);
+                    }
+                    else
+                    {
+                        // Save positions for error display
+                        cameraSpacePoints.remove(cameraSpacePoints.length() - 1);
+                        _intermediateVSPoints =
+                            MVGGeometryUtil::cameraToViewSpace(view, cameraSpacePoints);
                     }
                     break;
                 }
