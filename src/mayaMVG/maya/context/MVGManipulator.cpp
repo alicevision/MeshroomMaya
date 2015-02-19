@@ -4,6 +4,11 @@
 namespace mayaMVG
 {
 
+MVGManipulator::MVGManipulator()
+{
+    _cameraID = -1;
+}
+
 void MVGManipulator::getMousePosition(M3dView& view, MPoint& point, MVGManipulator::Space space)
 {
     short x, y;
@@ -29,12 +34,12 @@ MPoint MVGManipulator::getMousePosition(M3dView& view, MVGManipulator::Space spa
     return position;
 }
 
-const MPointArray& MVGManipulator::getFinalWSPositions() const
+const MPointArray& MVGManipulator::getFinalWSPoints() const
 {
-    return _finalWSPositions;
+    return _finalWSPoints;
 }
 
-void MVGManipulator::getIntersectedPositions(M3dView& view, MPointArray& positions,
+void MVGManipulator::getIntersectedPoints(M3dView& view, MPointArray& positions,
                                              MVGManipulator::Space space) const
 {
     MPointArray intersectedPositions;
@@ -76,11 +81,11 @@ void MVGManipulator::getIntersectedPositions(M3dView& view, MPointArray& positio
         positions.append(intersectedPositions[i]);
 }
 
-const MPointArray MVGManipulator::getIntersectedPositions(M3dView& view,
+const MPointArray MVGManipulator::getIntersectedPoints(M3dView& view,
                                                           MVGManipulator::Space space) const
 {
     MPointArray positions;
-    getIntersectedPositions(view, positions, space);
+    getIntersectedPoints(view, positions, space);
     return positions;
 }
 

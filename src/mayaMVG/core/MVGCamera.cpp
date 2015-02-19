@@ -319,25 +319,12 @@ void MVGCamera::setPinholeCamera(const openMVG::PinholeCamera& pinhole) const
     MVGMayaUtil::setDoubleArrayAttribute(_dagpath.node(), _PINHOLE, doubleArray);
 }
 
-std::vector<MVGPointCloudItem> MVGCamera::getVisibleItems() const
+void MVGCamera::getVisibleItems(std::vector<MVGPointCloudItem>& visibleItems) const
 {
-    std::vector<MVGPointCloudItem> allItems, items;
+    MIntArray visibleIndexes;
+    MVGMayaUtil::getIntArrayAttribute(_dagpath.node(), _ITEMS, visibleIndexes);
     MVGPointCloud pointCloud(MVGProject::_CLOUD);
-    allItems = pointCloud.getItems();
-    MIntArray intArray;
-    MVGMayaUtil::getIntArrayAttribute(_dagpath.node(), _ITEMS, intArray);
-    if(intArray.length() > 0)
-    {
-        for(size_t i = 0; i < intArray.length(); ++i)
-        {
-            int index = intArray[i];
-            if(index < allItems.size())
-                items.push_back(allItems[index]);
-        }
-        return items;
-    }
-    LOG_WARNING("No visibility information in pointCloud.");
-    return allItems;
+    pointCloud.getItems(visibleItems, visibleIndexes);
 }
 
 void MVGCamera::setVisibleItems(const std::vector<MVGPointCloudItem>& items) const

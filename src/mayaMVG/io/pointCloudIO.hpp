@@ -50,6 +50,10 @@ bool readPointCloud(std::string filePath)
             }
             continue;
         }
+        // Check for visibility
+        if(!element.has_property("visibility"))
+            LOG_WARNING("No visibility information in pointCloud : actions based on point cloud "
+                        "are not available.")
         items.reserve(element.count());
         for(size_t i = 0; i != element.count(); ++i)
         {
