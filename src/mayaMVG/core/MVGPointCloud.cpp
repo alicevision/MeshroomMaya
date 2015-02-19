@@ -1,11 +1,11 @@
 #include "mayaMVG/core/MVGPointCloud.hpp"
-#include "mayaMVG/core/MVGPointCloudItem.hpp"
 #include "mayaMVG/core/MVGCamera.hpp"
 #include "mayaMVG/core/MVGLog.hpp"
 #include "mayaMVG/core/MVGProject.hpp"
 #include "mayaMVG/core/MVGGeometryUtil.hpp"
 #include "mayaMVG/core/MVGPlaneKernel.hpp"
 #include "mayaMVG/maya/MVGMayaUtil.hpp"
+#include <maya/M3dView.h>
 #include <maya/MFnParticleSystem.h>
 #include <maya/MVectorArray.h>
 #include <maya/MPointArray.h>
@@ -26,7 +26,7 @@ MString MVGPointCloud::_RGBPP = "rgbPP";
 namespace
 { // empty namespace
 
-int isLeft(MPoint P0, MPoint P1, MPoint P2)
+int isLeft(const MPoint& P0, const MPoint& P1, const MPoint& P2)
 {
     // isLeft(): tests if a point is Left|On|Right of an infinite line.
     //    Input:  three points P0, P1, and P2
@@ -37,7 +37,7 @@ int isLeft(MPoint P0, MPoint P1, MPoint P2)
     return ((P1.x - P0.x) * (P2.y - P0.y) - (P2.x - P0.x) * (P1.y - P0.y));
 }
 
-int wn_PnPoly(MPoint P, MPointArray V)
+int wn_PnPoly(const MPoint& P, const MPointArray& V)
 {
     // wn_PnPoly(): winding number test for a point in a polygon
     //      Input:   P = a point,
@@ -148,51 +148,72 @@ void MVGPointCloud::setItems(const std::vector<MVGPointCloudItem>& items)
     CHECK(status)
 }
 
-std::vector<MVGPointCloudItem> MVGPointCloud::getItems() const
+MStatus MVGPointCloud::getAllItems(std::vector<MVGPointCloudItem>& items) const
 {
     MStatus status;
-    std::vector<MVGPointCloudItem> items;
+    items.clear();
     MFnParticleSystem fnParticle(_dagpath, &status);
-    if(!status)
-        return items;
+    CHECK_RETURN_STATUS(status)
     MVectorArray positionArray;
     fnParticle.position(positionArray);
+    items.reserve(positionArray.length());
     for(int i = 0; i < positionArray.length(); ++i)
     {
         MVGPointCloudItem item;
         item._position = positionArray[i];
         items.push_back(item);
     }
-    return items;
+    return status;
 }
 
-bool MVGPointCloud::projectPoints(M3dView& view, const MPointArray& cameraSpacePoints,
-                                  MPointArray& worldSpacePoints, const int index)
+MStatus MVGPointCloud::getItems(std::vector<MVGPointCloudItem>& items,
+                                const MIntArray& indexes) const
+{
+    MStatus status;
+    items.clear();
+    items.reserve(indexes.length());
+    MFnParticleSystem fnParticle(_dagpath, &status);
+    CHECK_RETURN_STATUS(status)
+    MVectorArray positionArray;
+    fnParticle.position(positionArray);
+    for(int i = 0; i < indexes.length(); ++i)
+    {
+        MVGPointCloudItem item;
+        item._position = positionArray[indexes[i]];
+        items.push_back(item);
+    }
+    return status;
+}
+
+/**
+ *
+ * @param[in] view
+ * @param[in] visibleItems : pointcloud items visible for the current camera
+ * @param[in] faceCSPoints : points describing the face in camera space coordinates
+ * @param[out] faceWSPoints : cameraSpacePoints projected on computed plane in world space
+ *coordinates
+ * @param[in] index : index of the point in the cameraSpacePoints to be projected (-1 = all)
+ * @return
+ */
+bool MVGPointCloud::projectPoints(M3dView& view, const std::vector<MVGPointCloudItem>& visibleItems,
+                                  const MPointArray& faceCSPoints, MPointArray& faceWSPoints,
+                                  const int index)
 {
     if(!isValid())
         return false;
-
-    MDagPath cameraPath;
-    view.getCamera(cameraPath);
-    MVGCamera camera(cameraPath);
-    if(!camera.isValid())
+    if(faceCSPoints.length() < 3)
+        return false;
+    if(visibleItems.size() < 3)
         return false;
 
-    if(cameraSpacePoints.length() < 3)
-        return false;
-
-    std::vector<MVGPointCloudItem> items = camera.getVisibleItems();
-    if(items.size() < 3)
-        return false;
-
-    MPointArray closedVSPolygon(MVGGeometryUtil::cameraToViewSpace(view, cameraSpacePoints));
+    MPointArray closedVSPolygon(MVGGeometryUtil::cameraToViewSpace(view, faceCSPoints));
     closedVSPolygon.append(closedVSPolygon[0]); // add an extra point (to describe a closed shape)
 
     // get enclosed items in pointcloud
     MPointArray enclosedWSPoints;
-    std::vector<MVGPointCloudItem>::const_iterator it = items.begin();
+    std::vector<MVGPointCloudItem>::const_iterator it = visibleItems.begin();
     int windingNumber = 0;
-    for(; it != items.end(); ++it)
+    for(; it != visibleItems.end(); ++it)
     {
         windingNumber =
             wn_PnPoly(MVGGeometryUtil::worldToViewSpace(view, it->_position), closedVSPolygon);
@@ -203,15 +224,15 @@ bool MVGPointCloud::projectPoints(M3dView& view, const MPointArray& cameraSpaceP
         return false;
 
     if(index == -1)
-        return MVGGeometryUtil::projectPointsOnPlane(view, cameraSpacePoints, enclosedWSPoints,
-                                                     worldSpacePoints);
+        return MVGGeometryUtil::projectPointsOnPlane(view, faceCSPoints, enclosedWSPoints,
+                                                     faceWSPoints);
 
-    assert(index < cameraSpacePoints.length());
+    assert(index < faceCSPoints.length());
     // Only project the specified point
     MPointArray pointsCSToProject;
-    pointsCSToProject.append(cameraSpacePoints[index]);
+    pointsCSToProject.append(faceCSPoints[index]);
     return MVGGeometryUtil::projectPointsOnPlane(view, pointsCSToProject, enclosedWSPoints,
-                                                 worldSpacePoints);
+                                                 faceWSPoints);
 }
 
 } // namespace
