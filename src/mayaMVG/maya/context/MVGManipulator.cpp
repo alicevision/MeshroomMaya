@@ -40,7 +40,7 @@ const MPointArray& MVGManipulator::getFinalWSPoints() const
 }
 
 void MVGManipulator::getIntersectedPoints(M3dView& view, MPointArray& positions,
-                                             MVGManipulator::Space space) const
+                                          MVGManipulator::Space space) const
 {
     MPointArray intersectedPositions;
     MVGManipulatorCache::IntersectedComponent intersectedComponent =
@@ -82,27 +82,48 @@ void MVGManipulator::getIntersectedPoints(M3dView& view, MPointArray& positions,
 }
 
 const MPointArray MVGManipulator::getIntersectedPoints(M3dView& view,
-                                                          MVGManipulator::Space space) const
+                                                       MVGManipulator::Space space) const
 {
     MPointArray positions;
     getIntersectedPoints(view, positions, space);
     return positions;
 }
 
+/**
+ * @brief Compute the parallelogram from one edge and one point (mouse position).
+ *
+ * [AB]: Input clicked edge
+ * P: mouse position on press
+ * M: moving mouse
+ * [DC]: the computed edge keeping AB length and AP==DM
+ *
+ *     A ____________ D
+ *      /           /
+ *   P +           + M
+ *    /           /
+ * B /___________/ C
+ *
+ * This computation is in 2D Camera Space.
+ *
+ * @param[in] view Viewort
+ * @param[in] onPressEdgeData clicked edge information
+ * @param[in] onPressCSMousePos clicked mouse position in Camera Space coordinates
+ * @param[out] intermediateCSEdgePoints the 2 new points (D and C) of the parallelogram
+ */
 void MVGManipulator::getIntermediateCSEdgePoints(
     M3dView& view, const MVGManipulatorCache::EdgeData* onPressEdgeData,
-    const MPoint& onPressCSPoint, MPointArray& intermediateCSEdgePoints)
+    const MPoint& onPressCSMousePos, MPointArray& intermediateCSEdgePoints)
 {
     assert(onPressEdgeData != NULL);
     // vertex 1
     MVector mouseToVertexCSOffset =
         MVGGeometryUtil::worldToCameraSpace(view, onPressEdgeData->vertex1->worldPosition) -
-        onPressCSPoint;
+        onPressCSMousePos;
     intermediateCSEdgePoints.append(getMousePosition(view) + mouseToVertexCSOffset);
     // vertex 2
     mouseToVertexCSOffset =
         MVGGeometryUtil::worldToCameraSpace(view, onPressEdgeData->vertex2->worldPosition) -
-        onPressCSPoint;
+        onPressCSMousePos;
     intermediateCSEdgePoints.append(getMousePosition(view) + mouseToVertexCSOffset);
 }
 

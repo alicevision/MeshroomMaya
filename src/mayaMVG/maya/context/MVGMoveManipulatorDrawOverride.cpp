@@ -69,7 +69,7 @@ MVGMoveManipulatorDrawOverride::prepareForDraw(const MDagPath& objPath, const MD
         manipulator->getMousePosition(cache->getActiveView(), MVGManipulator::kView);
     data->intersectedVSPoints.clear();
     manipulator->getIntersectedPoints(cache->getActiveView(), data->intersectedVSPoints,
-                                         MVGManipulator::kView);
+                                      MVGManipulator::kView);
     return data;
 }
 

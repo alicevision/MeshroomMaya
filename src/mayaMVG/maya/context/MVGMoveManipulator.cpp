@@ -257,7 +257,7 @@ MStatus MVGMoveManipulator::doPress(M3dView& view)
     _onPressIntersectedComponent = _cache->getIntersectedComponent();
 
     // compute final positions
-    computeFinalWSPositions(view);
+    computeFinalWSPoints(view);
 
     storeTweakInformation();
 
@@ -275,7 +275,7 @@ MStatus MVGMoveManipulator::doRelease(M3dView& view)
         return MPxManipulatorNode::doRelease(view);
 
     // compute the final vertex/edge position depending on move mode
-    computeFinalWSPositions(view);
+    computeFinalWSPoints(view);
 
     // prepare commands data
     MIntArray indices;
@@ -365,7 +365,7 @@ MStatus MVGMoveManipulator::doDrag(M3dView& view)
             break;
     }
 
-    computeFinalWSPositions(view);
+    computeFinalWSPoints(view);
 
     // Set points
     if(_finalWSPoints.length() > 0)
@@ -379,10 +379,9 @@ MStatus MVGMoveManipulator::doDrag(M3dView& view)
     return MPxManipulatorNode::doDrag(view);
 }
 
-void MVGMoveManipulator::computeFinalWSPositions(M3dView& view)
+void MVGMoveManipulator::computeFinalWSPoints(M3dView& view)
 {
     // clear last computed positions
-    _finalWSPoints.clear();
     _intermediateVSPoints.clear();
 
     // TODO in case we are intersecting a component of the same type, return this component
@@ -392,225 +391,257 @@ void MVGMoveManipulator::computeFinalWSPositions(M3dView& view)
     switch(_mode)
     {
         case kNViewTriangulation:
-        {
-            switch(_onPressIntersectedComponent.type)
-            {
-                case MFn::kBlindData:
-                case MFn::kMeshVertComponent:
-                {
-                    MPointArray intermediateCSPositions;
-                    intermediateCSPositions.append(getMousePosition(view));
-                    MPoint triangulatedWSPoint;
-                    if(triangulate(view, _onPressIntersectedComponent.vertex,
-                                   intermediateCSPositions[0], triangulatedWSPoint))
-                        _finalWSPoints.append(triangulatedWSPoint);
-                    break;
-                }
-                case MFn::kMeshEdgeComponent:
-                {
-                    MPoint triangulatedWSPoint;
-                    bool vertex1Computed = false;
-                    bool vertex2Computed = false;
-                    MPointArray intermediateCSPositions;
-                    getIntermediateCSEdgePoints(view, _onPressIntersectedComponent.edge,
-                                                _onPressCSPoint, intermediateCSPositions);
-                    if(triangulate(view, _onPressIntersectedComponent.edge->vertex1,
-                                   intermediateCSPositions[0], triangulatedWSPoint))
-                    {
-                        vertex1Computed = true;
-                        _finalWSPoints.append(triangulatedWSPoint);
-                    }
-                    if(triangulate(view, _onPressIntersectedComponent.edge->vertex2,
-                                   intermediateCSPositions[1], triangulatedWSPoint))
-                    {
-                        vertex2Computed = true;
-                        _finalWSPoints.append(triangulatedWSPoint);
-                    }
-                    // in case we can move only one vertex
-                    if(_finalWSPoints.length() == 1)
-                    {
-                        MVector edgeWS = _onPressIntersectedComponent.edge->vertex2->worldPosition -
-                                         _onPressIntersectedComponent.edge->vertex1->worldPosition;
-                        if(vertex1Computed)
-                            _finalWSPoints.append(_finalWSPoints[0] + edgeWS);
-                        if(vertex2Computed)
-                        {
-                            _finalWSPoints.append(_finalWSPoints[0]);
-                            _finalWSPoints[0] = _finalWSPoints[1] - edgeWS;
-                        }
-                    }
-                    break;
-                }
-                default:
-                    break;
-            }
+            computeTriangulatedPoints(view, _finalWSPoints);
             break;
-        }
         case kPointCloudProjection:
-        {
-            MVGMesh mesh(_onPressIntersectedComponent.meshPath);
-            switch(_onPressIntersectedComponent.type)
-            {
-                case MFn::kMeshVertComponent:
-                {
-                    MPointArray intermediateCSPositions;
-                    intermediateCSPositions.append(getMousePosition(view));
-                    MIntArray connectedFacesIDs =
-                        mesh.getConnectedFacesToVertex(_onPressIntersectedComponent.vertex->index);
-                    if(connectedFacesIDs.length() < 1)
-                        return;
-                    MIntArray verticesIDs = mesh.getFaceVertices(connectedFacesIDs[0]);
-                    MPointArray cameraSpacePoints;
-                    int movingVertexIDInThisFace = -1;
-                    for(size_t i = 0; i < verticesIDs.length(); ++i)
-                    {
-                        // replace the moved vertex position with the current mouse position (camera
-                        // space)
-                        if(verticesIDs[i] == _onPressIntersectedComponent.vertex->index)
-                        {
-                            cameraSpacePoints.append(getMousePosition(view));
-                            movingVertexIDInThisFace = i;
-                            continue;
-                        }
-                        MPoint vertexWSPoint;
-                        mesh.getPoint(verticesIDs[i], vertexWSPoint);
-                        cameraSpacePoints.append(
-                            MVGGeometryUtil::worldToCameraSpace(view, vertexWSPoint));
-                    }
-                    assert(movingVertexIDInThisFace != -1);
-                    MPointArray worldSpacePoints;
-                    MVGPointCloud cloud(MVGProject::_CLOUD);
-                    if(cloud.projectPoints(view, _visiblePointCloudItems, cameraSpacePoints,
-                                           worldSpacePoints))
-                    {
-                        // add only the moved vertex position, not the other projected vertices
-                        _finalWSPoints.append(worldSpacePoints[movingVertexIDInThisFace]);
-                    }
-                    else
-                    {
-                        // Save positions for error display
-                        _intermediateVSPoints =
-                            MVGGeometryUtil::cameraToViewSpace(view, cameraSpacePoints);
-                    }
-                    break;
-                }
-                case MFn::kMeshEdgeComponent:
-                {
-                    MIntArray connectedFacesIDs =
-                        mesh.getConnectedFacesToEdge(_onPressIntersectedComponent.edge->index);
-                    if(connectedFacesIDs.length() < 1)
-                        return;
-                    MIntArray verticesIDs = mesh.getFaceVertices(connectedFacesIDs[0]);
-                    MPointArray intermediateCSPositions;
-                    getIntermediateCSEdgePoints(view, _onPressIntersectedComponent.edge,
-                                                _onPressCSPoint, intermediateCSPositions);
-                    MPointArray cameraSpacePoints;
-                    for(size_t i = 0; i < verticesIDs.length(); ++i)
-                    {
-                        // replace the moved vertex position with the current mouse position (camera
-                        // space)
-                        if(verticesIDs[i] == _onPressIntersectedComponent.edge->vertex1->index)
-                        {
-                            cameraSpacePoints.append(intermediateCSPositions[0]);
-                            continue;
-                        }
-                        if(verticesIDs[i] == _onPressIntersectedComponent.edge->vertex2->index)
-                        {
-                            cameraSpacePoints.append(intermediateCSPositions[1]);
-                            continue;
-                        }
-                        MPoint vertexWSPoint;
-                        mesh.getPoint(verticesIDs[i], vertexWSPoint);
-                        cameraSpacePoints.append(
-                            MVGGeometryUtil::worldToCameraSpace(view, vertexWSPoint));
-                    }
-                    // we need mousePosition in world space to compute the right offset
-                    cameraSpacePoints.append(getMousePosition(view));
-                    MPointArray worldSpacePoints;
-                    MVGPointCloud cloud(MVGProject::_CLOUD);
-                    if(cloud.projectPoints(view, _visiblePointCloudItems, cameraSpacePoints,
-                                           worldSpacePoints, cameraSpacePoints.length() - 1))
-                    {
-                        MPointArray translatedWSEdgePoints;
-                        getTranslatedWSEdgePoints(view, _onPressIntersectedComponent.edge,
-                                                  _onPressCSPoint, worldSpacePoints[0],
-                                                  translatedWSEdgePoints);
-                        // add only the moved vertices positions, not the other projected vertices
-                        _finalWSPoints.append(translatedWSEdgePoints[0]);
-                        _finalWSPoints.append(translatedWSEdgePoints[1]);
-                    }
-                    else
-                    {
-                        // Save positions for error display
-                        cameraSpacePoints.remove(cameraSpacePoints.length() - 1);
-                        _intermediateVSPoints =
-                            MVGGeometryUtil::cameraToViewSpace(view, cameraSpacePoints);
-                    }
-                    break;
-                }
-                default:
-                    break;
-            }
+            computePCPoints(view, _finalWSPoints);
             break;
-        }
         case kAdjacentFaceProjection:
-        {
-            MVGMesh mesh(_onPressIntersectedComponent.meshPath);
-            switch(_onPressIntersectedComponent.type)
-            {
-                case MFn::kMeshVertComponent:
-                {
-                    MPointArray intermediateCSPositions;
-                    intermediateCSPositions.append(getMousePosition(view));
-                    // get face vertices
-                    MIntArray connectedFacesIDs =
-                        mesh.getConnectedFacesToVertex(_onPressIntersectedComponent.vertex->index);
-                    if(connectedFacesIDs.length() < 1)
-                        return;
-                    MIntArray verticesIDs = mesh.getFaceVertices(connectedFacesIDs[0]);
-                    MPointArray faceWSPoints;
-                    for(size_t i = 0; i < verticesIDs.length(); ++i)
-                    {
-                        MPoint vertexWSPoint;
-                        mesh.getPoint(verticesIDs[i], vertexWSPoint);
-                        faceWSPoints.append(vertexWSPoint);
-                    }
-                    // compute moved point
-                    MPoint projectedWSPoint;
-                    if(MVGGeometryUtil::projectPointOnPlane(view, intermediateCSPositions[0],
-                                                            faceWSPoints, projectedWSPoint))
-                        _finalWSPoints.append(projectedWSPoint);
-                    break;
-                }
-                case MFn::kMeshEdgeComponent:
-                {
-                    MIntArray connectedFacesIDs =
-                        mesh.getConnectedFacesToEdge(_onPressIntersectedComponent.edge->index);
-                    if(connectedFacesIDs.length() < 1)
-                        return;
-                    MIntArray verticesIDs = mesh.getFaceVertices(connectedFacesIDs[0]);
-                    MPointArray faceWSPoints;
-                    for(size_t i = 0; i < verticesIDs.length(); ++i)
-                    {
-                        MPoint vertexWSPoint;
-                        mesh.getPoint(verticesIDs[i], vertexWSPoint);
-                        faceWSPoints.append(vertexWSPoint);
-                    }
-                    // compute moved point
-                    MPointArray intermediateCSPositions;
-                    getIntermediateCSEdgePoints(view, _onPressIntersectedComponent.edge,
-                                                _onPressCSPoint, intermediateCSPositions);
-                    MVGGeometryUtil::projectPointsOnPlane(view, intermediateCSPositions,
-                                                          faceWSPoints, _finalWSPoints);
-                    break;
-                }
-                default:
-                    break;
-            }
+            computeAdjacentPoints(view, _finalWSPoints);
             break;
-        }
     }
 }
+
+/**
+ * @brief Triangulate moved points.
+ *
+ * "Moved points" could be one vertex or 2 points of an edge.
+ *
+ * @param view Viewport
+ * @param finalWSPoints computed points in 3D World Space coords.
+ */
+void MVGMoveManipulator::computeTriangulatedPoints(M3dView& view, MPointArray& finalWSPoints)
+{
+    finalWSPoints.clear();
+    MPointArray intermediateCSPositions;
+    switch(_onPressIntersectedComponent.type)
+    {
+        case MFn::kBlindData:
+        case MFn::kMeshVertComponent:
+        {
+            intermediateCSPositions.append(getMousePosition(view));
+            MPoint triangulatedWSPoint;
+            if(triangulate(view, _onPressIntersectedComponent.vertex, intermediateCSPositions[0],
+                           triangulatedWSPoint))
+                finalWSPoints.append(triangulatedWSPoint);
+            break;
+        }
+        case MFn::kMeshEdgeComponent:
+        {
+            // Triangulate the 2 points of the edge
+            MPoint triangulatedWSPoint;
+            bool isVertex1Computed = false;
+            bool isVertex2Computed = false;
+            getIntermediateCSEdgePoints(view, _onPressIntersectedComponent.edge, _onPressCSPoint,
+                                        intermediateCSPositions);
+            if(triangulate(view, _onPressIntersectedComponent.edge->vertex1,
+                           intermediateCSPositions[0], triangulatedWSPoint))
+            {
+                isVertex1Computed = true;
+                finalWSPoints.append(triangulatedWSPoint);
+            }
+            if(triangulate(view, _onPressIntersectedComponent.edge->vertex2,
+                           intermediateCSPositions[1], triangulatedWSPoint))
+            {
+                isVertex2Computed = true;
+                finalWSPoints.append(triangulatedWSPoint);
+            }
+            // in case we can move only one vertex
+            if(finalWSPoints.length() == 1)
+            {
+                MVector edgeWS = _onPressIntersectedComponent.edge->vertex2->worldPosition -
+                                 _onPressIntersectedComponent.edge->vertex1->worldPosition;
+                if(isVertex1Computed)
+                    finalWSPoints.append(finalWSPoints[0] + edgeWS);
+                if(isVertex2Computed)
+                {
+                    finalWSPoints.append(finalWSPoints[0]);
+                    finalWSPoints[0] = finalWSPoints[1] - edgeWS;
+                }
+            }
+            break;
+        }
+        default:
+            break;
+    }
+}
+
+/**
+ * @brief Recompute the plane of the moved points to fit the point cloud.
+ *
+ * "Moved points" could be one vertex or 2 points of an edge.
+ *
+ * @param view Viewport
+ * @param finalWSPoints computed points in 3D World Space coords.
+ */
+void MVGMoveManipulator::computePCPoints(M3dView& view, MPointArray& finalWSPoints)
+{
+    finalWSPoints.clear();
+    MVGMesh mesh(_onPressIntersectedComponent.meshPath);
+    switch(_onPressIntersectedComponent.type)
+    {
+        case MFn::kMeshVertComponent:
+        {
+            MPointArray intermediateCSPositions;
+            intermediateCSPositions.append(getMousePosition(view));
+            MIntArray connectedFacesIDs =
+                mesh.getConnectedFacesToVertex(_onPressIntersectedComponent.vertex->index);
+            if(connectedFacesIDs.length() < 1)
+                return;
+            MIntArray verticesIDs = mesh.getFaceVertices(connectedFacesIDs[0]);
+            MPointArray cameraSpacePoints;
+            int movingVertexIDInThisFace = -1;
+            for(size_t i = 0; i < verticesIDs.length(); ++i)
+            {
+                // replace the moved vertex position with the current mouse position (camera
+                // space)
+                if(verticesIDs[i] == _onPressIntersectedComponent.vertex->index)
+                {
+                    cameraSpacePoints.append(getMousePosition(view));
+                    movingVertexIDInThisFace = i;
+                    continue;
+                }
+                MPoint vertexWSPoint;
+                mesh.getPoint(verticesIDs[i], vertexWSPoint);
+                cameraSpacePoints.append(MVGGeometryUtil::worldToCameraSpace(view, vertexWSPoint));
+            }
+            assert(movingVertexIDInThisFace != -1);
+            MPointArray worldSpacePoints;
+            MVGPointCloud cloud(MVGProject::_CLOUD);
+            if(cloud.projectPoints(view, _visiblePointCloudItems, cameraSpacePoints,
+                                   worldSpacePoints))
+            {
+                // add only the moved vertex position, not the other projected vertices
+                finalWSPoints.append(worldSpacePoints[movingVertexIDInThisFace]);
+            }
+            else
+            {
+                // Save positions for error display
+                _intermediateVSPoints = MVGGeometryUtil::cameraToViewSpace(view, cameraSpacePoints);
+            }
+            break;
+        }
+        case MFn::kMeshEdgeComponent:
+        {
+            MIntArray connectedFacesIDs =
+                mesh.getConnectedFacesToEdge(_onPressIntersectedComponent.edge->index);
+            if(connectedFacesIDs.length() < 1)
+                return;
+            MIntArray verticesIDs = mesh.getFaceVertices(connectedFacesIDs[0]);
+            MPointArray intermediateCSPositions;
+            getIntermediateCSEdgePoints(view, _onPressIntersectedComponent.edge, _onPressCSPoint,
+                                        intermediateCSPositions);
+            MPointArray cameraSpacePoints;
+            for(size_t i = 0; i < verticesIDs.length(); ++i)
+            {
+                // replace the moved vertex position with the current mouse position (camera
+                // space)
+                if(verticesIDs[i] == _onPressIntersectedComponent.edge->vertex1->index)
+                {
+                    cameraSpacePoints.append(intermediateCSPositions[0]);
+                    continue;
+                }
+                if(verticesIDs[i] == _onPressIntersectedComponent.edge->vertex2->index)
+                {
+                    cameraSpacePoints.append(intermediateCSPositions[1]);
+                    continue;
+                }
+                MPoint vertexWSPoint;
+                mesh.getPoint(verticesIDs[i], vertexWSPoint);
+                cameraSpacePoints.append(MVGGeometryUtil::worldToCameraSpace(view, vertexWSPoint));
+            }
+            // we need mousePosition in world space to compute the right offset
+            cameraSpacePoints.append(getMousePosition(view));
+            MPointArray worldSpacePoints;
+            MVGPointCloud cloud(MVGProject::_CLOUD);
+            if(cloud.projectPoints(view, _visiblePointCloudItems, cameraSpacePoints,
+                                   worldSpacePoints, cameraSpacePoints.length() - 1))
+            {
+                MPointArray translatedWSEdgePoints;
+                getTranslatedWSEdgePoints(view, _onPressIntersectedComponent.edge, _onPressCSPoint,
+                                          worldSpacePoints[0], translatedWSEdgePoints);
+                // add only the moved vertices positions, not the other projected vertices
+                finalWSPoints.append(translatedWSEdgePoints[0]);
+                finalWSPoints.append(translatedWSEdgePoints[1]);
+            }
+            else
+            {
+                // Save positions for error display
+                cameraSpacePoints.remove(cameraSpacePoints.length() - 1);
+                _intermediateVSPoints = MVGGeometryUtil::cameraToViewSpace(view, cameraSpacePoints);
+            }
+            break;
+        }
+        default:
+            break;
+    }
+}
+
+/**
+ * @brief Move points keeping the original plane.
+ *
+ * "Moved points" could be one vertex or 2 points of an edge.
+ *
+ * @param view Viewport
+ * @param finalWSPoints computed points in 3D World Space coords.
+ */
+void MVGMoveManipulator::computeAdjacentPoints(M3dView& view, MPointArray& finalWSPoints)
+{
+    finalWSPoints.clear();
+    MVGMesh mesh(_onPressIntersectedComponent.meshPath);
+    switch(_onPressIntersectedComponent.type)
+    {
+        case MFn::kMeshVertComponent:
+        {
+            MPointArray intermediateCSPositions;
+            intermediateCSPositions.append(getMousePosition(view));
+            // get face vertices
+            MIntArray connectedFacesIDs =
+                mesh.getConnectedFacesToVertex(_onPressIntersectedComponent.vertex->index);
+            if(connectedFacesIDs.length() < 1)
+                return;
+            MIntArray verticesIDs = mesh.getFaceVertices(connectedFacesIDs[0]);
+            MPointArray faceWSPoints;
+            for(size_t i = 0; i < verticesIDs.length(); ++i)
+            {
+                MPoint vertexWSPoint;
+                mesh.getPoint(verticesIDs[i], vertexWSPoint);
+                faceWSPoints.append(vertexWSPoint);
+            }
+            // compute moved point
+            MPoint projectedWSPoint;
+            if(MVGGeometryUtil::projectPointOnPlane(view, intermediateCSPositions[0], faceWSPoints,
+                                                    projectedWSPoint))
+                finalWSPoints.append(projectedWSPoint);
+            break;
+        }
+        case MFn::kMeshEdgeComponent:
+        {
+            MIntArray connectedFacesIDs =
+                mesh.getConnectedFacesToEdge(_onPressIntersectedComponent.edge->index);
+            if(connectedFacesIDs.length() < 1)
+                return;
+            MIntArray verticesIDs = mesh.getFaceVertices(connectedFacesIDs[0]);
+            MPointArray faceWSPoints;
+            for(size_t i = 0; i < verticesIDs.length(); ++i)
+            {
+                MPoint vertexWSPoint;
+                mesh.getPoint(verticesIDs[i], vertexWSPoint);
+                faceWSPoints.append(vertexWSPoint);
+            }
+            // compute moved point
+            MPointArray intermediateCSPositions;
+            getIntermediateCSEdgePoints(view, _onPressIntersectedComponent.edge, _onPressCSPoint,
+                                        intermediateCSPositions);
+            MVGGeometryUtil::projectPointsOnPlane(view, intermediateCSPositions, faceWSPoints,
+                                                  finalWSPoints);
+            break;
+        }
+        default:
+            break;
+    }
+}
+
 MStatus MVGMoveManipulator::storeTweakInformation()
 {
     MStatus status;

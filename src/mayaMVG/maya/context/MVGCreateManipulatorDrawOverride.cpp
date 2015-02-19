@@ -68,7 +68,7 @@ MUserData* MVGCreateManipulatorDrawOverride::prepareForDraw(
     data->cache = cache;
     data->intersectedVSPoints.clear();
     manipulator->getIntersectedPoints(cache->getActiveView(), data->intersectedVSPoints,
-                                         MVGManipulator::kView);
+                                      MVGManipulator::kView);
     data->finalWSPoints = manipulator->getFinalWSPoints();
     data->clickedVSPoints = manipulator->getClickedVSPoints();
     // add mouse position

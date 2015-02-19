@@ -38,7 +38,7 @@ public:
     void getIntersectedPoints(M3dView&, MPointArray&, Space = kCamera) const;
     void getIntermediateCSEdgePoints(M3dView& view,
                                      const MVGManipulatorCache::EdgeData* onPressEdgeData,
-                                     const MPoint& onPressCSPoint,
+                                     const MPoint& onPressCSMousePos,
                                      MPointArray& intermediateCSEdgePoints);
     const MPointArray
     getIntermediateCSEdgePoints(M3dView& view, const MVGManipulatorCache::EdgeData* onPressEdgeData,
@@ -55,7 +55,7 @@ public:
 protected:
     MVGEditCmd* newEditCmd();
     void drawIntersection() const;
-    virtual void computeFinalWSPositions(M3dView& view) = 0;
+    virtual void computeFinalWSPoints(M3dView& view) = 0;
 
 protected:
     MVGManipulatorCache* _cache;
@@ -64,6 +64,7 @@ protected:
     MPointArray _finalWSPoints;
     int _cameraID;
     std::vector<MVGPointCloudItem> _visiblePointCloudItems;
+    MIntArray _snapedPoints;
 
 private:
     MVGContext* _context;
