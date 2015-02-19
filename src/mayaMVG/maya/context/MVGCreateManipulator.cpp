@@ -161,22 +161,34 @@ MStatus MVGCreateManipulator::doRelease(M3dView& view)
 
     // FIXME ensure the polygon is convex
 
-    // perform edit command : create face
+    // TODO : Undo/Redo for mesh creation
+    // mesh creation
+    if(_onPressIntersectedComponent.type == MFn::kInvalid)
+    {
+        MVGMesh mesh = MVGMesh::create(MVGProject::_MESH);
+        int polygonID;
+        mesh.addPolygon(_finalWSPoints, polygonID);
+
+        // Set blind data
+        MIntArray facePointsIndexes = mesh.getFaceVertices(polygonID);
+        for(size_t i = 0; i < facePointsIndexes.length(); ++i)
+            CHECK(mesh.setBlindDataPerCamera(facePointsIndexes[i], _cameraIDToClickedCSPoints.first,
+                                             _cameraIDToClickedCSPoints.second[i]))
+
+        _cameraIDToClickedCSPoints.second.clear();
+        _finalWSPoints.clear();
+        return MPxManipulatorNode::doRelease(view);
+    }
+    // mesh edit
     MVGEditCmd* cmd = newEditCmd();
     if(!cmd)
         return MS::kFailure;
+    MPointArray edgeCSPositions;
+    edgeCSPositions.append(MVGGeometryUtil::worldToCameraSpace(view, _finalWSPoints[2]));
+    edgeCSPositions.append(MVGGeometryUtil::worldToCameraSpace(view, _finalWSPoints[3]));
+    cmd->addFace(_onPressIntersectedComponent.meshPath, _finalWSPoints, edgeCSPositions,
+                 _cache->getActiveCamera().getId());
 
-    if(_onPressIntersectedComponent.type == MFn::kInvalid)
-        cmd->create(MDagPath(), _finalWSPoints, _cameraIDToClickedCSPoints.second,
-                    _cache->getActiveCamera().getId());
-    else
-    {
-        MPointArray edgeCSPositions;
-        edgeCSPositions.append(MVGGeometryUtil::worldToCameraSpace(view, _finalWSPoints[2]));
-        edgeCSPositions.append(MVGGeometryUtil::worldToCameraSpace(view, _finalWSPoints[3]));
-        cmd->create(_onPressIntersectedComponent.meshPath, _finalWSPoints, edgeCSPositions,
-                    _cache->getActiveCamera().getId());
-    }
     MArgList args;
     if(cmd->doIt(args))
     {
@@ -188,6 +200,7 @@ MStatus MVGCreateManipulator::doRelease(M3dView& view)
 
     _cameraIDToClickedCSPoints.second.clear();
     _finalWSPoints.clear();
+
     return MPxManipulatorNode::doRelease(view);
 }
 

@@ -16,7 +16,7 @@ class MVGMeshEditFactory
 public:
     enum EditType
     {
-        kCreate = 0,
+        kAddFace = 0,
         kMove = 1,
     };
 
