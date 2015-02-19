@@ -234,13 +234,17 @@ MStatus MVGMoveManipulator::doPress(M3dView& view)
         return MPxManipulatorNode::doPress(view);
     // use only the left mouse button
     if(!(QApplication::mouseButtons() & Qt::LeftButton))
-        return MS::kFailure;
-
+        return MPxManipulatorNode::doPress(view);
+    const MVGCamera& camera = _cache->getActiveCamera();
+    if(!camera.isValid())
+        return MPxManipulatorNode::doPress(view);
+    
     if(_cache->getActiveCamera().getId() != _cameraID)
     {
         _cameraID = _cache->getActiveCamera().getId();
         _cache->getActiveCamera().getVisibleItems(_visiblePointCloudItems);
     }
+
     // set this view as the active view
     _cache->setActiveView(view);
 
@@ -274,6 +278,9 @@ MStatus MVGMoveManipulator::doRelease(M3dView& view)
     if(_onPressIntersectedComponent.type == MFn::kInvalid) // not moving a component
         return MPxManipulatorNode::doRelease(view);
 
+    const MVGCamera& camera = _cache->getActiveCamera();
+    if(!camera.isValid())
+        return MPxManipulatorNode::doRelease(view);
     // compute the final vertex/edge position depending on move mode
     computeFinalWSPositions(view);
 
@@ -340,6 +347,10 @@ MStatus MVGMoveManipulator::doRelease(M3dView& view)
 
 MStatus MVGMoveManipulator::doMove(M3dView& view, bool& refresh)
 {
+    const MVGCamera& camera = _cache->getActiveCamera();
+    if(!camera.isValid())
+        return MPxManipulatorNode::doMove(view, refresh);
+
     bool triangulationMode = (_mode == kNViewTriangulation);
     _cache->checkIntersection(10.0, getMousePosition(view), triangulationMode);
     return MPxManipulatorNode::doMove(view, refresh);
@@ -347,6 +358,10 @@ MStatus MVGMoveManipulator::doMove(M3dView& view, bool& refresh)
 
 MStatus MVGMoveManipulator::doDrag(M3dView& view)
 {
+    const MVGCamera& camera = _cache->getActiveCamera();
+    if(!camera.isValid())
+        return MPxManipulatorNode::doDrag(view);
+
     bool triangulationMode = (_mode == kNViewTriangulation);
     _cache->checkIntersection(10.0, getMousePosition(view), triangulationMode);
     // Fill verticesIDs
@@ -730,6 +745,8 @@ void MVGMoveManipulator::drawPlacedPoints(
     MDagPath cameraPath;
     view.getCamera(cameraPath);
     MVGCamera camera(cameraPath);
+    if(!camera.isValid())
+        return;
 
     // browse meshes
     const std::map<std::string, MVGManipulatorCache::MeshData>& meshData = cache->getMeshData();
@@ -790,6 +807,9 @@ void MVGMoveManipulator::drawComplementaryIntersectedBlindData(
     MDagPath cameraPath;
     view.getCamera(cameraPath);
     MVGCamera camera(cameraPath);
+    if(!camera.isValid())
+        return;
+
     const std::map<int, MPoint>::const_iterator it =
         intersectedComponent.vertex->blindData.find(camera.getId());
     if(it != intersectedComponent.vertex->blindData.end())
@@ -805,6 +825,8 @@ void MVGMoveManipulator::drawVertexOnHover(M3dView& view, MVGManipulatorCache* c
     MString nbView;
     const MVGManipulatorCache::IntersectedComponent& intersectedComponent =
         cache->getIntersectedComponent();
+    if(!cache->getActiveCamera().isValid())
+        return;
     const int cameraID = cache->getActiveCamera().getId();
     std::map<int, MPoint> intersectedBD;
     switch(intersectedComponent.type)
