@@ -26,8 +26,8 @@ Item {
         {
             qlist[qlist.length] = m.project.cameraModel.get(i).name;
         }
-        m.project.selectItems(qlist)
-        m.project.selectCameras(qlist);
+        m.project.addCamerasToIHMSelection(qlist);
+        m.project.addCamerasToMayaSelection(qlist);
     }
     function computeListPosition(keyValue, upLimit, downLimit, currentPosition, step)
     {
@@ -39,6 +39,11 @@ Item {
                 return (currentPosition + step < downLimit) ? currentPosition + step : downLimit
         }
     }
+
+    Connections {
+         target: _project
+         onCenterCameraListByIndex: cameraListView.contentY = cameraIndex * m.thumbSize
+     }
 
     RowLayout {
         anchors.fill: parent
@@ -59,7 +64,7 @@ Item {
                 project: m.project
                 onSelection: {
                     m.currentIndex = index
-                    selectCameras(index, index) //m.currentIndex = index
+                    selectCameras(index, index)
                 }
                 onMultipleSelection: selectCameras(m.currentIndex, index)
             }

@@ -25,28 +25,37 @@ MVGProjectWrapper* getProjectWrapper()
 
 } // empty namespace
 
-// static void selectionChangedCB(void*)
-//{
-//    MVGProjectWrapper* project = getProjectWrapper();
-//    if(!project)
-//        return;
-//    MSelectionList list;
-//    MGlobal::getActiveSelectionList(list);
-//    MDagPath path;
-//    QList<QString> selectedCameras;
-//    for(size_t i = 0; i < list.length(); i++)
-//    {
-//        list.getDagPath(i, path);
-//        path.extendToShape();
-//        if(path.isValid() &&
-//           ((path.child(0).apiType() == MFn::kCamera) || (path.apiType() == MFn::kCamera)))
-//        {
-//            MFnDependencyNode fn(path.transform());
-//            selectedCameras.push_back(fn.name().asChar());
-//        }
-//    }
-//    project->selectItems(selectedCameras);
-//}
+static void selectionChangedCB(void*)
+{
+    MVGProjectWrapper* project = getProjectWrapper();
+    if(!project)
+        return;
+    MSelectionList list;
+    MGlobal::getActiveSelectionList(list);
+    MDagPath path;
+    QStringList selectedCameras;
+    for(size_t i = 0; i < list.length(); i++)
+    {
+        list.getDagPath(i, path);
+        path.extendToShape();
+        if(path.isValid() &&
+           ((path.child(0).apiType() == MFn::kCamera) || (path.apiType() == MFn::kCamera)))
+        {
+            MFnDependencyNode fn(path.transform());
+            selectedCameras.push_back(fn.name().asChar());
+        }
+    }
+
+    if(selectedCameras.size() == 0)
+        return;
+
+    // Compare IHM selection to Maya selection
+    QStringList IHMSelectedCamera = project->getSelectedCameras();
+    IHMSelectedCamera.sort();
+    selectedCameras.sort();
+    if(IHMSelectedCamera != selectedCameras)
+        project->addCamerasToIHMSelection(selectedCameras, true);
+}
 
 static void currentContextChangedCB(void*)
 {
