@@ -30,7 +30,15 @@ public:
     MPointArray getClickedVSPoints() const;
 
 private:
-    void computeFinalWSPositions(M3dView& view);
+    void computeFinalWSPoints(M3dView& view);
+    bool computePCPoints(M3dView& view, MPointArray& finalWSPoints,
+                         const MPointArray& intermediateCSEdgePoints);
+    bool computeAdjacentPoints(M3dView& view, MPointArray& finalWSPoints,
+                               const MPointArray& intermediateCSEdgePoints);
+    bool snapToIntersectedEdge(M3dView& view, MPointArray& finalWSPoints,
+                               const MVGManipulatorCache::IntersectedComponent& intersectedEdge);
+    bool snapToIntersectedVertex(M3dView& view, MPointArray& finalWSPoints,
+                                 const MPointArray& intermediateCSEdgePoints);
 
 public:
     static void drawCursor(const MPoint& originVS, MVGManipulatorCache* cache);

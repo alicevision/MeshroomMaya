@@ -32,7 +32,10 @@ public:
     virtual MStatus doDrag(M3dView& view);
 
 private:
-    void computeFinalWSPositions(M3dView& view);
+    void computeFinalWSPoints(M3dView& view);
+    void computeTriangulatedPoints(M3dView& view, MPointArray& finalWSPoints);
+    void computePCPoints(M3dView& view, MPointArray& finalWSPoints);
+    void computeAdjacentPoints(M3dView& view, MPointArray& finalWSPoints);
     MStatus storeTweakInformation();
     MStatus resetTweakInformation();
     bool triangulate(M3dView& view, MVGManipulatorCache::VertexData* vertex,

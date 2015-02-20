@@ -6,14 +6,14 @@
 
 namespace mayaMVG
 {
-MColor const MVGDrawUtil::_okayColor = MColor(0.5f, 0.7f, 0.4f);
-MColor const MVGDrawUtil::_errorColor = MColor(0.8f, 0.5f, 0.4f);
-MColor const MVGDrawUtil::_cursorColor = MColor(0.f, 0.f, 0.f);
-MColor const MVGDrawUtil::_createColor = MColor(0.9f, 0.9f, 0.1f);
-MColor const MVGDrawUtil::_triangulateColor = MColor(0.9f, 0.5f, 0.4f);
-MColor const MVGDrawUtil::_pointCloudColor = MColor(0.f, 1.f, 1.f);
-MColor const MVGDrawUtil::_adjacentFaceColor = MColor(0.f, 0.f, 1.f);
-MColor const MVGDrawUtil::_intersectionColor = MColor(1.f, 1.f, 1.f);
+MColor const MVGDrawUtil::_okayColor = MColor(0.5f, 0.7f, 0.4f);        // Green
+MColor const MVGDrawUtil::_errorColor = MColor(0.8f, 0.5f, 0.4f);       // Red/Orange
+MColor const MVGDrawUtil::_cursorColor = MColor(0.f, 0.f, 0.f);         // Black
+MColor const MVGDrawUtil::_createColor = MColor(0.9f, 0.9f, 0.1f);      // Yellow
+MColor const MVGDrawUtil::_triangulateColor = MColor(0.9f, 0.5f, 0.4f); // Orange
+MColor const MVGDrawUtil::_pointCloudColor = MColor(0.f, 1.f, 1.f);     // Cyan
+MColor const MVGDrawUtil::_adjacentFaceColor = MColor(0.f, 0.f, 1.f);   // Blue
+MColor const MVGDrawUtil::_intersectionColor = MColor(1.f, 1.f, 1.f);   // White
 
 // static
 void MVGDrawUtil::begin2DDrawing(const int portWidth, const int portHeight)
