@@ -221,7 +221,7 @@ MPointArray MVGGeometryUtil::cameraToWorldSpace(M3dView& view, const MPointArray
 void MVGGeometryUtil::cameraToImageSpace(MVGCamera& camera, const MPoint& cameraPoint,
                                          MPoint& imagePoint)
 {
-    MFnDagNode fnImage(camera.getImagePath());
+    MFnDagNode fnImage(camera.getImagePlaneShapeDagPath());
     const double width = fnImage.findPlug("coverageX").asDouble();
     const double height = fnImage.findPlug("coverageY").asDouble();
     assert(camera.getHorizontalFilmAperture() != 0.0);
