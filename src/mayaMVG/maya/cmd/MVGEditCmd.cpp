@@ -95,10 +95,10 @@ MStatus MVGEditCmd::initModifierNode(MObject node)
     return status;
 }
 
-void MVGEditCmd::create(const MDagPath& meshPath, const MPointArray& worldSpacePositions,
-                        const MPointArray& cameraSpacePositions, int cameraID)
+void MVGEditCmd::addFace(const MDagPath& meshPath, const MPointArray& worldSpacePositions,
+                         const MPointArray& cameraSpacePositions, int cameraID)
 {
-    _editType = MVGMeshEditFactory::kCreate;
+    _editType = MVGMeshEditFactory::kAddFace;
     _meshPath = meshPath;
     _worldSpacePositions = worldSpacePositions;
     _cameraSpacePositions = cameraSpacePositions;

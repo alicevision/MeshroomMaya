@@ -68,7 +68,7 @@ MStatus MVGMeshEditFactory::doIt()
 
     switch(_editType)
     {
-        case kCreate:
+        case kAddFace:
         {
             int index;
             mesh.addPolygon(_worldPositions, index);
