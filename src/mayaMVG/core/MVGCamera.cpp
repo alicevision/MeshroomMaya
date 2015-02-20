@@ -4,6 +4,7 @@
 #include "mayaMVG/core/MVGPointCloud.hpp"
 #include "mayaMVG/core/MVGPointCloudItem.hpp"
 #include "mayaMVG/maya/MVGMayaUtil.hpp"
+#include "mayaMVG/maya/cmd/MVGImagePlaneCmd.hpp"
 #include <maya/MMatrix.h>
 #include <maya/MQuaternion.h>
 #include <maya/MFnCamera.h>
@@ -161,7 +162,7 @@ void MVGCamera::setId(const int& id) const
     CHECK(status)
 }
 
-MDagPath MVGCamera::getImagePath() const
+MDagPath MVGCamera::getImagePlaneShapeDagPath() const
 {
 
     MStatus status;
@@ -186,7 +187,7 @@ MDagPath MVGCamera::getImagePath() const
 std::string MVGCamera::getImagePlane() const
 {
     MStatus status;
-    MFnDagNode fnImage(getImagePath(), &status);
+    MFnDagNode fnImage(getImagePlaneShapeDagPath(), &status);
     CHECK(status)
     std::string imageName(fnImage.findPlug(_DEFERRED).asString().asChar());
     return imageName;
@@ -199,7 +200,7 @@ void MVGCamera::setImagePlane(const std::string& img, int width, int height) con
 
     // image plane parameters
     MStatus status;
-    MDagPath imagePath = getImagePath();
+    MDagPath imagePath = getImagePlaneShapeDagPath();
     MFnDagNode fnImage(imagePath, &status);
     CHECK_RETURN(status)
     fnImage.findPlug("depth").setValue(50);
@@ -236,14 +237,12 @@ void MVGCamera::setImagePlane(const std::string& img, int width, int height) con
 void MVGCamera::loadImagePlane() const
 {
     MStatus status;
-    MFnDagNode fnImage(getImagePath());
+    MFnDagNode fnImage(getImagePlaneShapeDagPath());
     MString deferred = fnImage.findPlug(_DEFERRED, &status).asString();
-    CHECK_RETURN(status)
-    MPlug imageNamePlug = fnImage.findPlug("imageName", &status);
     CHECK_RETURN(status)
 
     MString cmd;
-    cmd.format("setAttr \"^1s\" -type \"string\" \"^2s\"", imageNamePlug.name(), deferred);
+    cmd.format("MVGImagePlaneCmd -name \"^1s\" -image \"^2s\"", fnImage.name(), deferred);
     status = MGlobal::executeCommandOnIdle(cmd);
     CHECK_RETURN(status)
 }
@@ -251,12 +250,10 @@ void MVGCamera::loadImagePlane() const
 void MVGCamera::unloadImagePlane() const
 {
     MStatus status;
-    MFnDagNode fnImage(getImagePath());
-    MPlug imageNamePlug = fnImage.findPlug("imageName", &status);
-    CHECK_RETURN(status)
+    MFnDagNode fnImage(getImagePlaneShapeDagPath());
 
     MString cmd;
-    cmd.format("setAttr \"^1s\" -type \"string\" \"\"", imageNamePlug.name());
+    cmd.format("MVGImagePlaneCmd -name \"^1s\" -image \"\"", fnImage.name());
     status = MGlobal::executeCommandOnIdle(cmd);
     CHECK_RETURN(status)
 }
@@ -455,7 +452,7 @@ const std::pair<double, double> MVGCamera::getImageSize() const
 {
     std::pair<double, double> size;
     MStatus status;
-    MFnDagNode fnImage(getImagePath(), &status);
+    MFnDagNode fnImage(getImagePlaneShapeDagPath(), &status);
     CHECK(status)
     size.first = fnImage.findPlug("coverageX").asDouble();
     size.second = fnImage.findPlug("coverageY").asDouble();

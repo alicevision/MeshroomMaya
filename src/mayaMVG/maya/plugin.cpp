@@ -3,6 +3,7 @@
 #include "mayaMVG/maya/MVGMayaCallbacks.hpp"
 #include "mayaMVG/maya/cmd/MVGCmd.hpp"
 #include "mayaMVG/maya/cmd/MVGEditCmd.hpp"
+#include "mayaMVG/maya/cmd/MVGImagePlaneCmd.hpp"
 #include "mayaMVG/maya/context/MVGContextCmd.hpp"
 #include "mayaMVG/maya/context/MVGCreateManipulator.hpp"
 #include "mayaMVG/maya/context/MVGMoveManipulator.hpp"
@@ -32,6 +33,8 @@ MStatus initializePlugin(MObject obj)
 
     // Register Maya context, commands & nodes
     CHECK(plugin.registerCommand("MVGCmd", MVGCmd::creator))
+    CHECK(plugin.registerCommand("MVGImagePlaneCmd", MVGImagePlaneCmd::creator,
+                                 MVGImagePlaneCmd::newSyntax))
     CHECK(plugin.registerContextCommand(MVGContextCmd::name, &MVGContextCmd::creator,
                                         MVGEditCmd::_name, MVGEditCmd::creator,
                                         MVGEditCmd::newSyntax))

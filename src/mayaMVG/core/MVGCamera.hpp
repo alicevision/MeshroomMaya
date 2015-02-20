@@ -35,7 +35,7 @@ public:
 public:
     int getId() const;
     void setId(const int&) const;
-    MDagPath getImagePath() const;
+    MDagPath getImagePlaneShapeDagPath() const;
     std::string getImagePlane() const;
     void setImagePlane(const std::string&, int width, int height) const;
     void loadImagePlane() const;
