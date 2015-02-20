@@ -159,7 +159,7 @@ MStatus MVGCreateManipulator::doRelease(M3dView& view)
     if(!camera.isValid())
         return MPxManipulatorNode::doRelease(view);
 
-    computeFinalWSPositions(view);
+    computeFinalWSPoints(view);
 
     // we are intersecting w/ a mesh component: retrieve the component properties and add its
     // coordinates to the clicked CS points array
