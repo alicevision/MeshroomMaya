@@ -61,12 +61,13 @@ void MVGCreateManipulator::draw(M3dView& view, const MDagPath& path, M3dView::Di
         MDagPath cameraPath;
         view.getCamera(cameraPath);
         MVGCamera camera(cameraPath);
-        if(_cameraIDToClickedCSPoints.first == camera.getId())
+        if(camera.isValid() && _cameraIDToClickedCSPoints.first == camera.getId())
         {
             MColor drawColor = MVGDrawUtil::_errorColor;
             MPointArray _clickedVSPoints =
                 MVGGeometryUtil::cameraToViewSpace(view, _cameraIDToClickedCSPoints.second);
-            if(_cameraIDToClickedCSPoints.first == _cache->getActiveCamera().getId())
+            const MVGCamera& activeCamera = _cache->getActiveCamera();
+            if(activeCamera.isValid() && _cameraIDToClickedCSPoints.first == activeCamera.getId())
             {
                 _clickedVSPoints.append(mouseVSPositions);
                 if(_finalWSPoints.length() == 4)
@@ -122,11 +123,13 @@ MStatus MVGCreateManipulator::doPress(M3dView& view)
         return MPxManipulatorNode::doPress(view);
     // use only the left mouse button
     if(!(QApplication::mouseButtons() & Qt::LeftButton))
-        return MS::kFailure;
-
-    if(_cache->getActiveCamera().getId() != _cameraIDToClickedCSPoints.first)
+        return MPxManipulatorNode::doPress(view);
+    const MVGCamera& camera = _cache->getActiveCamera();
+    if(!camera.isValid())
+        return MPxManipulatorNode::doPress(view);
+    if(camera.getId() != _cameraIDToClickedCSPoints.first)
     {
-        _cameraIDToClickedCSPoints.first = _cache->getActiveCamera().getId();
+        _cameraIDToClickedCSPoints.first = camera.getId();
         _cameraIDToClickedCSPoints.second.clear();
     }
     if(_cache->getActiveCamera().getId() != _cameraID)
@@ -151,7 +154,12 @@ MStatus MVGCreateManipulator::doRelease(M3dView& view)
 {
     if(!MVGMayaUtil::isActiveView(view) || !MVGMayaUtil::isMVGView(view))
         return MPxManipulatorNode::doRelease(view);
-    computeFinalWSPoints(view);
+
+    const MVGCamera& camera = _cache->getActiveCamera();
+    if(!camera.isValid())
+        return MPxManipulatorNode::doRelease(view);
+
+    computeFinalWSPositions(view);
 
     // we are intersecting w/ a mesh component: retrieve the component properties and add its
     // coordinates to the clicked CS points array
@@ -218,6 +226,10 @@ MStatus MVGCreateManipulator::doRelease(M3dView& view)
 
 MStatus MVGCreateManipulator::doMove(M3dView& view, bool& refresh)
 {
+    const MVGCamera& camera = _cache->getActiveCamera();
+    if(!camera.isValid())
+        return MPxManipulatorNode::doMove(view, refresh);
+
     _cache->checkIntersection(10.0, getMousePosition(view));
     computeFinalWSPoints(view);
     return MPxManipulatorNode::doMove(view, refresh);
@@ -225,6 +237,10 @@ MStatus MVGCreateManipulator::doMove(M3dView& view, bool& refresh)
 
 MStatus MVGCreateManipulator::doDrag(M3dView& view)
 {
+    const MVGCamera& camera = _cache->getActiveCamera();
+    if(!camera.isValid())
+        return MPxManipulatorNode::doDrag(view);
+
     // TODO : snap w/ current intersection
     _cache->checkIntersection(10.0, getMousePosition(view));
     computeFinalWSPoints(view);
