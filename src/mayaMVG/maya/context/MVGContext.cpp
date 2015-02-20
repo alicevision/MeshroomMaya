@@ -79,7 +79,8 @@ void MVGContext::updateManipulators()
 bool MVGContext::eventFilter(QObject* obj, QEvent* e)
 {
     QWidget* widget = qobject_cast<QWidget*>(obj);
-    if(widget && !widget->isActiveWindow())
+
+    if(!obj)
         return false;
 
     // key pressed
@@ -139,6 +140,8 @@ bool MVGContext::eventFilter(QObject* obj, QEvent* e)
     // mouse button pressed
     else if(e->type() == QEvent::MouseButtonPress)
     {
+        setFocusOnView(obj); // TODO: check how to do it only if needed.
+
         QMouseEvent* mouseevent = static_cast<QMouseEvent*>(e);
         // middle button: initialize camera pan
         if((mouseevent->button() & Qt::MidButton))
@@ -157,11 +160,13 @@ bool MVGContext::eventFilter(QObject* obj, QEvent* e)
     // mouse button moved
     else if(e->type() == QEvent::MouseMove)
     {
-        if(_eventData.isDragging)
+        if(widget && _eventData.isDragging && _eventData.cameraPath.isValid())
         {
             MVGCamera camera(_eventData.cameraPath);
             // compute pan offset
             QMouseEvent* mouseevent = static_cast<QMouseEvent*>(e);
+            if(!mouseevent)
+                return false;
             QPointF offset_screen = _eventData.onPressMousePos - mouseevent->posF();
             const double viewport_width = widget->width();
             QPointF offset = (offset_screen / viewport_width) * camera.getHorizontalFilmAperture() *
@@ -179,7 +184,7 @@ bool MVGContext::eventFilter(QObject* obj, QEvent* e)
     // mouse wheel rolled
     else if(e->type() == QEvent::Wheel)
     {
-        if(_eventData.cameraPath.isValid())
+        if(widget && _eventData.cameraPath.isValid())
         {
             // compute & set zoom value
             QMouseEvent* mouseevent = static_cast<QMouseEvent*>(e);
@@ -212,21 +217,31 @@ bool MVGContext::eventFilter(QObject* obj, QEvent* e)
     // mouse enters widget's boundaries
     else if(e->type() == QEvent::Enter)
     {
-        // check if we are entering an MVG panel
-        QVariant panelName = obj->property("mvg_panel");
-        if(panelName.type() == QVariant::Invalid)
+        if(widget && !widget->isActiveWindow())
             return false;
-        // find & register the associated camera path
-        MVGMayaUtil::getCameraInView(_eventData.cameraPath,
-                                     MQtUtil::toMString(panelName.toString()));
-        if(!_eventData.cameraPath.isValid())
-            return false;
-        // automatically set focus on this MVG panel
-        MVGMayaUtil::setFocusOnView(MQtUtil::toMString(panelName.toString()));
-        _manipulatorCache.setActiveView(M3dView::active3dView());
-        return true;
+        
+        return setFocusOnView(obj);
     }
     return false;
+}
+
+bool MVGContext::setFocusOnView(QObject* obj)
+{
+    // check if we are entering an MVG panel
+    QVariant panelName = obj->property("mvg_panel");
+    if(!panelName.isValid())
+        return false;
+
+    // find & register the associated camera path
+    MVGMayaUtil::getCameraInView(_eventData.cameraPath,
+                                 MQtUtil::toMString(panelName.toString()));
+    if(!_eventData.cameraPath.isValid())
+        return false;
+
+    // automatically set focus on this MVG panel
+    MVGMayaUtil::setFocusOnView(MQtUtil::toMString(panelName.toString()));
+    _manipulatorCache.setActiveView(M3dView::active3dView());
+    return true;
 }
 
 MVGEditCmd* MVGContext::newCmd()
