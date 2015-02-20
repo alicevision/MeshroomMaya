@@ -238,7 +238,7 @@ MStatus MVGMoveManipulator::doPress(M3dView& view)
     const MVGCamera& camera = _cache->getActiveCamera();
     if(!camera.isValid())
         return MPxManipulatorNode::doPress(view);
-    
+
     if(_cache->getActiveCamera().getId() != _cameraID)
     {
         _cameraID = _cache->getActiveCamera().getId();
@@ -547,10 +547,9 @@ void MVGMoveManipulator::computePCPoints(M3dView& view, MPointArray& finalWSPoin
             getIntermediateCSEdgePoints(view, _onPressIntersectedComponent.edge, _onPressCSPoint,
                                         intermediateCSPositions);
             MPointArray cameraSpacePoints;
+            // replace the moved edge position
             for(size_t i = 0; i < verticesIDs.length(); ++i)
             {
-                // replace the moved vertex position with the current mouse position (camera
-                // space)
                 if(verticesIDs[i] == _onPressIntersectedComponent.edge->vertex1->index)
                 {
                     cameraSpacePoints.append(intermediateCSPositions[0]);
@@ -646,10 +645,18 @@ void MVGMoveManipulator::computeAdjacentPoints(M3dView& view, MPointArray& final
             }
             // compute moved point
             MPointArray intermediateCSPositions;
-            getIntermediateCSEdgePoints(view, _onPressIntersectedComponent.edge, _onPressCSPoint,
-                                        intermediateCSPositions);
-            MVGGeometryUtil::projectPointsOnPlane(view, intermediateCSPositions, faceWSPoints,
-                                                  finalWSPoints);
+            MPointArray projectedWSPoints;
+            // Project mouse point to compute mouseWSPoint
+            intermediateCSPositions.append(getMousePosition(view));
+            if(!MVGGeometryUtil::projectPointsOnPlane(view, intermediateCSPositions, faceWSPoints,
+                                                      projectedWSPoints))
+                return;
+            MPointArray translatedWSEdgePoints;
+            getTranslatedWSEdgePoints(view, _onPressIntersectedComponent.edge, _onPressCSPoint,
+                                      projectedWSPoints[0], translatedWSEdgePoints);
+            // add only the moved vertices positions, not the other projected vertices
+            finalWSPoints.append(translatedWSEdgePoints[0]);
+            finalWSPoints.append(translatedWSEdgePoints[1]);
             break;
         }
         default:
