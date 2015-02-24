@@ -219,7 +219,7 @@ bool MVGContext::eventFilter(QObject* obj, QEvent* e)
     {
         if(widget && !widget->isActiveWindow())
             return false;
-        
+
         return setFocusOnView(obj);
     }
     return false;
@@ -233,8 +233,7 @@ bool MVGContext::setFocusOnView(QObject* obj)
         return false;
 
     // find & register the associated camera path
-    MVGMayaUtil::getCameraInView(_eventData.cameraPath,
-                                 MQtUtil::toMString(panelName.toString()));
+    MVGMayaUtil::getCameraInView(_eventData.cameraPath, MQtUtil::toMString(panelName.toString()));
     if(!_eventData.cameraPath.isValid())
         return false;
 

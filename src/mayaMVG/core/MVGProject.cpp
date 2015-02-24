@@ -61,6 +61,7 @@ std::string MVGProject::_MESH = "mvgMesh";
 std::string MVGProject::_PROJECT = "mayaMVG";
 MString MVGProject::_PROJECTPATH = "projectPath";
 
+// Paths
 std::string MVGProject::_cameraRelativeDirectory =
     stlplus::folder_append_separator("SfM_output") + stlplus::folder_append_separator("cameras");
 std::string MVGProject::_imageRelativeDirectory =
@@ -70,6 +71,9 @@ std::string MVGProject::_cameraRelativeFile =
 std::string MVGProject::_pointCloudRelativeFile = stlplus::folder_append_separator("SfM_output") +
                                                   stlplus::folder_append_separator("clouds") +
                                                   "calib.ply";
+// Image cache
+std::list<std::string> MVGProject::_cachedImagePlanes;
+std::map<std::string, std::string> MVGProject::_lastLoadedCameraByView;
 
 MVGProject::MVGProject(const std::string& name)
     : MVGNodeWrapper(name)
@@ -368,6 +372,9 @@ void MVGProject::lockProject() const
 
 void MVGProject::pushImageInCache(const std::string& cameraName)
 {
+    if(cameraName.empty())
+        return;
+
     std::list<std::string>::iterator camera =
         std::find(_cachedImagePlanes.begin(), _cachedImagePlanes.end(), cameraName);
     if(camera != _cachedImagePlanes.end()) // Camera is already in the list
@@ -375,13 +382,36 @@ void MVGProject::pushImageInCache(const std::string& cameraName)
 
     if(_cachedImagePlanes.size() == IMAGE_CACHE_SIZE)
     {
-        MVGCamera camera(cameraName);
+        std::string frontCamera = _cachedImagePlanes.front();
+        MVGCamera camera(frontCamera);
         camera.unloadImagePlane();
         _cachedImagePlanes.pop_front();
     }
     _cachedImagePlanes.push_back(cameraName);
 }
 
+const std::string MVGProject::getLastLoadedCameraInView(const std::string& viewName) const
+{
+    std::map<std::string, std::string>::const_iterator findIt =
+        _lastLoadedCameraByView.find(viewName);
+    if(findIt == _lastLoadedCameraByView.end())
+        return "";
+    return findIt->second;
+}
+
+void MVGProject::setLastLoadedCameraInView(const std::string& viewName,
+                                           const std::string& cameraName)
+{
+    _lastLoadedCameraByView[viewName] = cameraName;
+}
+
+/**
+ * Update the image cache :
+ *     - If current camera is in cache : remove it
+ *     - Push last current camera in cache
+ * @param newCameraName current camera
+ * @param oldCameraName last current camera that we need to push in cache
+ */
 void MVGProject::updateImageCache(const std::string& newCameraName,
                                   const std::string& oldCameraName)
 {
@@ -393,6 +423,20 @@ void MVGProject::updateImageCache(const std::string& newCameraName,
 
     if(oldCameraName.length() > 0)
         pushImageInCache(oldCameraName);
+}
+
+/**
+ * Create a command to load the current image plane corresponding to the camera in the panel.
+ * Push the command to the idle queue
+ * @param panelName view in which the image plane will be updated
+ */
+void MVGProject::pushLoadCurrentImagePlaneCommand(const std::string& panelName) const
+{
+    MStatus status;
+    MString cmd;
+    cmd.format("MVGImagePlaneCmd -panel \"^1s\" -load ", panelName.c_str());
+    status = MGlobal::executeCommandOnIdle(cmd);
+    CHECK_RETURN(status)
 }
 
 } // namespace
