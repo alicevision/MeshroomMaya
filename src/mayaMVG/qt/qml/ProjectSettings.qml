@@ -34,7 +34,7 @@ Item {
             State {
                 name: "OPEN"
                 when: m.isOpen
-                PropertyChanges { target: settings; height: 280; }
+                PropertyChanges { target: settings; height: 300; }
                 PropertyChanges { target: settings; opacity: 1; }
             }
         ]
@@ -211,6 +211,19 @@ Item {
                     implicitWidth: parent.width
                     Layout.minimumHeight: 130
                     project: m.project
+                }
+
+                Item
+                {
+                    width: parent.width
+                    Layout.minimumHeight: 25
+                    Text {
+                        anchors.fill: parent
+                        text: "MayaMVG " + m.project.getPluginVersion()
+                        color: m.textColor
+                        font.italic: true
+                        horizontalAlignment: Text.AlignRight
+                    }
                 }
             }
         }

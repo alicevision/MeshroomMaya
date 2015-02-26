@@ -1,4 +1,5 @@
 #include "mayaMVG/core/MVGLog.hpp"
+#include "mayaMVG/version.hpp"
 #include "mayaMVG/maya/MVGMayaUtil.hpp"
 #include "mayaMVG/maya/MVGMayaCallbacks.hpp"
 #include "mayaMVG/maya/cmd/MVGCmd.hpp"
@@ -29,7 +30,7 @@ MCallbackIdArray _callbacks;
 MStatus initializePlugin(MObject obj)
 {
     MStatus status;
-    MFnPlugin plugin(obj, PLUGIN_COMPANY, "0.2.0", "Any");
+    MFnPlugin plugin(obj, PLUGIN_COMPANY, MAYAMVG_VERSION, "Any");
 
     // Register Maya context, commands & nodes
     CHECK(plugin.registerCommand("MVGCmd", MVGCmd::creator))

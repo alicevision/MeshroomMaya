@@ -21,6 +21,7 @@ class MVGProjectWrapper : public QObject
                    currentContextChanged);
     Q_PROPERTY(QObjectListModel* panelList READ getPanelList NOTIFY panelListChanged);
     Q_PROPERTY(QString currentUnit READ getCurrentUnit NOTIFY currentUnitChanged);
+    Q_PROPERTY(QString pluginVersion READ getPluginVersion CONSTANT);
 
 public:
     MVGProjectWrapper();
@@ -35,6 +36,7 @@ public slots:
     const QString getCurrentContext() const;
     void setCurrentContext(const QString&);
     const QString getCurrentUnit() const;
+    const QString getPluginVersion() const;
 
 signals:
     void projectDirectoryChanged();
@@ -60,6 +62,7 @@ public:
     Q_INVOKABLE void setCamerasNear(const double near);
     Q_INVOKABLE void setCamerasFar(const double far);
     Q_INVOKABLE void setCameraLocatorScale(const double scale);
+
     void clear();
     void removeCameraFromUI(MDagPath& cameraPath);
     void emitCurrentUnitChanged();
