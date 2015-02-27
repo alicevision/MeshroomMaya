@@ -15,6 +15,12 @@ namespace mayaMVG
 MTypeId MVGCreateManipulator::_id(0x99111); // FIXME
 MString MVGCreateManipulator::_drawDbClassification("drawdb/geometry/createManipulator");
 MString MVGCreateManipulator::_drawRegistrantID("createManipulatorNode");
+bool MVGCreateManipulator::_doSnap = false;
+
+MVGCreateManipulator::MVGCreateManipulator()
+{
+    _doSnap = false;
+}
 
 void* MVGCreateManipulator::creator()
 {
@@ -96,16 +102,19 @@ void MVGCreateManipulator::draw(M3dView& view, const MDagPath& path, M3dView::Di
         getIntersectedPoints(view, intersectedVSPoints, MVGManipulator::kView);
         MVGManipulator::drawIntersection2D(intersectedVSPoints, _cache->getIntersectiontType());
 
-        // Draw snaped element
-        if(_snapedPoints.length() == 1)
-            MVGDrawUtil::drawCircle2D(
-                MVGGeometryUtil::worldToViewSpace(view, _finalWSPoints[_snapedPoints[0]]),
-                MVGDrawUtil::_intersectionColor, 5, 30);
-        else if(_snapedPoints.length() == 2)
-            MVGDrawUtil::drawLine2D(
-                MVGGeometryUtil::worldToViewSpace(view, _finalWSPoints[_snapedPoints[0]]),
-                MVGGeometryUtil::worldToViewSpace(view, _finalWSPoints[_snapedPoints[1]]),
-                MVGDrawUtil::_intersectionColor);
+        if(_doSnap)
+        {
+            // Draw snaped element
+            if(_snapedPoints.length() == 1)
+                MVGDrawUtil::drawCircle2D(
+                    MVGGeometryUtil::worldToViewSpace(view, _finalWSPoints[_snapedPoints[0]]),
+                    MVGDrawUtil::_intersectionColor, 5, 30);
+            else if(_snapedPoints.length() == 2)
+                MVGDrawUtil::drawLine2D(
+                    MVGGeometryUtil::worldToViewSpace(view, _finalWSPoints[_snapedPoints[0]]),
+                    MVGGeometryUtil::worldToViewSpace(view, _finalWSPoints[_snapedPoints[1]]),
+                    MVGDrawUtil::_intersectionColor);
+        }
 
         MVGDrawUtil::end2DDrawing();
     }
@@ -280,19 +289,20 @@ void MVGCreateManipulator::computeFinalWSPoints(M3dView& view)
     const MVGManipulatorCache::IntersectedComponent& mouseIntersectedComponent =
         _cache->getIntersectedComponent();
 
-    // Snap to intersected edge
-    if(snapToIntersectedEdge(view, _finalWSPoints, mouseIntersectedComponent))
-        return;
-
     // Retrieve edge points preserving on press edge length
     MPointArray intermediateCSEdgePoints;
     getIntermediateCSEdgePoints(view, _onPressIntersectedComponent.edge, _onPressCSPoint,
                                 intermediateCSEdgePoints);
     assert(intermediateCSEdgePoints.length() == 2);
-
-    // Snap to intersected vertex
-    if(snapToIntersectedVertex(view, _finalWSPoints, intermediateCSEdgePoints))
-        return;
+    if(_doSnap)
+    {
+        // Snap to intersected edge
+        if(snapToIntersectedEdge(view, _finalWSPoints, mouseIntersectedComponent))
+            return;
+        // Snap to intersected vertex
+        if(snapToIntersectedVertex(view, _finalWSPoints, intermediateCSEdgePoints))
+            return;
+    }
     // try to extend face in a plane computed w/ pointcloud
     if(computePCPoints(view, _finalWSPoints, intermediateCSEdgePoints))
         return;
