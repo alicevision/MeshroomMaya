@@ -776,6 +776,12 @@ void MVGMoveManipulator::drawCursor(const MPoint& originVS)
     }
 }
 // static
+/**
+ * Draw placed points in current camera
+ * @param view
+ * @param cache
+ * @param onPressIntersectedComponent
+ */
 void MVGMoveManipulator::drawPlacedPoints(
     M3dView& view, MVGManipulatorCache* cache,
     const MVGManipulatorCache::IntersectedComponent& onPressIntersectedComponent)
@@ -837,6 +843,11 @@ void MVGMoveManipulator::drawPlacedPoints(
 }
 
 // static
+/**
+ * Hightlight blind data of intersected points in MVG views
+ * @param view
+ * @param intersectedComponent
+ */
 void MVGMoveManipulator::drawComplementaryIntersectedBlindData(
     M3dView& view, const MVGManipulatorCache::IntersectedComponent& intersectedComponent)
 {
@@ -857,6 +868,13 @@ void MVGMoveManipulator::drawComplementaryIntersectedBlindData(
     }
 }
 // static
+/**
+ * Draw vertex information on hover :
+ *      - number of views in which the point is placed
+ * @param view
+ * @param cache
+ * @param mouseVSPosition
+ */
 void MVGMoveManipulator::drawVertexOnHover(M3dView& view, MVGManipulatorCache* cache,
                                            const MPoint& mouseVSPosition)
 {
@@ -875,7 +893,7 @@ void MVGMoveManipulator::drawVertexOnHover(M3dView& view, MVGManipulatorCache* c
             if(intersectedBD.find(cameraID) != intersectedBD.end())
                 break;
             nbView += (int)(intersectedBD.size());
-            view.setDrawColor(MColor(0.9f, 0.3f, 0.f));
+            view.setDrawColor(MVGDrawUtil::_placedInOtherViewColor);
             view.drawText(
                 nbView, MVGGeometryUtil::viewToWorldSpace(view, mouseVSPosition + MPoint(12, 12)));
             break;
@@ -886,7 +904,7 @@ void MVGMoveManipulator::drawVertexOnHover(M3dView& view, MVGManipulatorCache* c
             if(intersectedBD.find(cameraID) == intersectedBD.end())
             {
                 nbView += (int)(intersectedBD.size());
-                view.setDrawColor(MColor(0.9f, 0.3f, 0.f));
+                view.setDrawColor(MVGDrawUtil::_placedInOtherViewColor);
                 view.drawText(nbView, intersectedComponent.edge->vertex1->worldPosition);
             }
             intersectedBD = intersectedComponent.edge->vertex2->blindData;
@@ -894,7 +912,7 @@ void MVGMoveManipulator::drawVertexOnHover(M3dView& view, MVGManipulatorCache* c
             {
                 nbView.clear();
                 nbView += (int)(intersectedBD.size());
-                view.setDrawColor(MColor(0.9f, 0.3f, 0.f));
+                view.setDrawColor(MVGDrawUtil::_placedInOtherViewColor);
                 view.drawText(nbView, intersectedComponent.edge->vertex2->worldPosition);
             }
             break;

@@ -64,6 +64,7 @@ struct MVGDrawUtil
     static const MColor _cursorColor;
     static const MColor _createColor;
     static const MColor _triangulateColor;
+    static const MColor _placedInOtherViewColor;
     static const MColor _pointCloudColor;
     static const MColor _adjacentFaceColor;
     static const MColor _intersectionColor;
