@@ -1,4 +1,5 @@
 #include "mayaMVG/qt/MVGProjectWrapper.hpp"
+#include "mayaMVG/version.hpp"
 #include <QCoreApplication>
 #include "mayaMVG/qt/MVGCameraWrapper.hpp"
 #include "mayaMVG/maya/MVGMayaUtil.hpp"
@@ -57,6 +58,11 @@ const QString MVGProjectWrapper::getCurrentUnit() const
 {
     MDistance::Unit currentUnit = MDistance::uiUnit();
     return _unitMap[currentUnit];
+}
+
+const QString MVGProjectWrapper::getPluginVersion() const
+{
+    return MAYAMVG_VERSION;
 }
 
 void MVGProjectWrapper::setProjectDirectory(const QString& directory)
