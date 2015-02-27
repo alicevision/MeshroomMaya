@@ -22,6 +22,7 @@ class MVGProjectWrapper : public QObject
     Q_PROPERTY(QObjectListModel* panelList READ getPanelList NOTIFY panelListChanged);
     Q_PROPERTY(QString currentUnit READ getCurrentUnit NOTIFY currentUnitChanged);
     Q_PROPERTY(QString pluginVersion READ getPluginVersion CONSTANT);
+    Q_PROPERTY(bool isProjectLoading READ getIsProjectLoading NOTIFY isProjectLoadingChanged);
 
 public:
     MVGProjectWrapper();
@@ -37,15 +38,16 @@ public slots:
     void setCurrentContext(const QString&);
     const QString getCurrentUnit() const;
     const QString getPluginVersion() const;
+    const bool getIsProjectLoading() const { return _isProjectLoading; }
+    void setIsProjectLoading(const bool value);
 
 signals:
     void projectDirectoryChanged();
     void cameraModelChanged();
-    void panelModelChanged();
     void currentContextChanged();
     void panelListChanged();
     void currentUnitChanged();
-    void unitModelChanged();
+    void isProjectLoadingChanged();
     void centerCameraListByIndex(const int cameraIndex);
 
 public:
@@ -78,6 +80,7 @@ private:
     MVGProject _project;
     QObjectListModel _panelList;
     QString _currentContext;
+    bool _isProjectLoading;
 
     std::map<std::string, MVGCameraWrapper*> _camerasByName;
     /// map view to active camera

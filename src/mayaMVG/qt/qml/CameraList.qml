@@ -45,6 +45,19 @@ Item {
          onCenterCameraListByIndex: cameraListView.contentY = cameraIndex * m.thumbSize
      }
 
+    Item {
+        anchors.fill: parent
+        Text {
+            id: loadingText
+            anchors.fill: parent
+            text: "LOADING ... "
+            font.pointSize: 15
+            color: "white"
+            horizontalAlignment: Text.AlignHCenter
+            visible: _project.isProjectLoading
+        }
+    }
+
     RowLayout {
         anchors.fill: parent
         spacing: 0
