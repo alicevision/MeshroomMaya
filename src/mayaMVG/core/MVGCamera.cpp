@@ -23,7 +23,7 @@ namespace mayaMVG
 MString MVGCamera::_ID = "cameraId";
 MString MVGCamera::_PINHOLE = "pinholeProjectionMatrix";
 MString MVGCamera::_ITEMS = "visibleItems";
-MString MVGCamera::_DEFERRED = "deferredLoading";
+MString MVGCamera::_DEFERRED = "imageNameDeferred";
 
 MVGCamera::MVGCamera()
     : MVGNodeWrapper()
