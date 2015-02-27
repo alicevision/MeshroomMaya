@@ -85,6 +85,11 @@ bool MVGCamera::isValid() const
     fn.findPlug(_ITEMS, false, &status);
     if(!status)
         return false;
+    // Check for image plane connection
+    MPlug imagePlanePlug = fn.findPlug("imagePlane", false, &status);
+    CHECK(status)
+    if(imagePlanePlug.numElements() < 1)
+        return false;
     return true;
 }
 
@@ -130,16 +135,28 @@ MVGCamera MVGCamera::create(const std::string& name)
     return camera;
 }
 
+/**
+ * Retrieve valid MVGCamera under mayaMVG 'cameras' node
+ * @return
+ */
 std::vector<MVGCamera> MVGCamera::getCameras()
 {
+    MStatus status;
     std::vector<MVGCamera> list;
-    MDagPath path;
-    MItDependencyNodes it(MFn::kCamera);
-    for(; !it.isDone(); it.next())
+    // Retrieve mayaMVG camera node
+    MDagPath cameraDagPath;
+    status = MVGMayaUtil::getDagPathByName("cameras", cameraDagPath);
+    CHECK(status);
+    MFnDagNode cameraDagNode(cameraDagPath);
+    for(int i = 0; i < cameraDagNode.childCount(); ++i)
     {
-        MFnDependencyNode fn(it.thisNode());
-        MDagPath::getAPathTo(fn.object(), path);
-        MVGCamera camera(path);
+        // Retrieve transform node
+        MObject cameraObject = cameraDagNode.child(i);
+        MDagPath cameraPath;
+        status = MDagPath::getAPathTo(cameraObject, cameraPath);
+        CHECK(status);
+        cameraPath.extendToShape();
+        MVGCamera camera(cameraPath);
         if(camera.isValid())
             list.push_back(camera);
     }
