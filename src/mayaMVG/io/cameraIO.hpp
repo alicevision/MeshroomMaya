@@ -57,15 +57,18 @@ bool readCameras(std::string filePath, std::string imageDir, std::string cameraD
     // cameras description
     int cameraId = 0;
     std::string line;
-    while(std::getline(infile, line))
+    for(unsigned int i = 0; std::getline(infile, line); ++i)
     {
         std::istringstream iss(line);
         std::string imageName, binaryName;
         size_t width, height;
-        float near, far;
-        if(!(iss >> imageName >> width >> height >> binaryName >> near >> far))
-            break;
-
+        iss >> imageName >> width >> height >> binaryName;
+        if(iss.fail())
+        {
+            LOG_ERROR("Invalid file format. Can't parse image at line " << i << ".")
+            LOG_ERROR("Line is: \"" << line << "\"")
+            continue;
+        }
         // get or create camera
         std::string cameraName = getCameraName(binaryName);
         MVGCamera camera(cameraName);
