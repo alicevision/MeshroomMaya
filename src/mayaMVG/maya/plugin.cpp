@@ -63,31 +63,31 @@ MStatus initializePlugin(MObject obj)
     id = MEventMessage::addEventCallback("PostToolChanged", currentContextChangedCB, &status);
     if(status)
         _callbacks.append(id);
-    MEventMessage::addEventCallback("NewSceneOpened", newSceneCB, &status);
+    id = MEventMessage::addEventCallback("NewSceneOpened", newSceneCB, &status);
     if(status)
         _callbacks.append(id);
-    MEventMessage::addEventCallback("SceneOpened", sceneChangedCB, &status);
+    id = MEventMessage::addEventCallback("SceneOpened", sceneChangedCB, &status);
     if(status)
         _callbacks.append(id);
-    MEventMessage::addEventCallback("Undo", undoCB, &status);
+    id = MEventMessage::addEventCallback("Undo", undoCB, &status);
     if(status)
         _callbacks.append(id);
-    MEventMessage::addEventCallback("Redo", redoCB, &status);
+    id = MEventMessage::addEventCallback("Redo", redoCB, &status);
     if(status)
         _callbacks.append(id);
-    MEventMessage::addEventCallback("SelectionChanged", selectionChangedCB, &status);
+    id = MEventMessage::addEventCallback("SelectionChanged", selectionChangedCB, &status);
     if(status)
         _callbacks.append(id);
-    MEventMessage::addEventCallback("modelEditorChanged", modelEditorChangedCB, &status);
+    id = MEventMessage::addEventCallback("modelEditorChanged", modelEditorChangedCB, &status);
     if(status)
         _callbacks.append(id);
-    MEventMessage::addEventCallback("linearUnitChanged", linearUnitChanged, &status);
+    id = MEventMessage::addEventCallback("linearUnitChanged", linearUnitChanged, &status);
     if(status)
         _callbacks.append(id);
-    MDGMessage::addNodeRemovedCallback(nodeRemovedCB, "camera", &status);
+    id = MDGMessage::addNodeRemovedCallback(nodeRemovedCB, "camera", &status);
     if(status)
         _callbacks.append(id);
-    MDGMessage::addNodeRemovedCallback(nodeRemovedCB, "mesh", &status);
+    id = MDGMessage::addNodeRemovedCallback(nodeRemovedCB, "mesh", &status);
     if(status)
         _callbacks.append(id);
 
