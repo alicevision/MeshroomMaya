@@ -564,16 +564,19 @@ void MVGMoveManipulator::computePCPoints(M3dView& view, MPointArray& finalWSPoin
                 mesh.getPoint(verticesIDs[i], vertexWSPoint);
                 cameraSpacePoints.append(MVGGeometryUtil::worldToCameraSpace(view, vertexWSPoint));
             }
-            // we need mousePosition in world space to compute the right offset
-            cameraSpacePoints.append(getMousePosition(view));
-            MPointArray worldSpacePoints;
+            // Project mouse on point cloud
+            MPoint projectedMouseWS;
             MVGPointCloud cloud(MVGProject::_CLOUD);
-            if(cloud.projectPoints(view, _visiblePointCloudItems, cameraSpacePoints,
-                                   worldSpacePoints, cameraSpacePoints.length() - 1))
+            MPointArray constraintedWSPoints;
+            constraintedWSPoints.append(_onPressIntersectedComponent.edge->vertex1->worldPosition);
+            constraintedWSPoints.append(_onPressIntersectedComponent.edge->vertex2->worldPosition);
+            if(cloud.projectPointsWithLineConstraint(view, _visiblePointCloudItems,
+                                                     cameraSpacePoints, constraintedWSPoints,
+                                                     getMousePosition(view), projectedMouseWS))
             {
                 MPointArray translatedWSEdgePoints;
                 getTranslatedWSEdgePoints(view, _onPressIntersectedComponent.edge, _onPressCSPoint,
-                                          worldSpacePoints[0], translatedWSEdgePoints);
+                                          projectedMouseWS, translatedWSEdgePoints);
                 // add only the moved vertices positions, not the other projected vertices
                 finalWSPoints.append(translatedWSEdgePoints[0]);
                 finalWSPoints.append(translatedWSEdgePoints[1]);
@@ -623,8 +626,10 @@ void MVGMoveManipulator::computeAdjacentPoints(M3dView& view, MPointArray& final
                 faceWSPoints.append(vertexWSPoint);
             }
             // compute moved point
+            PlaneKernel::Model planeModel;
+            MVGGeometryUtil::computePlane(faceWSPoints, planeModel);
             MPoint projectedWSPoint;
-            if(MVGGeometryUtil::projectPointOnPlane(view, intermediateCSPositions[0], faceWSPoints,
+            if(MVGGeometryUtil::projectPointOnPlane(view, intermediateCSPositions[0], planeModel,
                                                     projectedWSPoint))
                 finalWSPoints.append(projectedWSPoint);
             break;
@@ -648,7 +653,9 @@ void MVGMoveManipulator::computeAdjacentPoints(M3dView& view, MPointArray& final
             MPointArray projectedWSPoints;
             // Project mouse point to compute mouseWSPoint
             intermediateCSPositions.append(getMousePosition(view));
-            if(!MVGGeometryUtil::projectPointsOnPlane(view, intermediateCSPositions, faceWSPoints,
+            PlaneKernel::Model planeModel;
+            MVGGeometryUtil::computePlane(faceWSPoints, planeModel);
+            if(!MVGGeometryUtil::projectPointsOnPlane(view, intermediateCSPositions, planeModel,
                                                       projectedWSPoints))
                 return;
             MPointArray translatedWSEdgePoints;

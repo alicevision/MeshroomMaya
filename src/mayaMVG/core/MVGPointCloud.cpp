@@ -190,14 +190,12 @@ MStatus MVGPointCloud::getItems(std::vector<MVGPointCloudItem>& items,
  * @param[in] view
  * @param[in] visibleItems : pointcloud items visible for the current camera
  * @param[in] faceCSPoints : points describing the face in camera space coordinates
- * @param[out] faceWSPoints : cameraSpacePoints projected on computed plane in world space
+ * @param[out] faceWSPoints : faceCSPoints projected on computed plane in world space
  *coordinates
- * @param[in] index : index of the point in the cameraSpacePoints to be projected (-1 = all)
  * @return
  */
 bool MVGPointCloud::projectPoints(M3dView& view, const std::vector<MVGPointCloudItem>& visibleItems,
-                                  const MPointArray& faceCSPoints, MPointArray& faceWSPoints,
-                                  const int index)
+                                  const MPointArray& faceCSPoints, MPointArray& faceWSPoints)
 {
     if(!isValid())
         return false;
@@ -223,16 +221,60 @@ bool MVGPointCloud::projectPoints(M3dView& view, const std::vector<MVGPointCloud
     if(enclosedWSPoints.length() < 3)
         return false;
 
-    if(index == -1)
-        return MVGGeometryUtil::projectPointsOnPlane(view, faceCSPoints, enclosedWSPoints,
-                                                     faceWSPoints);
+    // Compute plane
+    PlaneKernel::Model model;
+    MVGGeometryUtil::computePlane(enclosedWSPoints, model);
+    // Project points
+    return MVGGeometryUtil::projectPointsOnPlane(view, faceCSPoints, model, faceWSPoints);
+}
 
-    assert(index < faceCSPoints.length());
-    // Only project the specified point
-    MPointArray pointsCSToProject;
-    pointsCSToProject.append(faceCSPoints[index]);
-    return MVGGeometryUtil::projectPointsOnPlane(view, pointsCSToProject, enclosedWSPoints,
-                                                 faceWSPoints);
+/**
+ *
+ * @param[in] view
+ * @param[in] visibleItems : pointcloud items visible for the current camera
+ * @param[in] faceCSPoints : points describing the face in camera space coordinates
+ * @param[in] constraintedWSPoints : points describing the line constraint in world space
+ *coordinates
+ * @param[in] mouseCSPoint : mouse camera space coordinates
+ * @param[out] projectedWSMouse : mouseCSPoint projected on computed plane in world space
+ * @return
+ */
+bool MVGPointCloud::projectPointsWithLineConstraint(
+    M3dView& view, const std::vector<MVGPointCloudItem>& visibleItems,
+    const MPointArray& faceCSPoints, const MPointArray& constraintedWSPoints,
+    const MPoint& mouseCSPoint, MPoint& projectedWSMouse)
+{
+    if(!isValid())
+        return false;
+    if(faceCSPoints.length() < 3)
+        return false;
+    if(visibleItems.size() < 3)
+        return false;
+    if(constraintedWSPoints.length() < 2)
+        return false;
+
+    MPointArray closedVSPolygon(MVGGeometryUtil::cameraToViewSpace(view, faceCSPoints));
+    closedVSPolygon.append(closedVSPolygon[0]); // add an extra point (to describe a closed shape)
+
+    // get enclosed items in pointcloud
+    MPointArray enclosedWSPoints;
+    std::vector<MVGPointCloudItem>::const_iterator it = visibleItems.begin();
+    int windingNumber = 0;
+    for(; it != visibleItems.end(); ++it)
+    {
+        windingNumber =
+            wn_PnPoly(MVGGeometryUtil::worldToViewSpace(view, it->_position), closedVSPolygon);
+        if(windingNumber != 0)
+            enclosedWSPoints.append(it->_position);
+    }
+    if(enclosedWSPoints.length() < 3)
+        return false;
+
+    LineConstrainedPlaneKernel::Model model;
+    MVGGeometryUtil::computePlaneWithLineConstraint(enclosedWSPoints, constraintedWSPoints, model);
+
+    // Project the mouse point
+    return MVGGeometryUtil::projectPointOnPlane(view, mouseCSPoint, model, projectedWSMouse);
 }
 
 } // namespace
