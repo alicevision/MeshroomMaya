@@ -54,6 +54,15 @@ void MVGCreateManipulator::draw(M3dView& view, const MDagPath& path, M3dView::Di
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
+    // TODO : draw alpha poly
+    bool isActiveView = MVGMayaUtil::isActiveView(view);
+    bool isMVGView = MVGMayaUtil::isMVGView(view);
+    if(isActiveView && isMVGView)
+    {
+        if(_cameraIDToClickedCSPoints.second.length() == 0 && _finalWSPoints.length() > 3)
+            MVGDrawUtil::drawLineLoop3D(_finalWSPoints, MVGDrawUtil::_okayColor, 3.0);
+    }
+
     { // 2D drawing
         MPoint mouseVSPositions = getMousePosition(view, kView);
         MVGDrawUtil::begin2DDrawing(view.portWidth(), view.portHeight());
@@ -75,7 +84,7 @@ void MVGCreateManipulator::draw(M3dView& view, const MDagPath& path, M3dView::Di
             }
             MVGDrawUtil::drawClickedPoints(_clickedVSPoints, drawColor);
         }
-        if(!MVGMayaUtil::isActiveView(view))
+        if(!isActiveView)
         {
             MVGDrawUtil::end2DDrawing();
             glDisable(GL_BLEND);
@@ -84,7 +93,7 @@ void MVGCreateManipulator::draw(M3dView& view, const MDagPath& path, M3dView::Di
         }
         // draw cursor
         drawCursor(mouseVSPositions, _cache);
-        if(!MVGMayaUtil::isMVGView(view))
+        if(!isMVGView)
         {
             MVGDrawUtil::end2DDrawing();
             glDisable(GL_BLEND);
@@ -105,14 +114,10 @@ void MVGCreateManipulator::draw(M3dView& view, const MDagPath& path, M3dView::Di
             MVGDrawUtil::drawLine2D(
                 MVGGeometryUtil::worldToViewSpace(view, _finalWSPoints[_snapedPoints[0]]),
                 MVGGeometryUtil::worldToViewSpace(view, _finalWSPoints[_snapedPoints[1]]),
-                MVGDrawUtil::_intersectionColor);
+                MVGDrawUtil::_intersectionColor, 3.0);
 
         MVGDrawUtil::end2DDrawing();
     }
-    // TODO : draw alpha poly
-    if(_cameraIDToClickedCSPoints.second.length() == 0 && _finalWSPoints.length() > 3)
-        MVGDrawUtil::drawLineLoop3D(_finalWSPoints, MVGDrawUtil::_okayColor, 3.0);
-
     glDisable(GL_BLEND);
     view.endGL();
 }
@@ -393,7 +398,6 @@ bool MVGCreateManipulator::snapToIntersectedEdge(
         finalWSPoints[3] = tmp[2];
         finalWSPoints[2] = tmp[3];
     }
-
     return true;
 }
 
