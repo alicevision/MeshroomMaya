@@ -60,11 +60,13 @@ public:
 
     const std::pair<double, double> getImageSize() const;
 
+public:
+    static MString _DEFERRED;
+
 private:
     static MString _ID;
     static MString _PINHOLE;
     static MString _ITEMS;
-    static MString _DEFERRED;
 };
 
 } // namespace

@@ -1,5 +1,6 @@
 #include "MVGImagePlaneCmd.hpp"
 #include "mayaMVG/core/MVGProject.hpp"
+#include "mayaMVG/core/MVGCamera.hpp"
 #include "mayaMVG/core/MVGLog.hpp"
 #include <maya/MSyntax.h>
 #include <maya/MArgDatabase.h>
@@ -90,7 +91,7 @@ MStatus MVGImagePlaneCmd::doIt(const MArgList& args)
         imageNamePlug.getValue(imageNameValue);
 
         // Set "deferred" attribute into "imageName" attribute
-        MString deferred = fnImagePlane.findPlug("deferredLoading", &status).asString();
+        MString deferred = fnImagePlane.findPlug(MVGCamera::_DEFERRED, &status).asString();
         CHECK_RETURN_STATUS(status)
         if(imageNameValue != deferred)
         {
