@@ -11,7 +11,7 @@ class MVGEditCmd;
 class MVGCreateManipulator : public MVGManipulator
 {
 public:
-    MVGCreateManipulator() {}
+    MVGCreateManipulator();
     virtual ~MVGCreateManipulator() {}
 
 public:
@@ -47,6 +47,7 @@ public:
     static MTypeId _id;
     static MString _drawDbClassification;
     static MString _drawRegistrantID;
+    static bool _doSnap;
 
 private:
     std::pair<int, MPointArray> _cameraIDToClickedCSPoints; // cameraID to clicked points

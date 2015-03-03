@@ -15,6 +15,12 @@ namespace mayaMVG
 MTypeId MVGCreateManipulator::_id(0x99111); // FIXME
 MString MVGCreateManipulator::_drawDbClassification("drawdb/geometry/createManipulator");
 MString MVGCreateManipulator::_drawRegistrantID("createManipulatorNode");
+bool MVGCreateManipulator::_doSnap = false;
+
+MVGCreateManipulator::MVGCreateManipulator()
+{
+    _doSnap = false;
+}
 
 void* MVGCreateManipulator::creator()
 {
@@ -106,15 +112,18 @@ void MVGCreateManipulator::draw(M3dView& view, const MDagPath& path, M3dView::Di
         MVGManipulator::drawIntersection2D(intersectedVSPoints, _cache->getIntersectiontType());
 
         // Draw snaped element
-        if(_snapedPoints.length() == 1)
-            MVGDrawUtil::drawCircle2D(
-                MVGGeometryUtil::worldToViewSpace(view, _finalWSPoints[_snapedPoints[0]]),
-                MVGDrawUtil::_intersectionColor, 5, 30);
-        else if(_snapedPoints.length() == 2)
-            MVGDrawUtil::drawLine2D(
-                MVGGeometryUtil::worldToViewSpace(view, _finalWSPoints[_snapedPoints[0]]),
-                MVGGeometryUtil::worldToViewSpace(view, _finalWSPoints[_snapedPoints[1]]),
-                MVGDrawUtil::_intersectionColor, 3.0);
+        if(_doSnap)
+        {           
+            if(_snapedPoints.length() == 1)
+                MVGDrawUtil::drawCircle2D(
+                    MVGGeometryUtil::worldToViewSpace(view, _finalWSPoints[_snapedPoints[0]]),
+                    MVGDrawUtil::_intersectionColor, 5, 30);
+            else if(_snapedPoints.length() == 2)
+                MVGDrawUtil::drawLine2D(
+                    MVGGeometryUtil::worldToViewSpace(view, _finalWSPoints[_snapedPoints[0]]),
+                    MVGGeometryUtil::worldToViewSpace(view, _finalWSPoints[_snapedPoints[1]]),
+                    MVGDrawUtil::_intersectionColor, 3.0);
+        }
 
         MVGDrawUtil::end2DDrawing();
     }
@@ -285,19 +294,20 @@ void MVGCreateManipulator::computeFinalWSPoints(M3dView& view)
     const MVGManipulatorCache::IntersectedComponent& mouseIntersectedComponent =
         _cache->getIntersectedComponent();
 
-    // Snap to intersected edge
-    if(snapToIntersectedEdge(view, _finalWSPoints, mouseIntersectedComponent))
-        return;
-
     // Retrieve edge points preserving on press edge length
     MPointArray intermediateCSEdgePoints;
     getIntermediateCSEdgePoints(view, _onPressIntersectedComponent.edge, _onPressCSPoint,
                                 intermediateCSEdgePoints);
     assert(intermediateCSEdgePoints.length() == 2);
-
-    // Snap to intersected vertex
-    if(snapToIntersectedVertex(view, _finalWSPoints, intermediateCSEdgePoints))
-        return;
+    if(_doSnap)
+    {
+        // Snap to intersected edge
+        if(snapToIntersectedEdge(view, _finalWSPoints, mouseIntersectedComponent))
+            return;
+        // Snap to intersected vertex
+        if(snapToIntersectedVertex(view, _finalWSPoints, intermediateCSEdgePoints))
+            return;
+    }
     // try to extend face in a plane computed w/ pointcloud
     if(computePCPoints(view, _finalWSPoints, intermediateCSEdgePoints))
         return;
@@ -377,22 +387,30 @@ bool MVGCreateManipulator::snapToIntersectedEdge(
     const MVGManipulatorCache::IntersectedComponent& intersectedEdge)
 {
     finalWSPoints.clear();
-
-    // Snap to intersected edge
     if(intersectedEdge.type != MFn::kMeshEdgeComponent)
+        return false;
+    const MPoint& pressedVertex1 = _onPressIntersectedComponent.edge->vertex1->worldPosition;
+    const MPoint& pressedVertex2 = _onPressIntersectedComponent.edge->vertex2->worldPosition;
+    const MPoint& intersectedVertex1 = intersectedEdge.edge->vertex1->worldPosition;
+    const MPoint& intersectedVertex2 = intersectedEdge.edge->vertex2->worldPosition;
+
+    // Don't snap on adjacent edge
+    if(pressedVertex1 == intersectedVertex1 || pressedVertex1 == intersectedVertex2 ||
+       pressedVertex2 == intersectedVertex1 || pressedVertex2 == intersectedVertex2)
         return false;
 
     // Begin with second edge's vertex to keep normal
-    finalWSPoints.append(_onPressIntersectedComponent.edge->vertex2->worldPosition);
-    finalWSPoints.append(_onPressIntersectedComponent.edge->vertex1->worldPosition);
-    finalWSPoints.append(intersectedEdge.edge->vertex2->worldPosition);
-    finalWSPoints.append(intersectedEdge.edge->vertex1->worldPosition);
+    finalWSPoints.append(pressedVertex2);
+    finalWSPoints.append(pressedVertex1);
+    finalWSPoints.append(intersectedVertex2);
+    finalWSPoints.append(intersectedVertex1);
 
     // Check points order
-    MVector AD = finalWSPoints[3] - finalWSPoints[0];
-    MVector BC = finalWSPoints[2] - finalWSPoints[1];
-
-    if(MVGGeometryUtil::doEdgesIntersect(finalWSPoints[0], finalWSPoints[1], AD, BC))
+    MPoint A = MVGGeometryUtil::worldToCameraSpace(view, finalWSPoints[0]);
+    MPoint B = MVGGeometryUtil::worldToCameraSpace(view, finalWSPoints[1]);
+    MVector AD = MVGGeometryUtil::worldToCameraSpace(view, finalWSPoints[3]) - A;
+    MVector BC = MVGGeometryUtil::worldToCameraSpace(view, finalWSPoints[2]) - B;
+    if(MVGGeometryUtil::doEdgesIntersect(A, B, AD, BC))
     {
         MPointArray tmp = finalWSPoints;
         finalWSPoints[3] = tmp[2];

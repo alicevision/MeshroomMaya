@@ -87,6 +87,21 @@ bool MVGContext::eventFilter(QObject* obj, QEvent* e)
     if(e->type() == QEvent::KeyPress)
     {
         QKeyEvent* keyevent = static_cast<QKeyEvent*>(e);
+        switch(keyevent->key())
+        {
+            case Qt::Key_C:
+                if(_editMode != eModeCreate)
+                {
+                    _editMode = eModeCreate;
+                    updateManipulators();
+                }
+                return true;
+            case Qt::Key_V:
+                if(!MVGCreateManipulator::_doSnap)
+                    MVGCreateManipulator::_doSnap = true;
+                break; // Spread event to Maya
+        }
+        // Check for autorepeat
         if(!keyevent->isAutoRepeat())
         {
             switch(keyevent->key())
@@ -100,16 +115,12 @@ bool MVGContext::eventFilter(QObject* obj, QEvent* e)
                     camera.resetZoomAndPan();
                     return true;
                 }
-                case Qt::Key_C:
-                    _editMode = eModeCreate;
-                    updateManipulators();
-                    return true;
                 case Qt::Key_Control:
                     if(_editMode == eModeCreate)
                         break;
                     MVGMoveManipulator::_mode = static_cast<MVGMoveManipulator::MoveMode>(
                         (MVGMoveManipulator::_mode + 1) % 3);
-                    break;
+                    break; // Spread event to Maya
                 case Qt::Key_Escape:
                     updateManipulators();
                 default:
@@ -129,6 +140,9 @@ bool MVGContext::eventFilter(QObject* obj, QEvent* e)
                     _editMode = eModeMove;
                     updateManipulators();
                     return true;
+                case Qt::Key_V:
+                    MVGCreateManipulator::_doSnap = false;
+                    break; // Spread event to Maya
                 case Qt::Key_Escape:
                     updateManipulators();
                     return true;
@@ -219,7 +233,7 @@ bool MVGContext::eventFilter(QObject* obj, QEvent* e)
     {
         if(widget && !widget->isActiveWindow())
             return false;
-        
+
         return setFocusOnView(obj);
     }
     return false;
@@ -233,8 +247,7 @@ bool MVGContext::setFocusOnView(QObject* obj)
         return false;
 
     // find & register the associated camera path
-    MVGMayaUtil::getCameraInView(_eventData.cameraPath,
-                                 MQtUtil::toMString(panelName.toString()));
+    MVGMayaUtil::getCameraInView(_eventData.cameraPath, MQtUtil::toMString(panelName.toString()));
     if(!_eventData.cameraPath.isValid())
         return false;
 
