@@ -382,22 +382,30 @@ bool MVGCreateManipulator::snapToIntersectedEdge(
     const MVGManipulatorCache::IntersectedComponent& intersectedEdge)
 {
     finalWSPoints.clear();
-
-    // Snap to intersected edge
     if(intersectedEdge.type != MFn::kMeshEdgeComponent)
+        return false;
+    const MPoint& pressedVertex1 = _onPressIntersectedComponent.edge->vertex1->worldPosition;
+    const MPoint& pressedVertex2 = _onPressIntersectedComponent.edge->vertex2->worldPosition;
+    const MPoint& intersectedVertex1 = intersectedEdge.edge->vertex1->worldPosition;
+    const MPoint& intersectedVertex2 = intersectedEdge.edge->vertex2->worldPosition;
+
+    // Don't snap on adjacent edge
+    if(pressedVertex1 == intersectedVertex1 || pressedVertex1 == intersectedVertex2 ||
+       pressedVertex2 == intersectedVertex1 || pressedVertex2 == intersectedVertex2)
         return false;
 
     // Begin with second edge's vertex to keep normal
-    finalWSPoints.append(_onPressIntersectedComponent.edge->vertex2->worldPosition);
-    finalWSPoints.append(_onPressIntersectedComponent.edge->vertex1->worldPosition);
-    finalWSPoints.append(intersectedEdge.edge->vertex2->worldPosition);
-    finalWSPoints.append(intersectedEdge.edge->vertex1->worldPosition);
+    finalWSPoints.append(pressedVertex2);
+    finalWSPoints.append(pressedVertex1);
+    finalWSPoints.append(intersectedVertex2);
+    finalWSPoints.append(intersectedVertex1);
 
     // Check points order
-    MVector AD = finalWSPoints[3] - finalWSPoints[0];
-    MVector BC = finalWSPoints[2] - finalWSPoints[1];
-
-    if(MVGGeometryUtil::doEdgesIntersect(finalWSPoints[0], finalWSPoints[1], AD, BC))
+    MPoint A = MVGGeometryUtil::worldToCameraSpace(view, finalWSPoints[0]);
+    MPoint B = MVGGeometryUtil::worldToCameraSpace(view, finalWSPoints[1]);
+    MVector AD = MVGGeometryUtil::worldToCameraSpace(view, finalWSPoints[3]) - A;
+    MVector BC = MVGGeometryUtil::worldToCameraSpace(view, finalWSPoints[2]) - B;
+    if(MVGGeometryUtil::doEdgesIntersect(A, B, AD, BC))
     {
         MPointArray tmp = finalWSPoints;
         finalWSPoints[3] = tmp[2];
