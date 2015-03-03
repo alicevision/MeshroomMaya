@@ -30,6 +30,9 @@ MVGProjectWrapper::MVGProjectWrapper()
     _unitMap[MDistance::kKilometers] = "km";
     _unitMap[MDistance::kMeters] = "m";
     assert(_unitMap.size() == MDistance::kLast - 1); // First value is MDistance::kInvalid
+
+    // Init _isProjectLoading
+    _isProjectLoading = false;
 }
 
 MVGProjectWrapper::~MVGProjectWrapper()
@@ -63,6 +66,14 @@ const QString MVGProjectWrapper::getCurrentUnit() const
 const QString MVGProjectWrapper::getPluginVersion() const
 {
     return MAYAMVG_VERSION;
+}
+
+void MVGProjectWrapper::setIsProjectLoading(const bool value)
+{
+    if(value == _isProjectLoading)
+        return;
+    _isProjectLoading = value;
+    Q_EMIT isProjectLoadingChanged();
 }
 
 void MVGProjectWrapper::setProjectDirectory(const QString& directory)
@@ -110,6 +121,13 @@ void MVGProjectWrapper::loadNewProject(const QString& projectDirectoryPath)
     activeSelectionContext();
     if(!_project.isValid())
         _project = MVGProject::create(MVGProject::_PROJECT);
+    setIsProjectLoading(true);
+
+    // Loading project takes a lot of time.
+    // So we ask Qt to process events (UI) to display the "Loading" status
+    // before Maya will freeze the application.
+    qApp->processEvents();
+
     if(!_project.load(projectDirectoryPath.toStdString()))
     {
         setProjectDirectory("");
@@ -118,12 +136,13 @@ void MVGProjectWrapper::loadNewProject(const QString& projectDirectoryPath)
     }
     _project.setProjectDirectory(projectDirectoryPath.toStdString());
     Q_EMIT projectDirectoryChanged();
+    setIsProjectLoading(false);
 
     reloadMVGCamerasFromMaya();
 
-    // Set image planes in Maya takes a lot of time.
-    // So we ask Qt to process events (UI) before Maya will freeze the
-    // application.
+    // Loading image planes takes a lot of time.
+    // So before loading image planes, we ask Qt to process events (UI)
+    // before Maya will freeze the application.
     qApp->processEvents();
 
     // Select the two first cameras for the views
