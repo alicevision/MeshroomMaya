@@ -182,7 +182,7 @@ bool MVGProject::loadPointCloud(const std::string& projectDirectoryPath)
 }
 
 bool MVGProject::scaleScene(const double scaleSize) const
-{
+{ 
     // Check for root node
     if(!isValid())
         return false;
@@ -197,7 +197,16 @@ bool MVGProject::scaleScene(const double scaleSize) const
     mesh.getPoint(0, A);
     mesh.getPoint(1, B);
     mesh.getPoint(3, C);
-    MVector AB = B - A;
+    // Translate : center object in (0, 0, 0)
+    MMatrix translationMatrix;
+    translationMatrix[3][0] = -A.x;
+    translationMatrix[3][1] = -A.y;
+    translationMatrix[3][2] = -A.z;
+    translationMatrix[3][3] = 1;
+    // Rotate : fit Y axis
+    MPoint translatedA = A * translationMatrix;
+    MPoint translatedB = B * translationMatrix;
+    MVector AB = translatedB - translatedA;
     double scaleFactor = scaleSize / AB.length();
     AB.normalize();
     MVector y(0, 1, 0);
@@ -206,14 +215,6 @@ bool MVGProject::scaleScene(const double scaleSize) const
     yRotAxe.normalize();
     MQuaternion quat(yAngle, yRotAxe);
     MEulerRotation euler = quat.asEulerRotation();
-
-    // Translate : center object in (0, 0, 0)
-    MMatrix translationMatrix;
-    translationMatrix[3][0] = -A.x;
-    translationMatrix[3][1] = -A.y;
-    translationMatrix[3][2] = -A.z;
-    translationMatrix[3][3] = 1;
-    // Rotate : fit Y axis
     MMatrix rotationXMatrix;
     rotationXMatrix[1][1] = cos(euler.x);
     rotationXMatrix[1][2] = sin(euler.x);
@@ -240,29 +241,16 @@ bool MVGProject::scaleScene(const double scaleSize) const
     MPoint transformedA = A * transformMatrix;
     MPoint transformedC = C * transformMatrix;
     MVector AC = transformedC - transformedA;
+    AC.y = 0;
     AC.normalize();
     MVector x(1, 0, 0);
     double xAngle = acos(AC * x);
-    MVector xRotAxe = (AC ^ x);
-    xRotAxe.normalize();
-    MQuaternion xQuat(xAngle, xRotAxe);
-    euler = xQuat.asEulerRotation();
     MMatrix rotationYMatrix2;
-    rotationYMatrix2[0][0] = cos(euler.y);
-    rotationYMatrix2[0][2] = -sin(euler.y);
-    rotationYMatrix2[2][0] = sin(euler.y);
-    rotationYMatrix2[2][2] = cos(euler.y);
-    MMatrix rotationXMatrix2;
-    rotationXMatrix2[1][1] = cos(euler.x);
-    rotationXMatrix2[1][2] = sin(euler.x);
-    rotationXMatrix2[2][1] = -sin(euler.x);
-    rotationXMatrix2[2][2] = cos(euler.x);
-    MMatrix rotationZMatrix2;
-    rotationZMatrix2[0][0] = cos(euler.z);
-    rotationZMatrix2[0][1] = sin(euler.z);
-    rotationZMatrix2[1][0] = -sin(euler.z);
-    rotationZMatrix2[1][1] = cos(euler.z);
-    transformMatrix *= rotationXMatrix2 * rotationYMatrix2 * rotationZMatrix2;
+    rotationYMatrix2[0][0] = cos(xAngle);
+    rotationYMatrix2[0][2] = -sin(xAngle);
+    rotationYMatrix2[2][0] = sin(xAngle);
+    rotationYMatrix2[2][2] = cos(xAngle);
+    transformMatrix *= rotationYMatrix2;
 
     // Apply transformation
     MString matrix;
