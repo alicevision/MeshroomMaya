@@ -38,7 +38,6 @@ public:
     MDagPath getImagePlaneShapeDagPath() const;
     std::string getImagePlane() const;
     void setImagePlane(const std::string&, int width, int height) const;
-    void loadImagePlane() const;
     void unloadImagePlane() const;
     openMVG::PinholeCamera getPinholeCamera() const;
     void setPinholeCamera(const openMVG::PinholeCamera&) const;

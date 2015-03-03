@@ -200,25 +200,8 @@ void MVGProjectWrapper::setCameraToView(QObject* camera, const QString& viewName
 {
     MVGCameraWrapper* cameraWrapper = static_cast<MVGCameraWrapper*>(camera);
 
-    // Load new active camera
-    cameraWrapper->getCamera().loadImagePlane();
-
-    std::string newCameraName = cameraWrapper->getName().toStdString();
-    // Add old active camera to cached image list
-    std::string oldActiveCameraName;
-    std::map<std::string, std::string>::iterator cameraInViewIt =
-        _activeCameraNameByView.find(viewName.toStdString());
-    if(cameraInViewIt != _activeCameraNameByView.end())
-    {
-        if(cameraInViewIt->second != newCameraName)
-        {
-            const std::string activeCameraName = cameraInViewIt->second;
-            if(_camerasByName[activeCameraName]->getViews().size() < 2)
-                oldActiveCameraName = activeCameraName;
-        }
-    }
-
-    _project.updateImageCache(newCameraName, oldActiveCameraName);
+    // Push command
+    _project.pushLoadCurrentImagePlaneCommand(viewName.toStdString());
 
     // Set UI
     foreach(MVGCameraWrapper* c, _cameraList.asQList<MVGCameraWrapper>())
@@ -226,7 +209,7 @@ void MVGProjectWrapper::setCameraToView(QObject* camera, const QString& viewName
     MVGCameraWrapper* cam = qobject_cast<MVGCameraWrapper*>(camera);
     cam->setInView(viewName, true);
 
-    //     Update active camera
+    // Update active camera
     _activeCameraNameByView[viewName.toStdString()] = cameraWrapper->getName().toStdString();
 
     // rebuild cache
