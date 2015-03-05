@@ -131,6 +131,7 @@ void MVGProjectWrapper::loadNewProject(const QString& projectDirectoryPath)
     if(!_project.load(projectDirectoryPath.toStdString()))
     {
         setProjectDirectory("");
+        setIsProjectLoading(false);
         LOG_ERROR("An error occured when loading project.");
         return;
     }
