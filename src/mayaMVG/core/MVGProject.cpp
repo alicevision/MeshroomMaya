@@ -186,7 +186,7 @@ bool MVGProject::loadPointCloud(const std::string& projectDirectoryPath)
 }
 
 bool MVGProject::scaleScene(const double scaleSize) const
-{ 
+{
     // Check for root node
     if(!isValid())
         return false;
@@ -201,62 +201,43 @@ bool MVGProject::scaleScene(const double scaleSize) const
     mesh.getPoint(0, A);
     mesh.getPoint(1, B);
     mesh.getPoint(3, C);
-    // Translate : center object in (0, 0, 0)
-    MMatrix translationMatrix;
-    translationMatrix[3][0] = -A.x;
-    translationMatrix[3][1] = -A.y;
-    translationMatrix[3][2] = -A.z;
-    translationMatrix[3][3] = 1;
-    // Rotate : fit Y axis
-    MPoint translatedA = A * translationMatrix;
-    MPoint translatedB = B * translationMatrix;
-    MVector AB = translatedB - translatedA;
+    MVector AB = B - A;
     double scaleFactor = scaleSize / AB.length();
     AB.normalize();
+    // Rotate to Y Matrix
     MVector y(0, 1, 0);
     double yAngle = acos(AB * y);
     MVector yRotAxe = (AB ^ y);
     yRotAxe.normalize();
-    MQuaternion quat(yAngle, yRotAxe);
-    MEulerRotation euler = quat.asEulerRotation();
-    MMatrix rotationXMatrix;
-    rotationXMatrix[1][1] = cos(euler.x);
-    rotationXMatrix[1][2] = sin(euler.x);
-    rotationXMatrix[2][1] = -sin(euler.x);
-    rotationXMatrix[2][2] = cos(euler.x);
-    MMatrix rotationYMatrix;
-    rotationYMatrix[0][0] = cos(euler.y);
-    rotationYMatrix[0][2] = -sin(euler.y);
-    rotationYMatrix[2][0] = sin(euler.y);
-    rotationYMatrix[2][2] = cos(euler.y);
-    MMatrix rotationZMatrix;
-    rotationZMatrix[0][0] = cos(euler.z);
-    rotationZMatrix[0][1] = sin(euler.z);
-    rotationZMatrix[1][0] = -sin(euler.z);
-    rotationZMatrix[1][1] = cos(euler.z);
-    // Scale
-    MMatrix scaleMatrix;
-    scaleMatrix[0][0] = scaleFactor;
-    scaleMatrix[1][1] = scaleFactor;
-    scaleMatrix[2][2] = scaleFactor;
-    MMatrix transformMatrix =
-        translationMatrix * rotationXMatrix * rotationYMatrix * rotationZMatrix * scaleMatrix;
-    // Rotate : fit X axis
-    MPoint transformedA = A * transformMatrix;
-    MPoint transformedC = C * transformMatrix;
-    MVector AC = transformedC - transformedA;
+    MQuaternion yQuat(yAngle, yRotAxe);
+    MMatrix rotationToYMatrix = yQuat.asMatrix();
+    MPoint rotatedA = A * rotationToYMatrix;
+    MPoint rotatedC = C * rotationToYMatrix;
+    // Rotate to X Matrix
+    MVector AC = rotatedC - rotatedA;
     AC.y = 0;
     AC.normalize();
     MVector x(1, 0, 0);
     double xAngle = acos(AC * x);
-    MMatrix rotationYMatrix2;
-    rotationYMatrix2[0][0] = cos(xAngle);
-    rotationYMatrix2[0][2] = -sin(xAngle);
-    rotationYMatrix2[2][0] = sin(xAngle);
-    rotationYMatrix2[2][2] = cos(xAngle);
-    transformMatrix *= rotationYMatrix2;
-
+    MVector xRotAxe = (AC ^ x);
+    xRotAxe.normalize();
+    MQuaternion xQuat(xAngle, xRotAxe);
+    MMatrix rotationToXMatrix = xQuat.asMatrix();
+    rotatedA *= rotationToXMatrix;
+    // Translate
+    MMatrix translationMatrix;
+    translationMatrix[3][0] = -rotatedA.x;
+    translationMatrix[3][1] = -rotatedA.y;
+    translationMatrix[3][2] = -rotatedA.z;
+    translationMatrix[3][3] = 1;
+    // Scale Matrix
+    MMatrix scaleMatrix;
+    scaleMatrix[0][0] = scaleFactor;
+    scaleMatrix[1][1] = scaleFactor;
+    scaleMatrix[2][2] = scaleFactor;
     // Apply transformation
+    MMatrix transformMatrix =
+        rotationToYMatrix * rotationToXMatrix * translationMatrix * scaleMatrix;
     MString matrix;
     for(int i = 0; i < 4; ++i)
     {
