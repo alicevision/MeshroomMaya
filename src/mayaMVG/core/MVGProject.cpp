@@ -13,6 +13,8 @@
 #include <maya/MQuaternion.h>
 #include <maya/MEulerRotation.h>
 #include <maya/MMatrix.h>
+#include <maya/MItSelectionList.h>
+#include <maya/MItMeshPolygon.h>
 
 namespace
 { // empty namespace
@@ -190,17 +192,44 @@ bool MVGProject::scaleScene(const double scaleSize) const
     // Check for root node
     if(!isValid())
         return false;
-    // Check for mesh node
-    MVGMesh mesh(_MESH);
-    if(!mesh.isValid())
-        return false;
-    // Get references
-    // Y axis is described by the two first points
-    // X axis is described by the first and last points
+    // Retrieve reference face
+    std::string meshName;
     MPoint A, B, C;
-    mesh.getPoint(0, A);
-    mesh.getPoint(1, B);
-    mesh.getPoint(3, C);
+    // Use Maya selection if a mesh face is selected
+    MSelectionList selectionList;
+    MGlobal::getActiveSelectionList(selectionList);
+    bool selectedFace = false;
+    MItSelectionList selectionIt(selectionList);
+    for(; !selectionIt.isDone(); selectionIt.next())
+    {
+        MDagPath item;
+        MObject component;
+        selectionIt.getDagPath(item, component);
+        if(component.apiType() != MFn::kMeshPolygonComponent)
+            continue;
+        selectedFace = true;
+        MItMeshPolygon polyIt(item, component);
+        A = polyIt.point(0);
+        B = polyIt.point(1);
+        C = polyIt.point(3);
+
+        MObject transform = item.transform();
+        MDagPath::getAPathTo(transform, item);
+        meshName = item.partialPathName().asChar();
+        break;
+    }
+    // Else use the first face of the first created mesh
+    if(!selectedFace)
+    {
+        // Check for mesh node
+        MVGMesh mesh(_MESH);
+        if(!mesh.isValid())
+            return false;
+        mesh.getPoint(0, A);
+        mesh.getPoint(1, B);
+        mesh.getPoint(3, C);
+        meshName = _MESH;
+    }
     MVector AB = B - A;
     double scaleFactor = scaleSize / AB.length();
     AB.normalize();
@@ -242,7 +271,7 @@ bool MVGProject::scaleScene(const double scaleSize) const
     }
     MGlobal::executePythonCommand("from mayaMVG import scale");
     MGlobal::executePythonCommand("scale.scaleScene('" + matrix + "', '" + _PROJECT.c_str() +
-                                      "', '" + _MESH.c_str() + "')",
+                                      "', '" + meshName.c_str() + "')",
                                   false, true);
 
     // Update cache

@@ -11,6 +11,7 @@ def lockNode(node, lockValue):
     cmds.setAttr(node+".rotateY", lock=lockValue)
     cmds.setAttr(node+".rotateZ", lock=lockValue)
 
+# TODO : move a selection of meshes
 def scaleScene(transformMatrix, projectNodeName, meshName):
     import maya.cmds as cmds
     relatives = cmds.listRelatives(projectNodeName, ad=True, pa=True, type="transform")
