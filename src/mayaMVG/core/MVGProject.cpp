@@ -204,40 +204,32 @@ bool MVGProject::scaleScene(const double scaleSize) const
     MVector AB = B - A;
     double scaleFactor = scaleSize / AB.length();
     AB.normalize();
-    // Rotate to Y Matrix
-    MVector y(0, 1, 0);
-    double yAngle = acos(AB * y);
-    MVector yRotAxe = (AB ^ y);
-    yRotAxe.normalize();
-    MQuaternion yQuat(yAngle, yRotAxe);
-    MMatrix rotationToYMatrix = yQuat.asMatrix();
-    MPoint rotatedA = A * rotationToYMatrix;
-    MPoint rotatedC = C * rotationToYMatrix;
-    // Rotate to X Matrix
-    MVector AC = rotatedC - rotatedA;
-    AC.y = 0;
+    MVector AC = C - A;
     AC.normalize();
-    MVector x(1, 0, 0);
-    double xAngle = acos(AC * x);
-    MVector xRotAxe = (AC ^ x);
-    xRotAxe.normalize();
-    MQuaternion xQuat(xAngle, xRotAxe);
-    MMatrix rotationToXMatrix = xQuat.asMatrix();
-    rotatedA *= rotationToXMatrix;
-    // Translate
-    MMatrix translationMatrix;
-    translationMatrix[3][0] = -rotatedA.x;
-    translationMatrix[3][1] = -rotatedA.y;
-    translationMatrix[3][2] = -rotatedA.z;
-    translationMatrix[3][3] = 1;
-    // Scale Matrix
-    MMatrix scaleMatrix;
-    scaleMatrix[0][0] = scaleFactor;
-    scaleMatrix[1][1] = scaleFactor;
-    scaleMatrix[2][2] = scaleFactor;
+    MVector RZ = (AC ^ AB);
+    RZ.normalize();
+    MVector RX = (AB ^ RZ);
+    RX.normalize();
+    MVector RY = (RZ ^ RX);
+    RY.normalize();
+    // Compute rotateScale matrix
+    MMatrix rotateScaleMatrix;
+    rotateScaleMatrix[0][0] = scaleFactor * RX[0];
+    rotateScaleMatrix[0][1] = scaleFactor * RY[0];
+    rotateScaleMatrix[0][2] = scaleFactor * RZ[0];
+    rotateScaleMatrix[1][0] = scaleFactor * RX[1];
+    rotateScaleMatrix[1][1] = scaleFactor * RY[1];
+    rotateScaleMatrix[1][2] = scaleFactor * RZ[1];
+    rotateScaleMatrix[2][0] = scaleFactor * RX[2];
+    rotateScaleMatrix[2][1] = scaleFactor * RY[2];
+    rotateScaleMatrix[2][2] = scaleFactor * RZ[2];
+    // Compute translation matrix
+    MMatrix translateMatrix;
+    translateMatrix[3][0] = -A.x;
+    translateMatrix[3][1] = -A.y;
+    translateMatrix[3][2] = -A.z;
     // Apply transformation
-    MMatrix transformMatrix =
-        rotationToYMatrix * rotationToXMatrix * translationMatrix * scaleMatrix;
+    MMatrix transformMatrix = translateMatrix * rotateScaleMatrix;
     MString matrix;
     for(int i = 0; i < 4; ++i)
     {
