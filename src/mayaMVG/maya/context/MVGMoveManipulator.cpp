@@ -173,16 +173,18 @@ void MVGMoveManipulator::draw(M3dView& view, const MDagPath& path, M3dView::Disp
             break;
     }
 
+    bool isActiveView = MVGMayaUtil::isActiveView(view);
+    bool isMVGView = MVGMayaUtil::isMVGView(view);
     { // 2D drawing
 
         MVGDrawUtil::begin2DDrawing(view.portWidth(), view.portHeight());
         MPoint mouseVSPosition = getMousePosition(view, kView);
 
         // Draw in active view
-        if(MVGMayaUtil::isActiveView(view))
+        if(isActiveView)
             drawCursor(mouseVSPosition);
         // Draw in MayaMVG viewports
-        if(!MVGMayaUtil::isMVGView(view))
+        if(!isMVGView)
         {
             MVGDrawUtil::end2DDrawing();
             glDisable(GL_BLEND);
@@ -192,7 +194,7 @@ void MVGMoveManipulator::draw(M3dView& view, const MDagPath& path, M3dView::Disp
         drawPlacedPoints(view, _cache, _onPressIntersectedComponent);
         MFn::Type intersectedComponentType = _cache->getIntersectiontType();
         // Draw in active MayaMVG viewport
-        if(!MVGMayaUtil::isActiveView(view))
+        if(!isActiveView)
         {
             drawComplementaryIntersectedBlindData(view, _cache->getIntersectedComponent());
             MVGDrawUtil::end2DDrawing();
@@ -334,13 +336,15 @@ MStatus MVGMoveManipulator::doRelease(M3dView& view)
                   _cache->getActiveCamera().getId(), clearBD);
         MArgList args;
         if(cmd->doIt(args))
+        {
             cmd->finalize();
+            _cache->rebuildMeshCache(_onPressIntersectedComponent.meshPath);
+        }
     }
 
     // clear the intersected component (stored on mouse press)
     _onPressIntersectedComponent = MVGManipulatorCache::IntersectedComponent();
     _finalWSPoints.clear();
-    _cache->rebuildMeshesCache();
 
     return MPxManipulatorNode::doRelease(view);
 }

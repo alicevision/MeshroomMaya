@@ -212,10 +212,6 @@ void MVGProjectWrapper::setCameraToView(QObject* camera, const QString& viewName
 
     // Update active camera
     _activeCameraNameByView[viewName.toStdString()] = cameraWrapper->getName().toStdString();
-
-    // rebuild cache
-    if(rebuildCache)
-        MGlobal::executeCommandOnIdle("mayaMVGTool -e -rebuild mayaMVGTool1");
 }
 
 void MVGProjectWrapper::setCamerasNear(const double near)

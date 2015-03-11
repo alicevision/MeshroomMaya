@@ -21,6 +21,7 @@ MVGContext::MVGContext()
 void MVGContext::toolOnSetup(MEvent& event)
 {
     updateManipulators();
+    _manipulatorCache.rebuildMeshesCache();
 }
 
 void MVGContext::toolOffCleanup()
@@ -53,7 +54,6 @@ void MVGContext::updateManipulators()
                 MPxManipulatorNode::newManipulator("MVGCreateManipulator", manipObject, &status));
             if(!status || !manip)
                 return;
-            _manipulatorCache.rebuildMeshesCache();
             manip->setContext(this);
             manip->setCache(&_manipulatorCache);
             break;
@@ -64,7 +64,6 @@ void MVGContext::updateManipulators()
                 MPxManipulatorNode::newManipulator("MVGMoveManipulator", manipObject, &status));
             if(!status || !manip)
                 return;
-            _manipulatorCache.rebuildMeshesCache();
             manip->setContext(this);
             manip->setCache(&_manipulatorCache);
             break;

@@ -60,9 +60,10 @@ void MVGCreateManipulator::draw(M3dView& view, const MDagPath& path, M3dView::Di
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-    // TODO : draw alpha poly
     bool isActiveView = MVGMayaUtil::isActiveView(view);
     bool isMVGView = MVGMayaUtil::isMVGView(view);
+    // Draw wireframe face
+    // TODO : draw alpha poly
     if(isActiveView && isMVGView)
     {
         if(_cameraIDToClickedCSPoints.second.length() == 0 && _finalWSPoints.length() > 3)
@@ -190,6 +191,7 @@ MStatus MVGCreateManipulator::doRelease(M3dView& view)
         if(_cameraIDToClickedCSPoints.second.length() == 4)
             _cameraIDToClickedCSPoints.second.remove(_cameraIDToClickedCSPoints.second.length() -
                                                      1);
+        _onPressIntersectedComponent = MVGManipulatorCache::IntersectedComponent();
         return MPxManipulatorNode::doRelease(view);
     }
 
@@ -209,6 +211,7 @@ MStatus MVGCreateManipulator::doRelease(M3dView& view)
             CHECK(mesh.setBlindDataPerCamera(facePointsIndexes[i], _cameraIDToClickedCSPoints.first,
                                              _cameraIDToClickedCSPoints.second[i]))
 
+        _cache->rebuildMeshesCache();
         _cameraIDToClickedCSPoints.second.clear();
         _finalWSPoints.clear();
         return MPxManipulatorNode::doRelease(view);
@@ -227,11 +230,10 @@ MStatus MVGCreateManipulator::doRelease(M3dView& view)
     if(cmd->doIt(args))
     {
         cmd->finalize();
-        // FIXME should only rebuild the cache corresponding to this mesh
-        _onPressIntersectedComponent = MVGManipulatorCache::IntersectedComponent();
-        _cache->rebuildMeshesCache();
+        _cache->rebuildMeshCache(_onPressIntersectedComponent.meshPath);
     }
 
+    _onPressIntersectedComponent = MVGManipulatorCache::IntersectedComponent();
     _cameraIDToClickedCSPoints.second.clear();
     _finalWSPoints.clear();
 
@@ -386,9 +388,11 @@ bool MVGCreateManipulator::snapToIntersectedEdge(
     M3dView& view, MPointArray& finalWSPoints,
     const MVGManipulatorCache::IntersectedComponent& intersectedEdge)
 {
-    finalWSPoints.clear();
     if(intersectedEdge.type != MFn::kMeshEdgeComponent)
         return false;
+    if(_onPressIntersectedComponent.type != MFn::kMeshEdgeComponent)
+        return false;
+    finalWSPoints.clear();
     const MPoint& pressedVertex1 = _onPressIntersectedComponent.edge->vertex1->worldPosition;
     const MPoint& pressedVertex2 = _onPressIntersectedComponent.edge->vertex2->worldPosition;
     const MPoint& intersectedVertex1 = intersectedEdge.edge->vertex1->worldPosition;
@@ -422,6 +426,8 @@ bool MVGCreateManipulator::snapToIntersectedEdge(
 bool MVGCreateManipulator::snapToIntersectedVertex(M3dView& view, MPointArray& finalWSPoints,
                                                    const MPointArray& intermediateCSEdgePoints)
 {
+    if(_onPressIntersectedComponent.type != MFn::kMeshEdgeComponent)
+        return false;
     finalWSPoints.setLength(4);
     // Begin with second edge's vertex to keep normal
     finalWSPoints[0] = _onPressIntersectedComponent.edge->vertex2->worldPosition;

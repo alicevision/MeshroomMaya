@@ -74,6 +74,7 @@ public:
     // intersections tests
     bool checkIntersection(const double, const MPoint&, const bool checkBlindData = false);
     const IntersectedComponent& getIntersectedComponent() const;
+    void clearIntersectedComponent() { _intersectedComponent = IntersectedComponent(); }
     const MFn::Type getIntersectiontType() const;
 
     // mesh & view relative data
