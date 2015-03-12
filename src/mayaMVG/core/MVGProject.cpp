@@ -13,6 +13,8 @@
 #include <maya/MQuaternion.h>
 #include <maya/MEulerRotation.h>
 #include <maya/MMatrix.h>
+#include <maya/MItSelectionList.h>
+#include <maya/MItMeshPolygon.h>
 
 namespace
 { // empty namespace
@@ -186,77 +188,77 @@ bool MVGProject::loadPointCloud(const std::string& projectDirectoryPath)
 }
 
 bool MVGProject::scaleScene(const double scaleSize) const
-{ 
+{
     // Check for root node
     if(!isValid())
         return false;
-    // Check for mesh node
-    MVGMesh mesh(_MESH);
-    if(!mesh.isValid())
-        return false;
-    // Get references
-    // Y axis is described by the two first points
-    // X axis is described by the first and last points
+    // Retrieve reference face
+    std::string meshName;
     MPoint A, B, C;
-    mesh.getPoint(0, A);
-    mesh.getPoint(1, B);
-    mesh.getPoint(3, C);
-    // Translate : center object in (0, 0, 0)
-    MMatrix translationMatrix;
-    translationMatrix[3][0] = -A.x;
-    translationMatrix[3][1] = -A.y;
-    translationMatrix[3][2] = -A.z;
-    translationMatrix[3][3] = 1;
-    // Rotate : fit Y axis
-    MPoint translatedA = A * translationMatrix;
-    MPoint translatedB = B * translationMatrix;
-    MVector AB = translatedB - translatedA;
+    // Use Maya selection if a mesh face is selected
+    MSelectionList selectionList;
+    MGlobal::getActiveSelectionList(selectionList);
+    bool selectedFace = false;
+    MItSelectionList selectionIt(selectionList);
+    for(; !selectionIt.isDone(); selectionIt.next())
+    {
+        MDagPath item;
+        MObject component;
+        selectionIt.getDagPath(item, component);
+        if(component.apiType() != MFn::kMeshPolygonComponent)
+            continue;
+        selectedFace = true;
+        MItMeshPolygon polyIt(item, component);
+        A = polyIt.point(0);
+        B = polyIt.point(1);
+        C = polyIt.point(3);
+
+        MObject transform = item.transform();
+        MDagPath::getAPathTo(transform, item);
+        meshName = item.partialPathName().asChar();
+        break;
+    }
+    // Else use the first face of the first created mesh
+    if(!selectedFace)
+    {
+        // Check for mesh node
+        MVGMesh mesh(_MESH);
+        if(!mesh.isValid())
+            return false;
+        mesh.getPoint(0, A);
+        mesh.getPoint(1, B);
+        mesh.getPoint(3, C);
+        meshName = _MESH;
+    }
+    MVector AB = B - A;
     double scaleFactor = scaleSize / AB.length();
     AB.normalize();
-    MVector y(0, 1, 0);
-    double yAngle = acos(AB * y);
-    MVector yRotAxe = (AB ^ y);
-    yRotAxe.normalize();
-    MQuaternion quat(yAngle, yRotAxe);
-    MEulerRotation euler = quat.asEulerRotation();
-    MMatrix rotationXMatrix;
-    rotationXMatrix[1][1] = cos(euler.x);
-    rotationXMatrix[1][2] = sin(euler.x);
-    rotationXMatrix[2][1] = -sin(euler.x);
-    rotationXMatrix[2][2] = cos(euler.x);
-    MMatrix rotationYMatrix;
-    rotationYMatrix[0][0] = cos(euler.y);
-    rotationYMatrix[0][2] = -sin(euler.y);
-    rotationYMatrix[2][0] = sin(euler.y);
-    rotationYMatrix[2][2] = cos(euler.y);
-    MMatrix rotationZMatrix;
-    rotationZMatrix[0][0] = cos(euler.z);
-    rotationZMatrix[0][1] = sin(euler.z);
-    rotationZMatrix[1][0] = -sin(euler.z);
-    rotationZMatrix[1][1] = cos(euler.z);
-    // Scale
-    MMatrix scaleMatrix;
-    scaleMatrix[0][0] = scaleFactor;
-    scaleMatrix[1][1] = scaleFactor;
-    scaleMatrix[2][2] = scaleFactor;
-    MMatrix transformMatrix =
-        translationMatrix * rotationXMatrix * rotationYMatrix * rotationZMatrix * scaleMatrix;
-    // Rotate : fit X axis
-    MPoint transformedA = A * transformMatrix;
-    MPoint transformedC = C * transformMatrix;
-    MVector AC = transformedC - transformedA;
-    AC.y = 0;
+    MVector AC = C - A;
     AC.normalize();
-    MVector x(1, 0, 0);
-    double xAngle = acos(AC * x);
-    MMatrix rotationYMatrix2;
-    rotationYMatrix2[0][0] = cos(xAngle);
-    rotationYMatrix2[0][2] = -sin(xAngle);
-    rotationYMatrix2[2][0] = sin(xAngle);
-    rotationYMatrix2[2][2] = cos(xAngle);
-    transformMatrix *= rotationYMatrix2;
-
+    MVector RZ = (AC ^ AB);
+    RZ.normalize();
+    MVector RX = (AB ^ RZ);
+    RX.normalize();
+    MVector RY = (RZ ^ RX);
+    RY.normalize();
+    // Compute rotateScale matrix
+    MMatrix rotateScaleMatrix;
+    rotateScaleMatrix[0][0] = scaleFactor * RX[0];
+    rotateScaleMatrix[0][1] = scaleFactor * RY[0];
+    rotateScaleMatrix[0][2] = scaleFactor * RZ[0];
+    rotateScaleMatrix[1][0] = scaleFactor * RX[1];
+    rotateScaleMatrix[1][1] = scaleFactor * RY[1];
+    rotateScaleMatrix[1][2] = scaleFactor * RZ[1];
+    rotateScaleMatrix[2][0] = scaleFactor * RX[2];
+    rotateScaleMatrix[2][1] = scaleFactor * RY[2];
+    rotateScaleMatrix[2][2] = scaleFactor * RZ[2];
+    // Compute translation matrix
+    MMatrix translateMatrix;
+    translateMatrix[3][0] = -A.x;
+    translateMatrix[3][1] = -A.y;
+    translateMatrix[3][2] = -A.z;
     // Apply transformation
+    MMatrix transformMatrix = translateMatrix * rotateScaleMatrix;
     MString matrix;
     for(int i = 0; i < 4; ++i)
     {
@@ -269,7 +271,7 @@ bool MVGProject::scaleScene(const double scaleSize) const
     }
     MGlobal::executePythonCommand("from mayaMVG import scale");
     MGlobal::executePythonCommand("scale.scaleScene('" + matrix + "', '" + _PROJECT.c_str() +
-                                      "', '" + _MESH.c_str() + "')",
+                                      "', '" + meshName.c_str() + "')",
                                   false, true);
 
     // Update cache
