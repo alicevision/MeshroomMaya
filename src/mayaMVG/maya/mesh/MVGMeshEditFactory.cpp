@@ -105,6 +105,11 @@ MStatus MVGMeshEditFactory::doIt()
                                                      _cameraPositions[i]))
             }
             break;
+        }
+        case kClearBD:
+        {
+            for(size_t i = 0; i < _componentIDs.length(); ++i)
+                CHECK(mesh.unsetBlindData(_componentIDs[i]));
             break;
         }
     }

@@ -117,6 +117,11 @@ void MVGEditCmd::move(const MDagPath& meshPath, const MIntArray& componentIDs,
                       const MPointArray& cameraSpacePositions, const int cameraID,
                       const bool clearBD)
 {
+    if(!meshPath.isValid())
+    {
+        LOG_ERROR("Mesh path is not valid : " << meshPath.fullPathName())
+        return;
+    }
     _editType = MVGMeshEditFactory::kMove;
     _meshPath = meshPath;
     _componentIDs = componentIDs;
@@ -124,13 +129,18 @@ void MVGEditCmd::move(const MDagPath& meshPath, const MIntArray& componentIDs,
     _cameraSpacePositions = cameraSpacePositions;
     _cameraID = cameraID;
     _clearBD = clearBD;
+}
 
-    // TODO remove from here, should always be valid
+void MVGEditCmd::clearBD(const MDagPath& meshPath, const MIntArray& componentIDs)
+{
     if(!meshPath.isValid())
     {
-        MVGMesh mesh = MVGMesh::create(MVGProject::_MESH);
-        _meshPath = mesh.getDagPath();
+        LOG_ERROR("Mesh path is not valid : " << meshPath.fullPathName())
+        return;
     }
+    _editType = MVGMeshEditFactory::kClearBD;
+    _meshPath = meshPath;
+    _componentIDs = componentIDs;
 }
 
 } // namespace

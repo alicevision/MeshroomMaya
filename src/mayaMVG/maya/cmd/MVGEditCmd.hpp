@@ -35,6 +35,7 @@ public:
     void move(const MDagPath& meshPath, const MIntArray& componentIDs,
               const MPointArray& worldSpacePositions, const MPointArray& cameraSpacePositions,
               const int cameraID, const bool clearBD = false);
+    void clearBD(const MDagPath& meshPath, const MIntArray& componentIDs);
 
 public:
     static MString _name;

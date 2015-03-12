@@ -18,6 +18,7 @@ public:
     {
         kAddFace = 0,
         kMove = 1,
+        kClearBD = 2,
     };
 
 public:

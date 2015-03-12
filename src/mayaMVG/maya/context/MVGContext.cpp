@@ -5,6 +5,7 @@
 #include "mayaMVG/core/MVGCamera.hpp"
 #include "mayaMVG/qt/MVGQt.hpp"
 #include <maya/MQtUtil.h>
+#include <maya/MArgList.h>
 
 namespace mayaMVG
 {
@@ -122,6 +123,35 @@ bool MVGContext::eventFilter(QObject* obj, QEvent* e)
                     break; // Spread event to Maya
                 case Qt::Key_Escape:
                     updateManipulators();
+                    _manipulatorCache.clearSelectedComponent();
+                    break;
+                case Qt::Key_Return:
+                case Qt::Key_Enter:
+                {
+                    const MVGManipulatorCache::IntersectedComponent& selectedComponent =
+                        _manipulatorCache.getSelectedComponent();
+                    if(selectedComponent.type != MFn::kMeshVertComponent &&
+                       selectedComponent.type != MFn::kBlindData)
+                        break;
+                    MVGEditCmd* cmd = newCmd();
+                    if(cmd)
+                    {
+                        MIntArray componentId;
+                        componentId.append(selectedComponent.vertex->index);
+                        MDagPath meshPath = selectedComponent.meshPath;
+
+                        cmd->clearBD(meshPath, componentId);
+                        MArgList args;
+                        if(cmd->doIt(args))
+                        {
+                            cmd->finalize();
+                            _manipulatorCache.rebuildMeshesCache();
+                            _manipulatorCache.clearSelectedComponent();
+                        }
+                        break;
+                    }
+                    break;
+                }
                 default:
                     break;
             }
