@@ -110,11 +110,11 @@ void MVGCreateManipulator::draw(M3dView& view, const MDagPath& path, M3dView::Di
         // draw intersection
         MPointArray intersectedVSPoints;
         getIntersectedPoints(view, intersectedVSPoints, MVGManipulator::kView);
-        MVGManipulator::drawIntersection2D(intersectedVSPoints, _cache->getIntersectiontType());
+        MVGManipulator::drawIntersection2D(intersectedVSPoints, _cache->getIntersectionType());
 
         // Draw snaped element
         if(_doSnap)
-        {           
+        {
             if(_snapedPoints.length() == 1)
                 MVGDrawUtil::drawCircle2D(
                     MVGGeometryUtil::worldToViewSpace(view, _finalWSPoints[_snapedPoints[0]]),
@@ -191,6 +191,7 @@ MStatus MVGCreateManipulator::doRelease(M3dView& view)
         if(_cameraIDToClickedCSPoints.second.length() == 4)
             _cameraIDToClickedCSPoints.second.remove(_cameraIDToClickedCSPoints.second.length() -
                                                      1);
+        // Clear component
         _onPressIntersectedComponent = MVGManipulatorCache::IntersectedComponent();
         return MPxManipulatorNode::doRelease(view);
     }
@@ -204,12 +205,6 @@ MStatus MVGCreateManipulator::doRelease(M3dView& view)
         MVGMesh mesh = MVGMesh::create(MVGProject::_MESH);
         int polygonID;
         mesh.addPolygon(_finalWSPoints, polygonID);
-
-        // Set blind data
-        MIntArray facePointsIndexes = mesh.getFaceVertices(polygonID);
-        for(size_t i = 0; i < facePointsIndexes.length(); ++i)
-            CHECK(mesh.setBlindDataPerCamera(facePointsIndexes[i], _cameraIDToClickedCSPoints.first,
-                                             _cameraIDToClickedCSPoints.second[i]))
 
         _cache->rebuildMeshesCache();
         _cameraIDToClickedCSPoints.second.clear();
@@ -233,6 +228,7 @@ MStatus MVGCreateManipulator::doRelease(M3dView& view)
         _cache->rebuildMeshCache(_onPressIntersectedComponent.meshPath);
     }
 
+    // Clear data
     _onPressIntersectedComponent = MVGManipulatorCache::IntersectedComponent();
     _cameraIDToClickedCSPoints.second.clear();
     _finalWSPoints.clear();

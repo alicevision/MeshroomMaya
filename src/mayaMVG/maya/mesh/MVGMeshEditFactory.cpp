@@ -91,19 +91,24 @@ MStatus MVGMeshEditFactory::doIt()
             {
                 for(size_t i = 0; i < _componentIDs.length(); ++i)
                 {
+                    CHECK(mesh.setPoint(_componentIDs[i], _worldPositions[i]))
                     if(_clearBD)
                         CHECK(mesh.unsetBlindData(_componentIDs[i]));
-                    CHECK(mesh.setPoint(_componentIDs[i], _worldPositions[i]))
                 }
             }
+            if(!_clearBD)
+            {
+                // set blind data
+                assert(_componentIDs.length() == _cameraPositions.length());
+                for(size_t i = 0; i < _componentIDs.length(); ++i)
+                    CHECK(mesh.setBlindDataPerCamera(_componentIDs[i], _cameraID,
+                                                     _cameraPositions[i]))
+            }
+            break;
             break;
         }
     }
 
-    // set blind data
-    assert(_componentIDs.length() == _cameraPositions.length());
-    for(size_t i = 0; i < _componentIDs.length(); ++i)
-        CHECK(mesh.setBlindDataPerCamera(_componentIDs[i], _cameraID, _cameraPositions[i]))
     return status;
 }
 

@@ -48,6 +48,7 @@ public:
         std::vector<EdgeData> edges;
     };
 
+    // TODO : rename
     struct IntersectedComponent
     {
         IntersectedComponent()
@@ -56,7 +57,7 @@ public:
             , edge(NULL)
         {
         }
-        MFn::Type type; // kMeshEdgeComponent, kMeshVertComponent
+        MFn::Type type; // kMeshEdgeComponent, kMeshVertComponent, kBlindData
         MDagPath meshPath;
         VertexData* vertex;
         EdgeData* edge;
@@ -75,13 +76,18 @@ public:
     bool checkIntersection(const double, const MPoint&, const bool checkBlindData = false);
     const IntersectedComponent& getIntersectedComponent() const;
     void clearIntersectedComponent() { _intersectedComponent = IntersectedComponent(); }
-    const MFn::Type getIntersectiontType() const;
+    const MFn::Type getIntersectionType() const;
 
     // mesh & view relative data
     const std::map<std::string, MeshData>& getMeshData() const;
     const MeshData& getMeshData(const std::string meshName);
     void rebuildMeshesCache();
     void rebuildMeshCache(const MDagPath&);
+
+    const IntersectedComponent& getSelectedComponent() const { return _selectedComponent; }
+    void setSelectedComponent(const IntersectedComponent& selectedComponent);
+    void clearSelectedComponent() { _selectedComponent = IntersectedComponent(); }
+    void updateSelectedComponent(const MDagPath& meshPath, const MFn::Type type, const int index);
 
 private:
     bool isIntersectingBlindData(const double, const MPoint&);
@@ -92,6 +98,7 @@ private:
     M3dView _activeView;
     MVGCamera _activeCamera;
     IntersectedComponent _intersectedComponent;
+    IntersectedComponent _selectedComponent;
     std::map<std::string, MeshData> _meshData; // per mesh
 };
 

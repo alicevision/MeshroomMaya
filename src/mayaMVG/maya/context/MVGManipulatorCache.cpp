@@ -5,6 +5,7 @@
 #include "mayaMVG/core/MVGLog.hpp"
 #include <maya/MItMeshVertex.h>
 #include <maya/MItMeshEdge.h>
+#include <list>
 
 namespace mayaMVG
 {
@@ -66,8 +67,7 @@ bool MVGManipulatorCache::checkIntersection(const double tolerance, const MPoint
         return true;
     if(isIntersectingEdge(tolerance, mouseCSPosition))
         return true;
-    // clear intersected component
-    _intersectedComponent = MVGManipulatorCache::IntersectedComponent();
+    clearIntersectedComponent();
     return false;
 }
 
@@ -77,7 +77,7 @@ MVGManipulatorCache::getIntersectedComponent() const
     return _intersectedComponent;
 }
 
-const MFn::Type MVGManipulatorCache::getIntersectiontType() const
+const MFn::Type MVGManipulatorCache::getIntersectionType() const
 {
     return _intersectedComponent.type;
 }
@@ -91,14 +91,24 @@ const MVGManipulatorCache::MeshData& MVGManipulatorCache::getMeshData(const std:
 }
 void MVGManipulatorCache::rebuildMeshesCache()
 {
-    // clear cache & other associated data
-    _intersectedComponent = MVGManipulatorCache::IntersectedComponent();
-    _meshData.clear();
+    std::list<std::string> meshesList;
+    for(std::map<std::string, MeshData>::iterator it = _meshData.begin(); it != _meshData.end();
+        ++it)
+        meshesList.push_back(it->first);
+
     // rebuild cache
     std::vector<MVGMesh> meshes = MVGMesh::list();
     std::vector<MVGMesh>::const_iterator it = meshes.begin();
     for(; it != meshes.end(); ++it)
+    {
+        meshesList.remove(it->getDagPath().fullPathName().asChar());
         rebuildMeshCache(it->getDagPath());
+    }
+
+    // Remove data about meshes that does not exist anymore
+    for(std::list<std::string>::iterator meshIt = meshesList.begin(); meshIt != meshesList.end();
+        ++meshIt)
+        _meshData.erase(*meshIt);
 }
 
 void MVGManipulatorCache::rebuildMeshCache(const MDagPath& path)
@@ -106,6 +116,27 @@ void MVGManipulatorCache::rebuildMeshCache(const MDagPath& path)
     MVGMesh mesh(path);
     if(!mesh.isValid())
         return;
+
+    // Retrieve selectedComponent info
+    MDagPath meshPath = _selectedComponent.meshPath;
+    MFn::Type type = MFn::kInvalid;
+    int index = -1;
+    if(meshPath == path)
+    {
+        type = _selectedComponent.type;
+        if(type == MFn::kBlindData || type == MFn::kMeshVertComponent)
+            index = _selectedComponent.vertex->index;
+        if(type == MFn::kMeshEdgeComponent)
+            index = _selectedComponent.edge->index;
+    }
+
+    // Clear component associated to meshData
+    if(path == _intersectedComponent.meshPath)
+        clearIntersectedComponent();
+    if(path == _selectedComponent.meshPath)
+        ;
+    clearSelectedComponent();
+
     // prepare vertices & edges iterators
     MStatus status;
     MItMeshVertex vIt(path, MObject::kNullObj, &status);
@@ -117,8 +148,9 @@ void MVGManipulatorCache::rebuildMeshCache(const MDagPath& path)
     eIt.geomChanged();
     CHECK_RETURN(status)
     // prepare & add an empty mesh data object
-    _meshData[path.fullPathName().asChar()] = MeshData();
-    MeshData& newMeshData = _meshData[path.fullPathName().asChar()];
+    const std::string pathsString = path.fullPathName().asChar();
+    _meshData[pathsString] = MeshData();
+    MeshData& newMeshData = _meshData[pathsString];
     newMeshData.vertices.resize(vIt.count());
     newMeshData.edges.resize(eIt.count());
     // fill it with vertices data
@@ -151,6 +183,35 @@ void MVGManipulatorCache::rebuildMeshCache(const MDagPath& path)
         edge.vertex2 = &(*v2It);
         eIt.next();
     }
+
+    if(meshPath == path)
+        updateSelectedComponent(meshPath, type, index);
+}
+
+void MVGManipulatorCache::setSelectedComponent(const IntersectedComponent& selectedComponent)
+{
+    _selectedComponent = selectedComponent;
+}
+
+void MVGManipulatorCache::updateSelectedComponent(const MDagPath& meshPath, const MFn::Type type,
+                                                  const int index)
+{
+    IntersectedComponent component;
+    component.type = type;
+    component.meshPath = meshPath;
+
+    const std::string meshPathString = meshPath.fullPathName().asChar();
+    if(type == MFn::kMeshVertComponent || type == MFn::kBlindData)
+    {
+        std::map<std::string, MeshData>::iterator it = _meshData.find(meshPathString);
+        if(it == _meshData.end())
+            return;
+        std::vector<VertexData>& verticesArray = _meshData[meshPathString].vertices;
+        if(verticesArray.size() <= index)
+            return;
+        component.vertex = &(verticesArray[index]);
+    }
+    _selectedComponent = component;
 }
 
 bool MVGManipulatorCache::isIntersectingBlindData(const double tolerance,

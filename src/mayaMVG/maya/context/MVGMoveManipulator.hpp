@@ -50,6 +50,9 @@ public:
         M3dView& view, const MVGManipulatorCache::IntersectedComponent& intersectedComponent);
     static void drawVertexOnHover(M3dView& view, MVGManipulatorCache* cache,
                                   const MPoint& mouseVSPosition);
+    static void
+    drawSelectedPoint(M3dView& view,
+                      const MVGManipulatorCache::IntersectedComponent& selectedComponent);
 
 public:
     static MTypeId _id;
