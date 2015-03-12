@@ -128,11 +128,12 @@ bool MVGContext::eventFilter(QObject* obj, QEvent* e)
                 case Qt::Key_Return:
                 case Qt::Key_Enter:
                 {
-                    const MVGManipulatorCache::IntersectedComponent& selectedComponent =
+                    const MVGManipulatorCache::MVGComponent& selectedComponent =
                         _manipulatorCache.getSelectedComponent();
                     if(selectedComponent.type != MFn::kMeshVertComponent &&
                        selectedComponent.type != MFn::kBlindData)
                         break;
+                    // Clear blind data
                     MVGEditCmd* cmd = newCmd();
                     if(cmd)
                     {

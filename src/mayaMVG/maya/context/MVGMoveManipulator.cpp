@@ -181,17 +181,10 @@ void MVGMoveManipulator::draw(M3dView& view, const MDagPath& path, M3dView::Disp
     bool isActiveView = MVGMayaUtil::isActiveView(view);
     bool isMVGView = MVGMayaUtil::isMVGView(view);
 
-    const MVGManipulatorCache::IntersectedComponent& selectedComponent =
-        _cache->getSelectedComponent();
+    const MVGManipulatorCache::MVGComponent& selectedComponent = _cache->getSelectedComponent();
     // Draw selected point
     if(!_doDrag)
-    {
-        if(selectedComponent.type == MFn::kMeshVertComponent ||
-           selectedComponent.type == MFn::kBlindData)
-            MVGDrawUtil::drawPoint3D(selectedComponent.vertex->worldPosition,
-                                     MVGDrawUtil::_selectionColor, 6.f);
-    }
-
+        drawSelectedPoint3D(view, selectedComponent);
     { // 2D drawing
 
         MVGDrawUtil::begin2DDrawing(view.portWidth(), view.portHeight());
@@ -211,7 +204,7 @@ void MVGMoveManipulator::draw(M3dView& view, const MDagPath& path, M3dView::Disp
         drawPlacedPoints(view, _cache, _onPressIntersectedComponent);
         // Draw selected point
         if(!_doDrag)
-            drawSelectedPoint(view, selectedComponent);
+            drawSelectedPoint2D(view, selectedComponent);
         // Draw in active MayaMVG viewport
         if(!isActiveView)
         {
@@ -222,25 +215,7 @@ void MVGMoveManipulator::draw(M3dView& view, const MDagPath& path, M3dView::Disp
             return;
         }
         // Draw point to be placed
-        if(_mode == kNViewTriangulation && (selectedComponent.type == MFn::kMeshVertComponent ||
-                                            selectedComponent.type == MFn::kBlindData))
-        {
-            MDagPath cameraPath;
-            view.getCamera(cameraPath);
-            MVGCamera camera(cameraPath);
-
-            std::map<int, MPoint>::const_iterator currentData =
-                selectedComponent.vertex->blindData.find(camera.getId());
-            // If BD not found
-            if(currentData == selectedComponent.vertex->blindData.end())
-            {
-                MVGDrawUtil::drawFullCross(mouseVSPosition, 7, 1, MVGDrawUtil::_selectionColor);
-                MPoint vertexVS = MVGGeometryUtil::worldToViewSpace(
-                    view, selectedComponent.vertex->worldPosition);
-                MVGDrawUtil::drawLine2D(mouseVSPosition, vertexVS, MVGDrawUtil::_selectionColor,
-                                        1.5f, 1.f, true);
-            }
-        }
+        drawPointToBePlaced(view, selectedComponent, mouseVSPosition);
         // Draw vertex information on hover
         drawVertexOnHover(view, _cache, getMousePosition(view, kView));
         // draw intersection
@@ -327,8 +302,7 @@ MStatus MVGMoveManipulator::doRelease(M3dView& view)
 
     // If there is a selected component, and if there is no blind data for the current camera
     // Use the selected component instead of _onPressIntersectedComponent to compute final positions
-    const MVGManipulatorCache::IntersectedComponent& selectedComponent =
-        _cache->getSelectedComponent();
+    const MVGManipulatorCache::MVGComponent& selectedComponent = _cache->getSelectedComponent();
     if(selectedComponent.type == MFn::kMeshVertComponent ||
        selectedComponent.type == MFn::kBlindData)
     {
@@ -389,7 +363,7 @@ MStatus MVGMoveManipulator::doRelease(M3dView& view)
         if(_finalWSPoints.length() == 0)
         {
             // clear the intersected component (stored on mouse press)
-            _onPressIntersectedComponent = MVGManipulatorCache::IntersectedComponent();
+            _onPressIntersectedComponent = MVGManipulatorCache::MVGComponent();
             return MPxManipulatorNode::doRelease(view);
         }
         clickedCSPoints = MVGGeometryUtil::worldToCameraSpace(view, _finalWSPoints);
@@ -414,15 +388,14 @@ MStatus MVGMoveManipulator::doRelease(M3dView& view)
     }
 
     // clear the intersected component (stored on mouse press)
-    _onPressIntersectedComponent = MVGManipulatorCache::IntersectedComponent();
+    _onPressIntersectedComponent = MVGManipulatorCache::MVGComponent();
     _finalWSPoints.clear();
 
     // Select after rebuilding cache
     if(_mode == kNViewTriangulation)
     {
         _cache->checkIntersection(10.0, getMousePosition(view), true);
-        MVGManipulatorCache::IntersectedComponent intersectedComponent =
-            _cache->getIntersectedComponent();
+        MVGManipulatorCache::MVGComponent intersectedComponent = _cache->getIntersectedComponent();
         if(intersectedComponent.type == MFn::kBlindData ||
            intersectedComponent.type == MFn::kMeshVertComponent)
             _cache->setSelectedComponent(intersectedComponent);
@@ -870,7 +843,7 @@ void MVGMoveManipulator::drawCursor(const MPoint& originVS)
  */
 void MVGMoveManipulator::drawPlacedPoints(
     M3dView& view, MVGManipulatorCache* cache,
-    const MVGManipulatorCache::IntersectedComponent& onPressIntersectedComponent)
+    const MVGManipulatorCache::MVGComponent& onPressIntersectedComponent)
 {
     MDagPath cameraPath;
     view.getCamera(cameraPath);
@@ -932,10 +905,10 @@ void MVGMoveManipulator::drawPlacedPoints(
 /**
  * Hightlight blind data of intersected points in MVG views
  * @param view
- * @param intersectedComponent
+ * @param MVGComponent
  */
 void MVGMoveManipulator::drawComplementaryIntersectedBlindData(
-    M3dView& view, const MVGManipulatorCache::IntersectedComponent& intersectedComponent)
+    M3dView& view, const MVGManipulatorCache::MVGComponent& intersectedComponent)
 {
     if(intersectedComponent.type != MFn::kBlindData)
         return;
@@ -965,7 +938,7 @@ void MVGMoveManipulator::drawVertexOnHover(M3dView& view, MVGManipulatorCache* c
                                            const MPoint& mouseVSPosition)
 {
     MString nbView;
-    const MVGManipulatorCache::IntersectedComponent& intersectedComponent =
+    const MVGManipulatorCache::MVGComponent& intersectedComponent =
         cache->getIntersectedComponent();
     if(!cache->getActiveCamera().isValid())
         return;
@@ -1007,8 +980,14 @@ void MVGMoveManipulator::drawVertexOnHover(M3dView& view, MVGManipulatorCache* c
 }
 
 // static
-void MVGMoveManipulator::drawSelectedPoint(
-    M3dView& view, const MVGManipulatorCache::IntersectedComponent& selectedComponent)
+/**
+ * Highlight the blind data attached to the selected point
+ * @param view
+ * @param selectedComponent
+ */
+void
+MVGMoveManipulator::drawSelectedPoint2D(M3dView& view,
+                                        const MVGManipulatorCache::MVGComponent& selectedComponent)
 {
     if(selectedComponent.type != MFn::kMeshVertComponent &&
        selectedComponent.type != MFn::kBlindData)
@@ -1023,5 +1002,61 @@ void MVGMoveManipulator::drawSelectedPoint(
         MPoint blindDataVS = MVGGeometryUtil::cameraToViewSpace(view, currentData->second);
         MVGDrawUtil::drawEmptyCross(blindDataVS, 8, 2, MVGDrawUtil::_selectionColor, 1.5);
     }
+}
+
+// static
+/**
+ * Draw a point 3D on the world position of the selected component
+ * @param view
+ * @param selectedComponent
+ */
+void
+MVGMoveManipulator::drawSelectedPoint3D(M3dView& view,
+                                        const MVGManipulatorCache::MVGComponent& selectedComponent)
+{
+    if(selectedComponent.type != MFn::kMeshVertComponent &&
+       selectedComponent.type != MFn::kBlindData)
+        return;
+
+    MVGDrawUtil::drawPoint3D(selectedComponent.vertex->worldPosition, MVGDrawUtil::_selectionColor,
+                             6.f);
+}
+
+// static
+/**
+ * Draw a full cross at the mouseVSPosition
+ * Draw a line from the mouseVSPosition to the point in 3D
+ * @param view
+ * @param selectedComponent
+ * @param mouseVSPosition : position of the mouse in View Space coordinates
+ */
+void
+MVGMoveManipulator::drawPointToBePlaced(M3dView& view,
+                                        const MVGManipulatorCache::MVGComponent& selectedComponent,
+                                        const MPoint& mouseVSPosition)
+{
+    if(_mode != kNViewTriangulation)
+        return;
+    if(selectedComponent.type != MFn::kMeshVertComponent &&
+       selectedComponent.type != MFn::kBlindData)
+        return;
+
+    // Retrieve camera
+    MDagPath cameraPath;
+    view.getCamera(cameraPath);
+    MVGCamera camera(cameraPath);
+
+    std::map<int, MPoint>::const_iterator currentData =
+        selectedComponent.vertex->blindData.find(camera.getId());
+
+    // Only draw if no blind data for the current view
+    if(currentData != selectedComponent.vertex->blindData.end())
+        return;
+
+    MVGDrawUtil::drawFullCross(mouseVSPosition, 7, 1, MVGDrawUtil::_selectionColor);
+    MPoint vertexVS =
+        MVGGeometryUtil::worldToViewSpace(view, selectedComponent.vertex->worldPosition);
+    MVGDrawUtil::drawLine2D(mouseVSPosition, vertexVS, MVGDrawUtil::_selectionColor, 1.5f, 1.f,
+                            true);
 }
 } // namespace

@@ -71,8 +71,7 @@ bool MVGManipulatorCache::checkIntersection(const double tolerance, const MPoint
     return false;
 }
 
-const MVGManipulatorCache::IntersectedComponent&
-MVGManipulatorCache::getIntersectedComponent() const
+const MVGManipulatorCache::MVGComponent& MVGManipulatorCache::getIntersectedComponent() const
 {
     return _intersectedComponent;
 }
@@ -91,6 +90,7 @@ const MVGManipulatorCache::MeshData& MVGManipulatorCache::getMeshData(const std:
 }
 void MVGManipulatorCache::rebuildMeshesCache()
 {
+    // List all meshes
     std::list<std::string> meshesList;
     for(std::map<std::string, MeshData>::iterator it = _meshData.begin(); it != _meshData.end();
         ++it)
@@ -101,11 +101,12 @@ void MVGManipulatorCache::rebuildMeshesCache()
     std::vector<MVGMesh>::const_iterator it = meshes.begin();
     for(; it != meshes.end(); ++it)
     {
+        // Remove mesh updated to only clear meshes that have been removed
         meshesList.remove(it->getDagPath().fullPathName().asChar());
         rebuildMeshCache(it->getDagPath());
     }
 
-    // Remove data about meshes that does not exist anymore
+    // Remove data for meshes that does not exist anymore
     for(std::list<std::string>::iterator meshIt = meshesList.begin(); meshIt != meshesList.end();
         ++meshIt)
         _meshData.erase(*meshIt);
@@ -188,15 +189,23 @@ void MVGManipulatorCache::rebuildMeshCache(const MDagPath& path)
         updateSelectedComponent(meshPath, type, index);
 }
 
-void MVGManipulatorCache::setSelectedComponent(const IntersectedComponent& selectedComponent)
+void MVGManipulatorCache::setSelectedComponent(const MVGComponent& selectedComponent)
 {
     _selectedComponent = selectedComponent;
 }
 
+/**
+ * Retrieve the selected component after a rebuild cache
+ * The pointers in the Component are not valid anymore
+ *
+ * @param meshPath : path of the former selected component
+ * @param type : type of the former selected component
+ * @param index : index of the former selected component (edge or vertex)
+ */
 void MVGManipulatorCache::updateSelectedComponent(const MDagPath& meshPath, const MFn::Type type,
                                                   const int index)
 {
-    IntersectedComponent component;
+    MVGComponent component;
     component.type = type;
     component.meshPath = meshPath;
 

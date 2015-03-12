@@ -59,7 +59,7 @@ protected:
 
 protected:
     MVGManipulatorCache* _cache;
-    MVGManipulatorCache::IntersectedComponent _onPressIntersectedComponent;
+    MVGManipulatorCache::MVGComponent _onPressIntersectedComponent;
     MPoint _onPressCSPoint;
     MPointArray _finalWSPoints;
     int _cameraID;

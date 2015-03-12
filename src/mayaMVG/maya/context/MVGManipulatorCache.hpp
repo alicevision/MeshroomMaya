@@ -48,10 +48,9 @@ public:
         std::vector<EdgeData> edges;
     };
 
-    // TODO : rename
-    struct IntersectedComponent
+    struct MVGComponent
     {
-        IntersectedComponent()
+        MVGComponent()
             : type(MFn::kInvalid)
             , vertex(NULL)
             , edge(NULL)
@@ -74,8 +73,8 @@ public:
 
     // intersections tests
     bool checkIntersection(const double, const MPoint&, const bool checkBlindData = false);
-    const IntersectedComponent& getIntersectedComponent() const;
-    void clearIntersectedComponent() { _intersectedComponent = IntersectedComponent(); }
+    const MVGComponent& getIntersectedComponent() const;
+    void clearIntersectedComponent() { _intersectedComponent = MVGComponent(); }
     const MFn::Type getIntersectionType() const;
 
     // mesh & view relative data
@@ -84,9 +83,9 @@ public:
     void rebuildMeshesCache();
     void rebuildMeshCache(const MDagPath&);
 
-    const IntersectedComponent& getSelectedComponent() const { return _selectedComponent; }
-    void setSelectedComponent(const IntersectedComponent& selectedComponent);
-    void clearSelectedComponent() { _selectedComponent = IntersectedComponent(); }
+    const MVGComponent& getSelectedComponent() const { return _selectedComponent; }
+    void setSelectedComponent(const MVGComponent& selectedComponent);
+    void clearSelectedComponent() { _selectedComponent = MVGComponent(); }
     void updateSelectedComponent(const MDagPath& meshPath, const MFn::Type type, const int index);
 
 private:
@@ -97,8 +96,8 @@ private:
 private:
     M3dView _activeView;
     MVGCamera _activeCamera;
-    IntersectedComponent _intersectedComponent;
-    IntersectedComponent _selectedComponent;
+    MVGComponent _intersectedComponent;
+    MVGComponent _selectedComponent;
     std::map<std::string, MeshData> _meshData; // per mesh
 };
 

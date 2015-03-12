@@ -192,7 +192,7 @@ MStatus MVGCreateManipulator::doRelease(M3dView& view)
             _cameraIDToClickedCSPoints.second.remove(_cameraIDToClickedCSPoints.second.length() -
                                                      1);
         // Clear component
-        _onPressIntersectedComponent = MVGManipulatorCache::IntersectedComponent();
+        _onPressIntersectedComponent = MVGManipulatorCache::MVGComponent();
         return MPxManipulatorNode::doRelease(view);
     }
 
@@ -229,7 +229,7 @@ MStatus MVGCreateManipulator::doRelease(M3dView& view)
     }
 
     // Clear data
-    _onPressIntersectedComponent = MVGManipulatorCache::IntersectedComponent();
+    _onPressIntersectedComponent = MVGManipulatorCache::MVGComponent();
     _cameraIDToClickedCSPoints.second.clear();
     _finalWSPoints.clear();
 
@@ -289,7 +289,7 @@ void MVGCreateManipulator::computeFinalWSPoints(M3dView& view)
         return;
 
     _cache->checkIntersection(10.0, getMousePosition(view, kCamera));
-    const MVGManipulatorCache::IntersectedComponent& mouseIntersectedComponent =
+    const MVGManipulatorCache::MVGComponent& mouseIntersectedComponent =
         _cache->getIntersectedComponent();
 
     // Retrieve edge points preserving on press edge length
@@ -382,7 +382,7 @@ bool MVGCreateManipulator::computeAdjacentPoints(M3dView& view, MPointArray& fin
 
 bool MVGCreateManipulator::snapToIntersectedEdge(
     M3dView& view, MPointArray& finalWSPoints,
-    const MVGManipulatorCache::IntersectedComponent& intersectedEdge)
+    const MVGManipulatorCache::MVGComponent& intersectedEdge)
 {
     if(intersectedEdge.type != MFn::kMeshEdgeComponent)
         return false;
@@ -430,7 +430,7 @@ bool MVGCreateManipulator::snapToIntersectedVertex(M3dView& view, MPointArray& f
     finalWSPoints[1] = _onPressIntersectedComponent.edge->vertex1->worldPosition;
 
     // Get intersection with "intermediateCSEdgePoints"
-    MVGManipulatorCache::IntersectedComponent edgeIntersectedComponent;
+    MVGManipulatorCache::MVGComponent edgeIntersectedComponent;
     for(int i = 0; i < intermediateCSEdgePoints.length(); ++i)
     {
         if(_cache->checkIntersection(10.0, intermediateCSEdgePoints[i]))
