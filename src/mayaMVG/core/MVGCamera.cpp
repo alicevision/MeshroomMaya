@@ -193,7 +193,7 @@ MDagPath MVGCamera::getImagePlaneShapeDagPath() const
     CHECK(status)
     if(connectedPlugs.length() == 0)
     {
-        LOG_ERROR("No plug connected to the plug")
+        LOG_ERROR("No plug connected to the plug for camera : " << getName())
         return path;
     }
     status = MDagPath::getAPathTo(connectedPlugs[0].node(), path);

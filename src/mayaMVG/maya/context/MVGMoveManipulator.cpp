@@ -152,11 +152,16 @@ void MVGMoveManipulator::draw(M3dView& view, const MDagPath& path, M3dView::Disp
     // - Mouse position if vertex intersection
     // - Edges points with right offset if edge intersection
     MPointArray intermediateIntersectedCSPoints;
+    // Intersection tye
+    MFn::Type intersectedComponentType = _cache->getIntersectionType();
     switch(_onPressIntersectedComponent.type)
     {
         case MFn::kBlindData:
             if(_mode != kNViewTriangulation)
                 break;
+            intermediateIntersectedCSPoints.append(getMousePosition(view));
+            onPressIntersectedWSPoints.append(_onPressIntersectedComponent.vertex->worldPosition);
+            break;
         case MFn::kMeshVertComponent:
             intermediateIntersectedCSPoints.append(getMousePosition(view));
             onPressIntersectedWSPoints.append(_onPressIntersectedComponent.vertex->worldPosition);
@@ -173,33 +178,50 @@ void MVGMoveManipulator::draw(M3dView& view, const MDagPath& path, M3dView::Disp
             break;
     }
 
+    // Retrieve camera
+    MDagPath cameraPath;
+    view.getCamera(cameraPath);
+    MVGCamera camera(cameraPath);
+    bool isActiveView = MVGMayaUtil::isActiveView(view);
+    bool isMVGView = MVGMayaUtil::isMVGView(view);
+
+    // Draw selected point
+    const MVGManipulatorCache::MVGComponent& selectedComponent = _cache->getSelectedComponent();
+    if(!_doDrag)
+        drawSelectedPoint3D(view, selectedComponent);
+
     { // 2D drawing
 
         MVGDrawUtil::begin2DDrawing(view.portWidth(), view.portHeight());
         MPoint mouseVSPosition = getMousePosition(view, kView);
 
         // Draw in active view
-        if(MVGMayaUtil::isActiveView(view))
+        if(isActiveView)
             drawCursor(mouseVSPosition);
         // Draw in MayaMVG viewports
-        if(!MVGMayaUtil::isMVGView(view))
+        if(!isMVGView)
         {
             MVGDrawUtil::end2DDrawing();
             glDisable(GL_BLEND);
             view.endGL();
             return;
         }
-        drawPlacedPoints(view, _cache, _onPressIntersectedComponent);
-        MFn::Type intersectedComponentType = _cache->getIntersectiontType();
+        drawPlacedPoints(view, camera, _cache, _onPressIntersectedComponent);
+        // Draw selected point
+        if(!_doDrag)
+            drawSelectedPoint2D(view, camera, selectedComponent);
         // Draw in active MayaMVG viewport
-        if(!MVGMayaUtil::isActiveView(view))
+        if(!isActiveView)
         {
-            drawComplementaryIntersectedBlindData(view, _cache->getIntersectedComponent());
+            drawComplementaryIntersectedBlindData(view, camera, _cache->getIntersectedComponent());
             MVGDrawUtil::end2DDrawing();
             glDisable(GL_BLEND);
             view.endGL();
             return;
         }
+        // Draw point to be placed
+        if(!_doDrag)
+            drawPointToBePlaced(view, camera, selectedComponent, mouseVSPosition);
         // Draw vertex information on hover
         drawVertexOnHover(view, _cache, getMousePosition(view, kView));
         // draw intersection
@@ -239,6 +261,7 @@ MStatus MVGMoveManipulator::doPress(M3dView& view)
     if(!camera.isValid())
         return MPxManipulatorNode::doPress(view);
 
+    _doDrag = true;
     if(_cache->getActiveCamera().getId() != _cameraID)
     {
         _cameraID = _cache->getActiveCamera().getId();
@@ -260,12 +283,20 @@ MStatus MVGMoveManipulator::doPress(M3dView& view)
     // store the intersected component
     _onPressIntersectedComponent = _cache->getIntersectedComponent();
 
+    // Update selected component
+    if(_mode == kNViewTriangulation)
+    {
+        _cache->checkIntersection(10.0, getMousePosition(view), true);
+        if(_onPressIntersectedComponent.type == MFn::kBlindData ||
+           _onPressIntersectedComponent.type == MFn::kMeshVertComponent)
+            _cache->setSelectedComponent(_onPressIntersectedComponent);
+    }
+
     // compute final positions
     computeFinalWSPoints(view);
 
     storeTweakInformation();
 
-    _doDrag = true;
     return MPxManipulatorNode::doPress(view);
 }
 
@@ -275,12 +306,29 @@ MStatus MVGMoveManipulator::doRelease(M3dView& view)
     if(!MVGMayaUtil::isActiveView(view) || !MVGMayaUtil::isMVGView(view))
         return MPxManipulatorNode::doRelease(view);
 
-    if(_onPressIntersectedComponent.type == MFn::kInvalid) // not moving a component
-        return MPxManipulatorNode::doRelease(view);
-
+    // Retrieve camera
     const MVGCamera& camera = _cache->getActiveCamera();
     if(!camera.isValid())
         return MPxManipulatorNode::doRelease(view);
+
+    // If there is a selected component, and if there is no blind data for the current camera
+    // Use the selected component instead of _onPressIntersectedComponent to compute final positions
+    const MVGManipulatorCache::MVGComponent& selectedComponent = _cache->getSelectedComponent();
+    if(selectedComponent.type == MFn::kMeshVertComponent ||
+       selectedComponent.type == MFn::kBlindData)
+    {
+        // Compute triangulated point with mouse position only if point is not already placed in 2D
+        std::map<int, MPoint>::const_iterator currentData =
+            selectedComponent.vertex->blindData.find(camera.getId());
+        if(currentData == selectedComponent.vertex->blindData.end())
+            _onPressIntersectedComponent = selectedComponent;
+    }
+    if(_onPressIntersectedComponent.type == MFn::kInvalid) // not moving a component
+    {
+        _cache->clearSelectedComponent();
+        return MPxManipulatorNode::doRelease(view);
+    }
+
     // compute the final vertex/edge position depending on move mode
     computeFinalWSPoints(view);
 
@@ -318,7 +366,11 @@ MStatus MVGMoveManipulator::doRelease(M3dView& view)
     if(clickedCSPoints.length() == 0)
     {
         if(_finalWSPoints.length() == 0)
+        {
+            // clear the intersected component (stored on mouse press)
+            _onPressIntersectedComponent = MVGManipulatorCache::MVGComponent();
             return MPxManipulatorNode::doRelease(view);
+        }
         clickedCSPoints = MVGGeometryUtil::worldToCameraSpace(view, _finalWSPoints);
     }
 
@@ -334,14 +386,25 @@ MStatus MVGMoveManipulator::doRelease(M3dView& view)
                   _cache->getActiveCamera().getId(), clearBD);
         MArgList args;
         if(cmd->doIt(args))
+        {
             cmd->finalize();
+            _cache->rebuildMeshCache(_onPressIntersectedComponent.meshPath);
+        }
     }
 
     // clear the intersected component (stored on mouse press)
-    _onPressIntersectedComponent = MVGManipulatorCache::IntersectedComponent();
+    _onPressIntersectedComponent = MVGManipulatorCache::MVGComponent();
     _finalWSPoints.clear();
-    _cache->rebuildMeshesCache();
 
+    // Select after rebuilding cache
+    if(_mode == kNViewTriangulation)
+    {
+        _cache->checkIntersection(10.0, getMousePosition(view), true);
+        MVGManipulatorCache::MVGComponent intersectedComponent = _cache->getIntersectedComponent();
+        if(intersectedComponent.type == MFn::kBlindData ||
+           intersectedComponent.type == MFn::kMeshVertComponent)
+            _cache->setSelectedComponent(intersectedComponent);
+    }
     return MPxManipulatorNode::doRelease(view);
 }
 
@@ -353,6 +416,7 @@ MStatus MVGMoveManipulator::doMove(M3dView& view, bool& refresh)
 
     bool triangulationMode = (_mode == kNViewTriangulation);
     _cache->checkIntersection(10.0, getMousePosition(view), triangulationMode);
+
     return MPxManipulatorNode::doMove(view, refresh);
 }
 
@@ -364,6 +428,15 @@ MStatus MVGMoveManipulator::doDrag(M3dView& view)
 
     bool triangulationMode = (_mode == kNViewTriangulation);
     _cache->checkIntersection(10.0, getMousePosition(view), triangulationMode);
+
+    // If there is a selected component, and if there is no blind data for the current camera
+    // Use the selected component instead of _onPressIntersectedComponent to compute final positions
+    // and have 3D preview
+    const MVGManipulatorCache::MVGComponent& selectedComponent = _cache->getSelectedComponent();
+    if(selectedComponent.type == MFn::kMeshVertComponent ||
+       selectedComponent.type == MFn::kBlindData)
+        _onPressIntersectedComponent = selectedComponent;
+
     // Fill verticesIDs
     MIntArray verticesID;
     switch(_onPressIntersectedComponent.type)
@@ -783,12 +856,9 @@ void MVGMoveManipulator::drawCursor(const MPoint& originVS)
  * @param onPressIntersectedComponent
  */
 void MVGMoveManipulator::drawPlacedPoints(
-    M3dView& view, MVGManipulatorCache* cache,
-    const MVGManipulatorCache::IntersectedComponent& onPressIntersectedComponent)
+    M3dView& view, const MVGCamera& camera, MVGManipulatorCache* cache,
+    const MVGManipulatorCache::MVGComponent& onPressIntersectedComponent)
 {
-    MDagPath cameraPath;
-    view.getCamera(cameraPath);
-    MVGCamera camera(cameraPath);
     if(!camera.isValid())
         return;
 
@@ -846,16 +916,14 @@ void MVGMoveManipulator::drawPlacedPoints(
 /**
  * Hightlight blind data of intersected points in MVG views
  * @param view
- * @param intersectedComponent
+ * @param MVGComponent
  */
 void MVGMoveManipulator::drawComplementaryIntersectedBlindData(
-    M3dView& view, const MVGManipulatorCache::IntersectedComponent& intersectedComponent)
+    M3dView& view, const MVGCamera& camera,
+    const MVGManipulatorCache::MVGComponent& intersectedComponent)
 {
     if(intersectedComponent.type != MFn::kBlindData)
         return;
-    MDagPath cameraPath;
-    view.getCamera(cameraPath);
-    MVGCamera camera(cameraPath);
     if(!camera.isValid())
         return;
 
@@ -864,7 +932,7 @@ void MVGMoveManipulator::drawComplementaryIntersectedBlindData(
     if(it != intersectedComponent.vertex->blindData.end())
     {
         MPoint intersectedVSPoint = MVGGeometryUtil::cameraToViewSpace(view, it->second);
-        MVGDrawUtil::drawEmptyCross(intersectedVSPoint, 7, 2, MVGDrawUtil::_intersectionColor, 1.5);
+        MVGDrawUtil::drawEmptyCross(intersectedVSPoint, 8, 2, MVGDrawUtil::_intersectionColor, 1.5);
     }
 }
 // static
@@ -879,7 +947,7 @@ void MVGMoveManipulator::drawVertexOnHover(M3dView& view, MVGManipulatorCache* c
                                            const MPoint& mouseVSPosition)
 {
     MString nbView;
-    const MVGManipulatorCache::IntersectedComponent& intersectedComponent =
+    const MVGManipulatorCache::MVGComponent& intersectedComponent =
         cache->getIntersectedComponent();
     if(!cache->getActiveCamera().isValid())
         return;
@@ -918,5 +986,78 @@ void MVGMoveManipulator::drawVertexOnHover(M3dView& view, MVGManipulatorCache* c
             break;
         }
     }
+}
+
+// static
+/**
+ * Highlight the blind data attached to the selected point
+ * @param view
+ * @param selectedComponent
+ */
+void
+MVGMoveManipulator::drawSelectedPoint2D(M3dView& view, const MVGCamera& camera,
+                                        const MVGManipulatorCache::MVGComponent& selectedComponent)
+{
+    if(selectedComponent.type != MFn::kMeshVertComponent &&
+       selectedComponent.type != MFn::kBlindData)
+        return;
+    std::map<int, MPoint>::const_iterator currentData =
+        selectedComponent.vertex->blindData.find(camera.getId());
+    if(currentData != selectedComponent.vertex->blindData.end())
+    {
+        MPoint blindDataVS = MVGGeometryUtil::cameraToViewSpace(view, currentData->second);
+        MVGDrawUtil::drawEmptyCross(blindDataVS, 8, 2, MVGDrawUtil::_selectionColor, 1.5);
+    }
+}
+
+// static
+/**
+ * Draw a point 3D on the world position of the selected component
+ * @param view
+ * @param selectedComponent
+ */
+void
+MVGMoveManipulator::drawSelectedPoint3D(M3dView& view,
+                                        const MVGManipulatorCache::MVGComponent& selectedComponent)
+{
+    if(selectedComponent.type != MFn::kMeshVertComponent &&
+       selectedComponent.type != MFn::kBlindData)
+        return;
+
+    MVGDrawUtil::drawPoint3D(selectedComponent.vertex->worldPosition, MVGDrawUtil::_selectionColor,
+                             6.f);
+}
+
+// static
+/**
+ * Draw a full cross at the mouseVSPosition
+ * Draw a line from the mouseVSPosition to the point in 3D
+ * @param view
+ * @param selectedComponent
+ * @param mouseVSPosition : position of the mouse in View Space coordinates
+ */
+void
+MVGMoveManipulator::drawPointToBePlaced(M3dView& view, const MVGCamera& camera,
+                                        const MVGManipulatorCache::MVGComponent& selectedComponent,
+                                        const MPoint& mouseVSPosition)
+{
+    if(_mode != kNViewTriangulation)
+        return;
+    if(selectedComponent.type != MFn::kMeshVertComponent &&
+       selectedComponent.type != MFn::kBlindData)
+        return;
+
+    std::map<int, MPoint>::const_iterator currentData =
+        selectedComponent.vertex->blindData.find(camera.getId());
+
+    // Only draw if no blind data for the current view
+    if(currentData != selectedComponent.vertex->blindData.end())
+        return;
+
+    MVGDrawUtil::drawFullCross(mouseVSPosition, 7, 1, MVGDrawUtil::_selectionColor);
+    MPoint vertexVS =
+        MVGGeometryUtil::worldToViewSpace(view, selectedComponent.vertex->worldPosition);
+    MVGDrawUtil::drawLine2D(mouseVSPosition, vertexVS, MVGDrawUtil::_selectionColor, 1.5f, 1.f,
+                            true);
 }
 } // namespace

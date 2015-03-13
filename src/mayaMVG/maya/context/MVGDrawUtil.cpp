@@ -15,6 +15,7 @@ MColor const MVGDrawUtil::_placedInOtherViewColor = MColor(0.2f, 0.7f, 0.8f);
 MColor const MVGDrawUtil::_pointCloudColor = MColor(0.f, 1.f, 1.f);
 MColor const MVGDrawUtil::_adjacentFaceColor = MColor(0.f, 0.f, 1.f);
 MColor const MVGDrawUtil::_intersectionColor = MColor(1.f, 1.f, 1.f);
+MColor const MVGDrawUtil::_selectionColor = MColor(0.4f, 1.f, 0.7f);
 
 // static
 void MVGDrawUtil::begin2DDrawing(const int portWidth, const int portHeight)
@@ -138,6 +139,32 @@ void MVGDrawUtil::drawPolygon3D(const MPointArray& points, const MColor& color, 
 }
 
 // static
+void MVGDrawUtil::drawPoint2D(const MPoint& point, const MColor& color, const float pointSize,
+                              const float alpha)
+{
+    glPushAttrib(GL_ALL_ATTRIB_BITS);
+    glPointSize(pointSize);
+    glColor4f(color.r, color.g, color.b, alpha);
+    glBegin(GL_POINTS);
+    glVertex2f(point.x, point.y);
+    glEnd();
+    glPopAttrib();
+}
+
+// static
+void MVGDrawUtil::drawPoint3D(const MPoint& point, const MColor& color, const float pointSize,
+                              const float alpha)
+{
+    glPushAttrib(GL_ALL_ATTRIB_BITS);
+    glPointSize(pointSize);
+    glColor4f(color.r, color.g, color.b, alpha);
+    glBegin(GL_POINTS);
+    glVertex3f(point.x, point.y, point.z);
+    glEnd();
+    glPopAttrib();
+}
+
+// static
 void MVGDrawUtil::drawPoints2D(const MPointArray& points, const MColor& color,
                                const float pointSize, const float alpha)
 {
@@ -177,23 +204,6 @@ void MVGDrawUtil::drawCircle2D(const MPoint& center, const MColor& color, const 
     {
         float const t = 2 * M_PI * (float)n / (float)segments;
         glVertex2f(center.x + sin(t) * r, center.y + cos(t) * r);
-    }
-    glEnd();
-    glPopAttrib();
-}
-
-// static
-void MVGDrawUtil::drawCircle3D(const MPoint& center, const MColor& color, const int r,
-                               const int segments)
-{
-    glPushAttrib(GL_ALL_ATTRIB_BITS);
-    glColor3f(color.r, color.g, color.b);
-    glLineWidth(1.5f);
-    glBegin(GL_LINE_LOOP);
-    for(int n = 0; n <= segments; ++n)
-    {
-        float const t = 2 * M_PI * (float)n / (float)segments;
-        glVertex3f(center.x + sin(t) * r, center.y + cos(t) * r, center.z);
     }
     glEnd();
     glPopAttrib();

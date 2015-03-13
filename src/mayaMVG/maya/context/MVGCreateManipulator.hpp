@@ -36,7 +36,7 @@ private:
     bool computeAdjacentPoints(M3dView& view, MPointArray& finalWSPoints,
                                const MPointArray& intermediateCSEdgePoints);
     bool snapToIntersectedEdge(M3dView& view, MPointArray& finalWSPoints,
-                               const MVGManipulatorCache::IntersectedComponent& intersectedEdge);
+                               const MVGManipulatorCache::MVGComponent& intersectedEdge);
     bool snapToIntersectedVertex(M3dView& view, MPointArray& finalWSPoints,
                                  const MPointArray& intermediateCSEdgePoints);
 

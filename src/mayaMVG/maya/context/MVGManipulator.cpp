@@ -43,8 +43,7 @@ void MVGManipulator::getIntersectedPoints(M3dView& view, MPointArray& positions,
                                           MVGManipulator::Space space) const
 {
     MPointArray intersectedPositions;
-    MVGManipulatorCache::IntersectedComponent intersectedComponent =
-        _cache->getIntersectedComponent();
+    MVGManipulatorCache::MVGComponent intersectedComponent = _cache->getIntersectedComponent();
     switch(intersectedComponent.type)
     {
         case MFn::kBlindData:
