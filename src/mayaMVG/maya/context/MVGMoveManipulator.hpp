@@ -44,17 +44,18 @@ private:
 public:
     static void drawCursor(const MPoint& originVS);
     static void
-    drawPlacedPoints(M3dView& view, MVGManipulatorCache* cache,
+    drawPlacedPoints(M3dView& view, const MVGCamera& camera, MVGManipulatorCache* cache,
                      const MVGManipulatorCache::MVGComponent& onPressIntersectedComponent);
     static void drawComplementaryIntersectedBlindData(
-        M3dView& view, const MVGManipulatorCache::MVGComponent& intersectedComponent);
+        M3dView& view, const MVGCamera& camera,
+        const MVGManipulatorCache::MVGComponent& intersectedComponent);
     static void drawVertexOnHover(M3dView& view, MVGManipulatorCache* cache,
                                   const MPoint& mouseVSPosition);
-    static void drawSelectedPoint2D(M3dView& view,
+    static void drawSelectedPoint2D(M3dView& view, const MVGCamera& camera,
                                     const MVGManipulatorCache::MVGComponent& selectedComponent);
     static void drawSelectedPoint3D(M3dView& view,
                                     const MVGManipulatorCache::MVGComponent& selectedComponent);
-    static void drawPointToBePlaced(M3dView& view,
+    static void drawPointToBePlaced(M3dView& view, const MVGCamera& camera,
                                     const MVGManipulatorCache::MVGComponent& selectedComponent,
                                     const MPoint& mouseVSPosition);
 

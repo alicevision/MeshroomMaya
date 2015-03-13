@@ -135,8 +135,7 @@ void MVGManipulatorCache::rebuildMeshCache(const MDagPath& path)
     if(path == _intersectedComponent.meshPath)
         clearIntersectedComponent();
     if(path == _selectedComponent.meshPath)
-        ;
-    clearSelectedComponent();
+        clearSelectedComponent();
 
     // prepare vertices & edges iterators
     MStatus status;
