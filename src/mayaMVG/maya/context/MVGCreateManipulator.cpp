@@ -327,16 +327,19 @@ bool MVGCreateManipulator::computePCPoints(M3dView& view, MPointArray& finalWSPo
     cameraSpacePoints.append(intermediateCSEdgePoints[1]);
     cameraSpacePoints.append(intermediateCSEdgePoints[0]);
 
-    // we need mousePosition in world space to compute the right offset
-    cameraSpacePoints.append(getMousePosition(view));
-    MPointArray projectedWSPoints;
+    // Project mouse on point cloud
+    MPoint projectedMouseWS;
     MVGPointCloud cloud(MVGProject::_CLOUD);
-    if(!cloud.projectPoints(view, _visiblePointCloudItems, cameraSpacePoints, projectedWSPoints,
-                            cameraSpacePoints.length() - 1))
+    MPointArray constraintedPoints;
+    constraintedPoints.append(_onPressIntersectedComponent.edge->vertex1->worldPosition);
+    constraintedPoints.append(_onPressIntersectedComponent.edge->vertex2->worldPosition);
+    if(!cloud.projectPointsWithLineConstraint(view, _visiblePointCloudItems, cameraSpacePoints,
+                                              constraintedPoints, getMousePosition(view),
+                                              projectedMouseWS))
         return false;
     MPointArray translatedWSEdgePoints;
     getTranslatedWSEdgePoints(view, _onPressIntersectedComponent.edge, _onPressCSPoint,
-                              projectedWSPoints[0], translatedWSEdgePoints);
+                              projectedMouseWS, translatedWSEdgePoints);
     // Begin with second edge's vertex to keep normal
     finalWSPoints.append(_onPressIntersectedComponent.edge->vertex2->worldPosition);
     finalWSPoints.append(_onPressIntersectedComponent.edge->vertex1->worldPosition);
@@ -365,9 +368,13 @@ bool MVGCreateManipulator::computeAdjacentPoints(M3dView& view, MPointArray& fin
         mesh.getPoint(verticesIDs[i], vertexWSPoint);
         faceWSPoints.append(vertexWSPoint);
     }
-    // compute moved point
+    // Compute plane model
+    PlaneKernel::Model planeModel;
+    if(!MVGGeometryUtil::computePlane(faceWSPoints, planeModel))
+        return false;
+    // Project moves points on plane
     MPointArray projectedWSPoints;
-    if(!MVGGeometryUtil::projectPointsOnPlane(view, intermediateCSEdgePoints, faceWSPoints,
+    if(!MVGGeometryUtil::projectPointsOnPlane(view, intermediateCSEdgePoints, planeModel,
                                               projectedWSPoints))
         return false;
     assert(projectedWSPoints.length() == 2);

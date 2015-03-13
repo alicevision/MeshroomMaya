@@ -1,5 +1,5 @@
+#include "mayaMVG/core/MVGGeometryUtil.hpp" // Included first because of preprocessor symbol error
 #include "mayaMVG/maya/context/MVGDrawUtil.hpp"
-#include "mayaMVG/core/MVGGeometryUtil.hpp"
 #include "mayaMVG/core/MVGLog.hpp"
 #include <maya/M3dView.h>
 #include <cassert>
