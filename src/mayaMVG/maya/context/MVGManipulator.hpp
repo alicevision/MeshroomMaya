@@ -2,6 +2,7 @@
 
 #include "mayaMVG/maya/context/MVGManipulatorCache.hpp"
 #include "mayaMVG/maya/context/MVGContext.hpp"
+#include "mayaMVG/core/MVGPointCloudItem.hpp"
 #include "mayaMVG/maya/cmd/MVGEditCmd.hpp"
 #include "mayaMVG/core/MVGGeometryUtil.hpp"
 #include <maya/MPxManipulatorNode.h>
@@ -20,7 +21,7 @@ public:
     };
 
 public:
-    MVGManipulator() {}
+    MVGManipulator();
     virtual ~MVGManipulator() {}
 
 public:
@@ -31,35 +32,39 @@ public:
 public:
     MPoint getMousePosition(M3dView&, Space = kCamera);
     void getMousePosition(M3dView&, MPoint&, Space = kCamera);
-    const MPointArray& getFinalWSPositions() const;
-    const MPointArray& getIntermediateCSPositions() const;
-    MPointArray getIntersectedPositions(M3dView&, Space = kCamera) const;
-    void getIntersectedPositions(M3dView&, MPointArray&, Space = kCamera) const;
+    const MPointArray& getFinalWSPoints() const;
+    const MPointArray& getIntermediateCSPoints() const;
+    const MPointArray getIntersectedPoints(M3dView&, Space = kCamera) const;
+    void getIntersectedPoints(M3dView&, MPointArray&, Space = kCamera) const;
     void getIntermediateCSEdgePoints(M3dView& view,
                                      const MVGManipulatorCache::EdgeData* onPressEdgeData,
-                                     const MPoint& onPressCSPoint,
+                                     const MPoint& onPressCSMousePos,
                                      MPointArray& intermediateCSEdgePoints);
-    MPointArray getIntermediateCSEdgePoints(M3dView& view,
-                                            const MVGManipulatorCache::EdgeData* onPressEdgeData,
-                                            const MPoint& onPressCSPoint);
+    const MPointArray
+    getIntermediateCSEdgePoints(M3dView& view, const MVGManipulatorCache::EdgeData* onPressEdgeData,
+                                const MPoint& onPressCSPoint);
     void getTranslatedWSEdgePoints(M3dView& view,
                                    const MVGManipulatorCache::EdgeData* originEdgeData,
                                    MPoint& originCSPosition, MPoint& targetWSPosition,
                                    MPointArray& targetEdgeWSPositions) const;
 
 public:
-    static void drawIntersection2D(const MPointArray& intersectedVSPoints);
+    static void drawIntersection2D(const MPointArray& intersectedVSPoints,
+                                   const MFn::Type intersectionType);
 
 protected:
     MVGEditCmd* newEditCmd();
     void drawIntersection() const;
-    virtual void computeFinalWSPositions(M3dView& view) = 0;
+    virtual void computeFinalWSPoints(M3dView& view) = 0;
 
 protected:
     MVGManipulatorCache* _cache;
-    MVGManipulatorCache::IntersectedComponent _onPressIntersectedComponent;
-    MPoint _onPressCSPosition;
-    MPointArray _finalWSPositions;
+    MVGManipulatorCache::MVGComponent _onPressIntersectedComponent;
+    MPoint _onPressCSPoint;
+    MPointArray _finalWSPoints;
+    int _cameraID;
+    std::vector<MVGPointCloudItem> _visiblePointCloudItems;
+    MIntArray _snapedPoints;
 
 private:
     MVGContext* _context;

@@ -21,9 +21,11 @@ MVGMainWidget::MVGMainWidget(QWidget* parent)
     _view = new QDeclarativeView(parent);
 
     _projectWrapper.loadExistingProject();
-
     QString importDirectory = QString(MVGMayaUtil::getModulePath().asChar()) + "/qml";
+    const char* devQmlPath = std::getenv("MAYAMVG_QML_PATH");
     QString sourceDirectory = importDirectory + "/mvg/main.qml";
+    if(devQmlPath)
+        sourceDirectory = "./src/mayaMVG/qt/qml/main.qml";
 
     // QtDesktop Components
     _view->engine()->addPluginPath(importDirectory);
@@ -37,8 +39,11 @@ MVGMainWidget::MVGMainWidget(QWidget* parent)
     _view->setResizeMode(QDeclarativeView::SizeRootObjectToView);
 
     // Instant coding
-    // QmlInstantCoding* qic = new QmlInstantCoding(_view, true);
-    // qic->addFilesFromDirectory(importDirectory, true);
+    if(devQmlPath)
+    {
+        QmlInstantCoding* qic = new QmlInstantCoding(_view, true);
+        qic->addFilesFromDirectory(devQmlPath, true);
+    }
 }
 
 MVGMainWidget::~MVGMainWidget()

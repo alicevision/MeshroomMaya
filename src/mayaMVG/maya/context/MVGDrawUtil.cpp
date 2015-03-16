@@ -1,5 +1,5 @@
+#include "mayaMVG/core/MVGGeometryUtil.hpp" // Included first because of preprocessor symbol error
 #include "mayaMVG/maya/context/MVGDrawUtil.hpp"
-#include "mayaMVG/core/MVGGeometryUtil.hpp"
 #include "mayaMVG/core/MVGLog.hpp"
 #include <maya/M3dView.h>
 #include <cassert>
@@ -11,8 +11,11 @@ MColor const MVGDrawUtil::_errorColor = MColor(0.8f, 0.5f, 0.4f);
 MColor const MVGDrawUtil::_cursorColor = MColor(0.f, 0.f, 0.f);
 MColor const MVGDrawUtil::_createColor = MColor(0.9f, 0.9f, 0.1f);
 MColor const MVGDrawUtil::_triangulateColor = MColor(0.9f, 0.5f, 0.4f);
+MColor const MVGDrawUtil::_placedInOtherViewColor = MColor(0.2f, 0.7f, 0.8f);
 MColor const MVGDrawUtil::_pointCloudColor = MColor(0.f, 1.f, 1.f);
 MColor const MVGDrawUtil::_adjacentFaceColor = MColor(0.f, 0.f, 1.f);
+MColor const MVGDrawUtil::_intersectionColor = MColor(1.f, 1.f, 1.f);
+MColor const MVGDrawUtil::_selectionColor = MColor(0.4f, 1.f, 0.7f);
 
 // static
 void MVGDrawUtil::begin2DDrawing(const int portWidth, const int portHeight)
@@ -111,6 +114,7 @@ void MVGDrawUtil::drawLineLoop3D(const MPointArray& points, const MColor& color,
 void MVGDrawUtil::drawPolygon2D(const MPointArray& points, const MColor& color, const float alpha)
 {
     assert(points.length() > 2);
+    //    glXQueryVersion(NULL, NULL, NULL);
     glPushAttrib(GL_ALL_ATTRIB_BITS);
     glColor4f(color.r, color.g, color.b, alpha);
     glBegin(GL_POLYGON);
@@ -124,11 +128,38 @@ void MVGDrawUtil::drawPolygon2D(const MPointArray& points, const MColor& color, 
 void MVGDrawUtil::drawPolygon3D(const MPointArray& points, const MColor& color, const float alpha)
 {
     assert(points.length() > 2);
+    //    glXQueryVersion(NULL, NULL, NULL);
     glPushAttrib(GL_ALL_ATTRIB_BITS);
     glColor4f(color.r, color.g, color.b, alpha);
     glBegin(GL_POLYGON);
     for(int i = 0; i < points.length(); ++i)
         glVertex3f(points[i].x, points[i].y, points[i].z);
+    glEnd();
+    glPopAttrib();
+}
+
+// static
+void MVGDrawUtil::drawPoint2D(const MPoint& point, const MColor& color, const float pointSize,
+                              const float alpha)
+{
+    glPushAttrib(GL_ALL_ATTRIB_BITS);
+    glPointSize(pointSize);
+    glColor4f(color.r, color.g, color.b, alpha);
+    glBegin(GL_POINTS);
+    glVertex2f(point.x, point.y);
+    glEnd();
+    glPopAttrib();
+}
+
+// static
+void MVGDrawUtil::drawPoint3D(const MPoint& point, const MColor& color, const float pointSize,
+                              const float alpha)
+{
+    glPushAttrib(GL_ALL_ATTRIB_BITS);
+    glPointSize(pointSize);
+    glColor4f(color.r, color.g, color.b, alpha);
+    glBegin(GL_POINTS);
+    glVertex3f(point.x, point.y, point.z);
     glEnd();
     glPopAttrib();
 }
@@ -179,28 +210,12 @@ void MVGDrawUtil::drawCircle2D(const MPoint& center, const MColor& color, const 
 }
 
 // static
-void MVGDrawUtil::drawCircle3D(const MPoint& center, const MColor& color, const int r,
-                               const int segments)
-{
-    glPushAttrib(GL_ALL_ATTRIB_BITS);
-    glColor3f(color.r, color.g, color.b);
-    glLineWidth(1.5f);
-    glBegin(GL_LINE_LOOP);
-    for(int n = 0; n <= segments; ++n)
-    {
-        float const t = 2 * M_PI * (float)n / (float)segments;
-        glVertex3f(center.x + sin(t) * r, center.y + cos(t) * r, center.z);
-    }
-    glEnd();
-    glPopAttrib();
-}
-
-// static
 void MVGDrawUtil::drawEmptyCross(const MPoint& originVS, const float width, const float thickness,
-                                 const MColor& color)
+                                 const MColor& color, const float lineWidth)
 {
     glPushAttrib(GL_ALL_ATTRIB_BITS);
     glColor3f(color.r, color.g, color.b);
+    glLineWidth(lineWidth);
     glBegin(GL_LINE_LOOP);
     glVertex2f(originVS.x + width, originVS.y - thickness);
     glVertex2f(originVS.x + width, originVS.y + thickness);
@@ -371,9 +386,10 @@ void MVGDrawUtil::drawClickedPoints(const MPointArray& clickedVSPoints, const MC
 {
     MVGDrawUtil::drawPoints2D(clickedVSPoints, color, 4.0);
     if(clickedVSPoints.length() == 2)
-        MVGDrawUtil::drawLine2D(clickedVSPoints[0], clickedVSPoints[1], color);
+        MVGDrawUtil::drawLine2D(clickedVSPoints[0], clickedVSPoints[1], color, 3.0);
+    // TODO : draw alpha poly
     if(clickedVSPoints.length() > 2)
-        MVGDrawUtil::drawPolygon2D(clickedVSPoints, color, 0.2f);
+        MVGDrawUtil::drawLineLoop2D(clickedVSPoints, color, 3.0);
 }
 
 // Move manipulator

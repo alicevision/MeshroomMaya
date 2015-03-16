@@ -1,8 +1,8 @@
 import QtQuick 1.1
 import QtDesktop 0.1
 
-Rectangle {
 
+Rectangle {
     id: cameraItem
     border.color: "black"
     height: m.baseHeight
@@ -26,7 +26,7 @@ Rectangle {
                 name: "SELECTED"
                 when: m.camera.isSelected
                 PropertyChanges { target: cameraItem; color: "#004161"; }
-                PropertyChanges { target: loader; visible: true; }
+                PropertyChanges { target: loader; sourceComponent: extraInformation; }
             }
         ]
         transitions: Transition {
@@ -43,6 +43,7 @@ Rectangle {
         Component.onCompleted: {
             visible = true
         }
+
         CameraThumbnail {
             implicitWidth: height * m.thumbRatio
             height: parent.height
@@ -50,7 +51,8 @@ Rectangle {
             project: m.project
             camera: m.camera
         }
-        // right part: data
+
+        // Right part : data
         Item {
             Layout.horizontalSizePolicy: Layout.Expanding
             height: parent.height
@@ -61,7 +63,6 @@ Rectangle {
                     if(mouse.modifiers & Qt.ShiftModifier)
                         multipleSelection(index)
                     else {
-                        m.camera.select();
                         selection(index)
                     }
                 }
@@ -72,13 +73,11 @@ Rectangle {
                 Item {
                     width: parent.width
                     implicitHeight: cameraName.height * 2 // x2 to add vertical margins
-                    TextInput {
+                    Text{
                        id: cameraName
                        anchors.verticalCenter: parent.verticalCenter
                        text: m.camera.name
                        font.pointSize: 12
-                       readOnly: true
-                       selectByMouse: true
                        color: "white"
                     }
                 }
@@ -89,8 +88,7 @@ Rectangle {
                     Layout.verticalSizePolicy: Layout.Expanding
                     Loader {
                         id: loader
-                        visible: false
-                        sourceComponent: extraInformation.status != Component.Ready ? undefined : extraInformation;
+                        sourceComponent: undefined
                         width: parent.width
                         height: childrenRect.height
                     }
@@ -98,6 +96,7 @@ Rectangle {
             }
         }
     }
+
     function convertWeight(weight)
     {
         // TODO: constants
@@ -109,13 +108,10 @@ Rectangle {
             return (Math.ceil(weight/1024)) + " ko"
         return Math.ceil((weight/1024).toString()) + " octets"
     }
-
     // COMPONENT extraInformation
     Component {
         id: extraInformation
         Item {
-            width: parent.width
-            height: childrenRect.height
             ColumnLayout
             {
                 width: parent.width
@@ -125,39 +121,34 @@ Rectangle {
                 Item {
                     width: parent.width
                     Layout.minimumHeight: childrenRect.height
-                    TextInput {
+                    Text {
                         width: parent.width
                         anchors.verticalCenter: parent.verticalCenter
                         text: m.camera.imagePath
                         font.pointSize: 10
-                        readOnly: true
-                        selectByMouse: true
                         color: "#888888"
                     }
                 }
-                // file size
+                // Image size
+                /*
                 Item {
                     width: parent.width
                     Layout.minimumHeight: childrenRect.height
-                    TextInput {
+                    Text {
                         width: parent.width
                         text: m.camera.sourceSize.width + "x" + m.camera.sourceSize.height
                         font.pointSize: 10
-                        readOnly: true
-                        selectByMouse: true
                         color: "#888888"
                     }
-                }
+                }*/
                 // file weight
                 Item {
                     width: parent.width
                     Layout.minimumHeight: childrenRect.height
-                    TextInput {
+                    Text {
                         width: parent.width
                         text: convertWeight(m.camera.sourceWeight)
                         font.pointSize: 10
-                        readOnly: true
-                        selectByMouse: true
                         color: "#888888"
                     }
                 }

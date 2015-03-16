@@ -1,4 +1,5 @@
 #include "mayaMVG/qt/MVGProjectWrapper.hpp"
+#include "mayaMVG/version.hpp"
 #include <QCoreApplication>
 #include "mayaMVG/qt/MVGCameraWrapper.hpp"
 #include "mayaMVG/maya/MVGMayaUtil.hpp"
@@ -18,6 +19,20 @@ MVGProjectWrapper::MVGProjectWrapper()
     MString context;
     MVGMayaUtil::getCurrentContext(context);
     _currentContext = context.asChar();
+
+    // Init unit map
+    _unitMap[MDistance::kInches] = "in";
+    _unitMap[MDistance::kFeet] = "ft";
+    _unitMap[MDistance::kYards] = "yd";
+    _unitMap[MDistance::kMiles] = "mi";
+    _unitMap[MDistance::kMillimeters] = "mm";
+    _unitMap[MDistance::kCentimeters] = "cm";
+    _unitMap[MDistance::kKilometers] = "km";
+    _unitMap[MDistance::kMeters] = "m";
+    assert(_unitMap.size() == MDistance::kLast - 1); // First value is MDistance::kInvalid
+
+    // Init _isProjectLoading
+    _isProjectLoading = false;
 }
 
 MVGProjectWrapper::~MVGProjectWrapper()
@@ -40,6 +55,25 @@ void MVGProjectWrapper::setCurrentContext(const QString& context)
 {
     _currentContext = context;
     Q_EMIT currentContextChanged();
+}
+
+const QString MVGProjectWrapper::getCurrentUnit() const
+{
+    MDistance::Unit currentUnit = MDistance::uiUnit();
+    return _unitMap[currentUnit];
+}
+
+const QString MVGProjectWrapper::getPluginVersion() const
+{
+    return MAYAMVG_VERSION;
+}
+
+void MVGProjectWrapper::setIsProjectLoading(const bool value)
+{
+    if(value == _isProjectLoading)
+        return;
+    _isProjectLoading = value;
+    Q_EMIT isProjectLoadingChanged();
 }
 
 void MVGProjectWrapper::setProjectDirectory(const QString& directory)
@@ -87,20 +121,29 @@ void MVGProjectWrapper::loadNewProject(const QString& projectDirectoryPath)
     activeSelectionContext();
     if(!_project.isValid())
         _project = MVGProject::create(MVGProject::_PROJECT);
+    setIsProjectLoading(true);
+
+    // Loading project takes a lot of time.
+    // So we ask Qt to process events (UI) to display the "Loading" status
+    // before Maya will freeze the application.
+    qApp->processEvents();
+
     if(!_project.load(projectDirectoryPath.toStdString()))
     {
         setProjectDirectory("");
+        setIsProjectLoading(false);
         LOG_ERROR("An error occured when loading project.");
         return;
     }
     _project.setProjectDirectory(projectDirectoryPath.toStdString());
     Q_EMIT projectDirectoryChanged();
+    setIsProjectLoading(false);
 
     reloadMVGCamerasFromMaya();
 
-    // Set image planes in Maya takes a lot of time.
-    // So we ask Qt to process events (UI) before Maya will freeze the
-    // application.
+    // Loading image planes takes a lot of time.
+    // So before loading image planes, we ask Qt to process events (UI)
+    // before Maya will freeze the application.
     qApp->processEvents();
 
     // Select the two first cameras for the views
@@ -114,13 +157,37 @@ void MVGProjectWrapper::loadNewProject(const QString& projectDirectoryPath)
     }
 }
 
-void MVGProjectWrapper::selectItems(const QList<QString>& cameraNames) const
+void MVGProjectWrapper::addCamerasToIHMSelection(const QStringList& selectedCameraNames,
+                                                 bool center)
 {
-    foreach(MVGCameraWrapper* camera, _cameraList.asQList<MVGCameraWrapper>())
-        camera->setIsSelected(cameraNames.contains(camera->getName()));
+    // Reset old selection to false
+    for(QStringList::const_iterator it = _selectedCameras.begin(); it != _selectedCameras.end();
+        ++it)
+    {
+        MVGCameraWrapper* camera = _camerasByName[it->toStdString()];
+        camera->setIsSelected(false);
+    }
+    _selectedCameras.clear();
+    // Set new selection to true
+    for(QStringList::const_iterator it = selectedCameraNames.begin();
+        it != selectedCameraNames.end(); ++it)
+    {
+        if(_camerasByName.count(it->toStdString()) == 0)
+            continue;
+        MVGCameraWrapper* camera = _camerasByName[it->toStdString()];
+        camera->setIsSelected(true);
+        _selectedCameras.append(camera->getName());
+        // Replace listView and set image in first viewort
+        // TODO : let the user define in which viewport he wants to display the selected camera
+        if(center && camera->getName() == selectedCameraNames[0])
+        {
+            setCameraToView(camera, static_cast<MVGPanelWrapper*>(_panelList.get(0))->getName());
+            Q_EMIT centerCameraListByIndex(_cameraList.indexOf(camera));
+        }
+    }
 }
 
-void MVGProjectWrapper::selectCameras(const QStringList& cameraNames) const
+void MVGProjectWrapper::addCamerasToMayaSelection(const QStringList& cameraNames) const
 {
     if(!_project.isValid())
         return;
@@ -130,21 +197,58 @@ void MVGProjectWrapper::selectCameras(const QStringList& cameraNames) const
     _project.selectCameras(cameras);
 }
 
-void MVGProjectWrapper::setCameraToView(QObject* camera, const QString& viewName,
-                                        bool rebuildCache) const
+void MVGProjectWrapper::setCameraToView(QObject* camera, const QString& viewName, bool rebuildCache)
 {
+    MVGCameraWrapper* cameraWrapper = static_cast<MVGCameraWrapper*>(camera);
+
+    // Push command
+    _project.pushLoadCurrentImagePlaneCommand(viewName.toStdString());
+
+    // Set UI
     foreach(MVGCameraWrapper* c, _cameraList.asQList<MVGCameraWrapper>())
         c->setInView(viewName, false);
     MVGCameraWrapper* cam = qobject_cast<MVGCameraWrapper*>(camera);
     cam->setInView(viewName, true);
-    // rebuild cache
-    if(rebuildCache)
-        MGlobal::executeCommand("mayaMVGTool -e -rebuild mayaMVGTool1");
+
+    // Update active camera
+    _activeCameraNameByView[viewName.toStdString()] = cameraWrapper->getName().toStdString();
+}
+
+void MVGProjectWrapper::setCamerasNear(const double near)
+{
+    // TODO : undoable ?
+    for(std::map<std::string, MVGCameraWrapper*>::const_iterator it = _camerasByName.begin();
+        it != _camerasByName.end(); ++it)
+        it->second->getCamera().setNear(near);
+}
+void MVGProjectWrapper::setCamerasFar(const double far)
+{
+    // TODO : undoable ?
+    for(std::map<std::string, MVGCameraWrapper*>::const_iterator it = _camerasByName.begin();
+        it != _camerasByName.end(); ++it)
+        it->second->getCamera().setFar(far);
+}
+
+void MVGProjectWrapper::setCameraLocatorScale(const double scale)
+{
+    // TODO : undoable ?
+    for(std::map<std::string, MVGCameraWrapper*>::const_iterator it = _camerasByName.begin();
+        it != _camerasByName.end(); ++it)
+        it->second->getCamera().setLocatorScale(scale);
+}
+
+void MVGProjectWrapper::scaleScene(const double scaleSize) const
+{
+    double internalUnit = MDistance::uiToInternal(scaleSize);
+    if(!_project.scaleScene(internalUnit))
+        LOG_ERROR("Cannot scale scene")
 }
 
 void MVGProjectWrapper::clear()
 {
     _cameraList.clear();
+    _camerasByName.clear();
+    _activeCameraNameByView.clear();
     Q_EMIT projectDirectoryChanged();
 }
 
@@ -175,9 +279,16 @@ void MVGProjectWrapper::removeCameraFromUI(MDagPath& cameraPath)
     }
 }
 
+void MVGProjectWrapper::emitCurrentUnitChanged()
+{
+    Q_EMIT currentUnitChanged();
+}
+
 void MVGProjectWrapper::reloadMVGCamerasFromMaya()
 {
     _cameraList.clear();
+    _camerasByName.clear();
+    _activeCameraNameByView.clear();
     if(!_project.isValid())
     {
         LOG_ERROR("Project is not valid");
@@ -187,7 +298,11 @@ void MVGProjectWrapper::reloadMVGCamerasFromMaya()
     const std::vector<MVGCamera>& cameraList = MVGCamera::getCameras();
     std::vector<MVGCamera>::const_iterator it = cameraList.begin();
     for(; it != cameraList.end(); ++it)
-        _cameraList.append(new MVGCameraWrapper(*it));
+    {
+        MVGCameraWrapper* cameraWrapper = new MVGCameraWrapper(*it);
+        _cameraList.append(cameraWrapper);
+        _camerasByName[it->getName()] = cameraWrapper;
+    }
     Q_EMIT cameraModelChanged();
     // TODO : Camera selection
 }

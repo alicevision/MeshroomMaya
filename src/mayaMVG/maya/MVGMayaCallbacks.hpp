@@ -33,7 +33,7 @@ static void selectionChangedCB(void*)
     MSelectionList list;
     MGlobal::getActiveSelectionList(list);
     MDagPath path;
-    QList<QString> selectedCameras;
+    QStringList selectedCameras;
     for(size_t i = 0; i < list.length(); i++)
     {
         list.getDagPath(i, path);
@@ -45,7 +45,16 @@ static void selectionChangedCB(void*)
             selectedCameras.push_back(fn.name().asChar());
         }
     }
-    project->selectItems(selectedCameras);
+
+    if(selectedCameras.size() == 0)
+        return;
+
+    // Compare IHM selection to Maya selection
+    QStringList IHMSelectedCamera = project->getSelectedCameras();
+    IHMSelectedCamera.sort();
+    selectedCameras.sort();
+    if(IHMSelectedCamera != selectedCameras)
+        project->addCamerasToIHMSelection(selectedCameras, true);
 }
 
 static void currentContextChangedCB(void*)
@@ -164,4 +173,11 @@ static void modelEditorChangedCB(void*)
     }
 }
 
+static void linearUnitChanged(void*)
+{
+    MVGProjectWrapper* project = getProjectWrapper();
+    if(!project)
+        return;
+    project->emitCurrentUnitChanged();
+}
 } // namespace

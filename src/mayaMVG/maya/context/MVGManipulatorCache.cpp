@@ -5,6 +5,7 @@
 #include "mayaMVG/core/MVGLog.hpp"
 #include <maya/MItMeshVertex.h>
 #include <maya/MItMeshEdge.h>
+#include <list>
 
 namespace mayaMVG
 {
@@ -53,20 +54,31 @@ const MVGCamera& MVGManipulatorCache::getActiveCamera() const
     return _activeCamera;
 }
 
-bool MVGManipulatorCache::checkIntersection(double tolerance, const MPoint& mouseCSPosition)
+bool MVGManipulatorCache::checkIntersection(const double tolerance, const MPoint& mouseCSPosition,
+                                            const bool checkBlindData)
 {
+    // Check
+    if(checkBlindData)
+    {
+        if(isIntersectingBlindData(tolerance, mouseCSPosition))
+            return true;
+    }
     if(isIntersectingPoint(tolerance, mouseCSPosition))
         return true;
     if(isIntersectingEdge(tolerance, mouseCSPosition))
         return true;
-    // clear intersected component
-    _intersectedComponent = MVGManipulatorCache::IntersectedComponent();
+    clearIntersectedComponent();
     return false;
 }
 
-const MVGManipulatorCache::IntersectedComponent& MVGManipulatorCache::getIntersectedComponent()
+const MVGManipulatorCache::MVGComponent& MVGManipulatorCache::getIntersectedComponent() const
 {
     return _intersectedComponent;
+}
+
+const MFn::Type MVGManipulatorCache::getIntersectionType() const
+{
+    return _intersectedComponent.type;
 }
 const std::map<std::string, MVGManipulatorCache::MeshData>& MVGManipulatorCache::getMeshData() const
 {
@@ -78,14 +90,26 @@ const MVGManipulatorCache::MeshData& MVGManipulatorCache::getMeshData(const std:
 }
 void MVGManipulatorCache::rebuildMeshesCache()
 {
-    // clear cache & other associated data
-    _intersectedComponent = MVGManipulatorCache::IntersectedComponent();
-    _meshData.clear();
+    // List all meshes
+    std::list<std::string> meshesList;
+    for(std::map<std::string, MeshData>::iterator it = _meshData.begin(); it != _meshData.end();
+        ++it)
+        meshesList.push_back(it->first);
+
     // rebuild cache
     std::vector<MVGMesh> meshes = MVGMesh::list();
     std::vector<MVGMesh>::const_iterator it = meshes.begin();
     for(; it != meshes.end(); ++it)
+    {
+        // Remove mesh updated to only clear meshes that have been removed
+        meshesList.remove(it->getDagPath().fullPathName().asChar());
         rebuildMeshCache(it->getDagPath());
+    }
+
+    // Remove data for meshes that does not exist anymore
+    for(std::list<std::string>::iterator meshIt = meshesList.begin(); meshIt != meshesList.end();
+        ++meshIt)
+        _meshData.erase(*meshIt);
 }
 
 void MVGManipulatorCache::rebuildMeshCache(const MDagPath& path)
@@ -93,6 +117,26 @@ void MVGManipulatorCache::rebuildMeshCache(const MDagPath& path)
     MVGMesh mesh(path);
     if(!mesh.isValid())
         return;
+
+    // Retrieve selectedComponent info
+    MDagPath meshPath = _selectedComponent.meshPath;
+    MFn::Type type = MFn::kInvalid;
+    int index = -1;
+    if(meshPath == path)
+    {
+        type = _selectedComponent.type;
+        if(type == MFn::kBlindData || type == MFn::kMeshVertComponent)
+            index = _selectedComponent.vertex->index;
+        if(type == MFn::kMeshEdgeComponent)
+            index = _selectedComponent.edge->index;
+    }
+
+    // Clear component associated to meshData
+    if(path == _intersectedComponent.meshPath)
+        clearIntersectedComponent();
+    if(path == _selectedComponent.meshPath)
+        clearSelectedComponent();
+
     // prepare vertices & edges iterators
     MStatus status;
     MItMeshVertex vIt(path, MObject::kNullObj, &status);
@@ -104,8 +148,9 @@ void MVGManipulatorCache::rebuildMeshCache(const MDagPath& path)
     eIt.geomChanged();
     CHECK_RETURN(status)
     // prepare & add an empty mesh data object
-    _meshData[path.fullPathName().asChar()] = MeshData();
-    MeshData& newMeshData = _meshData[path.fullPathName().asChar()];
+    const std::string pathsString = path.fullPathName().asChar();
+    _meshData[pathsString] = MeshData();
+    MeshData& newMeshData = _meshData[pathsString];
     newMeshData.vertices.resize(vIt.count());
     newMeshData.edges.resize(eIt.count());
     // fill it with vertices data
@@ -138,9 +183,86 @@ void MVGManipulatorCache::rebuildMeshCache(const MDagPath& path)
         edge.vertex2 = &(*v2It);
         eIt.next();
     }
+
+    if(meshPath == path)
+        updateSelectedComponent(meshPath, type, index);
 }
 
-bool MVGManipulatorCache::isIntersectingPoint(double tolerance, const MPoint& mouseCSPosition)
+void MVGManipulatorCache::setSelectedComponent(const MVGComponent& selectedComponent)
+{
+    _selectedComponent = selectedComponent;
+}
+
+/**
+ * Retrieve the selected component after a rebuild cache
+ * The pointers in the Component are not valid anymore
+ *
+ * @param meshPath : path of the former selected component
+ * @param type : type of the former selected component
+ * @param index : index of the former selected component (edge or vertex)
+ */
+void MVGManipulatorCache::updateSelectedComponent(const MDagPath& meshPath, const MFn::Type type,
+                                                  const int index)
+{
+    MVGComponent component;
+    component.type = type;
+    component.meshPath = meshPath;
+
+    const std::string meshPathString = meshPath.fullPathName().asChar();
+    if(type == MFn::kMeshVertComponent || type == MFn::kBlindData)
+    {
+        std::map<std::string, MeshData>::iterator it = _meshData.find(meshPathString);
+        if(it == _meshData.end())
+            return;
+        std::vector<VertexData>& verticesArray = _meshData[meshPathString].vertices;
+        if(verticesArray.size() <= index)
+            return;
+        component.vertex = &(verticesArray[index]);
+    }
+    _selectedComponent = component;
+}
+
+bool MVGManipulatorCache::isIntersectingBlindData(const double tolerance,
+                                                  const MPoint& mouseCSPosition)
+{
+    if(_meshData.empty())
+        return false;
+    // compute tolerance
+    const double threshold =
+        (tolerance * _activeCamera.getZoom()) / (double)_activeView.portWidth();
+    const int cameraID = _activeCamera.getId();
+    // check each mesh vertices
+    std::map<std::string, MeshData>::iterator meshIt = _meshData.begin();
+    for(; meshIt != _meshData.end(); ++meshIt)
+    {
+        std::vector<VertexData>& vertices = meshIt->second.vertices;
+        std::vector<VertexData>::iterator vertexIt = vertices.begin();
+        for(; vertexIt < vertices.end(); ++vertexIt)
+        {
+            std::map<int, MPoint>::const_iterator blindDataIt = vertexIt->blindData.find(cameraID);
+            if(blindDataIt == vertexIt->blindData.end())
+                continue;
+            MPoint pointCSPosition = blindDataIt->second;
+            // check if we intersect w/ the vertex position
+            if(mouseCSPosition.x <= pointCSPosition.x + threshold &&
+               mouseCSPosition.x >= pointCSPosition.x - threshold &&
+               mouseCSPosition.y <= pointCSPosition.y + threshold &&
+               mouseCSPosition.y >= pointCSPosition.y - threshold)
+            {
+                MDagPath meshPath;
+                MVGMayaUtil::getDagPathByName(meshIt->first.c_str(), meshPath);
+                _intersectedComponent.type = MFn::kBlindData;
+                _intersectedComponent.meshPath = meshPath;
+                _intersectedComponent.vertex = &(*vertexIt);
+                _intersectedComponent.edge = NULL;
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+bool MVGManipulatorCache::isIntersectingPoint(const double tolerance, const MPoint& mouseCSPosition)
 {
     if(_meshData.empty())
         return false;
@@ -176,7 +298,7 @@ bool MVGManipulatorCache::isIntersectingPoint(double tolerance, const MPoint& mo
     return false;
 }
 
-bool MVGManipulatorCache::isIntersectingEdge(double tolerance, const MPoint& mouseCSPosition)
+bool MVGManipulatorCache::isIntersectingEdge(const double tolerance, const MPoint& mouseCSPosition)
 {
     if(_meshData.empty())
         return false;

@@ -4,6 +4,7 @@
 #include "mayaMVG/core/MVGLog.hpp"
 #include <stlplus3/filesystemSimplified/file_system.hpp>
 #include <fstream>
+#include <maya/MFnCamera.h>
 
 namespace
 { // empty namespace
@@ -62,16 +63,13 @@ bool readCameras(const std::string& filePath, const std::string& imageDir,
         std::istringstream iss(line);
         std::string imageName, binaryName;
         size_t width, height;
-        // double near, far;
-        iss >> imageName >> width >> height >> binaryName; // >> near >> far;
-
+        iss >> imageName >> width >> height >> binaryName;
         if(iss.fail())
         {
             LOG_ERROR("Invalid file format. Can't parse image at line " << i << ".")
             LOG_ERROR("Line is: \"" << line << "\"")
             continue;
         }
-
         // get or create camera
         std::string cameraName = getCameraName(binaryName);
         MVGCamera camera(cameraName);
@@ -79,6 +77,17 @@ bool readCameras(const std::string& filePath, const std::string& imageDir,
             camera = MVGCamera::create(cameraName);
 
         setPinholeFromBinary(camera, stlplus::create_filespec(cameraDir, binaryName));
+
+        // Set camera parameters
+        MFnCamera fnCamera(camera.getDagPath());
+        double focalLengthPixel = camera.getPinholeCamera()._K(0, 0);
+        fnCamera.setHorizontalFieldOfView(
+            (2.0 * atan((double)width / (2.0 * (double)focalLengthPixel))));
+        fnCamera.setPanZoomEnabled(true);
+        fnCamera.setFilmFit(MFnCamera::kHorizontalFilmFit);
+        // TODO : set camera aperture according to camera model
+        fnCamera.setAspectRatio((double)width / (double)height);
+
         camera.setImagePlane(stlplus::create_filespec(imageDir, imageName), width, height);
         // TODO: camera.setImageName(imageName)
         camera.setId(cameraId);

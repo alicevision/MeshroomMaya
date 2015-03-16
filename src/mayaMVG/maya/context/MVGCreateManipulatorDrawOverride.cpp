@@ -67,9 +67,9 @@ MUserData* MVGCreateManipulatorDrawOverride::prepareForDraw(
         manipulator->getMousePosition(cache->getActiveView(), MVGManipulator::kView);
     data->cache = cache;
     data->intersectedVSPoints.clear();
-    manipulator->getIntersectedPositions(cache->getActiveView(), data->intersectedVSPoints,
-                                         MVGManipulator::kView);
-    data->finalWSPoints = manipulator->getFinalWSPositions();
+    manipulator->getIntersectedPoints(cache->getActiveView(), data->intersectedVSPoints,
+                                      MVGManipulator::kView);
+    data->finalWSPoints = manipulator->getFinalWSPoints();
     data->clickedVSPoints = manipulator->getClickedVSPoints();
     // add mouse position
     data->clickedVSPoints.append(data->mouseVSPoint);
@@ -90,7 +90,7 @@ void MVGCreateManipulatorDrawOverride::draw(const MHWRender::MDrawContext& /*con
     MVGDrawUtil::begin2DDrawing(userdata->portWidth, userdata->portHeight);
     MVGCreateManipulator::drawCursor(userdata->mouseVSPoint, userdata->cache);
     MVGDrawUtil::drawClickedPoints(userdata->clickedVSPoints, MVGDrawUtil::_okayColor);
-    MVGManipulator::drawIntersection2D(userdata->intersectedVSPoints);
+    //    MVGManipulator::drawIntersection2D(userdata->intersectedVSPoints);
     if(userdata->finalWSPoints.length() > 3)
         MVGDrawUtil::drawPolygon3D(userdata->finalWSPoints, MVGDrawUtil::_okayColor);
     MVGDrawUtil::end2DDrawing();

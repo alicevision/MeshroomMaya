@@ -53,6 +53,8 @@ public:
     MVGManipulatorCache& getCache() { return _manipulatorCache; }
 
 private:
+    bool setFocusOnView(QObject* obj);
+
     EventData _eventData;
     MVGEventFilter<MVGContext> _filter;
     MVGEventFilter<MVGContext> _filterLV;

@@ -1,5 +1,7 @@
 #pragma once
 
+#include "mayaMVG/core/MVGPlaneKernel.hpp"
+#include "mayaMVG/core/MVGLineConstrainedPlaneKernel.hpp"
 #include <maya/MVector.h>
 
 class MPoint;
@@ -61,11 +63,19 @@ struct MVGGeometryUtil
     static MPointArray cameraToImageSpace(MVGCamera& camera, const MPointArray& cameraPoint);
 
     // projections
+    static bool computePlane(const MPointArray& points, PlaneKernel::Model& model);
+    static bool computePlaneWithLineConstraint(const MPointArray& pointsWS,
+                                               const MPointArray& constraintPoints,
+                                               LineConstrainedPlaneKernel::Model& model);
     static bool projectPointsOnPlane(M3dView& view, const MPointArray& toProjectCSPoints,
-                                     const MPointArray& faceWSPoints,
+                                     const PlaneKernel::Model& planeModel,
                                      MPointArray& projectedWSPoints);
     static bool projectPointOnPlane(M3dView& view, const MPoint& toProjectCSPoint,
-                                    const MPointArray& faceWSPoints, MPoint& projectedWSPoint);
+                                    const PlaneKernel::Model& planeModel, MPoint& projectedWSPoint);
+
+    // intersections
+    static double crossProduct2D(MVector& A, MVector& B);
+    static bool doEdgesIntersect(MPoint A, MPoint B, MVector AD, MVector BC);
 };
 
 } // namespace

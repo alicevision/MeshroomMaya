@@ -5,6 +5,7 @@
 #include "mayaMVG/core/MVGCamera.hpp"
 #include "mayaMVG/qt/MVGQt.hpp"
 #include <maya/MQtUtil.h>
+#include <maya/MArgList.h>
 
 namespace mayaMVG
 {
@@ -21,6 +22,7 @@ MVGContext::MVGContext()
 void MVGContext::toolOnSetup(MEvent& event)
 {
     updateManipulators();
+    _manipulatorCache.rebuildMeshesCache();
 }
 
 void MVGContext::toolOffCleanup()
@@ -53,7 +55,6 @@ void MVGContext::updateManipulators()
                 MPxManipulatorNode::newManipulator("MVGCreateManipulator", manipObject, &status));
             if(!status || !manip)
                 return;
-            _manipulatorCache.rebuildMeshesCache();
             manip->setContext(this);
             manip->setCache(&_manipulatorCache);
             break;
@@ -64,7 +65,6 @@ void MVGContext::updateManipulators()
                 MPxManipulatorNode::newManipulator("MVGMoveManipulator", manipObject, &status));
             if(!status || !manip)
                 return;
-            _manipulatorCache.rebuildMeshesCache();
             manip->setContext(this);
             manip->setCache(&_manipulatorCache);
             break;
@@ -78,10 +78,30 @@ void MVGContext::updateManipulators()
 
 bool MVGContext::eventFilter(QObject* obj, QEvent* e)
 {
+    QWidget* widget = qobject_cast<QWidget*>(obj);
+
+    if(!obj)
+        return false;
+
     // key pressed
     if(e->type() == QEvent::KeyPress)
     {
         QKeyEvent* keyevent = static_cast<QKeyEvent*>(e);
+        switch(keyevent->key())
+        {
+            case Qt::Key_C:
+                if(_editMode != eModeCreate)
+                {
+                    _editMode = eModeCreate;
+                    updateManipulators();
+                }
+                return true;
+            case Qt::Key_V:
+                if(!MVGCreateManipulator::_doSnap)
+                    MVGCreateManipulator::_doSnap = true;
+                break; // Spread event to Maya
+        }
+        // Check for autorepeat
         if(!keyevent->isAutoRepeat())
         {
             switch(keyevent->key())
@@ -95,17 +115,45 @@ bool MVGContext::eventFilter(QObject* obj, QEvent* e)
                     camera.resetZoomAndPan();
                     return true;
                 }
-                case Qt::Key_C:
-                    _editMode = eModeCreate;
-                    updateManipulators();
-                    return true;
                 case Qt::Key_Control:
                     if(_editMode == eModeCreate)
                         break;
                     MVGMoveManipulator::_mode = static_cast<MVGMoveManipulator::MoveMode>(
                         (MVGMoveManipulator::_mode + 1) % 3);
+                    _manipulatorCache.clearSelectedComponent();
+                    break; // Spread event to Maya
                 case Qt::Key_Escape:
                     updateManipulators();
+                    _manipulatorCache.clearSelectedComponent();
+                    break;
+                case Qt::Key_Return:
+                case Qt::Key_Enter:
+                {
+                    const MVGManipulatorCache::MVGComponent& selectedComponent =
+                        _manipulatorCache.getSelectedComponent();
+                    if(selectedComponent.type != MFn::kMeshVertComponent &&
+                       selectedComponent.type != MFn::kBlindData)
+                        break;
+                    // Clear blind data
+                    MVGEditCmd* cmd = newCmd();
+                    if(cmd)
+                    {
+                        MIntArray componentId;
+                        componentId.append(selectedComponent.vertex->index);
+                        MDagPath meshPath = selectedComponent.meshPath;
+
+                        cmd->clearBD(meshPath, componentId);
+                        MArgList args;
+                        if(cmd->doIt(args))
+                        {
+                            cmd->finalize();
+                            _manipulatorCache.rebuildMeshesCache();
+                            _manipulatorCache.clearSelectedComponent();
+                        }
+                        break;
+                    }
+                    break;
+                }
                 default:
                     break;
             }
@@ -123,6 +171,9 @@ bool MVGContext::eventFilter(QObject* obj, QEvent* e)
                     _editMode = eModeMove;
                     updateManipulators();
                     return true;
+                case Qt::Key_V:
+                    MVGCreateManipulator::_doSnap = false;
+                    break; // Spread event to Maya
                 case Qt::Key_Escape:
                     updateManipulators();
                     return true;
@@ -134,6 +185,8 @@ bool MVGContext::eventFilter(QObject* obj, QEvent* e)
     // mouse button pressed
     else if(e->type() == QEvent::MouseButtonPress)
     {
+        setFocusOnView(obj); // TODO: check how to do it only if needed.
+
         QMouseEvent* mouseevent = static_cast<QMouseEvent*>(e);
         // middle button: initialize camera pan
         if((mouseevent->button() & Qt::MidButton))
@@ -152,13 +205,15 @@ bool MVGContext::eventFilter(QObject* obj, QEvent* e)
     // mouse button moved
     else if(e->type() == QEvent::MouseMove)
     {
-        if(_eventData.isDragging)
+        if(widget && _eventData.isDragging && _eventData.cameraPath.isValid())
         {
             MVGCamera camera(_eventData.cameraPath);
             // compute pan offset
             QMouseEvent* mouseevent = static_cast<QMouseEvent*>(e);
+            if(!mouseevent)
+                return false;
             QPointF offset_screen = _eventData.onPressMousePos - mouseevent->posF();
-            const double viewport_width = qobject_cast<QWidget*>(obj)->width();
+            const double viewport_width = widget->width();
             QPointF offset = (offset_screen / viewport_width) * camera.getHorizontalFilmAperture() *
                              camera.getZoom();
             camera.setPan(_eventData.onPressCameraHPan + offset.x(),
@@ -174,13 +229,12 @@ bool MVGContext::eventFilter(QObject* obj, QEvent* e)
     // mouse wheel rolled
     else if(e->type() == QEvent::Wheel)
     {
-        if(_eventData.cameraPath.isValid())
+        if(widget && _eventData.cameraPath.isValid())
         {
             // compute & set zoom value
             QMouseEvent* mouseevent = static_cast<QMouseEvent*>(e);
             QWheelEvent* wheelevent = static_cast<QWheelEvent*>(e);
             MVGCamera camera(_eventData.cameraPath);
-            QWidget* widget = qobject_cast<QWidget*>(obj);
             const double viewportWidth = widget->width();
             const double viewportHeight = widget->height();
             static const double wheelStep = 1.15;
@@ -208,23 +262,30 @@ bool MVGContext::eventFilter(QObject* obj, QEvent* e)
     // mouse enters widget's boundaries
     else if(e->type() == QEvent::Enter)
     {
-        // check if we are entering an MVG panel
-        QVariant panelName = obj->property("mvg_panel");
-        if(panelName.type() != QVariant::Invalid)
-        {
-            // find & register the associated camera path
-            MVGMayaUtil::getCameraInView(_eventData.cameraPath,
-                                         MQtUtil::toMString(panelName.toString()));
-            if(_eventData.cameraPath.isValid())
-            {
-                // automagically set focus on this MVG panel
-                MVGMayaUtil::setFocusOnView(MQtUtil::toMString(panelName.toString()));
-                _manipulatorCache.setActiveView(M3dView::active3dView());
-                return true;
-            }
-        }
+        if(widget && !widget->isActiveWindow())
+            return false;
+
+        return setFocusOnView(obj);
     }
     return false;
+}
+
+bool MVGContext::setFocusOnView(QObject* obj)
+{
+    // check if we are entering an MVG panel
+    QVariant panelName = obj->property("mvg_panel");
+    if(!panelName.isValid())
+        return false;
+
+    // find & register the associated camera path
+    MVGMayaUtil::getCameraInView(_eventData.cameraPath, MQtUtil::toMString(panelName.toString()));
+    if(!_eventData.cameraPath.isValid())
+        return false;
+
+    // automatically set focus on this MVG panel
+    MVGMayaUtil::setFocusOnView(MQtUtil::toMString(panelName.toString()));
+    _manipulatorCache.setActiveView(M3dView::active3dView());
+    return true;
 }
 
 MVGEditCmd* MVGContext::newCmd()

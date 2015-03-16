@@ -1,8 +1,10 @@
 #include "mayaMVG/core/MVGLog.hpp"
+#include "mayaMVG/version.hpp"
 #include "mayaMVG/maya/MVGMayaUtil.hpp"
 #include "mayaMVG/maya/MVGMayaCallbacks.hpp"
 #include "mayaMVG/maya/cmd/MVGCmd.hpp"
 #include "mayaMVG/maya/cmd/MVGEditCmd.hpp"
+#include "mayaMVG/maya/cmd/MVGImagePlaneCmd.hpp"
 #include "mayaMVG/maya/context/MVGContextCmd.hpp"
 #include "mayaMVG/maya/context/MVGCreateManipulator.hpp"
 #include "mayaMVG/maya/context/MVGMoveManipulator.hpp"
@@ -28,10 +30,12 @@ MCallbackIdArray _callbacks;
 MStatus initializePlugin(MObject obj)
 {
     MStatus status;
-    MFnPlugin plugin(obj, PLUGIN_COMPANY, "0.1.0", "Any");
+    MFnPlugin plugin(obj, PLUGIN_COMPANY, MAYAMVG_VERSION, "Any");
 
     // Register Maya context, commands & nodes
     CHECK(plugin.registerCommand("MVGCmd", MVGCmd::creator))
+    CHECK(plugin.registerCommand("MVGImagePlaneCmd", MVGImagePlaneCmd::creator,
+                                 MVGImagePlaneCmd::newSyntax))
     CHECK(plugin.registerContextCommand(MVGContextCmd::name, &MVGContextCmd::creator,
                                         MVGEditCmd::_name, MVGEditCmd::creator,
                                         MVGEditCmd::newSyntax))
@@ -59,28 +63,31 @@ MStatus initializePlugin(MObject obj)
     id = MEventMessage::addEventCallback("PostToolChanged", currentContextChangedCB, &status);
     if(status)
         _callbacks.append(id);
-    MEventMessage::addEventCallback("NewSceneOpened", newSceneCB, &status);
+    id = MEventMessage::addEventCallback("NewSceneOpened", newSceneCB, &status);
     if(status)
         _callbacks.append(id);
-    MEventMessage::addEventCallback("SceneOpened", sceneChangedCB, &status);
+    id = MEventMessage::addEventCallback("SceneOpened", sceneChangedCB, &status);
     if(status)
         _callbacks.append(id);
-    MEventMessage::addEventCallback("Undo", undoCB, &status);
+    id = MEventMessage::addEventCallback("Undo", undoCB, &status);
     if(status)
         _callbacks.append(id);
-    MEventMessage::addEventCallback("Redo", redoCB, &status);
+    id = MEventMessage::addEventCallback("Redo", redoCB, &status);
     if(status)
         _callbacks.append(id);
-    MEventMessage::addEventCallback("SelectionChanged", selectionChangedCB, &status);
+    id = MEventMessage::addEventCallback("SelectionChanged", selectionChangedCB, &status);
     if(status)
         _callbacks.append(id);
-    MEventMessage::addEventCallback("modelEditorChanged", modelEditorChangedCB, &status);
+    id = MEventMessage::addEventCallback("modelEditorChanged", modelEditorChangedCB, &status);
     if(status)
         _callbacks.append(id);
-    MDGMessage::addNodeRemovedCallback(nodeRemovedCB, "camera", &status);
+    id = MEventMessage::addEventCallback("linearUnitChanged", linearUnitChanged, &status);
     if(status)
         _callbacks.append(id);
-    MDGMessage::addNodeRemovedCallback(nodeRemovedCB, "mesh", &status);
+    id = MDGMessage::addNodeRemovedCallback(nodeRemovedCB, "camera", &status);
+    if(status)
+        _callbacks.append(id);
+    id = MDGMessage::addNodeRemovedCallback(nodeRemovedCB, "mesh", &status);
     if(status)
         _callbacks.append(id);
 

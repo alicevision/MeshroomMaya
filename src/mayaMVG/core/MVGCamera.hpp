@@ -35,13 +35,13 @@ public:
 public:
     int getId() const;
     void setId(const int&) const;
-    MDagPath getImagePath() const;
+    MDagPath getImagePlaneShapeDagPath() const;
     std::string getImagePlane() const;
     void setImagePlane(const std::string&, int width, int height) const;
-    void loadImagePlane() const;
+    void unloadImagePlane() const;
     openMVG::PinholeCamera getPinholeCamera() const;
     void setPinholeCamera(const openMVG::PinholeCamera&) const;
-    std::vector<MVGPointCloudItem> getVisibleItems() const;
+    void getVisibleItems(std::vector<MVGPointCloudItem>& visibleItems) const;
     void setVisibleItems(const std::vector<MVGPointCloudItem>& item) const;
     double getZoom() const;
     void setZoom(const double zoom) const;
@@ -50,15 +50,23 @@ public:
     double getVerticalPan() const;
     void setVerticalPan(const double pan) const;
     void setPan(const double hpan, const double vpan) const;
+    void setAspectRatio(const double ratio) const;
     double getHorizontalFilmAperture() const;
     void resetZoomAndPan() const;
     void setInView(const std::string& viewName) const;
+    void setNear(const double near) const;
+    void setFar(const double far) const;
+    void setLocatorScale(const double scale) const;
+
+    const std::pair<double, double> getImageSize() const;
+
+public:
+    static MString _DEFERRED;
 
 private:
     static MString _ID;
     static MString _PINHOLE;
     static MString _ITEMS;
-    static MString _DEFERRED;
 };
 
 } // namespace

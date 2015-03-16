@@ -48,15 +48,15 @@ public:
         std::vector<EdgeData> edges;
     };
 
-    struct IntersectedComponent
+    struct MVGComponent
     {
-        IntersectedComponent()
+        MVGComponent()
             : type(MFn::kInvalid)
             , vertex(NULL)
             , edge(NULL)
         {
         }
-        MFn::Type type; // kMeshEdgeComponent, kMeshVertComponent
+        MFn::Type type; // kMeshEdgeComponent, kMeshVertComponent, kBlindData
         MDagPath meshPath;
         VertexData* vertex;
         EdgeData* edge;
@@ -72,8 +72,10 @@ public:
     const MVGCamera& getActiveCamera() const;
 
     // intersections tests
-    bool checkIntersection(double, const MPoint&);
-    const IntersectedComponent& getIntersectedComponent();
+    bool checkIntersection(const double, const MPoint&, const bool checkBlindData = false);
+    const MVGComponent& getIntersectedComponent() const;
+    void clearIntersectedComponent() { _intersectedComponent = MVGComponent(); }
+    const MFn::Type getIntersectionType() const;
 
     // mesh & view relative data
     const std::map<std::string, MeshData>& getMeshData() const;
@@ -81,14 +83,21 @@ public:
     void rebuildMeshesCache();
     void rebuildMeshCache(const MDagPath&);
 
+    const MVGComponent& getSelectedComponent() const { return _selectedComponent; }
+    void setSelectedComponent(const MVGComponent& selectedComponent);
+    void clearSelectedComponent() { _selectedComponent = MVGComponent(); }
+    void updateSelectedComponent(const MDagPath& meshPath, const MFn::Type type, const int index);
+
 private:
-    bool isIntersectingPoint(double, const MPoint&);
-    bool isIntersectingEdge(double, const MPoint&);
+    bool isIntersectingBlindData(const double, const MPoint&);
+    bool isIntersectingPoint(const double, const MPoint&);
+    bool isIntersectingEdge(const double, const MPoint&);
 
 private:
     M3dView _activeView;
     MVGCamera _activeCamera;
-    IntersectedComponent _intersectedComponent;
+    MVGComponent _intersectedComponent;
+    MVGComponent _selectedComponent;
     std::map<std::string, MeshData> _meshData; // per mesh
 };
 

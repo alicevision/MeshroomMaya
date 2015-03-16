@@ -11,7 +11,7 @@ class MVGEditCmd;
 class MVGCreateManipulator : public MVGManipulator
 {
 public:
-    MVGCreateManipulator() {}
+    MVGCreateManipulator();
     virtual ~MVGCreateManipulator() {}
 
 public:
@@ -30,7 +30,15 @@ public:
     MPointArray getClickedVSPoints() const;
 
 private:
-    void computeFinalWSPositions(M3dView& view);
+    void computeFinalWSPoints(M3dView& view);
+    bool computePCPoints(M3dView& view, MPointArray& finalWSPoints,
+                         const MPointArray& intermediateCSEdgePoints);
+    bool computeAdjacentPoints(M3dView& view, MPointArray& finalWSPoints,
+                               const MPointArray& intermediateCSEdgePoints);
+    bool snapToIntersectedEdge(M3dView& view, MPointArray& finalWSPoints,
+                               const MVGManipulatorCache::MVGComponent& intersectedEdge);
+    bool snapToIntersectedVertex(M3dView& view, MPointArray& finalWSPoints,
+                                 const MPointArray& intermediateCSEdgePoints);
 
 public:
     static void drawCursor(const MPoint& originVS, MVGManipulatorCache* cache);
@@ -39,6 +47,7 @@ public:
     static MTypeId _id;
     static MString _drawDbClassification;
     static MString _drawRegistrantID;
+    static bool _doSnap;
 
 private:
     std::pair<int, MPointArray> _cameraIDToClickedCSPoints; // cameraID to clicked points

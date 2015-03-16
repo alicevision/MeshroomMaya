@@ -4,6 +4,7 @@
 #include "mayaMVG/core/MVGCamera.hpp"
 #include "mayaMVG/core/MVGLog.hpp"
 #include "mayaMVG/core/MVGPlaneKernel.hpp"
+#include "mayaMVG/core/MVGLineConstrainedPlaneKernel.hpp"
 #include <maya/MPointArray.h>
 #include <maya/M3dView.h>
 #include <maya/MPlug.h>
@@ -221,7 +222,7 @@ MPointArray MVGGeometryUtil::cameraToWorldSpace(M3dView& view, const MPointArray
 void MVGGeometryUtil::cameraToImageSpace(MVGCamera& camera, const MPoint& cameraPoint,
                                          MPoint& imagePoint)
 {
-    MFnDagNode fnImage(camera.getImagePath());
+    MFnDagNode fnImage(camera.getImagePlaneShapeDagPath());
     const double width = fnImage.findPlug("coverageX").asDouble();
     const double height = fnImage.findPlug("coverageY").asDouble();
     assert(camera.getHorizontalFilmAperture() != 0.0);
@@ -253,20 +254,66 @@ MPointArray MVGGeometryUtil::cameraToImageSpace(MVGCamera& camera, const MPointA
     return points;
 }
 
-bool MVGGeometryUtil::projectPointsOnPlane(M3dView& view, const MPointArray& toProjectCSPoints,
-                                           const MPointArray& faceWSPoints,
-                                           MPointArray& projectedWSPoints)
+/**
+ *
+ * @param[in] pointsWS : all points used to compute plane in World Space coordinates
+ * @param[out] model : computed plane
+ * @return
+ */
+bool MVGGeometryUtil::computePlane(const MPointArray& pointsWS, PlaneKernel::Model& model)
 {
-    if(faceWSPoints.length() < 3)
+    if(pointsWS.length() < 3)
         return false;
-    // compute plane
-    openMVG::Mat facePointsMat(3, faceWSPoints.length());
-    for(size_t i = 0; i < faceWSPoints.length(); ++i)
-        facePointsMat.col(i) = TO_VEC3(faceWSPoints[i]);
+
+    openMVG::Mat facePointsMat(3, pointsWS.length());
+    for(size_t i = 0; i < pointsWS.length(); ++i)
+        facePointsMat.col(i) = TO_VEC3(pointsWS[i]);
     PlaneKernel kernel(facePointsMat);
     double outlierThreshold = std::numeric_limits<double>::infinity();
-    PlaneKernel::Model model;
     openMVG::robust::LeastMedianOfSquares(kernel, &model, &outlierThreshold);
+
+    return true;
+}
+
+/**
+ *
+ * @param[in] pointsWS: all points used to compute plane in World Space coordinates
+ * @param[in] constraintPoints : points describing the line constraint
+ * @param[out] model : computed plane
+ * @return
+ */
+bool MVGGeometryUtil::computePlaneWithLineConstraint(const MPointArray& pointsWS,
+                                                     const MPointArray& constraintPoints,
+                                                     LineConstrainedPlaneKernel::Model& model)
+{
+    if(pointsWS.length() < 3)
+        return false;
+    if(constraintPoints.length() < 2)
+        return false;
+    openMVG::Mat facePointsMat(3, pointsWS.length());
+    for(size_t i = 0; i < pointsWS.length(); ++i)
+        facePointsMat.col(i) = TO_VEC3(pointsWS[i]);
+    LineConstrainedPlaneKernel kernel(facePointsMat, TO_VEC3(constraintPoints[0]),
+                                      TO_VEC3(constraintPoints[1]));
+    double outlierThreshold = std::numeric_limits<double>::infinity();
+    openMVG::robust::LeastMedianOfSquares(kernel, &model, &outlierThreshold);
+
+    return true;
+}
+
+/**
+ *
+ * @param view
+ * @param[in] toProjectCSPoints : points to project in the computed plane in Camera Space
+ *coordinates
+ * @param[in] faceWSPoints : all points used to compute plane in World Space coordinates
+ * @param[out] projectedWSPoints : toPojectCSPoints projected in plane in World Space coordinates
+ * @return
+ */
+bool MVGGeometryUtil::projectPointsOnPlane(M3dView& view, const MPointArray& toProjectCSPoints,
+                                           const PlaneKernel::Model& planeModel,
+                                           MPointArray& projectedWSPoints)
+{
     // compute camera center
     MDagPath cameraPath;
     view.getCamera(cameraPath);
@@ -277,11 +324,11 @@ bool MVGGeometryUtil::projectPointsOnPlane(M3dView& view, const MPointArray& toP
     if(cloud.isValid())
         inclusiveMatrix = cloud.getDagPath().inclusiveMatrix();
     cameraCenter *= inclusiveMatrix;
-    // project moved point on computed plane
+    // project points on computed plane
     MPoint projectedWSPoint;
     for(size_t i = 0; i < toProjectCSPoints.length(); ++i)
     {
-        plane_line_intersect(model, cameraCenter,
+        plane_line_intersect(planeModel, cameraCenter,
                              MVGGeometryUtil::cameraToWorldSpace(view, toProjectCSPoints[i]),
                              projectedWSPoint);
         projectedWSPoints.append(projectedWSPoint);
@@ -291,15 +338,40 @@ bool MVGGeometryUtil::projectPointsOnPlane(M3dView& view, const MPointArray& toP
 }
 
 bool MVGGeometryUtil::projectPointOnPlane(M3dView& view, const MPoint& toProjectCSPoint,
-                                          const MPointArray& faceWSPoints, MPoint& projectedWSPoint)
+                                          const PlaneKernel::Model& planeModel,
+                                          MPoint& projectedWSPoint)
 {
     MPointArray toProjectCSPoints;
     MPointArray projectedWSPoints;
     toProjectCSPoints.append(toProjectCSPoint);
-    if(projectPointsOnPlane(view, toProjectCSPoints, faceWSPoints, projectedWSPoints))
+    if(projectPointsOnPlane(view, toProjectCSPoints, planeModel, projectedWSPoints))
     {
         assert(projectedWSPoints.length() == 1);
         projectedWSPoint = projectedWSPoints[0];
+        return true;
+    }
+    return false;
+}
+double MVGGeometryUtil::crossProduct2D(MVector& A, MVector& B)
+{
+    return A.x * B.y - A.y * B.x;
+}
+
+bool MVGGeometryUtil::doEdgesIntersect(MPoint A, MPoint B, MVector AD, MVector BC)
+{
+    // r x s = 0
+    double cross = crossProduct2D(AD, BC);
+    double eps = 0.00001;
+    if(cross < eps && cross > -eps)
+        return false;
+
+    MVector AB = B - A;
+
+    double x = crossProduct2D(AB, BC) / crossProduct2D(AD, BC);
+    double y = crossProduct2D(AB, AD) / crossProduct2D(AD, BC);
+
+    if(x >= 0 && x <= 1 && y >= 0 && y <= 1)
+    {
         return true;
     }
     return false;

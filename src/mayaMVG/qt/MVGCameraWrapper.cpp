@@ -40,14 +40,17 @@ void MVGCameraWrapper::setInView(const QString& viewName, const bool value)
             Q_EMIT viewsChanged();
         }
         _camera.setInView(viewName.toStdString());
-        return;
     }
-    if(_views.removeOne(viewName))
-        Q_EMIT viewsChanged();
+    else
+    {
+        if(_views.removeOne(viewName))
+            Q_EMIT viewsChanged();
+    }
 }
 
 const QSize MVGCameraWrapper::getSourceSize()
 {
+    // TODO : do not load image
     if(!_imageLoaded)
     {
         QImage image(getImagePath());
@@ -63,9 +66,9 @@ const qint64 MVGCameraWrapper::getSourceWeight() const
     return info.size();
 }
 
-void MVGCameraWrapper::select() const
+void MVGCameraWrapper::selectCameraNode() const
 {
-    _camera.select();
+    _camera.selectNode();
 }
 
 } // namespace

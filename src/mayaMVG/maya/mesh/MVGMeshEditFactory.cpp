@@ -68,15 +68,20 @@ MStatus MVGMeshEditFactory::doIt()
 
     switch(_editType)
     {
-        case kCreate:
+        case kAddFace:
         {
             int index;
-            int verticesCountBeforeAddPolygon = mesh.getVerticesCount();
             mesh.addPolygon(_worldPositions, index);
+            MIntArray facePointsIndexes = mesh.getFaceVertices(index);
             // Update componentIDs
             _componentIDs.clear();
-            for(int i = 0; i < _cameraPositions.length(); ++i)
-                _componentIDs.append(verticesCountBeforeAddPolygon + i);
+            _componentIDs = facePointsIndexes;
+            if(_cameraPositions.length() == 2)
+            {
+                _componentIDs.clear();
+                _componentIDs.append(facePointsIndexes[2]);
+                _componentIDs.append(facePointsIndexes[3]);
+            }
             break;
         }
         case kMove:
@@ -86,19 +91,29 @@ MStatus MVGMeshEditFactory::doIt()
             {
                 for(size_t i = 0; i < _componentIDs.length(); ++i)
                 {
+                    CHECK(mesh.setPoint(_componentIDs[i], _worldPositions[i]))
                     if(_clearBD)
                         CHECK(mesh.unsetBlindData(_componentIDs[i]));
-                    CHECK(mesh.setPoint(_componentIDs[i], _worldPositions[i]))
                 }
             }
+            if(!_clearBD)
+            {
+                // set blind data
+                assert(_componentIDs.length() == _cameraPositions.length());
+                for(size_t i = 0; i < _componentIDs.length(); ++i)
+                    CHECK(mesh.setBlindDataPerCamera(_componentIDs[i], _cameraID,
+                                                     _cameraPositions[i]))
+            }
+            break;
+        }
+        case kClearBD:
+        {
+            for(size_t i = 0; i < _componentIDs.length(); ++i)
+                CHECK(mesh.unsetBlindData(_componentIDs[i]));
             break;
         }
     }
 
-    // set blind data
-    assert(_componentIDs.length() == _cameraPositions.length());
-    for(size_t i = 0; i < _componentIDs.length(); ++i)
-        CHECK(mesh.setBlindDataPerCamera(_componentIDs[i], _cameraID, _cameraPositions[i]))
     return status;
 }
 
