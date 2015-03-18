@@ -34,7 +34,7 @@ public:
     enum EditMode
     {
         eModeCreate = 0,
-        eModeMove
+        eModeMove = 1
     };
 
 public:
@@ -51,6 +51,8 @@ public:
 
 public:
     MVGManipulatorCache& getCache() { return _manipulatorCache; }
+    const EditMode getEditMode() const { return _editMode; }
+    void setEditMode(EditMode mode) { _editMode = mode; }
 
 private:
     bool setFocusOnView(QObject* obj);

@@ -51,14 +51,21 @@ signals:
     void centerCameraListByIndex(const int cameraIndex);
 
 public:
-    Q_INVOKABLE void addCamerasToIHMSelection(const QStringList& cameraNames, bool center = false);
-    Q_INVOKABLE void addCamerasToMayaSelection(const QStringList& cameraNames) const;
     Q_INVOKABLE QString openFileDialog() const;
-    Q_INVOKABLE void activeSelectionContext() const;
-    Q_INVOKABLE void activeMVGContext();
-    Q_INVOKABLE void loadExistingProject();
-    Q_INVOKABLE void loadNewProject(const QString& projectDirectoryPath);
     Q_INVOKABLE void scaleScene(const double scaleSize) const;
+    // Context & Modes
+    Q_INVOKABLE void activeSelectionContext() const;
+    Q_INVOKABLE void setCreationMode();
+    Q_INVOKABLE void setTriangulationMode();
+    Q_INVOKABLE void setPointCloudMode();
+    Q_INVOKABLE void setAdjacentPlaneMode(); 
+    // Project
+    Q_INVOKABLE void loadExistingProject();
+    Q_INVOKABLE void loadNewProject(const QString& projectDirectoryPath);   
+    // Selection
+    Q_INVOKABLE void addCamerasToIHMSelection(const QStringList& cameraNames, bool center = false);
+    Q_INVOKABLE void addCamerasToMayaSelection(const QStringList& cameraNames) const;   
+    // Cameras
     Q_INVOKABLE void setCameraToView(QObject* camera, const QString& viewName,
                                      bool rebuildCache = true);
     Q_INVOKABLE void setCamerasNear(const double near);

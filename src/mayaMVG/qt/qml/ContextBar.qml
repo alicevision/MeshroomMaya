@@ -20,10 +20,31 @@ Item {
             checked: (m.project.currentContext === "selectSuperContext")
         }
         ToolButton {
-            iconSource: "img/mouse_place.png"
+            iconSource: "img/create.png"
             tooltip: "MVG mode"
             checked: (m.project.currentContext === "mayaMVGTool1")
-            onClicked: m.project.activeMVGContext();
+            onClicked: m.project.setCreationMode();
+            iconSize: 20
+
+
+        }
+        ToolButton {
+            iconSource: "img/triangulation.png"
+            tooltip: "Triangulation mode"
+            onClicked: m.project.setTriangulationMode();
+            iconSize: 20
+        }
+        ToolButton {
+            iconSource: "img/pointCloud.png"
+            tooltip: "Fit point cloud mode"
+            onClicked: m.project.setPointCloudMode();
+            iconSize: 20
+        }
+        ToolButton {
+            iconSource: "img/adjacentPlane.png"
+            tooltip: "Adjacent face mode"
+            onClicked: m.project.setAdjacentPlaneMode();
+            iconSize: 20
         }
         Rectangle {
             Layout.horizontalSizePolicy: Layout.Expanding

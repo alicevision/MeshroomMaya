@@ -24,8 +24,79 @@ namespace
 { // empty namespace
 
 MCallbackIdArray _callbacks;
+MStringArray _commands;
 
 } // empty namespace
+
+MStatus registerMVGHotkeys()
+{
+    MStatus status;
+    MString commandName;
+    MString cmd;
+    MString keySequence;
+    MString editModeString;
+    MString moveModeString;
+
+    MGlobal::executePythonCommand("from mayaMVG import context");
+    // MVGCreateCommand
+    commandName = "MVGCreateCommand";
+    editModeString = MVGContext::eModeCreate;
+    cmd.format("mayaMVGTool -e -em ^1s mayaMVGTool1", editModeString);
+    keySequence = "0";
+    cmd.format("context.initMVGCommand(\"^1s\", \"^2s\", \"mel\", \"^3s\", False, True)",
+               commandName, cmd, keySequence);
+    status = MGlobal::executePythonCommand(cmd);
+    CHECK_RETURN_STATUS(status)
+    _commands.append(commandName);
+    // MVGTriangulationCommand
+    commandName = "MVGTriangulationCommand";
+    editModeString = MVGContext::eModeMove;
+    moveModeString = MVGMoveManipulator::kNViewTriangulation;
+    cmd.format("mayaMVGTool -e -em ^1s -mv ^2s mayaMVGTool1", editModeString, moveModeString);
+    keySequence = "1";
+    cmd.format("context.initMVGCommand(\"^1s\", \"^2s\", \"mel\", \"^3s\", False, True)",
+               commandName, cmd, keySequence);
+    status = MGlobal::executePythonCommand(cmd);
+    CHECK_RETURN_STATUS(status)
+    _commands.append(commandName);
+    // MVGMovePointCloudCommand
+    commandName = "MVGMovePointCloudCommand";
+    editModeString = MVGContext::eModeMove;
+    moveModeString = MVGMoveManipulator::kPointCloudProjection;
+    cmd.format("mayaMVGTool -e -em ^1s -mv ^2s mayaMVGTool1", editModeString, moveModeString);
+    keySequence = "2";
+    cmd.format("context.initMVGCommand(\"^1s\", \"^2s\", \"mel\", \"^3s\", False, True)",
+               commandName, cmd, keySequence);
+    status = MGlobal::executePythonCommand(cmd);
+    CHECK_RETURN_STATUS(status)
+    _commands.append(commandName);
+    // MVGMoveAdjacentFaceCommand
+    commandName = "MVGMoveAdjacentFaceCommand";
+    editModeString = MVGContext::eModeMove;
+    moveModeString = MVGMoveManipulator::kAdjacentFaceProjection;
+    cmd.format("mayaMVGTool -e -em ^1s -mv ^2s mayaMVGTool1", editModeString, moveModeString);
+    keySequence = "3";
+    cmd.format("context.initMVGCommand(\"^1s\", \"^2s\", \"mel\", \"^3s\", False, True)",
+               commandName, cmd, keySequence);
+    status = MGlobal::executePythonCommand(cmd);
+    CHECK_RETURN_STATUS(status)
+    _commands.append(commandName);
+
+    return status;
+}
+
+MStatus deregisterMVGHotkeys()
+{
+    MStatus status;
+    for(int i = 0; i < _commands.length(); ++i)
+    {
+        MString cmd;
+        cmd.format("context.removeMVGCommand(\"^1s\")", _commands[i]);
+        status = MGlobal::executePythonCommand(cmd);
+        CHECK_RETURN_STATUS(status)
+    }
+    return status;
+}
 
 MStatus initializePlugin(MObject obj)
 {
@@ -95,6 +166,9 @@ MStatus initializePlugin(MObject obj)
     CHECK(plugin.registerUI("mayaMVGCreateUI", "mayaMVGDeleteUI"))
     CHECK(MVGMayaUtil::createMVGContext())
 
+    // Create hotkeys
+    CHECK(registerMVGHotkeys())
+
     return status;
 }
 
@@ -102,6 +176,9 @@ MStatus uninitializePlugin(MObject obj)
 {
     MStatus status;
     MFnPlugin plugin(obj);
+
+    // Delete hotkeys
+    deregisterMVGHotkeys();
 
     // Delete custom GUI
     CHECK(MVGMayaUtil::deleteMVGContext())

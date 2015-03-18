@@ -11,8 +11,8 @@ public:
     enum MoveMode
     {
         kNViewTriangulation = 0,
-        kPointCloudProjection,
-        kAdjacentFaceProjection
+        kPointCloudProjection = 1,
+        kAdjacentFaceProjection = 2
     };
 
 public:

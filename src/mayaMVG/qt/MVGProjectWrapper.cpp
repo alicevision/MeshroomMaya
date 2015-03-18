@@ -4,6 +4,8 @@
 #include "mayaMVG/qt/MVGCameraWrapper.hpp"
 #include "mayaMVG/maya/MVGMayaUtil.hpp"
 #include "mayaMVG/core/MVGLog.hpp"
+#include "mayaMVG/maya/context/MVGContext.hpp"
+#include "mayaMVG/maya/context/MVGMoveManipulator.hpp"
 #include <maya/MQtUtil.h>
 
 namespace mayaMVG
@@ -91,14 +93,37 @@ QString MVGProjectWrapper::openFileDialog() const
     return MQtUtil::toQString(directoryPath);
 }
 
+void MVGProjectWrapper::scaleScene(const double scaleSize) const
+{
+    double internalUnit = MDistance::uiToInternal(scaleSize);
+    if(!_project.scaleScene(internalUnit))
+        LOG_ERROR("Cannot scale scene")
+}
+
+
 void MVGProjectWrapper::activeSelectionContext() const
 {
     MVGMayaUtil::activeSelectionContext();
 }
 
-void MVGProjectWrapper::activeMVGContext()
+void MVGProjectWrapper::setCreationMode()
 {
-    MVGMayaUtil::activeContext();
+    MVGMayaUtil::setCreationMode();
+}
+
+void MVGProjectWrapper::setTriangulationMode()
+{
+    MVGMayaUtil::setTriangulationMode();
+}
+
+void MVGProjectWrapper::setPointCloudMode()
+{
+    MVGMayaUtil::setPointCloudMode();
+}
+
+void MVGProjectWrapper::setAdjacentPlaneMode()
+{
+    MVGMayaUtil::setAdjacentPlaneMode();
 }
 
 void MVGProjectWrapper::loadExistingProject()
@@ -235,13 +260,6 @@ void MVGProjectWrapper::setCameraLocatorScale(const double scale)
     for(std::map<std::string, MVGCameraWrapper*>::const_iterator it = _camerasByName.begin();
         it != _camerasByName.end(); ++it)
         it->second->getCamera().setLocatorScale(scale);
-}
-
-void MVGProjectWrapper::scaleScene(const double scaleSize) const
-{
-    double internalUnit = MDistance::uiToInternal(scaleSize);
-    if(!_project.scaleScene(internalUnit))
-        LOG_ERROR("Cannot scale scene")
 }
 
 void MVGProjectWrapper::clear()
