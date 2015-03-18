@@ -28,7 +28,7 @@ public:
     MVGProjectWrapper();
     ~MVGProjectWrapper();
 
-public slots:
+public Q_SLOTS:
     const QString getProjectDirectory() const;
     void setProjectDirectory(const QString& directory);
     QObjectListModel* getCameraModel() { return &_cameraList; }
@@ -41,7 +41,7 @@ public slots:
     const bool getIsProjectLoading() const { return _isProjectLoading; }
     void setIsProjectLoading(const bool value);
 
-signals:
+Q_SIGNALS:
     void projectDirectoryChanged();
     void cameraModelChanged();
     void currentContextChanged();
