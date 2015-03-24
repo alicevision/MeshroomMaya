@@ -1,0 +1,460 @@
+//
+//  Description:
+//	This contains procedures necessary for
+//	the Hotkey/NameCommand editor.
+//
+
+global proc string constructHotkeyCommand(
+    string $key,
+    int    $ctrl,
+    int    $alt,
+    int	    $cmd,
+    int    $press,
+    int    $repeat,
+    string $command)
+//
+//	Description:
+//		Construct and return a string containing a valid hotkey command
+//		that can be passed to the eval() funtion.
+//
+//	Arguments:
+//		key		- The key string.
+//		ctrl	- True if Ctrl modifer is required, false otherwise.
+//		alt		- True if Alt modifer is required, false otherwise.
+//		press	- True for key press, false for key release.
+//		repeat	- True if the hotkey is repeatable, false otherwise.
+//		command	- The command string to execute.
+//
+{
+    //	Must surround the key string in double quote characters.
+    //
+    string $result = ("hotkey -k \"");
+
+    //	Must preceed back slashes and double quote characters with
+    //	a backslash.
+    //
+    if ("\\" == $key || "\"" == $key) $key = "\\" + $key;
+
+    $result += ($key + "\" ");
+
+    if ($ctrl) $result += "-ctl ";
+    if ($alt) $result += "-alt ";
+    if ($cmd) $result += "-cmd ";
+
+    if ($press) $result += "-name \"";
+    else $result += "-releaseName \"";
+
+    $result += ($command + "\" ");
+
+    if ($press) $result += "-pressCommandRepeat ";
+    else $result += "-releaseCommandRepeat ";
+
+    $result += $repeat;
+
+    return $result;
+}
+
+global proc string [] getAllHotkeys(string $command)
+//
+//	Description:
+//		Determine all the hotkeys that will invoke the specified
+//		runTimeCommand.
+//
+//	Returns:
+//		A string array containing all the hotkeys attahed to the
+//		specified command.  Each string element in the array will
+//		full describe the hotkey, for example: "Ctrl b", or "Alt Space",
+//		or "N Release".
+//
+{
+    string $result[], $keyInfo[], $hotkey, $cmd;
+    int $resultIndex = 0, $index, $numberOfNameCommands;
+    int $hotkeyInfoIndex, $numberOfHotkeys;
+
+    if ("" != $command) {
+        $numberOfNameCommands = `assignCommand -query -numElements`;
+        for ($index = 1; $index <= $numberOfNameCommands; $index++) {
+            $cmd = `assignCommand -query -command $index`;
+            //
+            //	Is this nameCommand pointing to the target runTimeCommand?
+            //
+            if ($cmd == $command) {
+                //
+                //	For this nameCommand determine all the hotkeys
+                //	that point to it.
+                //
+                $keyInfo = AWAppendStringsToStringArray(
+                    `assignCommand -query -keyArray $index`, $keyInfo);
+
+                //	Don't stop searching.  There may be other nameCommand
+                //	objects that point to the specified runTimeCommand.
+            }
+        }
+    }
+
+    //	The keyInfo array should now contain all the hotkeys that
+    //	point to the target runTimeCommand.
+    //
+    $hotkeyInfoIndex = 0;
+    $numberOfHotkeys = size($keyInfo) / 5;
+    for ($index = 0; $index < $numberOfHotkeys; $index++) {
+        $hotkey = "";
+        if ("1" == $keyInfo[$hotkeyInfoIndex + 2]) {
+            if (`about -mac`) {
+                    $hotkey += ((uiRes("m_hotkeyEditor.kControl")) + "+" );
+            }
+            else {
+                    $hotkey += ((uiRes("m_hotkeyEditor.kCtrl")) + "+" );
+            }
+        }
+        if ("1" == $keyInfo[$hotkeyInfoIndex + 1]) {
+            if (`about -mac`) {
+                    $hotkey += ((uiRes("m_hotkeyEditor.kOption")) + "+" );
+            }
+            else {
+                    $hotkey += ((uiRes("m_hotkeyEditor.kAlt")) + "+" );
+            }
+        }
+
+        if ("1" == $keyInfo[$hotkeyInfoIndex + 4]) {
+            $hotkey += ((uiRes("m_hotkeyEditor.kCommand")) + "+" );
+        }
+
+        if (" " == $keyInfo[$hotkeyInfoIndex]) {
+            if (`about -mac`) {
+                    $hotkey += ("space");
+            }
+            else {
+                    $hotkey += ("Space");
+            }
+        } else {
+            $hotkey += $keyInfo[$hotkeyInfoIndex];
+        }
+
+        if ("1" == $keyInfo[$hotkeyInfoIndex + 3]) {
+            $hotkey += ( " " + (uiRes("m_hotkeyEditor.kRelease")) );
+        }
+
+      // Command keys needs to be taken care of. So an extra field in the array. - Vidya.
+        $hotkeyInfoIndex += 5;
+        $result[$resultIndex++] = $hotkey;
+    }
+    return $result;
+}
+
+global proc removeHotkey(string $hotkey)
+//
+//	Description:
+//		Remove a hotkey assignment.
+//
+//	Notes:
+//		This procedure may be called as a result of deleting a runTimeCommand
+//		that is attached to a custom Marking Menu (via the Marking Menu 
+//		Editor).  The Hotkey Editor may or may not exist in this case.
+//		Therefore DO NOT attempt to update any Hotkey Editor UI within this
+//		function.  It is the responsibility of the calling function to
+//		handle any required updating.
+//		
+{
+    //	Convert the hotkey string into its parameter elements.
+    //
+    //	A hotkey string may look something like the following:
+    //
+    //	a
+    //	Ctrl+z
+    //	Alt+N Release
+    //	Ctrl+Alt+b
+    //	Ctrl+Alt+b Release
+    // In case of MAC
+    //	a
+    //	Ctrl+z
+    //
+    //	From this string determine the 3 integer values that will
+    //	reflect the Ctrl and Alt modifier state and the key 
+    //	direction (ie. press or release).  We also want a string
+    //	that contains only the key value.
+    //
+    //	First, break down the string into tokens.  Tokens are
+    //	separated by white space.
+    //
+    string $token[], $plusString;
+
+    string $ctrlKey    = (uiRes("m_hotkeyEditor.kCtrl"));
+    string $altKey     = (uiRes("m_hotkeyEditor.kAlt"));
+    string $controlKey = (uiRes("m_hotkeyEditor.kControl"));
+    string $optionKey  = (uiRes("m_hotkeyEditor.kOption"));
+    string $pressKey   = (uiRes("m_hotkeyEditor.kPress"));	
+    string $releaseKey = (uiRes("m_hotkeyEditor.kRelease"));
+    string $commandKey = (uiRes("m_hotkeyEditor.kCommand"));	
+
+    int $numberOfTokens, $lastNumber, $lastButNum ;
+    if(size($hotkey) > 1){
+        $lastNumber = size($hotkey);
+        $lastButNum = size($hotkey)-1;
+        $plusString = `substring $hotkey $lastButNum $lastNumber`;
+    }
+
+    if($plusString == "++" ){
+        $numberOfTokens = `tokenize $hotkey " +" $token`;
+        $token[$numberOfTokens++] = "+";
+    }else{
+        if($hotkey == "+"){
+                $numberOfTokens = 1;
+                $token[0] = $hotkey;
+        }else{
+                $numberOfTokens = `tokenize $hotkey " +" $token`;
+        }
+    }
+
+    string $key;
+    int $ctrl = 0, $alt = 0, $press = 1, $cmd = 0;
+
+    if (`about -mac`)
+    {
+        if (1 == $numberOfTokens) {
+            //
+            //	Only one token.  String contains the key only.
+            //	Both modifiers are off and the key direction is 
+            //	press.
+            //
+            $key = $token[0];
+
+        } else if (2 == $numberOfTokens) {
+            //
+            //	Two tokens.  String is either a key release or
+            //	a key with a single modifier.
+            //
+            if ($releaseKey == $token[1]) {
+                //
+                //	Key release.
+                //
+                $key = $token[0];
+                $press = 0;
+
+            } else {
+                //
+                //	Key and single modifier.
+                //
+                $key = $token[1];
+                if ($controlKey == $token[0]) $ctrl = 1;
+                else if($optionKey == $token[0]) $alt = 1;
+                else $cmd = 1;
+            }
+        } else if (3 == $numberOfTokens) {
+            //
+            //	Three tokens.  String is either a key release with
+            //	a single modifier or a key with both modifiers.
+            //
+            if ($releaseKey == $token[2]) {
+                //
+                //	Key release with single modifier.
+                //
+                $key = $token[1];
+                $press = 0;
+                if ($controlKey == $token[0]) $ctrl = 1;
+                else if($optionKey == $token[0]) $alt = 1;
+                else $cmd = 1;
+
+            } else {
+                //
+                //	Key press with both modifiers.
+                //
+                $key = $token[2];
+                if((($controlKey == $token[0]) && ($optionKey == $token[1])) || (($controlKey == $token[1]) && ($optionKey == $token[0]))){
+                        $ctrl = 1;
+                        $alt = 1;
+                }else if ((($controlKey == $token[0]) && ($commandKey == $token[1])) || (($controlKey == $token[1]) && ($commandKey == $token[0])) ){
+                        $ctrl = 1;
+                        $cmd = 1;
+                }else{
+                        $alt = 1;
+                        $cmd = 1;
+                }
+            }
+        } else if (4 == $numberOfTokens){
+            if ($releaseKey == $token[3]) {
+                //
+                //	Key release with single modifier.
+                //
+                $key = $token[2];
+                $press = 0;
+                if((($controlKey == $token[0]) && ($optionKey == $token[1])) || (($controlKey == $token[1]) && ($optionKey == $token[0]))){
+                        $ctrl = 1;
+                        $alt = 1;
+                }else if ((($controlKey == $token[0]) && ($commandKey == $token[1])) || (($controlKey == $token[1]) && ($commandKey == $token[0])) ){
+                        $ctrl = 1;
+                        $cmd = 1;
+                }else{
+                        $alt = 1;
+                        $cmd = 1;
+                }
+
+            } else {
+                //
+                //	Key press with both modifiers.
+                //
+                $key = $token[3];
+                if((($controlKey == $token[0]) && ($optionKey == $token[1]) && ($commandKey != $token[2])) || 
+                        (($controlKey == $token[1]) && ($optionKey == $token[0]) && ($commandKey != $token[2])) ||
+                        (($controlKey == $token[1]) && ($optionKey == $token[2]) && ($commandKey != $token[0])) || 
+                        (($controlKey == $token[2]) && ($optionKey == $token[1]) && ($commandKey != $token[0])) ){
+                        $ctrl = 1;
+                        $alt = 1;
+                }else if ( (($controlKey == $token[0]) && ($commandKey == $token[1]) && ($optionKey != $token[2])) || 
+                                        (($controlKey == $token[1]) && ($commandKey == $token[0]) && ($optionKey != $token[2])) ||
+                                        (($controlKey == $token[1]) && ($commandKey == $token[2]) && ($optionKey != $token[0])) || 
+                                        (($controlKey == $token[2]) && ($commandKey == $token[1]) && ($optionKey != $token[0])) ){
+                        $ctrl = 1;
+                        $cmd = 1;
+                }else if ( (($optionKey == $token[0]) && ($commandKey == $token[1]) && ($controlKey != $token[2])) || 
+                                        (($optionKey == $token[1]) && ($commandKey == $token[0]) && ($controlKey!= $token[2])) ||
+                                        (($optionKey == $token[1]) && ($commandKey == $token[2]) && ($controlKey != $token[0])) || 
+                                        (($optionKey == $token[2]) && ($commandKey == $token[1]) && ($controlKey != $token[0])) ) {
+                        $alt = 1;
+                        $cmd = 1;
+                }else{
+                        $alt = 1;
+                        $cmd = 1;
+                        $ctrl = 1;
+                }
+            }
+        }else{
+            //
+            //	All four tokens.  String is key release with both
+            //	modifiers.
+            //
+            $ctrl = 1;
+            $alt = 1;
+            $cmd = 1;
+            $key = $token[3];
+            $press = 0;
+        }
+    }
+    else{
+        if (1 == $numberOfTokens) {
+            //
+            //	Only one token.  String contains the key only.
+            //	Both modifiers are off and the key direction is 
+            //	press.
+            //
+            $key = $token[0];
+        } else if (2 == $numberOfTokens) {
+            //
+            //	Two tokens.  String is either a key release or
+            //	a key with a single modifier.
+            //
+            if ($releaseKey == $token[1]) {
+                //
+                //	Key release.
+                //
+                $key = $token[0];
+                $press = 0;
+
+            } else {
+                //
+                //	Key and single modifier.
+                //
+                $key = $token[1];
+                if ($ctrlKey == $token[0]) $ctrl = 1;
+                else $alt = 1;
+            }
+        } else if (3 == $numberOfTokens) {
+            //
+            //	Three tokens.  String is either a key release with
+            //	a single modifier or a key with both modifiers.
+            //
+            if ($releaseKey == $token[2]) {
+                //
+                //	Key release with single modifier.
+                //
+                $key = $token[1];
+                $press = 0;
+                if ($ctrlKey == $token[0]) $ctrl = 1;
+                else $alt = 1;
+
+            } else {
+                //
+                //	Key press with both modifiers.
+                //
+                $key = $token[2];
+                $ctrl = 1;
+                $alt = 1;
+            }
+        } else {
+            //
+            //	All four tokens.  String is key release with both
+            //	modifiers.
+            //
+            $ctrl = 1;
+            $alt = 1;
+            $key = $token[2];
+            $press = 0;
+        }
+    }
+    //	To remove a hotkey assignment simply set the hotkey command flag
+    //	-name or -releaseName to an empty string.
+    //
+    string $hotkeyCmd;
+    $hotkeyCmd = constructHotkeyCommand($key, $ctrl, $alt, $cmd, $press, false, "");
+    eval ($hotkeyCmd);
+}
+
+global proc deleteRunTimeCommand(string $command)
+//
+//	Description:
+//		Delete the given runTimeCommand.  Also cleanup, remove, and/or
+//		delete any nameCommands and hotkeys that use this runTimeCommand.
+//
+//	Notes:
+//		This procedure may be called as a result of deleting a runTimeCommand
+//		that is attached to a custom Marking Menu (via the Marking Menu 
+//		Editor).  The Hotkey Editor may or may not exist in this case.
+//		Therefore DO NOT attempt to update any Hotkey Editor UI within this
+//		function.  It is the responsibility of the calling function to
+//		handle any required updating.
+//		
+{
+    if (`runTimeCommand -exists $command` &&
+        !`runTimeCommand -query -default $command`) {
+
+        int $mustUpdateCurrentHotkeys = false;
+
+        //
+        //	Determine all the hotkeys pointing to this command.
+        //
+        string $hotkeys[] = getAllHotkeys($command);
+
+        //	Determine the nameCommand associated with this command.
+        //
+        string $nameCommand = $command + "NameCommand";
+        int $numberOfNameCommands = `assignCommand -query -numElements`;
+        for ($index = 1; $index <= $numberOfNameCommands; $index++) {
+            if ($nameCommand == `assignCommand -query -name $index`) {
+
+                string $keyArray[] = `assignCommand -q -keyArray $index`;
+                // Save hotkey in optionVar
+                $varString = $command + "_hotkey";
+                if(`optionVar -exists $varString`)
+                    optionVar -remove $varString;
+                int $i;
+                for($i = 0; $i < size($keyArray); $i++)
+                    optionVar -sva $varString $keyArray[$i];
+
+                assignCommand -edit -delete $index;
+                break;
+            }
+        }
+
+        // Delete hotkey
+        if (size($hotkeys) > 0) {
+            for ($hotkey in $hotkeys) {
+                // Remove hotkey
+                removeHotkey($hotkey);
+            }
+        }
+
+        //	Now delete the command.
+        //
+        runTimeCommand -edit -delete $command;
+    }
+}

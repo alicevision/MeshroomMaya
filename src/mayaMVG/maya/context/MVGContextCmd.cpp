@@ -94,6 +94,7 @@ MStatus MVGContextCmd::doEditFlags()
                 cache.rebuildMeshesCache();
                 manip->setContext(_context);
                 manip->setCache(&cache);
+                break;
             }
         }
         if(status)

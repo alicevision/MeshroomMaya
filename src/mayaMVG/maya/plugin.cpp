@@ -88,14 +88,20 @@ MStatus registerMVGHotkeys()
 MStatus deregisterMVGHotkeys()
 {
     MStatus status;
-    for(int i = 0; i < _commands.length(); ++i)
+    for(int i = _commands.length() - 1; i >= 0; --i)
     {
         MString cmd;
         cmd.format("context.removeMVGCommand(\"^1s\")", _commands[i]);
         status = MGlobal::executePythonCommand(cmd);
         CHECK_RETURN_STATUS(status)
+        _commands.remove(i);
     }
     return status;
+}
+
+static void quitApplicationCB(void*)
+{
+    deregisterMVGHotkeys();
 }
 
 MStatus initializePlugin(MObject obj)
@@ -144,6 +150,9 @@ MStatus initializePlugin(MObject obj)
     if(status)
         _callbacks.append(id);
     id = MEventMessage::addEventCallback("Redo", redoCB, &status);
+    if(status)
+        _callbacks.append(id);
+    id = MEventMessage::addEventCallback("quitApplication", quitApplicationCB, &status);
     if(status)
         _callbacks.append(id);
     id = MEventMessage::addEventCallback("SelectionChanged", selectionChangedCB, &status);

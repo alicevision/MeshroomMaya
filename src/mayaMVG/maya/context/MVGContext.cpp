@@ -22,7 +22,6 @@ MVGContext::MVGContext()
 
 void MVGContext::toolOnSetup(MEvent& event)
 {
-    updateManipulators();
     _manipulatorCache.rebuildMeshesCache();
 }
 
@@ -50,8 +49,7 @@ void MVGContext::updateManipulators()
         MGlobal::executeCommand(cmd);
         return;
     }
-    cmd.format("mayaMVGTool -e -em ^1s mayaMVGTool1", editMode);
-    MGlobal::executeCommand(cmd);
+    MVGMayaUtil::setCreationMode();
 }
 
 bool MVGContext::eventFilter(QObject* obj, QEvent* e)

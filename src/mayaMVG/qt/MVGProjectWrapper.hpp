@@ -58,13 +58,13 @@ public:
     Q_INVOKABLE void setCreationMode();
     Q_INVOKABLE void setTriangulationMode();
     Q_INVOKABLE void setPointCloudMode();
-    Q_INVOKABLE void setAdjacentPlaneMode(); 
+    Q_INVOKABLE void setAdjacentPlaneMode();
     // Project
     Q_INVOKABLE void loadExistingProject();
-    Q_INVOKABLE void loadNewProject(const QString& projectDirectoryPath);   
+    Q_INVOKABLE void loadNewProject(const QString& projectDirectoryPath);
     // Selection
     Q_INVOKABLE void addCamerasToIHMSelection(const QStringList& cameraNames, bool center = false);
-    Q_INVOKABLE void addCamerasToMayaSelection(const QStringList& cameraNames) const;   
+    Q_INVOKABLE void addCamerasToMayaSelection(const QStringList& cameraNames) const;
     // Cameras
     Q_INVOKABLE void setCameraToView(QObject* camera, const QString& viewName,
                                      bool rebuildCache = true);
