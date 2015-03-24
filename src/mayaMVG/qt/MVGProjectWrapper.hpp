@@ -59,8 +59,7 @@ public:
     Q_INVOKABLE void loadExistingProject();
     Q_INVOKABLE void loadNewProject(const QString& projectDirectoryPath);
     Q_INVOKABLE void scaleScene(const double scaleSize) const;
-    Q_INVOKABLE void setCameraToView(QObject* camera, const QString& viewName,
-                                     bool rebuildCache = true);
+    Q_INVOKABLE void setCameraToView(QObject* camera, const QString& viewName);
     Q_INVOKABLE void setCamerasNear(const double near);
     Q_INVOKABLE void setCamerasFar(const double far);
     Q_INVOKABLE void setCameraLocatorScale(const double scale);

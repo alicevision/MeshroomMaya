@@ -48,6 +48,14 @@ void MVGCameraWrapper::setInView(const QString& viewName, const bool value)
     }
 }
 
+void MVGCameraWrapper::setIsSelected(const bool isSelected)
+{
+    if(_isSelected == isSelected)
+        return;
+    _isSelected = isSelected;
+    Q_EMIT isSelectedChanged();
+}
+
 const QSize MVGCameraWrapper::getSourceSize()
 {
     // TODO : do not load image
