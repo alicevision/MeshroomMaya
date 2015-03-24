@@ -46,7 +46,7 @@ public:
         _lastEvent->ignore();
     }
 
-signals:
+Q_SIGNALS:
     void verticalWheel(int delta, Qt::KeyboardModifiers modifier);
     void horizontalWheel(int delta, Qt::KeyboardModifiers modifier);
 

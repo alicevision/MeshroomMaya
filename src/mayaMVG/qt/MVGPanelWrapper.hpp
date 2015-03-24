@@ -25,7 +25,7 @@ public:
 public:
     void emitIsPointCloudDisplayedChanged();
 
-public slots:
+public Q_SLOTS:
     inline const QString& getName() const { return _name; }
     inline const QString& getLabel() const { return _label; }
     void setLabel(QString label);
@@ -33,7 +33,7 @@ public slots:
     bool isPointCloudDisplayed() const;
     void displayPointCloud(const bool display);
 
-signals:
+Q_SIGNALS:
     void isPointCloudDisplayedChanged();
     void labelChanged();
 

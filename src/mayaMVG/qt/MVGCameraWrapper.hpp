@@ -24,22 +24,16 @@ public:
     MVGCameraWrapper(const MVGCameraWrapper& other);
     ~MVGCameraWrapper();
 
-public slots:
+public Q_SLOTS:
     const QString getName() const { return QString::fromStdString(_camera.getName()); }
     const QString getImagePath() const { return QString::fromStdString(_camera.getImagePlane()); }
     bool isSelected() const { return _isSelected; }
-    void setIsSelected(const bool isSelected)
-    {
-        if(_isSelected == isSelected)
-            return;
-        _isSelected = isSelected;
-        Q_EMIT isSelectedChanged();
-    }
+    void setIsSelected(const bool isSelected);
     const QStringList& getViews() const { return _views; }
     const QSize getSourceSize();
     const qint64 getSourceWeight() const;
 
-signals:
+Q_SIGNALS:
     void isSelectedChanged();
     void viewsChanged();
 

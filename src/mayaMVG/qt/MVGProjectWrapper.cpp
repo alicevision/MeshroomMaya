@@ -150,10 +150,8 @@ void MVGProjectWrapper::loadNewProject(const QString& projectDirectoryPath)
     if(_cameraList.size() > 1 && _panelList.count() > 1)
     {
         QList<MVGCameraWrapper*>& cameras = _cameraList.asQList<MVGCameraWrapper>();
-        setCameraToView(cameras[0], static_cast<MVGPanelWrapper*>(_panelList.get(0))->getName(),
-                        false);
-        setCameraToView(cameras[1], static_cast<MVGPanelWrapper*>(_panelList.get(1))->getName(),
-                        false);
+        setCameraToView(cameras[0], static_cast<MVGPanelWrapper*>(_panelList.get(0))->getName());
+        setCameraToView(cameras[1], static_cast<MVGPanelWrapper*>(_panelList.get(1))->getName());
     }
 }
 
@@ -164,8 +162,10 @@ void MVGProjectWrapper::addCamerasToIHMSelection(const QStringList& selectedCame
     for(QStringList::const_iterator it = _selectedCameras.begin(); it != _selectedCameras.end();
         ++it)
     {
-        MVGCameraWrapper* camera = _camerasByName[it->toStdString()];
-        camera->setIsSelected(false);
+        std::map<std::string, MVGCameraWrapper*>::const_iterator foundIt =
+            _camerasByName.find(it->toStdString());
+        if(foundIt != _camerasByName.end())
+            foundIt->second->setIsSelected(false);
     }
     _selectedCameras.clear();
     // Set new selection to true
@@ -197,7 +197,7 @@ void MVGProjectWrapper::addCamerasToMayaSelection(const QStringList& cameraNames
     _project.selectCameras(cameras);
 }
 
-void MVGProjectWrapper::setCameraToView(QObject* camera, const QString& viewName, bool rebuildCache)
+void MVGProjectWrapper::setCameraToView(QObject* camera, const QString& viewName)
 {
     MVGCameraWrapper* cameraWrapper = static_cast<MVGCameraWrapper*>(camera);
 
@@ -249,6 +249,7 @@ void MVGProjectWrapper::clear()
     _cameraList.clear();
     _camerasByName.clear();
     _activeCameraNameByView.clear();
+    _selectedCameras.clear();
     Q_EMIT projectDirectoryChanged();
 }
 

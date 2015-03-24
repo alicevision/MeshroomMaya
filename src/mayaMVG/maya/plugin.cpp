@@ -112,6 +112,7 @@ MStatus uninitializePlugin(MObject obj)
 
     // Deregister Maya context, commands & nodes
     CHECK(plugin.deregisterCommand("MVGCmd"))
+    CHECK(plugin.deregisterCommand("MVGImagePlaneCmd"))
     CHECK(plugin.deregisterContextCommand(MVGContextCmd::name, MVGEditCmd::_name))
     CHECK(plugin.deregisterNode(MVGCreateManipulator::_id))
     CHECK(plugin.deregisterNode(MVGMoveManipulator::_id))
