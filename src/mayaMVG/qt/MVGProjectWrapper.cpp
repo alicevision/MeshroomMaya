@@ -2,6 +2,7 @@
 #include "mayaMVG/version.hpp"
 #include <QCoreApplication>
 #include "mayaMVG/qt/MVGCameraWrapper.hpp"
+#include "mayaMVG/qt/MVGMeshWrapper.hpp"
 #include "mayaMVG/maya/MVGMayaUtil.hpp"
 #include "mayaMVG/core/MVGLog.hpp"
 #include <maya/MQtUtil.h>
@@ -109,6 +110,8 @@ void MVGProjectWrapper::loadExistingProject()
         return;
     _project = projects.front();
     reloadMVGCamerasFromMaya();
+    reloadMVGMeshesFromMaya();
+    Q_EMIT projectDirectoryChanged();
 }
 
 void MVGProjectWrapper::loadNewProject(const QString& projectDirectoryPath)
@@ -140,6 +143,7 @@ void MVGProjectWrapper::loadNewProject(const QString& projectDirectoryPath)
     setIsProjectLoading(false);
 
     reloadMVGCamerasFromMaya();
+    reloadMVGMeshesFromMaya();
 
     // Loading image planes takes a lot of time.
     // So before loading image planes, we ask Qt to process events (UI)
@@ -250,6 +254,7 @@ void MVGProjectWrapper::clear()
     _camerasByName.clear();
     _activeCameraNameByView.clear();
     _selectedCameras.clear();
+    _meshesList.clear();
     Q_EMIT projectDirectoryChanged();
 }
 
@@ -279,6 +284,30 @@ void MVGProjectWrapper::removeCameraFromUI(MDagPath& cameraPath)
         _cameraList.removeAt(i);
     }
 }
+void MVGProjectWrapper::addMeshToUI(const MDagPath& meshPath)
+{
+    MVGMesh mesh(meshPath);
+
+    MVGMeshWrapper* meshWrapper = new MVGMeshWrapper(mesh);
+    _meshesList.append(meshWrapper);
+}
+
+void MVGProjectWrapper::removeMeshFromUI(const MDagPath& meshPath)
+{
+    MVGMesh mesh(meshPath);
+    if(!meshPath.isValid())
+        return;
+
+    for(int i = 0; i < _meshesList.count(); ++i)
+    {
+        MVGMeshWrapper* meshWraper = static_cast<MVGMeshWrapper*>(_meshesList.at(i));
+        if(!meshWraper)
+            continue;
+        if(meshWraper->getMesh().getName() != mesh.getName())
+            continue;
+        _meshesList.removeAt(i);
+    }
+}
 
 void MVGProjectWrapper::emitCurrentUnitChanged()
 {
@@ -290,12 +319,7 @@ void MVGProjectWrapper::reloadMVGCamerasFromMaya()
     _cameraList.clear();
     _camerasByName.clear();
     _activeCameraNameByView.clear();
-    if(!_project.isValid())
-    {
-        LOG_ERROR("Project is not valid");
-        return;
-    }
-    Q_EMIT projectDirectoryChanged();
+
     const std::vector<MVGCamera>& cameraList = MVGCamera::getCameras();
     std::vector<MVGCamera>::const_iterator it = cameraList.begin();
     for(; it != cameraList.end(); ++it)
@@ -306,6 +330,20 @@ void MVGProjectWrapper::reloadMVGCamerasFromMaya()
     }
     Q_EMIT cameraModelChanged();
     // TODO : Camera selection
+}
+
+void MVGProjectWrapper::reloadMVGMeshesFromMaya()
+{
+    _meshesList.clear();
+    const std::vector<MVGMesh>& meshList = MVGMesh::listAllMeshes();
+    std::vector<MVGMesh>::const_iterator it = meshList.begin();
+    for(; it != meshList.end(); ++it)
+    {
+        MVGMeshWrapper* meshWrapper = new MVGMeshWrapper(*it);
+        _meshesList.append(meshWrapper);
+    }
+    // Needed ?
+    Q_EMIT meshModelChanged();
 }
 
 } // namespace

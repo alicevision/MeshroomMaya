@@ -1,4 +1,5 @@
 #include "mayaMVG/core/MVGCamera.hpp"
+#include "mayaMVG/core/MVGMesh.hpp"
 #include "mayaMVG/qt/MVGPanelWrapper.hpp"
 #include "mayaMVG/qt/MVGMainWidget.hpp"
 #include <maya/MFnDependencyNode.h>
@@ -125,6 +126,28 @@ static void redoCB(void*)
     }
 }
 
+static void nodeAddedCB(MObject& node, void*)
+{
+    MVGProjectWrapper* project = getProjectWrapper();
+    if(!project)
+        return;
+
+    switch(node.apiType())
+    {
+        case MFn::kMesh:
+        {
+            MFnDagNode fn(node);
+            if(fn.isIntermediateObject())
+                return;
+            MVGMesh mesh(node);
+            if(mesh.isValid())
+                project->addMeshToUI(mesh.getDagPath());
+            break;
+        }
+        default:
+            break;
+    }
+}
 static void nodeRemovedCB(MObject& node, void*)
 {
     MVGProjectWrapper* project = getProjectWrapper();
@@ -150,6 +173,10 @@ static void nodeRemovedCB(MObject& node, void*)
             MFnDagNode fn(node);
             if(fn.isIntermediateObject())
                 return;
+            MVGMesh mesh(node);
+            if(!mesh.isValid())
+                return;
+            project->removeMeshFromUI(mesh.getDagPath());
             // TODO : remove only this mesh from cache
             MGlobal::executeCommand("mayaMVGTool -e -rebuild mayaMVGTool1");
             break;

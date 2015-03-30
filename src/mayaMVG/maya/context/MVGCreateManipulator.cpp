@@ -205,6 +205,7 @@ MStatus MVGCreateManipulator::doRelease(M3dView& view)
         MVGMesh mesh = MVGMesh::create(MVGProject::_MESH);
         int polygonID;
         mesh.addPolygon(_finalWSPoints, polygonID);
+        mesh.setIsActive(true);
 
         _cache->rebuildMeshesCache();
         _cameraIDToClickedCSPoints.second.clear();

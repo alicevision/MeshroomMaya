@@ -12,6 +12,8 @@
 #include <maya/MGlobal.h>
 #include <maya/MPointArray.h>
 #include <maya/MFloatPointArray.h>
+#include <maya/MFnNumericAttribute.h>
+#include <maya/MPlug.h>
 #include <cassert>
 #include <cstring>
 
@@ -32,6 +34,7 @@ void binaryToVectorData(const char* binaryData, const int binarySize,
 } // empty namespace
 
 int MVGMesh::_blindDataID = 0; // FIXME
+MString MVGMesh::_MVG = "mvg";
 
 MVGMesh::MVGMesh(const std::string& name)
     : MVGNodeWrapper(name)
@@ -58,7 +61,6 @@ bool MVGMesh::isValid() const
     if(_object == MObject::kNullObj ||
        !(_object.apiType() == MFn::kMesh || _object.apiType() == MFn::kMeshData))
         return false;
-    // TODO ? Check if mesh has blind data
     return true;
 }
 
@@ -104,7 +106,26 @@ MVGMesh MVGMesh::create(const std::string& name)
     return mesh;
 }
 
-std::vector<MVGMesh> MVGMesh::list()
+std::vector<MVGMesh> MVGMesh::listMVGMeshes()
+{
+    std::vector<MVGMesh> list;
+    MDagPath path;
+    MItDag it(MItDag::kDepthFirst, MFn::kMesh);
+    for(; !it.isDone(); it.next())
+    {
+        MFnDagNode fn(it.currentItem());
+        if(fn.isIntermediateObject())
+            continue;
+        fn.getPath(path);
+        MVGMesh mesh(path);
+        if(mesh.isValid() && mesh.isActive())
+            list.push_back(mesh);
+    }
+    return list;
+}
+
+// static
+std::vector<MVGMesh> MVGMesh::listAllMeshes()
 {
     std::vector<MVGMesh> list;
     MDagPath path;
@@ -120,6 +141,55 @@ std::vector<MVGMesh> MVGMesh::list()
             list.push_back(mesh);
     }
     return list;
+}
+
+void MVGMesh::setIsActive(const bool isActive) const
+{
+    MStatus status;
+
+    // Check is flag exists
+    MFnMesh fn(_dagpath);
+    MPlug mvgPlug = fn.findPlug(_MVG, false, &status);
+    if(!status && !isActive)
+        return;
+    if(!status && isActive)
+    {
+        // Create MayaMVG attribute
+        MDagModifier dagModifier;
+        MFnNumericAttribute nAttr;
+        MObject mvgAttr = nAttr.create(_MVG, "mvg", MFnNumericData::kBoolean);
+        status = dagModifier.addAttribute(_object, mvgAttr);
+        CHECK(status)
+        dagModifier.doIt();
+        mvgPlug = fn.findPlug(_MVG, false, &status);
+    }
+    status = mvgPlug.setValue(isActive);
+    CHECK(status)
+    // Freeze transform mesh
+    if(isActive)
+    {
+        MString cmd;
+        cmd.format("makeIdentity -apply true \"^1s\"", getName().c_str());
+        status = MGlobal::executeCommand(cmd);
+        CHECK(status)
+    }
+    MString cmd;
+    cmd.format("mayaMVGTool -e -rebuild -mesh \"^1s\" mayaMVGTool1", getDagPath().fullPathName());
+    MGlobal::executeCommand(cmd);
+}
+
+bool MVGMesh::isActive() const
+{
+    MStatus status;
+    // Check is flag exists
+    MFnMesh fn(_dagpath);
+    MPlug mvgPlug = fn.findPlug(_MVG, false, &status);
+    if(!status)
+        return false;
+    // Retrieve value
+    bool value;
+    status = mvgPlug.getValue(value);
+    return value;
 }
 
 bool MVGMesh::addPolygon(const MPointArray& pointArray, int& index) const

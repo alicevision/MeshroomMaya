@@ -17,6 +17,7 @@ class MVGProjectWrapper : public QObject
     Q_PROPERTY(QString projectDirectory READ getProjectDirectory WRITE setProjectDirectory NOTIFY
                    projectDirectoryChanged);
     Q_PROPERTY(QObjectListModel* cameraModel READ getCameraModel NOTIFY cameraModelChanged);
+    Q_PROPERTY(QObjectListModel* meshModel READ getMeshModel NOTIFY meshModelChanged);
     Q_PROPERTY(QString currentContext READ getCurrentContext WRITE setCurrentContext NOTIFY
                    currentContextChanged);
     Q_PROPERTY(QObjectListModel* panelList READ getPanelList NOTIFY panelListChanged);
@@ -32,6 +33,7 @@ public Q_SLOTS:
     const QString getProjectDirectory() const;
     void setProjectDirectory(const QString& directory);
     QObjectListModel* getCameraModel() { return &_cameraList; }
+    QObjectListModel* getMeshModel() { return &_meshesList; }
     QStringList& getSelectedCameras() { return _selectedCameras; }
     QObjectListModel* getPanelList() { return &_panelList; }
     const QString getCurrentContext() const;
@@ -44,6 +46,7 @@ public Q_SLOTS:
 Q_SIGNALS:
     void projectDirectoryChanged();
     void cameraModelChanged();
+    void meshModelChanged();
     void currentContextChanged();
     void panelListChanged();
     void currentUnitChanged();
@@ -63,9 +66,13 @@ public:
     Q_INVOKABLE void setCamerasNear(const double near);
     Q_INVOKABLE void setCamerasFar(const double far);
     Q_INVOKABLE void setCameraLocatorScale(const double scale);
+    // Should be a private and non invokable function
+    Q_INVOKABLE void reloadMVGMeshesFromMaya();
 
     void clear();
     void removeCameraFromUI(MDagPath& cameraPath);
+    void addMeshToUI(const MDagPath& meshPath);
+    void removeMeshFromUI(const MDagPath& meshPath);
     void emitCurrentUnitChanged();
 
 private:
@@ -73,6 +80,7 @@ private:
 
 private:
     QObjectListModel _cameraList;
+    QObjectListModel _meshesList;
     /// Names of the selected cameras
     /// Selection already stored in camera but this list is needed for a faster access
     QStringList _selectedCameras;

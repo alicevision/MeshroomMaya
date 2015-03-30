@@ -18,6 +18,15 @@ Item {
             implicitWidth: parent.width
             project: _project
             settingsVisibility: (_project.projectDirectory === "")
+
+            onShowMeshSignal: {
+                cameraList.model = _project.meshModel;
+                cameraList.delegate = meshComponent;
+            }
+            onShowCameraSignal: {
+                cameraList.model = _project.cameraModel;
+                cameraList.delegate = cameraComponent;
+            }
         }
         ProjectSettings {
             id: settings
@@ -32,19 +41,43 @@ Item {
             onSettingProjectLoaded: contextBar.settingsVisibility = false
             thumbSize: sliderMinValue
         }
-        // PointCloudItem {
-        //     implicitWidth: parent.width
-        //     Layout.minimumHeight: childrenRect.height
-        //     Layout.maximumHeight: childrenRect.height
-        //     Layout.verticalSizePolicy: Layout.Expanding
-        //     thumbSize: settings.thumbSize
-        // }
+        Component
+        {
+            id: cameraComponent
+            CameraItem {
+                width: cameraList.width
+                baseHeight: m.thumbSize
+                color: altColor(index%2)
+                camera: model.modelData
+                project: m.project
+                onSelection: {
+                    m.currentIndex = index
+                    selectCameras(index, index)
+                }
+                onMultipleSelection: selectCameras(m.currentIndex, index)
+            }
+        }
+
+        Component
+        {
+            id: meshComponent
+            MeshItem {
+                width: cameraList.width - 12 // ScrollBar height
+                height: 75
+                color: altColor(index%2)
+                mesh: model.modelData
+                project: m.project
+            }
+        }
+
         CameraList {
             id: cameraList
             implicitWidth: parent.width
             Layout.verticalSizePolicy: Layout.Expanding
             thumbSize: settings.thumbSize
             project: _project
+            model: _project.cameraModel
+            delegate: cameraComponent
         }
     }
 

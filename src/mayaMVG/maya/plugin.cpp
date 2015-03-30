@@ -87,6 +87,9 @@ MStatus initializePlugin(MObject obj)
     id = MDGMessage::addNodeRemovedCallback(nodeRemovedCB, "camera", &status);
     if(status)
         _callbacks.append(id);
+    id = MDGMessage::addNodeAddedCallback(nodeAddedCB, "mesh", &status);
+    if(status)
+        _callbacks.append(id);
     id = MDGMessage::addNodeRemovedCallback(nodeRemovedCB, "mesh", &status);
     if(status)
         _callbacks.append(id);

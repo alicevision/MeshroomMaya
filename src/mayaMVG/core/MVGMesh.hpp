@@ -33,9 +33,12 @@ public:
 
 public:
     static MVGMesh create(const std::string& name);
-    static std::vector<MVGMesh> list();
+    static std::vector<MVGMesh> listMVGMeshes();
+    static std::vector<MVGMesh> listAllMeshes();
 
 public:
+    void setIsActive(const bool value) const;
+    bool isActive() const;
     bool addPolygon(const MPointArray& pointArray, int& index) const;
     bool deletePolygon(const int index) const;
     MStatus getPoints(MPointArray& pointArray) const;
@@ -59,6 +62,7 @@ public:
 
 private:
     static int _blindDataID;
+    static MString _MVG;
 };
 
 } // namespace

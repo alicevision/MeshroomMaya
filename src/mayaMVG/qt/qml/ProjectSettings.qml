@@ -213,6 +213,7 @@ Item {
                     project: m.project
                 }
 
+                // Version
                 Item
                 {
                     width: parent.width

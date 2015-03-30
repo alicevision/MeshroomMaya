@@ -90,14 +90,14 @@ const MVGManipulatorCache::MeshData& MVGManipulatorCache::getMeshData(const std:
 }
 void MVGManipulatorCache::rebuildMeshesCache()
 {
-    // List all meshes
+    // List all meshes currently stored in meshData
     std::list<std::string> meshesList;
     for(std::map<std::string, MeshData>::iterator it = _meshData.begin(); it != _meshData.end();
         ++it)
         meshesList.push_back(it->first);
 
-    // rebuild cache
-    std::vector<MVGMesh> meshes = MVGMesh::list();
+    // Update all meshes
+    std::vector<MVGMesh> meshes = MVGMesh::listAllMeshes();
     std::vector<MVGMesh>::const_iterator it = meshes.begin();
     for(; it != meshes.end(); ++it)
     {
@@ -114,10 +114,18 @@ void MVGManipulatorCache::rebuildMeshesCache()
 
 void MVGManipulatorCache::rebuildMeshCache(const MDagPath& path)
 {
-    MVGMesh mesh(path);
-    if(!mesh.isValid())
+    if(!path.isValid())
         return;
-
+    MVGMesh mesh(path);
+    // Remove non active mesh
+    if(!mesh.isActive())
+    {
+        std::map<std::string, MeshData>::iterator foundIt =
+            _meshData.find(path.fullPathName().asChar());
+        if(foundIt != _meshData.end())
+            _meshData.erase(foundIt);
+        return;
+    }
     // Retrieve selectedComponent info
     MDagPath meshPath = _selectedComponent.meshPath;
     MFn::Type type = MFn::kInvalid;

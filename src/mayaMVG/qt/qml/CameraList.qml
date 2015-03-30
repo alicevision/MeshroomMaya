@@ -7,11 +7,15 @@ Item {
     signal keyPressed(variant value)
     property alias thumbSize: m.thumbSize
     property alias project: m.project
+    property alias model: m.model
+    property alias delegate: m.delegate
     QtObject {
         id: m
         property int thumbSize
         property variant project
         property int currentIndex
+        property variant model
+        property variant delegate
     }
     function altColor(i) {
         var colors = [ "#262626", "#2f2f2f2f" ];
@@ -57,7 +61,6 @@ Item {
             visible: _project.isProjectLoading
         }
     }
-
     RowLayout {
         anchors.fill: parent
         spacing: 0
@@ -68,19 +71,8 @@ Item {
             currentIndex: -1  // don't use ListView selection mechanism
             boundsBehavior: Flickable.StopAtBounds
             flickableDirection: Flickable.VerticalFlick
-            model: m.project.cameraModel
-            delegate: CameraItem {
-                width: cameraList.width
-                baseHeight: m.thumbSize
-                color: altColor(index%2)
-                camera: model.modelData
-                project: m.project
-                onSelection: {
-                    m.currentIndex = index
-                    selectCameras(index, index)
-                }
-                onMultipleSelection: selectCameras(m.currentIndex, index)
-            }
+            model: m.model
+            delegate: m.delegate
             clip: true
             transitions: Transition  {
                 NumberAnimation { properties: "opacity"; duration: 200 }
