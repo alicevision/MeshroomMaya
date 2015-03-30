@@ -20,12 +20,18 @@ Item {
             settingsVisibility: (_project.projectDirectory === "")
 
             onShowMeshSignal: {
-                cameraList.model = _project.meshModel;
-                cameraList.delegate = meshComponent;
+                // To avoir errors when switching lists
+                componentList.model = "None";
+                componentList.delegate = meshComponent;
+                componentList.model = _project.meshModel;
+
             }
             onShowCameraSignal: {
-                cameraList.model = _project.cameraModel;
-                cameraList.delegate = cameraComponent;
+                // To avoir errors when switching lists
+                componentList.model = "None";
+                componentList.delegate = cameraComponent;
+                componentList.model = _project.cameraModel;
+
             }
         }
         ProjectSettings {
@@ -45,9 +51,8 @@ Item {
         {
             id: cameraComponent
             CameraItem {
-                width: cameraList.width
+                width: componentList.width
                 baseHeight: m.thumbSize
-                color: altColor(index%2)
                 camera: model.modelData
                 project: m.project
                 onSelection: {
@@ -55,6 +60,7 @@ Item {
                     selectCameras(index, index)
                 }
                 onMultipleSelection: selectCameras(m.currentIndex, index)
+                Component.onCompleted: color = altColor(index%2)
             }
         }
 
@@ -62,16 +68,17 @@ Item {
         {
             id: meshComponent
             MeshItem {
-                width: cameraList.width - 12 // ScrollBar height
+                width: componentList.width - 12 // ScrollBar height
                 height: 75
-                color: altColor(index%2)
                 mesh: model.modelData
                 project: m.project
+                Component.onCompleted: color = altColor(index%2)
             }
+
         }
 
-        CameraList {
-            id: cameraList
+        MVGList {
+            id: componentList
             implicitWidth: parent.width
             Layout.verticalSizePolicy: Layout.Expanding
             thumbSize: settings.thumbSize
@@ -108,5 +115,5 @@ Item {
             }
         }
     }
-    Keys.onPressed: cameraList.keyPressed(event.key)
+    Keys.onPressed: componentList.keyPressed(event.key)
 }

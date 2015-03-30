@@ -3,7 +3,7 @@ import QtDesktop 0.1
 
 
 Item {
-    id: cameraList
+    id: componentList
     signal keyPressed(variant value)
     property alias thumbSize: m.thumbSize
     property alias project: m.project
@@ -46,7 +46,7 @@ Item {
 
     Connections {
          target: _project
-         onCenterCameraListByIndex: cameraListView.contentY = cameraIndex * m.thumbSize
+         onCenterCameraListByIndex: componentListView.contentY = cameraIndex * m.thumbSize
      }
 
     Item {
@@ -65,7 +65,7 @@ Item {
         anchors.fill: parent
         spacing: 0
         ListView {
-            id: cameraListView
+            id: componentListView
             height: parent.height
             Layout.horizontalSizePolicy:  Layout.Expanding
             currentIndex: -1  // don't use ListView selection mechanism
@@ -85,12 +85,12 @@ Item {
                 id: verticalScrollBar
                 anchors.fill: parent
                 orientation: Qt.Vertical
-                position: cameraListView.visibleArea.yPosition
-                pageSize: cameraListView.visibleArea.heightRatio
-                onPositionUpdated: cameraListView.contentY = value * cameraListView.contentHeight
+                position: componentListView.visibleArea.yPosition
+                pageSize: componentListView.visibleArea.heightRatio
+                onPositionUpdated: componentListView.contentY = value * componentListView.contentHeight
                 onMoveFromStep: {
-                    var newPosition = computeListPosition(direction, verticalScrollBar.upLimit, verticalScrollBar.downLimit, cameraListView.visibleArea.yPosition, 0.1)
-                    cameraListView.contentY = newPosition * cameraListView.contentHeight
+                    var newPosition = computeListPosition(direction, verticalScrollBar.upLimit, verticalScrollBar.downLimit, componentListView.visibleArea.yPosition, 0.1)
+                    componentListView.contentY = newPosition * componentListView.contentHeight
                 }
             }
         }
@@ -101,14 +101,14 @@ Item {
         {
             case Qt.Key_Up:
             case Qt.Key_Down:
-                var newPosition = computeListPosition(value, verticalScrollBar.upLimit, verticalScrollBar.downLimit, cameraListView.visibleArea.yPosition, 0.1);
-                cameraListView.contentY = newPosition * cameraListView.contentHeight;
+                var newPosition = computeListPosition(value, verticalScrollBar.upLimit, verticalScrollBar.downLimit, componentListView.visibleArea.yPosition, 0.1);
+                componentListView.contentY = newPosition * componentListView.contentHeight;
                 break;
             case Qt.Key_Home:
-                cameraListView.positionViewAtBeginning();
+                componentListView.positionViewAtBeginning();
                 break;
             case Qt.Key_End:
-                cameraListView.positionViewAtEnd();
+                componentListView.positionViewAtEnd();
                 break;
         }
     }
