@@ -106,6 +106,7 @@ MVGMesh MVGMesh::create(const std::string& name)
     return mesh;
 }
 
+// static
 std::vector<MVGMesh> MVGMesh::listMVGMeshes()
 {
     std::vector<MVGMesh> list;
@@ -165,12 +166,26 @@ void MVGMesh::setIsActive(const bool isActive) const
     }
     status = mvgPlug.setValue(isActive);
     CHECK(status)
-    // Freeze transform mesh
     if(isActive)
     {
+        // Freeze transform mesh
         MString cmd;
         cmd.format("makeIdentity -apply true \"^1s\"", getName().c_str());
         status = MGlobal::executeCommand(cmd);
+        CHECK(status)
+        // Lock node
+        status = MGlobal::executePythonCommand("from mayaMVG import scale");
+        cmd.format("scale.lockNode(\"^1s\", True)", getName().c_str());
+        status = MGlobal::executePythonCommand(cmd);
+        CHECK(status)
+    }
+    else
+    {
+        // Unlock node
+        status = MGlobal::executePythonCommand("from mayaMVG import scale");
+        MString cmd;
+        cmd.format("scale.lockNode(\"^1s\", False)", getName().c_str());
+        status = MGlobal::executePythonCommand(cmd);
         CHECK(status)
     }
     MString cmd;
