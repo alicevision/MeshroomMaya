@@ -27,6 +27,9 @@ public:
         int numConnectedEdges;
         MPoint worldPosition;
         std::map<int, MPoint> blindData; // map from cameraIDs to clickedCSPositions
+        /// Map from cameraIDs to cameraSpacePositions
+        /// Only store the point for the current cameras
+        std::map<int, MPoint> cameraSpacePoints;
     };
 
     struct EdgeData
@@ -82,6 +85,8 @@ public:
     const MeshData& getMeshData(const std::string meshName);
     void rebuildMeshesCache();
     void rebuildMeshCache(const MDagPath&);
+    void computeMeshCacheForCameraID(M3dView& view, const int cameraID);
+    void removeMeshCacheForCameraID(const int cameraID);
 
     const MVGComponent& getSelectedComponent() const { return _selectedComponent; }
     void setSelectedComponent(const MVGComponent& selectedComponent);

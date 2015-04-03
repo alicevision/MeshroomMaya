@@ -16,7 +16,10 @@ public:
     };
 
 public:
-    MVGMoveManipulator() {}
+    MVGMoveManipulator()
+        : _doDrag(false)
+    {
+    }
     virtual ~MVGMoveManipulator() {}
 
 public:
