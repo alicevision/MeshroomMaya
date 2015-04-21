@@ -1,4 +1,5 @@
-#include "mayaMVG/qt/QObjectListModel.hpp"
+#include "QObjectListModel.hpp"
+#include <QtDeclarative/QDeclarativeEngine>
 
 /*!
     \class QObjectListModel
@@ -238,7 +239,7 @@ QObject* QObjectListModel::takeAt(int i)
     QObject* obj = _objects.takeAt(i);
     endRemoveRows();
     internEmitCountChanged();
-    return obj;
+    return obj; // INVOKABLE => by default tranfer ownership to qml (QQmlEngine::JavaScriptOwnership)
 }
 
 /*!
@@ -261,7 +262,10 @@ void QObjectListModel::clear()
 */
 QObject* QObjectListModel::get(int i) const
 {
-    return _objects.at(i);
+    QObject* obj = _objects.at(i);
+    // Explicitly keep the ownership which is not the default behavior in INVOKABLE methods.
+    QDeclarativeEngine::setObjectOwnership(obj, QDeclarativeEngine::CppOwnership);
+    return obj;
 }
 
 void QObjectListModel::emitModified()

@@ -40,9 +40,7 @@ Rectangle {
         height: parent.height
         spacing: 10
         visible: false
-        Component.onCompleted: {
-            visible = true
-        }
+        Component.onCompleted: visible = true
 
         CameraThumbnail {
             implicitWidth: height * m.thumbRatio

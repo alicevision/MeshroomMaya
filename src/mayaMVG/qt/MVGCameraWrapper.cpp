@@ -45,8 +45,8 @@ void MVGCameraWrapper::setInView(const QString& viewName, const bool value)
     {
         if(_views.removeOne(viewName))
             Q_EMIT viewsChanged();
+        }
     }
-}
 
 void MVGCameraWrapper::setIsSelected(const bool isSelected)
 {

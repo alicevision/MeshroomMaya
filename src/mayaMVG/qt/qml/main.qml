@@ -18,21 +18,6 @@ Item {
             implicitWidth: parent.width
             project: _project
             settingsVisibility: (_project.projectDirectory === "")
-
-            onShowMeshSignal: {
-                // To avoir errors when switching lists
-                componentList.model = "None";
-                componentList.delegate = meshComponent;
-                componentList.model = _project.meshModel;
-
-            }
-            onShowCameraSignal: {
-                // To avoir errors when switching lists
-                componentList.model = "None";
-                componentList.delegate = cameraComponent;
-                componentList.model = _project.cameraModel;
-
-            }
         }
         ProjectSettings {
             id: settings
@@ -47,44 +32,14 @@ Item {
             onSettingProjectLoaded: contextBar.settingsVisibility = false
             thumbSize: sliderMinValue
         }
-        Component
-        {
-            id: cameraComponent
-            CameraItem {
-                width: componentList.width
-                baseHeight: m.thumbSize
-                camera: model.modelData
-                project: m.project
-                onSelection: {
-                    m.currentIndex = index
-                    selectCameras(index, index)
-                }
-                onMultipleSelection: selectCameras(m.currentIndex, index)
-                Component.onCompleted: color = altColor(index%2)
-            }
-        }
 
-        Component
-        {
-            id: meshComponent
-            MeshItem {
-                width: componentList.width - 12 // ScrollBar height
-                height: 75
-                mesh: model.modelData
-                project: m.project
-                Component.onCompleted: color = altColor(index%2)
-            }
-
-        }
-
-        MVGList {
+        MVGPanel {
             id: componentList
             implicitWidth: parent.width
             Layout.verticalSizePolicy: Layout.Expanding
             thumbSize: settings.thumbSize
             project: _project
-            model: _project.cameraModel
-            delegate: cameraComponent
+            mode: contextBar.mode
         }
     }
 

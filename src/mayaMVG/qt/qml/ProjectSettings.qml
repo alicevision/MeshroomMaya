@@ -24,7 +24,6 @@ Item {
 
     StateGroup {
         id: openState
-        state: "OPEN"
         states: [
             State {
                 name: "CLOSED"
@@ -146,6 +145,7 @@ Item {
                         }
                     }
                 }
+
                 // Scale
                 Item {
                     implicitWidth: parent.width

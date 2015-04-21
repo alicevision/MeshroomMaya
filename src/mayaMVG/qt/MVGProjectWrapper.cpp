@@ -207,13 +207,11 @@ void MVGProjectWrapper::setCameraToView(QObject* camera, const QString& viewName
 
     // Push command
     _project.pushLoadCurrentImagePlaneCommand(viewName.toStdString());
-
     // Set UI
     foreach(MVGCameraWrapper* c, _cameraList.asQList<MVGCameraWrapper>())
         c->setInView(viewName, false);
     MVGCameraWrapper* cam = qobject_cast<MVGCameraWrapper*>(camera);
     cam->setInView(viewName, true);
-
     // Update active camera
     _activeCameraNameByView[viewName.toStdString()] = cameraWrapper->getName().toStdString();
 }

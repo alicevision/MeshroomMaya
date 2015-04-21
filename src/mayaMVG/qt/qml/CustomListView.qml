@@ -5,34 +5,15 @@ import QtDesktop 0.1
 Item {
     id: componentList
     signal keyPressed(variant value)
-    property alias thumbSize: m.thumbSize
-    property alias project: m.project
     property alias model: m.model
     property alias delegate: m.delegate
+    property alias contentY: componentListView.contentY
     QtObject {
         id: m
-        property int thumbSize
-        property variant project
-        property int currentIndex
         property variant model
         property variant delegate
     }
-    function altColor(i) {
-        var colors = [ "#262626", "#2f2f2f2f" ];
-        return colors[i];
-    }
-    function selectCameras(oldIndex, newIndex) {
-        var qlist = [];
-        var begin = Math.min(oldIndex, newIndex);
-        var end = Math.max(oldIndex, newIndex) + 1;
 
-        for(var i = begin; i < end; ++i)
-        {
-            qlist[qlist.length] = m.project.cameraModel.get(i).name;
-        }
-        m.project.addCamerasToIHMSelection(qlist);
-        m.project.addCamerasToMayaSelection(qlist);
-    }
     function computeListPosition(keyValue, upLimit, downLimit, currentPosition, step)
     {
         switch(keyValue)
@@ -44,23 +25,6 @@ Item {
         }
     }
 
-    Connections {
-         target: _project
-         onCenterCameraListByIndex: componentListView.contentY = cameraIndex * m.thumbSize
-     }
-
-    Item {
-        anchors.fill: parent
-        Text {
-            id: loadingText
-            anchors.fill: parent
-            text: "LOADING ... "
-            font.pointSize: 15
-            color: "white"
-            horizontalAlignment: Text.AlignHCenter
-            visible: _project.isProjectLoading
-        }
-    }
     RowLayout {
         anchors.fill: parent
         spacing: 0
