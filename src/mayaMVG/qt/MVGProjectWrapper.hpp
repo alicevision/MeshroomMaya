@@ -74,6 +74,7 @@ public:
     void addMeshToUI(const MDagPath& meshPath);
     void removeMeshFromUI(const MDagPath& meshPath);
     void emitCurrentUnitChanged();
+    void resetCameraSelection();
 
 private:
     void reloadMVGCamerasFromMaya();
@@ -81,7 +82,7 @@ private:
 private:
     QObjectListModel _cameraList;
     QObjectListModel _meshesList;
-    /// Names of the selected cameras
+    // DagPaths of the selected cameras as stringNames of the selected cameras
     /// Selection already stored in camera but this list is needed for a faster access
     QStringList _selectedCameras;
     MVGProject _project;

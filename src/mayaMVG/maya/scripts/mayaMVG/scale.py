@@ -4,12 +4,14 @@ import pymel.core as pm
 
 def lockNode(node, lockValue):
     import maya.cmds as cmds
-    cmds.setAttr(node+".translateX", lock=lockValue)
-    cmds.setAttr(node+".translateY", lock=lockValue)
-    cmds.setAttr(node+".translateZ", lock=lockValue)
-    cmds.setAttr(node+".rotateX", lock=lockValue)
-    cmds.setAttr(node+".rotateY", lock=lockValue)
-    cmds.setAttr(node+".rotateZ", lock=lockValue)
+    # Retrieve transform
+    transform = cmds.listRelatives(node, parent=True, fullPath=True)
+    cmds.setAttr(transform[0]+".translateX", lock=lockValue)
+    cmds.setAttr(transform[0]+".translateY", lock=lockValue)
+    cmds.setAttr(transform[0]+".translateZ", lock=lockValue)
+    cmds.setAttr(transform[0]+".rotateX", lock=lockValue)
+    cmds.setAttr(transform[0]+".rotateY", lock=lockValue)
+    cmds.setAttr(transform[0]+".rotateZ", lock=lockValue)
 
 def listMVGMeshesTransform():
     import maya.cmds as cmds

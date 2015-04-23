@@ -239,7 +239,8 @@ QObject* QObjectListModel::takeAt(int i)
     QObject* obj = _objects.takeAt(i);
     endRemoveRows();
     internEmitCountChanged();
-    return obj; // INVOKABLE => by default tranfer ownership to qml (QQmlEngine::JavaScriptOwnership)
+    return obj; // INVOKABLE => by default tranfer ownership to qml
+                // (QQmlEngine::JavaScriptOwnership)
 }
 
 /*!

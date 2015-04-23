@@ -27,7 +27,7 @@ Item {
 
         for(var i = begin; i < end; ++i)
         {
-            qlist[qlist.length] = m.project.cameraModel.get(i).name;
+            qlist[qlist.length] = m.project.cameraModel.get(i).dagPath;
         }
         m.project.addCamerasToIHMSelection(qlist);
         m.project.addCamerasToMayaSelection(qlist);

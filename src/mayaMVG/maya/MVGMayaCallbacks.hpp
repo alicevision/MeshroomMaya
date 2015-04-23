@@ -35,27 +35,33 @@ static void selectionChangedCB(void*)
     MGlobal::getActiveSelectionList(list);
     MDagPath path;
     QStringList selectedCameras;
+    QStringList selectedMeshes;
     for(size_t i = 0; i < list.length(); i++)
     {
         list.getDagPath(i, path);
         path.extendToShape();
+        // Check for camera
+        if(path.isValid() && (path.apiType() == MFn::kCamera))
+            selectedCameras.push_back(path.fullPathName().asChar());
+        // Check for mesh
         if(path.isValid() &&
-           ((path.child(0).apiType() == MFn::kCamera) || (path.apiType() == MFn::kCamera)))
+           ((path.child(0).apiType() == MFn::kMesh) || (path.apiType() == MFn::kMesh)))
         {
-            MFnDependencyNode fn(path.transform());
-            selectedCameras.push_back(fn.name().asChar());
+            selectedMeshes.push_back(path.fullPathName().asChar());
         }
     }
 
-    if(selectedCameras.size() == 0)
-        return;
-
     // Compare IHM selection to Maya selection
-    QStringList IHMSelectedCamera = project->getSelectedCameras();
-    IHMSelectedCamera.sort();
-    selectedCameras.sort();
-    if(IHMSelectedCamera != selectedCameras)
-        project->addCamerasToIHMSelection(selectedCameras, true);
+    if(selectedCameras.size() > 0)
+    {
+        QStringList IHMSelectedCamera = project->getSelectedCameras();
+        IHMSelectedCamera.sort();
+        selectedCameras.sort();
+        if(IHMSelectedCamera != selectedCameras)
+            project->addCamerasToIHMSelection(selectedCameras, true);
+    }
+    else
+        project->resetCameraSelection();
 }
 
 static void currentContextChangedCB(void*)

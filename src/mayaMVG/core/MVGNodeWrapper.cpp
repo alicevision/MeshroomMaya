@@ -11,21 +11,21 @@ MVGNodeWrapper::MVGNodeWrapper()
 {
 }
 
-MVGNodeWrapper::MVGNodeWrapper(const std::string& name)
+MVGNodeWrapper::MVGNodeWrapper(const std::string& dagPathAsString)
 {
-    if(name.empty())
+    if(dagPathAsString.empty())
         return;
-    MVGMayaUtil::getDagPathByName(name.c_str(), _dagpath);
+    MVGMayaUtil::getDagPathByName(dagPathAsString.c_str(), _dagpath);
     if(_dagpath.apiType() == MFn::kTransform)
         _dagpath.extendToShape();
     _object = _dagpath.node();
 }
 
-MVGNodeWrapper::MVGNodeWrapper(const MString& name)
+MVGNodeWrapper::MVGNodeWrapper(const MString& dagPathAsString)
 {
-    if(name.length() == 0)
+    if(dagPathAsString.length() == 0)
         return;
-    MVGMayaUtil::getDagPathByName(name, _dagpath);
+    MVGMayaUtil::getDagPathByName(dagPathAsString, _dagpath);
     if(_dagpath.apiType() == MFn::kTransform)
         _dagpath.extendToShape();
     _object = _dagpath.node();
@@ -57,6 +57,11 @@ void MVGNodeWrapper::selectNode() const
 const MDagPath& MVGNodeWrapper::getDagPath() const
 {
     return _dagpath;
+}
+
+const std::string MVGNodeWrapper::getDagPathAsString() const
+{
+    return _dagpath.fullPathName().asChar();
 }
 
 const MObject& MVGNodeWrapper::getObject() const

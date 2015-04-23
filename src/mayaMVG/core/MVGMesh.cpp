@@ -36,13 +36,13 @@ void binaryToVectorData(const char* binaryData, const int binarySize,
 int MVGMesh::_blindDataID = 0; // FIXME
 MString MVGMesh::_MVG = "mvg";
 
-MVGMesh::MVGMesh(const std::string& name)
-    : MVGNodeWrapper(name)
+MVGMesh::MVGMesh(const std::string& dagPathAsString)
+    : MVGNodeWrapper(dagPathAsString)
 {
 }
 
-MVGMesh::MVGMesh(const MString& name)
-    : MVGNodeWrapper(name)
+MVGMesh::MVGMesh(const MString& dagPathAsString)
+    : MVGNodeWrapper(dagPathAsString)
 {
 }
 
@@ -107,7 +107,7 @@ MVGMesh MVGMesh::create(const std::string& name)
 }
 
 // static
-std::vector<MVGMesh> MVGMesh::listMVGMeshes()
+std::vector<MVGMesh> MVGMesh::listActiveMeshes()
 {
     std::vector<MVGMesh> list;
     MDagPath path;
@@ -170,12 +170,12 @@ void MVGMesh::setIsActive(const bool isActive) const
     {
         // Freeze transform mesh
         MString cmd;
-        cmd.format("makeIdentity -apply true \"^1s\"", getName().c_str());
+        cmd.format("makeIdentity -apply true \"^1s\"", getDagPath().fullPathName().asChar());
         status = MGlobal::executeCommand(cmd);
         CHECK(status)
         // Lock node
         status = MGlobal::executePythonCommand("from mayaMVG import scale");
-        cmd.format("scale.lockNode(\"^1s\", True)", getName().c_str());
+        cmd.format("scale.lockNode(\"^1s\", True)", getDagPath().fullPathName());
         status = MGlobal::executePythonCommand(cmd);
         CHECK(status)
     }
@@ -184,7 +184,7 @@ void MVGMesh::setIsActive(const bool isActive) const
         // Unlock node
         status = MGlobal::executePythonCommand("from mayaMVG import scale");
         MString cmd;
-        cmd.format("scale.lockNode(\"^1s\", False)", getName().c_str());
+        cmd.format("scale.lockNode(\"^1s\", False)", getDagPath().fullPathName());
         status = MGlobal::executePythonCommand(cmd);
         CHECK(status)
     }

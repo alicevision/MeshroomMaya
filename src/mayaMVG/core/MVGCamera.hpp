@@ -17,7 +17,7 @@ class MVGCamera : public MVGNodeWrapper
 
 public:
     MVGCamera();
-    MVGCamera(const std::string& name);
+    MVGCamera(const std::string& dagPathAsString);
     MVGCamera(const MDagPath& dagPath);
     MVGCamera(const int& id);
     virtual ~MVGCamera();

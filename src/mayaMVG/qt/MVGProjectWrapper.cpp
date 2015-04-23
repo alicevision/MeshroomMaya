@@ -163,15 +163,7 @@ void MVGProjectWrapper::addCamerasToIHMSelection(const QStringList& selectedCame
                                                  bool center)
 {
     // Reset old selection to false
-    for(QStringList::const_iterator it = _selectedCameras.begin(); it != _selectedCameras.end();
-        ++it)
-    {
-        std::map<std::string, MVGCameraWrapper*>::const_iterator foundIt =
-            _camerasByName.find(it->toStdString());
-        if(foundIt != _camerasByName.end())
-            foundIt->second->setIsSelected(false);
-    }
-    _selectedCameras.clear();
+    resetCameraSelection();
     // Set new selection to true
     for(QStringList::const_iterator it = selectedCameraNames.begin();
         it != selectedCameraNames.end(); ++it)
@@ -180,10 +172,10 @@ void MVGProjectWrapper::addCamerasToIHMSelection(const QStringList& selectedCame
             continue;
         MVGCameraWrapper* camera = _camerasByName[it->toStdString()];
         camera->setIsSelected(true);
-        _selectedCameras.append(camera->getName());
+        _selectedCameras.append(*it);
         // Replace listView and set image in first viewort
         // TODO : let the user define in which viewport he wants to display the selected camera
-        if(center && camera->getName() == selectedCameraNames[0])
+        if(center && camera->getDagPathAsString() == selectedCameraNames[0])
         {
             setCameraToView(camera, static_cast<MVGPanelWrapper*>(_panelList.get(0))->getName());
             Q_EMIT centerCameraListByIndex(_cameraList.indexOf(camera));
@@ -213,7 +205,8 @@ void MVGProjectWrapper::setCameraToView(QObject* camera, const QString& viewName
     MVGCameraWrapper* cam = qobject_cast<MVGCameraWrapper*>(camera);
     cam->setInView(viewName, true);
     // Update active camera
-    _activeCameraNameByView[viewName.toStdString()] = cameraWrapper->getName().toStdString();
+    _activeCameraNameByView[viewName.toStdString()] =
+        cameraWrapper->getDagPathAsString().toStdString();
 }
 
 void MVGProjectWrapper::setCamerasNear(const double near)
@@ -312,6 +305,19 @@ void MVGProjectWrapper::emitCurrentUnitChanged()
     Q_EMIT currentUnitChanged();
 }
 
+void MVGProjectWrapper::resetCameraSelection()
+{
+    LOG_INFO("MVGProjectWrapper::resetCameraSelection")
+    for(QStringList::const_iterator it = _selectedCameras.begin(); it != _selectedCameras.end();
+        ++it)
+    {
+        std::map<std::string, MVGCameraWrapper*>::const_iterator foundIt =
+            _camerasByName.find(it->toStdString());
+        if(foundIt != _camerasByName.end())
+            foundIt->second->setIsSelected(false);
+    }
+    _selectedCameras.clear();
+}
 void MVGProjectWrapper::reloadMVGCamerasFromMaya()
 {
     _cameraList.clear();
@@ -324,7 +330,7 @@ void MVGProjectWrapper::reloadMVGCamerasFromMaya()
     {
         MVGCameraWrapper* cameraWrapper = new MVGCameraWrapper(*it);
         _cameraList.append(cameraWrapper);
-        _camerasByName[it->getName()] = cameraWrapper;
+        _camerasByName[it->getDagPathAsString()] = cameraWrapper;
     }
     Q_EMIT cameraModelChanged();
     // TODO : Camera selection

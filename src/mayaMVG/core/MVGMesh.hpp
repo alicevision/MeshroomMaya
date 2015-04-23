@@ -22,8 +22,8 @@ public:
     };
 
 public:
-    MVGMesh(const std::string& name);
-    MVGMesh(const MString& name);
+    MVGMesh(const std::string& dagPathAsString);
+    MVGMesh(const MString& dagPathAsString);
     MVGMesh(const MDagPath& dagPath);
     MVGMesh(const MObject& object);
     virtual ~MVGMesh() {}
@@ -33,7 +33,7 @@ public:
 
 public:
     static MVGMesh create(const std::string& name);
-    static std::vector<MVGMesh> listMVGMeshes();
+    static std::vector<MVGMesh> listActiveMeshes();
     static std::vector<MVGMesh> listAllMeshes();
 
 public:

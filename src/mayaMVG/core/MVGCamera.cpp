@@ -30,8 +30,8 @@ MVGCamera::MVGCamera()
 {
 }
 
-MVGCamera::MVGCamera(const std::string& name)
-    : MVGNodeWrapper(name)
+MVGCamera::MVGCamera(const std::string& dagPathAsString)
+    : MVGNodeWrapper(dagPathAsString)
 {
 }
 

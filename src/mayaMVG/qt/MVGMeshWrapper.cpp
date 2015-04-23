@@ -19,6 +19,11 @@ MVGMeshWrapper::~MVGMeshWrapper()
 {
 }
 
+const QString MVGMeshWrapper::getDagPathAsString() const
+{
+    return QString::fromStdString(_mesh.getDagPathAsString());
+}
+
 const MVGMesh& MVGMeshWrapper::getMesh() const
 {
     return _mesh;
