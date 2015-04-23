@@ -2,10 +2,10 @@
 (
 mkdir -p build_release &&
 cd build_release &&
-run maya-2014 openMVG cmake -- cmake ../src -DCMAKE_BUILD_TYPE=RELEASE "$@" &&
+rez env maya-2014 openMVG cmake -- cmake ../src -DCMAKE_BUILD_TYPE=RELEASE "$@" &&
 cd .. &&
 mkdir -p build_debug &&
 cd build_debug &&
-run maya-2014 openMVG cmake -- cmake ../src -DCMAKE_BUILD_TYPE=DEBUG "$@"
+rez env maya-2014 openMVG cmake -- cmake ../src -DCMAKE_BUILD_TYPE=DEBUG "$@"
 )
 
