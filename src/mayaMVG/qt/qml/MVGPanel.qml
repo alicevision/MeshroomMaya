@@ -25,16 +25,15 @@ Item {
             State {
                 name: "CAMERA"
                 when: (mode === "camera")
-                PropertyChanges { target: listLoader; sourceComponent: camerasComponent;}
+                PropertyChanges { target: stack; current: 0}
             },
             State {
                 name: "MESH"
                 when: (mode === "mesh")
-                PropertyChanges { target: listLoader; sourceComponent: meshesComponent;}
+                PropertyChanges { target: stack; current: 1}
             }
         ]
     }
-    onModeChanged: console.log("Mode changed : " + mode)
     Item {
         anchors.fill: parent
         Text {
@@ -47,32 +46,24 @@ Item {
             visible: _project.isProjectLoading
         }
     }
-    Loader {
-        id: listLoader
-        anchors.fill: parent
-    }
 
-    // CameraList component
-    Component {
-        id: camerasComponent
+    Stack {
+        id: stack
+        anchors.fill: parent
+        focus: true
         CameraListView {
-            id: cameraListView
             height: componentList.height
             width: componentList.width
             project: m.project
             thumbSize: m.thumbSize
         }
-    }
-    // MeshList component
-    Component {
-        id: meshesComponent
+
         MeshListView {
-            id: meshListView
             height: componentList.height
             width: componentList.width
             project: m.project
         }
-    }
 
-    onKeyPressed: listLoader.sourceComponent.keyPressed(value)
+        Keys.onPressed: children[current].keyPressed(event.key)
+    }
 }
