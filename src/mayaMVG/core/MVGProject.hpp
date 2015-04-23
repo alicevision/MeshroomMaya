@@ -48,6 +48,7 @@ public:
     void pushImageInCache(const std::string& cameraName);
     void updateImageCache(const std::string& newCameraName, const std::string& oldCameraName);
     const std::list<std::string>& getImageCache() { return _cachedImagePlanes; };
+    void clearImageCache();
 
 public:
     // openMVG node names

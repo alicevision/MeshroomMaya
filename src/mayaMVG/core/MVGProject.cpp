@@ -74,6 +74,7 @@ std::string MVGProject::_pointCloudRelativeFile = stlplus::folder_append_separat
                                                   stlplus::folder_append_separator("clouds") +
                                                   "calib.ply";
 // Image cache
+// List of camera by name or dagpath according to uniqueness
 std::list<std::string> MVGProject::_cachedImagePlanes;
 std::map<std::string, std::string> MVGProject::_lastLoadedCameraByView;
 
@@ -416,6 +417,20 @@ void MVGProject::updateImageCache(const std::string& newCameraName,
 }
 
 /**
+ *  Unload all images in camera (except current cameras) and clear cache
+ */
+void MVGProject::clearImageCache()
+{
+    std::list<std::string>::iterator it = _cachedImagePlanes.begin();
+    for(; it != _cachedImagePlanes.end(); ++it)
+    {
+        MVGCamera camera(*it);
+        camera.unloadImagePlane();
+    }
+    _cachedImagePlanes.clear();
+}
+
+/**
  * Create a command to load the current image plane corresponding to the camera in the panel.
  * Push the command to the idle queue
  * @param panelName view in which the image plane will be updated
@@ -424,6 +439,8 @@ void MVGProject::pushLoadCurrentImagePlaneCommand(const std::string& panelName) 
 {
     MStatus status;
     MString cmd;
+    // Warning: this command return the NAME of the object if unique.
+    // Else, it return the dagpath
     cmd.format("MVGImagePlaneCmd -panel \"^1s\" -load ", panelName.c_str());
     status = MGlobal::executeCommandOnIdle(cmd);
     CHECK_RETURN(status)
