@@ -361,6 +361,17 @@ void MVGProject::selectCameras(std::vector<std::string> cameraNames) const
     MGlobal::setActiveSelectionList(list);
 }
 
+void MVGProject::selectMeshes(std::vector<std::string> meshes) const
+{
+    MSelectionList list;
+    for(std::vector<std::string>::iterator it = meshes.begin(); it != meshes.end(); ++it)
+    {
+        MVGMesh mesh(*it);
+        list.add(mesh.getDagPath());
+    }
+    MGlobal::setActiveSelectionList(list);
+}
+
 void MVGProject::unlockProject() const
 {
     unlockNode(getObject());

@@ -8,6 +8,8 @@ Item {
     property alias model: m.model
     property alias delegate: m.delegate
     property alias contentY: componentListView.contentY
+    property alias contentHeight: componentListView.contentHeight
+    property alias count: componentListView.count
     QtObject {
         id: m
         property variant model
@@ -41,6 +43,7 @@ Item {
             transitions: Transition  {
                 NumberAnimation { properties: "opacity"; duration: 200 }
             }
+
         }
         Item {
             height: parent.height

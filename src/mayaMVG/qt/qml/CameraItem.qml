@@ -60,9 +60,8 @@ Rectangle {
                 onClicked: {
                     if(mouse.modifiers & Qt.ShiftModifier)
                         multipleSelection(index)
-                    else {
+                    else
                         selection(index)
-                    }
                 }
             }
             ColumnLayout {

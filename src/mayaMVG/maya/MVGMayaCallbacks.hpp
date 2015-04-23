@@ -62,6 +62,16 @@ static void selectionChangedCB(void*)
     }
     else
         project->resetCameraSelection();
+    if(selectedMeshes.size() > 0)
+    {
+        QStringList IHMSelectedMeshes = project->getSelectedMeshes();
+        IHMSelectedMeshes.sort();
+        selectedMeshes.sort();
+        if(IHMSelectedMeshes != selectedMeshes)
+            project->addMeshesToIHMSelection(selectedMeshes, true);
+    }
+    else
+        project->resetMeshSelection();
 }
 
 static void currentContextChangedCB(void*)

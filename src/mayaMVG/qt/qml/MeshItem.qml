@@ -8,10 +8,24 @@ Rectangle {
     height: 75
     property alias project: m.project
     property alias mesh: m.mesh
+    signal multipleSelection(int index)
+    signal selection(int index)
     QtObject {
         id: m
         property variant project
         property variant mesh
+    }
+
+    StateGroup {
+        id: selectionState
+        states: [
+            State {
+                name: "SELECTED"
+                when: m.mesh.isSelected
+                PropertyChanges { target: meshItem; color: "#004161"; }
+            }
+
+        ]
     }
 
     RowLayout {
@@ -19,6 +33,17 @@ Rectangle {
         anchors.fill: parent
         anchors.margins: 10
         spacing: 0
+
+        MouseArea {
+            anchors.fill: parent
+            onClicked: {
+                if(mouse.modifiers & Qt.ShiftModifier)
+                    multipleSelection(index)
+                else {
+                    selection(index)
+                }
+            }
+        }
 
         // Data
         Item {
@@ -61,4 +86,6 @@ Rectangle {
         }
 
     }
+
+
 }

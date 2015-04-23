@@ -3,6 +3,7 @@
 #include "mayaMVG/qt/QObjectListModel.hpp"
 #include "mayaMVG/qt/MVGPanelWrapper.hpp"
 #include "mayaMVG/qt/MVGCameraWrapper.hpp"
+#include "mayaMVG/qt/MVGMeshWrapper.hpp"
 #include "mayaMVG/core/MVGProject.hpp"
 #include "maya/MDistance.h"
 #include <QObject>
@@ -35,6 +36,7 @@ public Q_SLOTS:
     QObjectListModel* getCameraModel() { return &_cameraList; }
     QObjectListModel* getMeshModel() { return &_meshesList; }
     QStringList& getSelectedCameras() { return _selectedCameras; }
+    QStringList& getSelectedMeshes() { return _selectedMeshes; }
     QObjectListModel* getPanelList() { return &_panelList; }
     const QString getCurrentContext() const;
     void setCurrentContext(const QString&);
@@ -52,10 +54,14 @@ Q_SIGNALS:
     void currentUnitChanged();
     void isProjectLoadingChanged();
     void centerCameraListByIndex(const int cameraIndex);
+    void centerMeshListByIndex(const int meshIndex);
 
 public:
     Q_INVOKABLE void addCamerasToIHMSelection(const QStringList& cameraNames, bool center = false);
     Q_INVOKABLE void addCamerasToMayaSelection(const QStringList& cameraNames) const;
+    Q_INVOKABLE void addMeshesToIHMSelection(const QStringList& selectedMeshes,
+                                             bool center = false);
+    Q_INVOKABLE void addMeshesToMayaSelection(const QStringList& meshes) const;
     Q_INVOKABLE QString openFileDialog() const;
     Q_INVOKABLE void activeSelectionContext() const;
     Q_INVOKABLE void activeMVGContext();
@@ -75,6 +81,7 @@ public:
     void removeMeshFromUI(const MDagPath& meshPath);
     void emitCurrentUnitChanged();
     void resetCameraSelection();
+    void resetMeshSelection();
 
 private:
     void reloadMVGCamerasFromMaya();
@@ -85,12 +92,16 @@ private:
     // DagPaths of the selected cameras as stringNames of the selected cameras
     /// Selection already stored in camera but this list is needed for a faster access
     QStringList _selectedCameras;
+    /// DagPaths of the selected meshes as string
+    /// Selection already stored in mesh but this list is needed for a faster access
+    QStringList _selectedMeshes;
     MVGProject _project;
     QObjectListModel _panelList;
     QString _currentContext;
     bool _isProjectLoading;
 
     std::map<std::string, MVGCameraWrapper*> _camerasByName;
+    std::map<std::string, MVGMeshWrapper*> _meshesByName;
     /// map view to active camera
     std::map<std::string, std::string> _activeCameraNameByView;
     QMap<MDistance::Unit, QString> _unitMap;

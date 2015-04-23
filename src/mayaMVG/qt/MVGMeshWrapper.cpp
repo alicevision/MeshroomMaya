@@ -7,11 +7,13 @@ namespace mayaMVG
 
 MVGMeshWrapper::MVGMeshWrapper(const MVGMesh& mesh)
     : _mesh(mesh)
+    , _isSelected(false)
 {
 }
 
 MVGMeshWrapper::MVGMeshWrapper(const MVGMeshWrapper& other)
     : _mesh(other._mesh)
+    , _isSelected(other._isSelected)
 {
 }
 
@@ -40,6 +42,14 @@ void MVGMeshWrapper::setIsActive(const bool isActive)
         return;
     _mesh.setIsActive(isActive);
     Q_EMIT isActiveChanged();
+}
+
+void MVGMeshWrapper::setIsSelected(const bool isSelected)
+{
+    if(_isSelected == isSelected)
+        return;
+    _isSelected = isSelected;
+    Q_EMIT isSelectedChanged();
 }
 
 } // namespace

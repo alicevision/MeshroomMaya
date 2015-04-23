@@ -33,12 +33,17 @@ Item {
         m.project.addCamerasToMayaSelection(qlist);
     }
 
+    function center(index, itemHeight, listView) {
+        var itemY = index * itemHeight
+        if(itemY > listView.contentHeight - listView.height)
+            return listView.contentHeight - listView.height;
+        else
+            return itemY;
+    }
+
     Connections {
          target: m.project
-         onCenterCameraListByIndex: {
-             console.log("onCenterCameraListByIndex emited");
-             listView.contentY = cameraIndex * m.thumbSize;
-         }
+         onCenterCameraListByIndex: listView.contentY = center(cameraIndex , m.thumbSize, listView)
      }
 
     Component {
@@ -62,7 +67,6 @@ Item {
         anchors.fill: parent
         model: m.project.cameraModel
         delegate: cameraItem
-
     }
 
     onKeyPressed: listView.keyPressed(value)
