@@ -85,7 +85,8 @@ public:
     const MeshData& getMeshData(const std::string meshName);
     void rebuildMeshesCache();
     void rebuildMeshCache(const MDagPath&);
-    void computeMeshCacheForCameraID(M3dView& view, const int cameraID);
+    void checkForCameraSpacePositions(M3dView& view, MeshData& meshData, const int cameraID);
+    void computeMeshCacheForCameraID(M3dView& view, MeshData& meshData, const int cameraID);
     void removeMeshCacheForCameraID(const int cameraID);
 
     const MVGComponent& getSelectedComponent() const { return _selectedComponent; }
