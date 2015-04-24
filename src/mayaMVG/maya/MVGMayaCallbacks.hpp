@@ -125,6 +125,14 @@ static void redoCB(void*)
     }
 }
 
+static void sceneSavedCB(void*)
+{
+    MVGProjectWrapper* project = getProjectWrapper();
+    if(!project)
+        return;
+    project->clearImageCache();
+}
+
 static void nodeRemovedCB(MObject& node, void*)
 {
     MVGProjectWrapper* project = getProjectWrapper();

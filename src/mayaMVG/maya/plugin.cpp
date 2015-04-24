@@ -14,6 +14,7 @@
 #include <maya/MFnPlugin.h>
 #include <maya/MCallbackIdArray.h>
 #include <maya/MEventMessage.h>
+#include <maya/MSceneMessage.h>
 #include <maya/MMessage.h>
 #include <maya/MDGMessage.h>
 #include <maya/MDrawRegistry.h>
@@ -73,6 +74,9 @@ MStatus initializePlugin(MObject obj)
     if(status)
         _callbacks.append(id);
     id = MEventMessage::addEventCallback("Redo", redoCB, &status);
+    if(status)
+        _callbacks.append(id);
+    id = MSceneMessage::addCallback(MSceneMessage::kBeforeSave, sceneSavedCB, &status);
     if(status)
         _callbacks.append(id);
     id = MEventMessage::addEventCallback("SelectionChanged", selectionChangedCB, &status);

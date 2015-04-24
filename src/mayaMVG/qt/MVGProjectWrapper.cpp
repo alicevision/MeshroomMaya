@@ -253,6 +253,11 @@ void MVGProjectWrapper::clear()
     Q_EMIT projectDirectoryChanged();
 }
 
+void MVGProjectWrapper::clearImageCache()
+{
+    _project.clearImageCache();
+}
+
 void MVGProjectWrapper::removeCameraFromUI(MDagPath& cameraPath)
 {
     MVGCamera camera(cameraPath);

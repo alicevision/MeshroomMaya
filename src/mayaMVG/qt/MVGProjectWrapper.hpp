@@ -65,6 +65,7 @@ public:
     Q_INVOKABLE void setCameraLocatorScale(const double scale);
 
     void clear();
+    void clearImageCache();
     void removeCameraFromUI(MDagPath& cameraPath);
     void emitCurrentUnitChanged();
 
