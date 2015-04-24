@@ -168,35 +168,48 @@ void MVGMesh::setIsActive(const bool isActive) const
     CHECK(status)
     if(isActive)
     {
-        // Freeze transform mesh
+        status = MGlobal::executePythonCommand("from mayaMVG import scale");
+        CHECK(status)
         MString cmd;
-        cmd.format("makeIdentity -apply true \"^1s\"", getDagPath().fullPathName().asChar());
+        // Retrieve transform node
+        cmd.format("scale.getParent(\"^1s\")", _dagpath.fullPathName());
+        MString transform;
+        status = MGlobal::executePythonCommand(cmd, transform);
+        // Freeze transform mesh
+        cmd.format("makeIdentity -apply true \"^1s\"", transform);
         status = MGlobal::executeCommand(cmd);
         CHECK(status)
         // Lock node
-        status = MGlobal::executePythonCommand("from mayaMVG import scale");
-        cmd.format("scale.lockNode(\"^1s\", True)", getDagPath().fullPathName());
+        cmd.format("scale.lockNode(\"^1s\", True)", transform);
         status = MGlobal::executePythonCommand(cmd);
         CHECK(status)
     }
     else
     {
+        status = MGlobal::executePythonCommand("from mayaMVG import scale");
+        CHECK(status)
+        MString cmd;
+        // Retrieve transform node
+        cmd.format("scale.getParent(\"^1s\")", _dagpath.fullPathName());
+        MString transform;
+        status = MGlobal::executePythonCommand(cmd, transform);
         // Unlock node
         status = MGlobal::executePythonCommand("from mayaMVG import scale");
-        MString cmd;
-        cmd.format("scale.lockNode(\"^1s\", False)", getDagPath().fullPathName());
+        cmd.format("scale.lockNode(\"^1s\", False)", transform);
         status = MGlobal::executePythonCommand(cmd);
         CHECK(status)
     }
+    // Rebuild cache
     MString cmd;
-    cmd.format("mayaMVGTool -e -rebuild -mesh \"^1s\" mayaMVGTool1", getDagPath().fullPathName());
-    MGlobal::executeCommand(cmd);
+    cmd.format("mayaMVGTool -e -rebuild -mesh \"^1s\" mayaMVGTool1", _dagpath.fullPathName());
+    status = MGlobal::executeCommand(cmd);
+    CHECK(status)
 }
 
 bool MVGMesh::isActive() const
 {
     MStatus status;
-    // Check is flag exists
+    // Check if the specific plug exists
     MFnMesh fn(_dagpath);
     MPlug mvgPlug = fn.findPlug(_MVG, false, &status);
     if(!status)

@@ -163,7 +163,7 @@ void MVGProjectWrapper::addCamerasToIHMSelection(const QStringList& selectedCame
                                                  bool center)
 {
     // Reset old selection to false
-    resetCameraSelection();
+    clearCameraSelection();
     // Set new selection to true
     for(QStringList::const_iterator it = selectedCameraNames.begin();
         it != selectedCameraNames.end(); ++it)
@@ -196,7 +196,7 @@ void MVGProjectWrapper::addCamerasToMayaSelection(const QStringList& cameraNames
 void MVGProjectWrapper::addMeshesToIHMSelection(const QStringList& selectedMeshPaths, bool center)
 {
     // Reset old selection to false
-    resetMeshSelection();
+    clearMeshSelection();
     // Set new selection to true
     for(QStringList::const_iterator it = selectedMeshPaths.begin(); it != selectedMeshPaths.end();
         ++it)
@@ -337,7 +337,7 @@ void MVGProjectWrapper::emitCurrentUnitChanged()
     Q_EMIT currentUnitChanged();
 }
 
-void MVGProjectWrapper::resetCameraSelection()
+void MVGProjectWrapper::clearCameraSelection()
 {
     for(QStringList::const_iterator it = _selectedCameras.begin(); it != _selectedCameras.end();
         ++it)
@@ -350,7 +350,7 @@ void MVGProjectWrapper::resetCameraSelection()
     _selectedCameras.clear();
 }
 
-void MVGProjectWrapper::resetMeshSelection()
+void MVGProjectWrapper::clearMeshSelection()
 {
     for(QStringList::const_iterator it = _selectedMeshes.begin(); it != _selectedMeshes.end(); ++it)
     {
@@ -391,8 +391,8 @@ void MVGProjectWrapper::reloadMVGMeshesFromMaya()
         _meshesList.append(meshWrapper);
         _meshesByName[it->getDagPathAsString()] = meshWrapper;
     }
-    // Needed ?
-    Q_EMIT meshModelChanged();
+//    // Needed ?
+//    Q_EMIT meshModelChanged();
 }
 
 } // namespace

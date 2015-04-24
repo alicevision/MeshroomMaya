@@ -196,6 +196,12 @@ void MVGManipulatorCache::rebuildMeshCache(const MDagPath& path)
         updateSelectedComponent(meshPath, type, index);
 }
 
+/**
+ *
+ * @param view
+ * @param cameraID
+ * @brief Compute camera space coordinates and add it to mesh cache
+ */
 void MVGManipulatorCache::computeMeshCacheForCameraID(M3dView& view, const int cameraID)
 {
     for(std::map<std::string, MeshData>::iterator meshIt = _meshData.begin();
@@ -310,7 +316,10 @@ bool MVGManipulatorCache::isIntersectingPoint(const double tolerance, const MPoi
     double threshold = (tolerance * _activeCamera.getZoom()) / (double)_activeView.portWidth();
 
     // Check for cameraSpace coordinates
+    // We compute position only if there are not in the cache to avoid computing them all the time
     int cameraID = _activeCamera.getId();
+    if(_meshData.begin()->second.vertices.empty())
+        return false;
     std::map<int, MPoint>& cameraSpacePoints =
         _meshData.begin()->second.vertices.begin()->cameraSpacePoints;
     std::map<int, MPoint>::iterator cameraIt = cameraSpacePoints.find(cameraID);
@@ -353,7 +362,10 @@ bool MVGManipulatorCache::isIntersectingEdge(const double tolerance, const MPoin
     double threshold = (tolerance * _activeCamera.getZoom()) / (double)_activeView.portWidth();
 
     // Check for cameraSpace coordinates
+    // We compute position only if there are not in the cache to avoid computing them all the time
     int cameraID = _activeCamera.getId();
+    if(_meshData.begin()->second.vertices.empty())
+        return false;
     std::map<int, MPoint>& cameraSpacePoints =
         _meshData.begin()->second.vertices.begin()->cameraSpacePoints;
     std::map<int, MPoint>::iterator cameraIt = cameraSpacePoints.find(cameraID);

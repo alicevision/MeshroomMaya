@@ -45,14 +45,14 @@ static void selectionChangedCB(void*)
             selectedCameras.push_back(path.fullPathName().asChar());
         // Check for mesh
         if(path.isValid() &&
-           ((path.child(0).apiType() == MFn::kMesh) || (path.apiType() == MFn::kMesh)))
+           ((path.apiType() == MFn::kMesh) || (path.child(0).apiType() == MFn::kMesh)))
         {
             selectedMeshes.push_back(path.fullPathName().asChar());
         }
     }
 
     // Compare IHM selection to Maya selection
-    if(selectedCameras.size() > 0)
+    if(!selectedCameras.empty())
     {
         QStringList IHMSelectedCamera = project->getSelectedCameras();
         IHMSelectedCamera.sort();
@@ -61,8 +61,8 @@ static void selectionChangedCB(void*)
             project->addCamerasToIHMSelection(selectedCameras, true);
     }
     else
-        project->resetCameraSelection();
-    if(selectedMeshes.size() > 0)
+        project->clearCameraSelection();
+    if(!selectedMeshes.empty())
     {
         QStringList IHMSelectedMeshes = project->getSelectedMeshes();
         IHMSelectedMeshes.sort();
@@ -71,7 +71,7 @@ static void selectionChangedCB(void*)
             project->addMeshesToIHMSelection(selectedMeshes, true);
     }
     else
-        project->resetMeshSelection();
+        project->clearMeshSelection();
 }
 
 static void currentContextChangedCB(void*)
@@ -142,6 +142,9 @@ static void redoCB(void*)
     }
 }
 
+/**
+ * @brief Listen to the Maya nodes creation to update the list of Meshes.
+**/
 static void nodeAddedCB(MObject& node, void*)
 {
     MVGProjectWrapper* project = getProjectWrapper();

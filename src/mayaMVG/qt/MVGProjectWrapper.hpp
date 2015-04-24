@@ -80,8 +80,8 @@ public:
     void addMeshToUI(const MDagPath& meshPath);
     void removeMeshFromUI(const MDagPath& meshPath);
     void emitCurrentUnitChanged();
-    void resetCameraSelection();
-    void resetMeshSelection();
+    void clearCameraSelection();
+    void clearMeshSelection();
 
 private:
     void reloadMVGCamerasFromMaya();

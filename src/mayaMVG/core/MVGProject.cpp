@@ -350,10 +350,11 @@ const bool MVGProject::isProjectDirectoryValid(const std::string& projectDirecto
     return true;
 }
 
-void MVGProject::selectCameras(std::vector<std::string> cameraNames) const
+void MVGProject::selectCameras(const std::vector<std::string>& cameraNames) const
 {
     MSelectionList list;
-    for(std::vector<std::string>::iterator it = cameraNames.begin(); it != cameraNames.end(); ++it)
+    for(std::vector<std::string>::const_iterator it = cameraNames.begin(); it != cameraNames.end();
+        ++it)
     {
         MVGCamera camera(*it);
         list.add(camera.getDagPath());
@@ -361,10 +362,10 @@ void MVGProject::selectCameras(std::vector<std::string> cameraNames) const
     MGlobal::setActiveSelectionList(list);
 }
 
-void MVGProject::selectMeshes(std::vector<std::string> meshes) const
+void MVGProject::selectMeshes(const std::vector<std::string>& meshes) const
 {
     MSelectionList list;
-    for(std::vector<std::string>::iterator it = meshes.begin(); it != meshes.end(); ++it)
+    for(std::vector<std::string>::const_iterator it = meshes.begin(); it != meshes.end(); ++it)
     {
         MVGMesh mesh(*it);
         list.add(mesh.getDagPath());

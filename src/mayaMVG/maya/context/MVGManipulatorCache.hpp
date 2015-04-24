@@ -28,7 +28,7 @@ public:
         MPoint worldPosition;
         std::map<int, MPoint> blindData; // map from cameraIDs to clickedCSPositions
         /// Map from cameraIDs to cameraSpacePositions
-        /// Only store the point for the current cameras
+        /// Only store points for the cameras used in the UI.
         std::map<int, MPoint> cameraSpacePoints;
     };
 
