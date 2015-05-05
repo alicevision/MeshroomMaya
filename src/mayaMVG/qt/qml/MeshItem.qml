@@ -5,6 +5,7 @@ import QtDesktop 0.1
 Rectangle {
     id: meshItem
     border.color: "black"
+    color: "#262626"
     height: 75
     property alias project: m.project
     property alias mesh: m.mesh

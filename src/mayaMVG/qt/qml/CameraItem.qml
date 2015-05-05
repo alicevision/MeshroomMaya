@@ -5,6 +5,7 @@ import QtDesktop 0.1
 Rectangle {
     id: cameraItem
     border.color: "black"
+    color: "#262626"
     height: m.baseHeight
     property alias camera: m.camera
     property alias project: m.project

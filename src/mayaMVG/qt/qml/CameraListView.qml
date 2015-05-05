@@ -15,10 +15,12 @@ Item {
         property int currentIndex
     }
 
-    function altColor(i) {
-        var colors = [ "#262626", "#2f2f2f2f" ];
-        return colors[i];
-    }
+//    function altColor(i) {
+//        var colors = ["#262626", "#2f2f2f2f"];
+//        if(i > colors.length)
+//            return "#262626";
+//        return colors[i];
+//    }
 
     function selectCameras(oldIndex, newIndex) {
         var qlist = [];
@@ -51,9 +53,8 @@ Item {
         CameraItem {
             width: listView.width
             baseHeight: cameraListView.thumbSize
-            camera: model.modelData
+            camera: object
             project: cameraListView.project
-            Component.onCompleted: color = altColor(index%2);
             onSelection: {
                 cameraListView.currentIndex = index
                 selectCameras(index, index)

@@ -376,7 +376,6 @@ void MVGProjectWrapper::reloadMVGCamerasFromMaya()
         _cameraList.append(cameraWrapper);
         _camerasByName[it->getDagPathAsString()] = cameraWrapper;
     }
-    Q_EMIT cameraModelChanged();
     // TODO : Camera selection
 }
 
@@ -391,8 +390,6 @@ void MVGProjectWrapper::reloadMVGMeshesFromMaya()
         _meshesList.append(meshWrapper);
         _meshesByName[it->getDagPathAsString()] = meshWrapper;
     }
-//    // Needed ?
-//    Q_EMIT meshModelChanged();
 }
 
 } // namespace

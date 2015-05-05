@@ -15,10 +15,12 @@ Item {
         property int itemHeight : 75
     }
 
-    function altColor(i) {
-        var colors = [ "#262626", "#2f2f2f2f" ];
-        return colors[i];
-    }
+//    function altColor(i) {
+//        var colors = [ "#262626", "#2f2f2f2f" ];
+//        if(i > colors.length)
+//            return "#262626";
+//        return colors[i];
+//    }
 
     function selectMeshes(oldIndex, newIndex) {
         var qlist = [];
@@ -59,8 +61,6 @@ Item {
                 selectMeshes(index, index)
             }
             onMultipleSelection: selectMeshes(meshListView.currentIndex, index)
-            // To avoid " Unable to assign [undefined] to QColor color"
-            Component.onCompleted: color = altColor(index%2)
         }
 
     }
