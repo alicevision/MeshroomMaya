@@ -21,6 +21,8 @@ MVGProjectWrapper::MVGProjectWrapper()
     MString context;
     MVGMayaUtil::getCurrentContext(context);
     _currentContext = context.asChar();
+    _editMode = MVGContext::eEditModeCreate;
+    _moveMode = MVGMoveManipulator::eMoveModeNViewTriangulation;
 
     // Init unit map
     _unitMap[MDistance::kInches] = "in";
@@ -99,7 +101,6 @@ void MVGProjectWrapper::scaleScene(const double scaleSize) const
     if(!_project.scaleScene(internalUnit))
         LOG_ERROR("Cannot scale scene")
 }
-
 
 void MVGProjectWrapper::activeSelectionContext() const
 {
@@ -300,6 +301,22 @@ void MVGProjectWrapper::removeCameraFromUI(MDagPath& cameraPath)
 void MVGProjectWrapper::emitCurrentUnitChanged()
 {
     Q_EMIT currentUnitChanged();
+}
+
+void MVGProjectWrapper::setEditMode(const int mode)
+{
+    if(_editMode == mode)
+        return;
+    _editMode = mode;
+    Q_EMIT editModeChanged();
+}
+
+void MVGProjectWrapper::setMoveMode(const int mode)
+{
+    if(_moveMode == mode)
+        return;
+    _moveMode = mode;
+    Q_EMIT moveModeChanged();
 }
 
 void MVGProjectWrapper::reloadMVGCamerasFromMaya()

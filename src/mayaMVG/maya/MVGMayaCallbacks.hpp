@@ -1,6 +1,8 @@
 #include "mayaMVG/core/MVGCamera.hpp"
 #include "mayaMVG/qt/MVGPanelWrapper.hpp"
 #include "mayaMVG/qt/MVGMainWidget.hpp"
+#include "mayaMVG/maya/context/MVGMoveManipulator.hpp"
+#include "mayaMVG/maya/context/MVGContext.hpp"
 #include <maya/MFnDependencyNode.h>
 #include <maya/MFnDagNode.h>
 #include <maya/MSelectionList.h>
@@ -179,5 +181,17 @@ static void linearUnitChanged(void*)
     if(!project)
         return;
     project->emitCurrentUnitChanged();
+}
+
+static void modeChangedCB(void* /*data*/)
+{
+    MVGProjectWrapper* project = getProjectWrapper();
+    if(!project)
+        return;
+    int editMode, moveMode;
+    MGlobal::executeCommand("mayaMVGTool -q -editMode mayaMVGTool1", editMode);
+    project->setEditMode(editMode);
+    MGlobal::executeCommand("mayaMVGTool -q -moveMode mayaMVGTool1", moveMode);
+    project->setMoveMode(moveMode);
 }
 } // namespace

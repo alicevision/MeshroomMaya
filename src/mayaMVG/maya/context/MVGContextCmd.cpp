@@ -2,10 +2,10 @@
 #include "mayaMVG/maya/context/MVGContext.hpp"
 #include "mayaMVG/maya/context/MVGCreateManipulator.hpp"
 #include "mayaMVG/maya/context/MVGMoveManipulator.hpp"
+#include "mayaMVG/maya/MVGMayaUtil.hpp"
 #include "mayaMVG/core/MVGLog.hpp"
-
 #include <maya/MPxManipulatorNode.h>
-#include <mayaMVG/maya/MVGMayaUtil.hpp>
+#include <maya/MUserEventMessage.h>
 
 namespace
 { // empty namespace
@@ -112,11 +112,18 @@ MStatus MVGContextCmd::doEditFlags()
         MVGMoveManipulator::_mode =
             static_cast<MVGMoveManipulator::EMoveMode>(moveModeString.asInt());
     }
+    MUserEventMessage::postUserEvent("modeChangedEvent");
     return MS::kSuccess;
 }
 
 MStatus MVGContextCmd::doQueryFlags()
 {
+    MArgParser argData = parser();
+
+    if(argData.isFlagSet(editModeFlag))
+        setResult((int)_context->getEditMode());
+    if(argData.isFlagSet(moveModeFlag))
+        setResult((int)MVGMoveManipulator::_mode);
     return MS::kSuccess;
 }
 

@@ -17,6 +17,8 @@
 #include <maya/MMessage.h>
 #include <maya/MDGMessage.h>
 #include <maya/MDrawRegistry.h>
+#include <maya/MCommandMessage.h>
+#include <maya/MUserEventMessage.h>
 
 using namespace mayaMVG;
 
@@ -25,6 +27,7 @@ namespace
 
 MCallbackIdArray _callbacks;
 MStringArray _commands;
+MString _modeChangedEvent = "modeChangedEvent";
 
 } // empty namespace
 
@@ -137,6 +140,11 @@ MStatus initializePlugin(MObject obj)
 
     // Register Maya callbacks
     MCallbackId id;
+    if(!MUserEventMessage::isUserEvent(_modeChangedEvent))
+        MUserEventMessage::registerUserEvent(_modeChangedEvent);
+    id = MUserEventMessage::addUserEventCallback(_modeChangedEvent, modeChangedCB, &status);
+    if(status)
+        _callbacks.append(id);
     id = MEventMessage::addEventCallback("PostToolChanged", currentContextChangedCB, &status);
     if(status)
         _callbacks.append(id);
@@ -194,6 +202,7 @@ MStatus uninitializePlugin(MObject obj)
     CHECK(MVGMayaUtil::deleteMVGWindow())
 
     // Deregister Maya callbacks
+    CHECK(MUserEventMessage::deregisterUserEvent(_modeChangedEvent))
     CHECK(MMessage::removeCallbacks(_callbacks))
 
     // Deregister Maya context, commands & nodes

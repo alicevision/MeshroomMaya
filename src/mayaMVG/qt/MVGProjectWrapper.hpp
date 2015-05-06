@@ -16,6 +16,8 @@ class MVGProjectWrapper : public QObject
 
     Q_PROPERTY(QString projectDirectory READ getProjectDirectory WRITE setProjectDirectory NOTIFY
                    projectDirectoryChanged);
+    Q_PROPERTY(int editMode READ getEditMode NOTIFY editModeChanged);
+    Q_PROPERTY(int moveMode READ getMoveMode NOTIFY moveModeChanged);
     Q_PROPERTY(QObjectListModel* cameraModel READ getCameraModel NOTIFY cameraModelChanged);
     Q_PROPERTY(QString currentContext READ getCurrentContext WRITE setCurrentContext NOTIFY
                    currentContextChanged);
@@ -31,6 +33,8 @@ public:
 public slots:
     const QString getProjectDirectory() const;
     void setProjectDirectory(const QString& directory);
+    const int getEditMode() const { return _editMode; }
+    const int getMoveMode() const { return _moveMode; }
     QObjectListModel* getCameraModel() { return &_cameraList; }
     QStringList& getSelectedCameras() { return _selectedCameras; }
     QObjectListModel* getPanelList() { return &_panelList; }
@@ -43,6 +47,8 @@ public slots:
 
 signals:
     void projectDirectoryChanged();
+    void editModeChanged();
+    void moveModeChanged();
     void cameraModelChanged();
     void currentContextChanged();
     void panelListChanged();
@@ -75,6 +81,11 @@ public:
     void clear();
     void removeCameraFromUI(MDagPath& cameraPath);
     void emitCurrentUnitChanged();
+    void emitModeChanged();
+
+    // Setter not callable from QML
+    void setEditMode(const int mode);
+    void setMoveMode(const int mode);
 
 private:
     void reloadMVGCamerasFromMaya();
@@ -87,6 +98,8 @@ private:
     MVGProject _project;
     QObjectListModel _panelList;
     QString _currentContext;
+    int _editMode;
+    int _moveMode;
     bool _isProjectLoading;
 
     std::map<std::string, MVGCameraWrapper*> _camerasByName;
