@@ -18,6 +18,8 @@
 #include <maya/MMessage.h>
 #include <maya/MDGMessage.h>
 #include <maya/MDrawRegistry.h>
+#include <maya/MCommandMessage.h>
+#include <maya/MUserEventMessage.h>
 
 using namespace mayaMVG;
 
@@ -25,8 +27,86 @@ namespace
 { // empty namespace
 
 MCallbackIdArray _callbacks;
+MStringArray _commands;
+MString _modeChangedEvent = "modeChangedEvent";
 
 } // empty namespace
+
+MStatus registerMVGHotkeys()
+{
+    MStatus status;
+    MString commandName;
+    MString cmd;
+    MString keySequence;
+    MString editModeString;
+    MString moveModeString;
+
+    MGlobal::executePythonCommand("from mayaMVG import context");
+    // MVGCreateCommand
+    commandName = "MVGCreateCommand";
+    editModeString = MVGContext::eEditModeCreate;
+    cmd.format("mayaMVGTool -e -em ^1s mayaMVGTool1", editModeString);
+    keySequence = "0";
+    cmd.format("context.initMVGCommand(\"^1s\", \"^2s\", \"mel\", \"^3s\", False, True)",
+               commandName, cmd, keySequence);
+    status = MGlobal::executePythonCommand(cmd);
+    CHECK_RETURN_STATUS(status)
+    _commands.append(commandName);
+    // MVGTriangulationCommand
+    commandName = "MVGTriangulationCommand";
+    editModeString = MVGContext::eEditModeMove;
+    moveModeString = MVGMoveManipulator::eMoveModeNViewTriangulation;
+    cmd.format("mayaMVGTool -e -em ^1s -mv ^2s mayaMVGTool1", editModeString, moveModeString);
+    keySequence = "1";
+    cmd.format("context.initMVGCommand(\"^1s\", \"^2s\", \"mel\", \"^3s\", False, True)",
+               commandName, cmd, keySequence);
+    status = MGlobal::executePythonCommand(cmd);
+    CHECK_RETURN_STATUS(status)
+    _commands.append(commandName);
+    // MVGMovePointCloudCommand
+    commandName = "MVGMovePointCloudCommand";
+    editModeString = MVGContext::eEditModeMove;
+    moveModeString = MVGMoveManipulator::eMoveModePointCloudProjection;
+    cmd.format("mayaMVGTool -e -em ^1s -mv ^2s mayaMVGTool1", editModeString, moveModeString);
+    keySequence = "2";
+    cmd.format("context.initMVGCommand(\"^1s\", \"^2s\", \"mel\", \"^3s\", False, True)",
+               commandName, cmd, keySequence);
+    status = MGlobal::executePythonCommand(cmd);
+    CHECK_RETURN_STATUS(status)
+    _commands.append(commandName);
+    // MVGMoveAdjacentFaceCommand
+    commandName = "MVGMoveAdjacentFaceCommand";
+    editModeString = MVGContext::eEditModeMove;
+    moveModeString = MVGMoveManipulator::eMoveModeAdjacentFaceProjection;
+    cmd.format("mayaMVGTool -e -em ^1s -mv ^2s mayaMVGTool1", editModeString, moveModeString);
+    keySequence = "3";
+    cmd.format("context.initMVGCommand(\"^1s\", \"^2s\", \"mel\", \"^3s\", False, True)",
+               commandName, cmd, keySequence);
+    status = MGlobal::executePythonCommand(cmd);
+    CHECK_RETURN_STATUS(status)
+    _commands.append(commandName);
+
+    return status;
+}
+
+MStatus deregisterMVGHotkeys()
+{
+    MStatus status;
+    for(int i = _commands.length() - 1; i >= 0; --i)
+    {
+        MString cmd;
+        cmd.format("context.removeMVGCommand(\"^1s\")", _commands[i]);
+        status = MGlobal::executePythonCommand(cmd);
+        CHECK_RETURN_STATUS(status)
+        _commands.remove(i);
+    }
+    return status;
+}
+
+static void quitApplicationCB(void*)
+{
+    deregisterMVGHotkeys();
+}
 
 MStatus initializePlugin(MObject obj)
 {
@@ -61,6 +141,11 @@ MStatus initializePlugin(MObject obj)
 
     // Register Maya callbacks
     MCallbackId id;
+    if(!MUserEventMessage::isUserEvent(_modeChangedEvent))
+        MUserEventMessage::registerUserEvent(_modeChangedEvent);
+    id = MUserEventMessage::addUserEventCallback(_modeChangedEvent, modeChangedCB, &status);
+    if(status)
+        _callbacks.append(id);
     id = MEventMessage::addEventCallback("PostToolChanged", currentContextChangedCB, &status);
     if(status)
         _callbacks.append(id);
@@ -77,6 +162,9 @@ MStatus initializePlugin(MObject obj)
     if(status)
         _callbacks.append(id);
     id = MSceneMessage::addCallback(MSceneMessage::kBeforeSave, sceneSavedCB, &status);
+    if(status)
+        _callbacks.append(id);
+    id = MEventMessage::addEventCallback("quitApplication", quitApplicationCB, &status);
     if(status)
         _callbacks.append(id);
     id = MEventMessage::addEventCallback("SelectionChanged", selectionChangedCB, &status);
@@ -102,6 +190,9 @@ MStatus initializePlugin(MObject obj)
     CHECK(plugin.registerUI("mayaMVGCreateUI", "mayaMVGDeleteUI"))
     CHECK(MVGMayaUtil::createMVGContext())
 
+    // Create hotkeys
+    CHECK(registerMVGHotkeys())
+
     return status;
 }
 
@@ -110,11 +201,15 @@ MStatus uninitializePlugin(MObject obj)
     MStatus status;
     MFnPlugin plugin(obj);
 
+    // Delete hotkeys
+    deregisterMVGHotkeys();
+
     // Delete custom GUI
     CHECK(MVGMayaUtil::deleteMVGContext())
     CHECK(MVGMayaUtil::deleteMVGWindow())
 
     // Deregister Maya callbacks
+    CHECK(MUserEventMessage::deregisterUserEvent(_modeChangedEvent))
     CHECK(MMessage::removeCallbacks(_callbacks))
 
     // Deregister Maya context, commands & nodes

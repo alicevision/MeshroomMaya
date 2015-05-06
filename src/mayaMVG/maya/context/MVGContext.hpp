@@ -31,10 +31,10 @@ class MVGEditCmd;
 class MVGContext : public MPxContext
 {
 public:
-    enum EditMode
+    enum EEditMode
     {
-        eModeCreate = 0,
-        eModeMove
+        eEditModeCreate = 0,
+        eEditModeMove = 1
     };
 
 public:
@@ -51,6 +51,8 @@ public:
 
 public:
     MVGManipulatorCache& getCache() { return _manipulatorCache; }
+    const EEditMode& getEditMode() const { return _editMode; }
+    void setEditMode(EEditMode mode) { _editMode = mode; }
 
 private:
     bool setFocusOnView(QObject* obj);
@@ -59,7 +61,7 @@ private:
     MVGEventFilter<MVGContext> _filter;
     MVGEventFilter<MVGContext> _filterLV;
     MVGEventFilter<MVGContext> _filterRV;
-    EditMode _editMode;
+    EEditMode _editMode;
     MVGManipulatorCache _manipulatorCache;
 };
 

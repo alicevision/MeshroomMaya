@@ -17,6 +17,8 @@ class MVGProjectWrapper : public QObject
 
     Q_PROPERTY(QString projectDirectory READ getProjectDirectory WRITE setProjectDirectory NOTIFY
                    projectDirectoryChanged);
+    Q_PROPERTY(int editMode READ getEditMode NOTIFY editModeChanged);
+    Q_PROPERTY(int moveMode READ getMoveMode NOTIFY moveModeChanged);
     Q_PROPERTY(QObjectListModel* cameraModel READ getCameraModel NOTIFY cameraModelChanged);
     Q_PROPERTY(QObjectListModel* meshModel READ getMeshModel NOTIFY meshModelChanged);
     Q_PROPERTY(QString currentContext READ getCurrentContext WRITE setCurrentContext NOTIFY
@@ -33,6 +35,8 @@ public:
 public Q_SLOTS:
     const QString getProjectDirectory() const;
     void setProjectDirectory(const QString& directory);
+    const int getEditMode() const { return _editMode; }
+    const int getMoveMode() const { return _moveMode; }
     QObjectListModel* getCameraModel() { return &_cameraList; }
     QObjectListModel* getMeshModel() { return &_meshesList; }
     QStringList& getSelectedCameras() { return _selectedCameras; }
@@ -47,6 +51,8 @@ public Q_SLOTS:
 
 Q_SIGNALS:
     void projectDirectoryChanged();
+    void editModeChanged();
+    void moveModeChanged();
     void cameraModelChanged();
     void meshModelChanged();
     void currentContextChanged();
@@ -57,32 +63,45 @@ Q_SIGNALS:
     void centerMeshListByIndex(const int meshIndex);
 
 public:
+    Q_INVOKABLE QString openFileDialog() const;
+    Q_INVOKABLE void scaleScene(const double scaleSize) const;
+    // Context & Modes
+    Q_INVOKABLE void activeSelectionContext() const;
+    Q_INVOKABLE void setCreationMode();
+    Q_INVOKABLE void setTriangulationMode();
+    Q_INVOKABLE void setPointCloudMode();
+    Q_INVOKABLE void setAdjacentPlaneMode();
+    // Project
+    Q_INVOKABLE void loadExistingProject();
+    Q_INVOKABLE void loadNewProject(const QString& projectDirectoryPath);
+    // Selection
     Q_INVOKABLE void addCamerasToIHMSelection(const QStringList& cameraNames, bool center = false);
     Q_INVOKABLE void addCamerasToMayaSelection(const QStringList& cameraNames) const;
     Q_INVOKABLE void addMeshesToIHMSelection(const QStringList& selectedMeshes,
                                              bool center = false);
     Q_INVOKABLE void addMeshesToMayaSelection(const QStringList& meshes) const;
-    Q_INVOKABLE QString openFileDialog() const;
-    Q_INVOKABLE void activeSelectionContext() const;
-    Q_INVOKABLE void activeMVGContext();
-    Q_INVOKABLE void loadExistingProject();
-    Q_INVOKABLE void loadNewProject(const QString& projectDirectoryPath);
-    Q_INVOKABLE void scaleScene(const double scaleSize) const;
+    // Cameras
     Q_INVOKABLE void setCameraToView(QObject* camera, const QString& viewName);
     Q_INVOKABLE void setCamerasNear(const double near);
     Q_INVOKABLE void setCamerasFar(const double far);
     Q_INVOKABLE void setCameraLocatorScale(const double scale);
     // Should be a private and non invokable function
     Q_INVOKABLE void reloadMVGMeshesFromMaya();
-
+    
+    // Clear
     void clear();
     void clearImageCache();
+    void clearCameraSelection();
+    void clearMeshSelection();
+    // UI
     void removeCameraFromUI(MDagPath& cameraPath);
     void addMeshToUI(const MDagPath& meshPath);
     void removeMeshFromUI(const MDagPath& meshPath);
-    void emitCurrentUnitChanged();
-    void clearCameraSelection();
-    void clearMeshSelection();
+    // Signals
+    void emitCurrentUnitChanged(); 
+    // Setter not callable from QML
+    void setEditMode(const int mode);
+    void setMoveMode(const int mode);
 
 private:
     void reloadMVGCamerasFromMaya();
@@ -99,6 +118,8 @@ private:
     MVGProject _project;
     QObjectListModel _panelList;
     QString _currentContext;
+    int _editMode;
+    int _moveMode;
     bool _isProjectLoading;
 
     std::map<std::string, MVGCameraWrapper*> _camerasByName;

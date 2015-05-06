@@ -141,6 +141,27 @@ MStatus MVGMayaUtil::getCurrentContext(MString& context)
     return MGlobal::executePythonCommand("cmds.currentCtx()\n", context);
 }
 
+// static
+MStatus MVGMayaUtil::setCreationMode()
+{
+    return MGlobal::executeCommandOnIdle("mayaMVGTool -e -em 0 mayaMVGTool1");
+}
+// static
+MStatus MVGMayaUtil::setTriangulationMode()
+{
+    return MGlobal::executeCommandOnIdle("mayaMVGTool -e -em 1 -mv 0 mayaMVGTool1");
+}
+// static
+MStatus MVGMayaUtil::setPointCloudMode()
+{
+    return MGlobal::executeCommandOnIdle("mayaMVGTool -e -em 1 -mv 1 mayaMVGTool1");
+}
+// static
+MStatus MVGMayaUtil::setAdjacentPlaneMode()
+{
+    return MGlobal::executeCommandOnIdle("mayaMVGTool -e -em 1 -mv 2 mayaMVGTool1");
+}
+
 MStatus MVGMayaUtil::setCameraInView(const MVGCamera& camera, const MString& viewName)
 {
     MGlobal::executePythonCommand("import maya.cmds as cmds");

@@ -5,6 +5,8 @@
 #include "mayaMVG/qt/MVGMeshWrapper.hpp"
 #include "mayaMVG/maya/MVGMayaUtil.hpp"
 #include "mayaMVG/core/MVGLog.hpp"
+#include "mayaMVG/maya/context/MVGContext.hpp"
+#include "mayaMVG/maya/context/MVGMoveManipulator.hpp"
 #include <maya/MQtUtil.h>
 
 namespace mayaMVG
@@ -20,6 +22,8 @@ MVGProjectWrapper::MVGProjectWrapper()
     MString context;
     MVGMayaUtil::getCurrentContext(context);
     _currentContext = context.asChar();
+    _editMode = MVGContext::eEditModeCreate;
+    _moveMode = MVGMoveManipulator::eMoveModeNViewTriangulation;
 
     // Init unit map
     _unitMap[MDistance::kInches] = "in";
@@ -92,14 +96,36 @@ QString MVGProjectWrapper::openFileDialog() const
     return MQtUtil::toQString(directoryPath);
 }
 
+void MVGProjectWrapper::scaleScene(const double scaleSize) const
+{
+    double internalUnit = MDistance::uiToInternal(scaleSize);
+    if(!_project.scaleScene(internalUnit))
+        LOG_ERROR("Cannot scale scene")
+}
+
 void MVGProjectWrapper::activeSelectionContext() const
 {
     MVGMayaUtil::activeSelectionContext();
 }
 
-void MVGProjectWrapper::activeMVGContext()
+void MVGProjectWrapper::setCreationMode()
 {
-    MVGMayaUtil::activeContext();
+    MVGMayaUtil::setCreationMode();
+}
+
+void MVGProjectWrapper::setTriangulationMode()
+{
+    MVGMayaUtil::setTriangulationMode();
+}
+
+void MVGProjectWrapper::setPointCloudMode()
+{
+    MVGMayaUtil::setPointCloudMode();
+}
+
+void MVGProjectWrapper::setAdjacentPlaneMode()
+{
+    MVGMayaUtil::setAdjacentPlaneMode();
 }
 
 void MVGProjectWrapper::loadExistingProject()
@@ -262,13 +288,6 @@ void MVGProjectWrapper::setCameraLocatorScale(const double scale)
         it->second->getCamera().setLocatorScale(scale);
 }
 
-void MVGProjectWrapper::scaleScene(const double scaleSize) const
-{
-    double internalUnit = MDistance::uiToInternal(scaleSize);
-    if(!_project.scaleScene(internalUnit))
-        LOG_ERROR("Cannot scale scene")
-}
-
 void MVGProjectWrapper::clear()
 {
     _cameraList.clear();
@@ -284,6 +303,31 @@ void MVGProjectWrapper::clear()
 void MVGProjectWrapper::clearImageCache()
 {
     _project.clearImageCache();
+}
+
+void MVGProjectWrapper::clearCameraSelection()
+{
+    for(QStringList::const_iterator it = _selectedCameras.begin(); it != _selectedCameras.end();
+        ++it)
+    {
+        std::map<std::string, MVGCameraWrapper*>::const_iterator foundIt =
+            _camerasByName.find(it->toStdString());
+        if(foundIt != _camerasByName.end())
+            foundIt->second->setIsSelected(false);
+    }
+    _selectedCameras.clear();
+}
+
+void MVGProjectWrapper::clearMeshSelection()
+{
+    for(QStringList::const_iterator it = _selectedMeshes.begin(); it != _selectedMeshes.end(); ++it)
+    {
+        std::map<std::string, MVGMeshWrapper*>::const_iterator foundIt =
+            _meshesByName.find(it->toStdString());
+        if(foundIt != _meshesByName.end())
+            foundIt->second->setIsSelected(false);
+    }
+    _selectedMeshes.clear();
 }
 
 void MVGProjectWrapper::removeCameraFromUI(MDagPath& cameraPath)
@@ -341,30 +385,21 @@ void MVGProjectWrapper::emitCurrentUnitChanged()
 {
     Q_EMIT currentUnitChanged();
 }
-
-void MVGProjectWrapper::clearCameraSelection()
+    
+void MVGProjectWrapper::setEditMode(const int mode)
 {
-    for(QStringList::const_iterator it = _selectedCameras.begin(); it != _selectedCameras.end();
-        ++it)
-    {
-        std::map<std::string, MVGCameraWrapper*>::const_iterator foundIt =
-            _camerasByName.find(it->toStdString());
-        if(foundIt != _camerasByName.end())
-            foundIt->second->setIsSelected(false);
-    }
-    _selectedCameras.clear();
+    if(_editMode == mode)
+        return;
+    _editMode = mode;
+    Q_EMIT editModeChanged();
 }
 
-void MVGProjectWrapper::clearMeshSelection()
+void MVGProjectWrapper::setMoveMode(const int mode)
 {
-    for(QStringList::const_iterator it = _selectedMeshes.begin(); it != _selectedMeshes.end(); ++it)
-    {
-        std::map<std::string, MVGMeshWrapper*>::const_iterator foundIt =
-            _meshesByName.find(it->toStdString());
-        if(foundIt != _meshesByName.end())
-            foundIt->second->setIsSelected(false);
-    }
-    _selectedMeshes.clear();
+    if(_moveMode == mode)
+        return;
+    _moveMode = mode;
+    Q_EMIT moveModeChanged();
 }
 
 void MVGProjectWrapper::reloadMVGCamerasFromMaya()

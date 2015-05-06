@@ -6,6 +6,7 @@
 #include "mayaMVG/qt/MVGQt.hpp"
 #include <maya/MQtUtil.h>
 #include <maya/MArgList.h>
+#include <maya/MGlobal.h>
 
 namespace mayaMVG
 {
@@ -14,14 +15,13 @@ MVGContext::MVGContext()
     : _filter((QObject*)MVGMayaUtil::getMVGWindow(), this)
     , _filterLV((QObject*)MVGMayaUtil::getMVGViewportLayout("mvgLPanel"), this)
     , _filterRV((QObject*)MVGMayaUtil::getMVGViewportLayout("mvgRPanel"), this)
-    , _editMode(eModeMove)
+    , _editMode(eEditModeMove)
 {
     setTitleString("MVG tool");
 }
 
 void MVGContext::toolOnSetup(MEvent& event)
 {
-    updateManipulators();
     _manipulatorCache.rebuildMeshesCache();
 }
 
@@ -38,42 +38,18 @@ void MVGContext::getClassName(MString& name) const
 
 void MVGContext::updateManipulators()
 {
-    MString currentContext;
-    MVGMayaUtil::getCurrentContext(currentContext);
-    if(currentContext != "mayaMVGTool1")
-        return;
-    // delete all manipulators
-    deleteManipulators();
-    // then add a new one, depending on edit mode
-    MStatus status;
-    MObject manipObject;
-    switch(_editMode)
+    MString cmd;
+    MString editMode;
+    editMode += _editMode;
+    if(_editMode == eEditModeMove)
     {
-        case eModeCreate:
-        {
-            MVGCreateManipulator* manip = static_cast<MVGCreateManipulator*>(
-                MPxManipulatorNode::newManipulator("MVGCreateManipulator", manipObject, &status));
-            if(!status || !manip)
-                return;
-            manip->setContext(this);
-            manip->setCache(&_manipulatorCache);
-            break;
-        }
-        case eModeMove:
-        {
-            MVGMoveManipulator* manip = static_cast<MVGMoveManipulator*>(
-                MPxManipulatorNode::newManipulator("MVGMoveManipulator", manipObject, &status));
-            if(!status || !manip)
-                return;
-            manip->setContext(this);
-            manip->setCache(&_manipulatorCache);
-            break;
-        }
-        default:
-            return;
+        MString moveMode;
+        moveMode += MVGMoveManipulator::_mode;
+        cmd.format("mayaMVGTool -e -em ^1s -mv ^2s mayaMVGTool1", editMode, moveMode);
+        MGlobal::executeCommand(cmd);
+        return;
     }
-    if(status)
-        addManipulator(manipObject);
+    MVGMayaUtil::setCreationMode();
 }
 
 bool MVGContext::eventFilter(QObject* obj, QEvent* e)
@@ -89,13 +65,6 @@ bool MVGContext::eventFilter(QObject* obj, QEvent* e)
         QKeyEvent* keyevent = static_cast<QKeyEvent*>(e);
         switch(keyevent->key())
         {
-            case Qt::Key_C:
-                if(_editMode != eModeCreate)
-                {
-                    _editMode = eModeCreate;
-                    updateManipulators();
-                }
-                return true;
             case Qt::Key_V:
                 if(!MVGCreateManipulator::_doSnap)
                     MVGCreateManipulator::_doSnap = true;
@@ -115,13 +84,6 @@ bool MVGContext::eventFilter(QObject* obj, QEvent* e)
                     camera.resetZoomAndPan();
                     return true;
                 }
-                case Qt::Key_Control:
-                    if(_editMode == eModeCreate)
-                        break;
-                    MVGMoveManipulator::_mode = static_cast<MVGMoveManipulator::MoveMode>(
-                        (MVGMoveManipulator::_mode + 1) % 3);
-                    _manipulatorCache.clearSelectedComponent();
-                    break; // Spread event to Maya
                 case Qt::Key_Escape:
                     updateManipulators();
                     _manipulatorCache.clearSelectedComponent();
@@ -167,16 +129,9 @@ bool MVGContext::eventFilter(QObject* obj, QEvent* e)
         {
             switch(keyevent->key())
             {
-                case Qt::Key_C:
-                    _editMode = eModeMove;
-                    updateManipulators();
-                    return true;
                 case Qt::Key_V:
                     MVGCreateManipulator::_doSnap = false;
                     break; // Spread event to Maya
-                case Qt::Key_Escape:
-                    updateManipulators();
-                    return true;
                 default:
                     break;
             }
