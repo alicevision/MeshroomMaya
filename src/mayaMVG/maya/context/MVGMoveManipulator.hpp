@@ -8,11 +8,11 @@ namespace mayaMVG
 class MVGMoveManipulator : public MVGManipulator
 {
 public:
-    enum MoveMode
+    enum EMoveMode
     {
-        kNViewTriangulation = 0,
-        kPointCloudProjection = 1,
-        kAdjacentFaceProjection = 2
+        eMoveModeNViewTriangulation = 0,
+        eMoveModePointCloudProjection = 1,
+        eMoveModeAdjacentFaceProjection = 2
     };
 
 public:
@@ -63,7 +63,7 @@ public:
     static MTypeId _id;
     static MString _drawDbClassification;
     static MString _drawRegistrantID;
-    static MoveMode _mode;
+    static EMoveMode _mode;
     bool _doDrag;
 
 private:

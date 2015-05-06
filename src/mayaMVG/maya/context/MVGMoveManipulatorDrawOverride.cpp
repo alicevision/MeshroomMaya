@@ -87,7 +87,7 @@ void MVGMoveManipulatorDrawOverride::draw(const MHWRender::MDrawContext& /*conte
     MVGDrawUtil::begin2DDrawing(userdata->portWidth, userdata->portHeight);
     MVGMoveManipulator::drawCursor(userdata->mouseVSPoint);
     //    MVGManipulator::drawIntersection2D(userdata->intersectedVSPoints);
-    //        if(MVGMoveManipulator::_mode == MVGMoveManipulator::kNViewTriangulation)
+    //        if(MVGMoveManipulator::_mode == MVGMoveManipulator::eMoveModeNViewTriangulation)
     //            MVGDrawUtil::drawTriangulation(
     //                userdata->cache->getActiveView(), userdata->onPressWSPoints,
     //                userdata->intermediateVSPositions);

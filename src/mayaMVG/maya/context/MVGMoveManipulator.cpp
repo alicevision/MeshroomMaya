@@ -109,7 +109,7 @@ void triangulatePoint(const std::map<int, MPoint>& point2dPerCamera_CS,
 MTypeId MVGMoveManipulator::_id(0x99222); // FIXME
 MString MVGMoveManipulator::_drawDbClassification("drawdb/geometry/moveManipulator");
 MString MVGMoveManipulator::_drawRegistrantID("moveManipulatorNode");
-MVGMoveManipulator::MoveMode MVGMoveManipulator::_mode = kNViewTriangulation;
+MVGMoveManipulator::EMoveMode MVGMoveManipulator::_mode = eMoveModeNViewTriangulation;
 
 void* MVGMoveManipulator::creator()
 {
@@ -157,7 +157,7 @@ void MVGMoveManipulator::draw(M3dView& view, const MDagPath& path, M3dView::Disp
     switch(_onPressIntersectedComponent.type)
     {
         case MFn::kBlindData:
-            if(_mode != kNViewTriangulation)
+            if(_mode != eMoveModeNViewTriangulation)
                 break;
             intermediateIntersectedCSPoints.append(getMousePosition(view));
             onPressIntersectedWSPoints.append(_onPressIntersectedComponent.vertex->worldPosition);
@@ -232,7 +232,7 @@ void MVGMoveManipulator::draw(M3dView& view, const MDagPath& path, M3dView::Disp
             MVGManipulator::drawIntersection2D(intersectedVSPoints, intersectedComponentType);
         }
         // draw triangulation
-        if(_mode == kNViewTriangulation)
+        if(_mode == eMoveModeNViewTriangulation)
         {
             MPointArray triangulatedWSPoints = onPressIntersectedWSPoints;
             if(_finalWSPoints.length() > 0)
@@ -273,7 +273,7 @@ MStatus MVGMoveManipulator::doPress(M3dView& view)
 
     // check if we intersect w/ a mesh component
     _onPressCSPoint = getMousePosition(view);
-    bool triangulationMode = (_mode == kNViewTriangulation);
+    bool triangulationMode = (_mode == eMoveModeNViewTriangulation);
     if(!_cache->checkIntersection(10.0, _onPressCSPoint, triangulationMode))
     {
         _onPressIntersectedComponent = _cache->getIntersectedComponent();
@@ -284,7 +284,7 @@ MStatus MVGMoveManipulator::doPress(M3dView& view)
     _onPressIntersectedComponent = _cache->getIntersectedComponent();
 
     // Update selected component
-    if(_mode == kNViewTriangulation)
+    if(_mode == eMoveModeNViewTriangulation)
     {
         _cache->checkIntersection(10.0, getMousePosition(view), true);
         if(_onPressIntersectedComponent.type == MFn::kBlindData ||
@@ -341,12 +341,12 @@ MStatus MVGMoveManipulator::doRelease(M3dView& view)
     switch(_onPressIntersectedComponent.type)
     {
         case MFn::kBlindData:
-            if(_mode != kNViewTriangulation)
+            if(_mode != eMoveModeNViewTriangulation)
                 break;
         case MFn::kMeshVertComponent:
         {
             indices.append(_onPressIntersectedComponent.vertex->index);
-            if(_mode == kNViewTriangulation)
+            if(_mode == eMoveModeNViewTriangulation)
                 clickedCSPoints.append(getMousePosition(view));
             break;
         }
@@ -354,7 +354,7 @@ MStatus MVGMoveManipulator::doRelease(M3dView& view)
         {
             indices.append(_onPressIntersectedComponent.edge->vertex1->index);
             indices.append(_onPressIntersectedComponent.edge->vertex2->index);
-            if(_mode == kNViewTriangulation)
+            if(_mode == eMoveModeNViewTriangulation)
                 getIntermediateCSEdgePoints(view, _onPressIntersectedComponent.edge,
                                             _onPressCSPoint, clickedCSPoints);
             break;
@@ -381,7 +381,7 @@ MStatus MVGMoveManipulator::doRelease(M3dView& view)
     MVGEditCmd* cmd = newEditCmd();
     if(cmd)
     {
-        bool clearBD = !(_mode == kNViewTriangulation);
+        bool clearBD = !(_mode == eMoveModeNViewTriangulation);
         cmd->move(_onPressIntersectedComponent.meshPath, indices, _finalWSPoints, clickedCSPoints,
                   _cache->getActiveCamera().getId(), clearBD);
         MArgList args;
@@ -397,7 +397,7 @@ MStatus MVGMoveManipulator::doRelease(M3dView& view)
     _finalWSPoints.clear();
 
     // Select after rebuilding cache
-    if(_mode == kNViewTriangulation)
+    if(_mode == eMoveModeNViewTriangulation)
     {
         _cache->checkIntersection(10.0, getMousePosition(view), true);
         MVGManipulatorCache::MVGComponent intersectedComponent = _cache->getIntersectedComponent();
@@ -414,7 +414,7 @@ MStatus MVGMoveManipulator::doMove(M3dView& view, bool& refresh)
     if(!camera.isValid())
         return MPxManipulatorNode::doMove(view, refresh);
 
-    bool triangulationMode = (_mode == kNViewTriangulation);
+    bool triangulationMode = (_mode == eMoveModeNViewTriangulation);
     _cache->checkIntersection(10.0, getMousePosition(view), triangulationMode);
 
     return MPxManipulatorNode::doMove(view, refresh);
@@ -426,7 +426,7 @@ MStatus MVGMoveManipulator::doDrag(M3dView& view)
     if(!camera.isValid())
         return MPxManipulatorNode::doDrag(view);
 
-    bool triangulationMode = (_mode == kNViewTriangulation);
+    bool triangulationMode = (_mode == eMoveModeNViewTriangulation);
     _cache->checkIntersection(10.0, getMousePosition(view), triangulationMode);
 
     // If there is a selected component, and if there is no blind data for the current camera
@@ -442,7 +442,7 @@ MStatus MVGMoveManipulator::doDrag(M3dView& view)
     switch(_onPressIntersectedComponent.type)
     {
         case MFn::kBlindData:
-            if(_mode != kNViewTriangulation)
+            if(_mode != eMoveModeNViewTriangulation)
                 break;
         case MFn::kMeshVertComponent:
             verticesID.append(_onPressIntersectedComponent.vertex->index);
@@ -478,13 +478,13 @@ void MVGMoveManipulator::computeFinalWSPoints(M3dView& view)
     // compute final vertex/edge positions
     switch(_mode)
     {
-        case kNViewTriangulation:
+        case eMoveModeNViewTriangulation:
             computeTriangulatedPoints(view, _finalWSPoints);
             break;
-        case kPointCloudProjection:
+        case eMoveModePointCloudProjection:
             computePCPoints(view, _finalWSPoints);
             break;
-        case kAdjacentFaceProjection:
+        case eMoveModeAdjacentFaceProjection:
             computeAdjacentPoints(view, _finalWSPoints);
             break;
     }
@@ -842,14 +842,14 @@ void MVGMoveManipulator::drawCursor(const MPoint& originVS)
     MPoint offsetMouseVSPosition = originVS + MPoint(10, 10);
     switch(_mode)
     {
-        case MVGMoveManipulator::kNViewTriangulation:
+        case MVGMoveManipulator::eMoveModeNViewTriangulation:
             MVGDrawUtil::drawFullCross(offsetMouseVSPosition, 5, 1, MVGDrawUtil::_triangulateColor);
             break;
-        case MVGMoveManipulator::kPointCloudProjection:
+        case MVGMoveManipulator::eMoveModePointCloudProjection:
             MVGDrawUtil::drawPointCloudCursorItem(offsetMouseVSPosition,
                                                   MVGDrawUtil::_pointCloudColor);
             break;
-        case MVGMoveManipulator::kAdjacentFaceProjection:
+        case MVGMoveManipulator::eMoveModeAdjacentFaceProjection:
             MVGDrawUtil::drawPlaneCursorItem(offsetMouseVSPosition,
                                              MVGDrawUtil::_adjacentFaceColor);
             break;
@@ -888,7 +888,7 @@ void MVGMoveManipulator::drawPlacedPoints(
             // Don't draw if point is currently moving
             if(onPressIntersectedComponent.type == MFn::kMeshVertComponent ||
                (onPressIntersectedComponent.type == MFn::kBlindData &&
-                _mode == kNViewTriangulation))
+                _mode == eMoveModeNViewTriangulation))
             {
                 if(onPressIntersectedComponent.vertex->index == verticesIt->index)
                     continue;
@@ -1048,7 +1048,7 @@ MVGMoveManipulator::drawPointToBePlaced(M3dView& view, const MVGCamera& camera,
                                         const MVGManipulatorCache::MVGComponent& selectedComponent,
                                         const MPoint& mouseVSPosition)
 {
-    if(_mode != kNViewTriangulation)
+    if(_mode != eMoveModeNViewTriangulation)
         return;
     if(selectedComponent.type != MFn::kMeshVertComponent &&
        selectedComponent.type != MFn::kBlindData)

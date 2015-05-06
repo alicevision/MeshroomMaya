@@ -40,7 +40,7 @@ MStatus registerMVGHotkeys()
     MGlobal::executePythonCommand("from mayaMVG import context");
     // MVGCreateCommand
     commandName = "MVGCreateCommand";
-    editModeString = MVGContext::eModeCreate;
+    editModeString = MVGContext::eEditModeCreate;
     cmd.format("mayaMVGTool -e -em ^1s mayaMVGTool1", editModeString);
     keySequence = "0";
     cmd.format("context.initMVGCommand(\"^1s\", \"^2s\", \"mel\", \"^3s\", False, True)",
@@ -50,8 +50,8 @@ MStatus registerMVGHotkeys()
     _commands.append(commandName);
     // MVGTriangulationCommand
     commandName = "MVGTriangulationCommand";
-    editModeString = MVGContext::eModeMove;
-    moveModeString = MVGMoveManipulator::kNViewTriangulation;
+    editModeString = MVGContext::eEditModeMove;
+    moveModeString = MVGMoveManipulator::eMoveModeNViewTriangulation;
     cmd.format("mayaMVGTool -e -em ^1s -mv ^2s mayaMVGTool1", editModeString, moveModeString);
     keySequence = "1";
     cmd.format("context.initMVGCommand(\"^1s\", \"^2s\", \"mel\", \"^3s\", False, True)",
@@ -61,8 +61,8 @@ MStatus registerMVGHotkeys()
     _commands.append(commandName);
     // MVGMovePointCloudCommand
     commandName = "MVGMovePointCloudCommand";
-    editModeString = MVGContext::eModeMove;
-    moveModeString = MVGMoveManipulator::kPointCloudProjection;
+    editModeString = MVGContext::eEditModeMove;
+    moveModeString = MVGMoveManipulator::eMoveModePointCloudProjection;
     cmd.format("mayaMVGTool -e -em ^1s -mv ^2s mayaMVGTool1", editModeString, moveModeString);
     keySequence = "2";
     cmd.format("context.initMVGCommand(\"^1s\", \"^2s\", \"mel\", \"^3s\", False, True)",
@@ -72,8 +72,8 @@ MStatus registerMVGHotkeys()
     _commands.append(commandName);
     // MVGMoveAdjacentFaceCommand
     commandName = "MVGMoveAdjacentFaceCommand";
-    editModeString = MVGContext::eModeMove;
-    moveModeString = MVGMoveManipulator::kAdjacentFaceProjection;
+    editModeString = MVGContext::eEditModeMove;
+    moveModeString = MVGMoveManipulator::eMoveModeAdjacentFaceProjection;
     cmd.format("mayaMVGTool -e -em ^1s -mv ^2s mayaMVGTool1", editModeString, moveModeString);
     keySequence = "3";
     cmd.format("context.initMVGCommand(\"^1s\", \"^2s\", \"mel\", \"^3s\", False, True)",

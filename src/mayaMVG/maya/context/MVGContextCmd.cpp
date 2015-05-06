@@ -53,7 +53,7 @@ MStatus MVGContextCmd::doEditFlags()
     {
         MString editModeString;
         argData.getFlagArgument(editModeFlag, 0, editModeString);
-        MVGContext::EditMode editMode = static_cast<MVGContext::EditMode>(editModeString.asInt());
+        MVGContext::EEditMode editMode = static_cast<MVGContext::EEditMode>(editModeString.asInt());
 
         // delete all manipulators
         _context->deleteManipulators();
@@ -69,7 +69,7 @@ MStatus MVGContextCmd::doEditFlags()
 
         switch(editMode)
         {
-            case MVGContext::eModeCreate:
+            case MVGContext::eEditModeCreate:
             {
                 MVGCreateManipulator* manip =
                     static_cast<MVGCreateManipulator*>(MPxManipulatorNode::newManipulator(
@@ -77,20 +77,20 @@ MStatus MVGContextCmd::doEditFlags()
                 CHECK_RETURN_STATUS(status)
                 if(!manip)
                     return MS::kFailure;
-                _context->setEditMode(MVGContext::eModeCreate);
+                _context->setEditMode(MVGContext::eEditModeCreate);
                 cache.rebuildMeshesCache();
                 manip->setContext(_context);
                 manip->setCache(&cache);
                 break;
             }
-            case MVGContext::eModeMove:
+            case MVGContext::eEditModeMove:
             {
                 MVGMoveManipulator* manip = static_cast<MVGMoveManipulator*>(
                     MPxManipulatorNode::newManipulator("MVGMoveManipulator", manipObject, &status));
                 CHECK_RETURN_STATUS(status)
                 if(!manip)
                     return MS::kFailure;
-                _context->setEditMode(MVGContext::eModeMove);
+                _context->setEditMode(MVGContext::eEditModeMove);
                 cache.rebuildMeshesCache();
                 manip->setContext(_context);
                 manip->setCache(&cache);
@@ -102,7 +102,7 @@ MStatus MVGContextCmd::doEditFlags()
     }
     if(argData.isFlagSet(moveModeFlag))
     {
-        if(_context->getEditMode() != MVGContext::eModeMove)
+        if(_context->getEditMode() != MVGContext::eEditModeMove)
         {
             LOG_ERROR("moveMode only available with editMode = eMoveMode")
             return MS::kFailure;
@@ -110,7 +110,7 @@ MStatus MVGContextCmd::doEditFlags()
         MString moveModeString;
         argData.getFlagArgument(moveModeFlag, 0, moveModeString);
         MVGMoveManipulator::_mode =
-            static_cast<MVGMoveManipulator::MoveMode>(moveModeString.asInt());
+            static_cast<MVGMoveManipulator::EMoveMode>(moveModeString.asInt());
     }
     return MS::kSuccess;
 }

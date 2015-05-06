@@ -15,7 +15,7 @@ MVGContext::MVGContext()
     : _filter((QObject*)MVGMayaUtil::getMVGWindow(), this)
     , _filterLV((QObject*)MVGMayaUtil::getMVGViewportLayout("mvgLPanel"), this)
     , _filterRV((QObject*)MVGMayaUtil::getMVGViewportLayout("mvgRPanel"), this)
-    , _editMode(eModeMove)
+    , _editMode(eEditModeMove)
 {
     setTitleString("MVG tool");
 }
@@ -41,7 +41,7 @@ void MVGContext::updateManipulators()
     MString cmd;
     MString editMode;
     editMode += _editMode;
-    if(_editMode == eModeMove)
+    if(_editMode == eEditModeMove)
     {
         MString moveMode;
         moveMode += MVGMoveManipulator::_mode;
