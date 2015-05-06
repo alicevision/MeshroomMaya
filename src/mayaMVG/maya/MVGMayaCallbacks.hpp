@@ -1,4 +1,5 @@
 #include "mayaMVG/core/MVGCamera.hpp"
+#include "mayaMVG/core/MVGMesh.hpp"
 #include "mayaMVG/qt/MVGPanelWrapper.hpp"
 #include "mayaMVG/qt/MVGMainWidget.hpp"
 #include <maya/MFnDependencyNode.h>
@@ -34,27 +35,43 @@ static void selectionChangedCB(void*)
     MGlobal::getActiveSelectionList(list);
     MDagPath path;
     QStringList selectedCameras;
+    QStringList selectedMeshes;
     for(size_t i = 0; i < list.length(); i++)
     {
         list.getDagPath(i, path);
         path.extendToShape();
+        // Check for camera
+        if(path.isValid() && (path.apiType() == MFn::kCamera))
+            selectedCameras.push_back(path.fullPathName().asChar());
+        // Check for mesh
         if(path.isValid() &&
-           ((path.child(0).apiType() == MFn::kCamera) || (path.apiType() == MFn::kCamera)))
+           ((path.apiType() == MFn::kMesh) || (path.child(0).apiType() == MFn::kMesh)))
         {
-            MFnDependencyNode fn(path.transform());
-            selectedCameras.push_back(fn.name().asChar());
+            selectedMeshes.push_back(path.fullPathName().asChar());
         }
     }
 
-    if(selectedCameras.size() == 0)
-        return;
-
     // Compare IHM selection to Maya selection
-    QStringList IHMSelectedCamera = project->getSelectedCameras();
-    IHMSelectedCamera.sort();
-    selectedCameras.sort();
-    if(IHMSelectedCamera != selectedCameras)
-        project->addCamerasToIHMSelection(selectedCameras, true);
+    if(!selectedCameras.empty())
+    {
+        QStringList IHMSelectedCamera = project->getSelectedCameras();
+        IHMSelectedCamera.sort();
+        selectedCameras.sort();
+        if(IHMSelectedCamera != selectedCameras)
+            project->addCamerasToIHMSelection(selectedCameras, true);
+    }
+    else
+        project->clearCameraSelection();
+    if(!selectedMeshes.empty())
+    {
+        QStringList IHMSelectedMeshes = project->getSelectedMeshes();
+        IHMSelectedMeshes.sort();
+        selectedMeshes.sort();
+        if(IHMSelectedMeshes != selectedMeshes)
+            project->addMeshesToIHMSelection(selectedMeshes, true);
+    }
+    else
+        project->clearMeshSelection();
 }
 
 static void currentContextChangedCB(void*)
@@ -133,6 +150,32 @@ static void sceneSavedCB(void*)
     project->clearImageCache();
 }
 
+/**
+ * @brief Listen to the Maya nodes creation to update the list of Meshes.
+**/
+static void nodeAddedCB(MObject& node, void*)
+{
+    MVGProjectWrapper* project = getProjectWrapper();
+    if(!project)
+        return;
+
+    switch(node.apiType())
+    {
+        case MFn::kMesh:
+        {
+            MFnDagNode fn(node);
+            if(fn.isIntermediateObject())
+                return;
+            MVGMesh mesh(node);
+            if(mesh.isValid())
+                project->addMeshToUI(mesh.getDagPath());
+            break;
+        }
+        default:
+            break;
+    }
+}
+
 static void nodeRemovedCB(MObject& node, void*)
 {
     MVGProjectWrapper* project = getProjectWrapper();
@@ -158,6 +201,10 @@ static void nodeRemovedCB(MObject& node, void*)
             MFnDagNode fn(node);
             if(fn.isIntermediateObject())
                 return;
+            MVGMesh mesh(node);
+            if(!mesh.isValid())
+                return;
+            project->removeMeshFromUI(mesh.getDagPath());
             // TODO : remove only this mesh from cache
             MGlobal::executeCommand("mayaMVGTool -e -rebuild mayaMVGTool1");
             break;

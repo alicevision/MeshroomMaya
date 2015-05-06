@@ -2,6 +2,7 @@
 #include "mayaMVG/version.hpp"
 #include <QCoreApplication>
 #include "mayaMVG/qt/MVGCameraWrapper.hpp"
+#include "mayaMVG/qt/MVGMeshWrapper.hpp"
 #include "mayaMVG/maya/MVGMayaUtil.hpp"
 #include "mayaMVG/core/MVGLog.hpp"
 #include <maya/MQtUtil.h>
@@ -109,6 +110,8 @@ void MVGProjectWrapper::loadExistingProject()
         return;
     _project = projects.front();
     reloadMVGCamerasFromMaya();
+    reloadMVGMeshesFromMaya();
+    Q_EMIT projectDirectoryChanged();
 }
 
 void MVGProjectWrapper::loadNewProject(const QString& projectDirectoryPath)
@@ -140,6 +143,7 @@ void MVGProjectWrapper::loadNewProject(const QString& projectDirectoryPath)
     setIsProjectLoading(false);
 
     reloadMVGCamerasFromMaya();
+    reloadMVGMeshesFromMaya();
 
     // Loading image planes takes a lot of time.
     // So before loading image planes, we ask Qt to process events (UI)
@@ -159,15 +163,7 @@ void MVGProjectWrapper::addCamerasToIHMSelection(const QStringList& selectedCame
                                                  bool center)
 {
     // Reset old selection to false
-    for(QStringList::const_iterator it = _selectedCameras.begin(); it != _selectedCameras.end();
-        ++it)
-    {
-        std::map<std::string, MVGCameraWrapper*>::const_iterator foundIt =
-            _camerasByName.find(it->toStdString());
-        if(foundIt != _camerasByName.end())
-            foundIt->second->setIsSelected(false);
-    }
-    _selectedCameras.clear();
+    clearCameraSelection();
     // Set new selection to true
     for(QStringList::const_iterator it = selectedCameraNames.begin();
         it != selectedCameraNames.end(); ++it)
@@ -176,10 +172,10 @@ void MVGProjectWrapper::addCamerasToIHMSelection(const QStringList& selectedCame
             continue;
         MVGCameraWrapper* camera = _camerasByName[it->toStdString()];
         camera->setIsSelected(true);
-        _selectedCameras.append(camera->getName());
+        _selectedCameras.append(*it);
         // Replace listView and set image in first viewort
         // TODO : let the user define in which viewport he wants to display the selected camera
-        if(center && camera->getName() == selectedCameraNames[0])
+        if(center && camera->getDagPathAsString() == selectedCameraNames[0])
         {
             setCameraToView(camera, static_cast<MVGPanelWrapper*>(_panelList.get(0))->getName());
             Q_EMIT centerCameraListByIndex(_cameraList.indexOf(camera));
@@ -197,21 +193,50 @@ void MVGProjectWrapper::addCamerasToMayaSelection(const QStringList& cameraNames
     _project.selectCameras(cameras);
 }
 
+void MVGProjectWrapper::addMeshesToIHMSelection(const QStringList& selectedMeshPaths, bool center)
+{
+    // Reset old selection to false
+    clearMeshSelection();
+    // Set new selection to true
+    for(QStringList::const_iterator it = selectedMeshPaths.begin(); it != selectedMeshPaths.end();
+        ++it)
+    {
+        if(_meshesByName.count(it->toStdString()) == 0)
+            continue;
+        MVGMeshWrapper* mesh = _meshesByName[it->toStdString()];
+        mesh->setIsSelected(true);
+        _selectedMeshes.append(mesh->getDagPathAsString());
+        // Replace listView
+        // TODO : let the user define in which viewport he wants to display the selected camera
+        if(center && mesh->getDagPathAsString() == selectedMeshPaths[0])
+            Q_EMIT centerMeshListByIndex(_meshesList.indexOf(mesh));
+    }
+}
+
+void MVGProjectWrapper::addMeshesToMayaSelection(const QStringList& meshesPath) const
+{
+    if(!_project.isValid())
+        return;
+    std::vector<std::string> meshes;
+    for(QStringList::const_iterator it = meshesPath.begin(); it != meshesPath.end(); ++it)
+        meshes.push_back(it->toStdString());
+    _project.selectMeshes(meshes);
+}
+
 void MVGProjectWrapper::setCameraToView(QObject* camera, const QString& viewName)
 {
     MVGCameraWrapper* cameraWrapper = static_cast<MVGCameraWrapper*>(camera);
 
     // Push command
     _project.pushLoadCurrentImagePlaneCommand(viewName.toStdString());
-
     // Set UI
     foreach(MVGCameraWrapper* c, _cameraList.asQList<MVGCameraWrapper>())
         c->setInView(viewName, false);
     MVGCameraWrapper* cam = qobject_cast<MVGCameraWrapper*>(camera);
     cam->setInView(viewName, true);
-
     // Update active camera
-    _activeCameraNameByView[viewName.toStdString()] = cameraWrapper->getName().toStdString();
+    _activeCameraNameByView[viewName.toStdString()] =
+        cameraWrapper->getDagPathAsString().toStdString();
 }
 
 void MVGProjectWrapper::setCamerasNear(const double near)
@@ -250,6 +275,9 @@ void MVGProjectWrapper::clear()
     _camerasByName.clear();
     _activeCameraNameByView.clear();
     _selectedCameras.clear();
+    _meshesList.clear();
+    _meshesByName.clear();
+    _selectedMeshes.clear();
     Q_EMIT projectDirectoryChanged();
 }
 
@@ -284,10 +312,59 @@ void MVGProjectWrapper::removeCameraFromUI(MDagPath& cameraPath)
         _cameraList.removeAt(i);
     }
 }
+void MVGProjectWrapper::addMeshToUI(const MDagPath& meshPath)
+{
+    MVGMesh mesh(meshPath);
+
+    MVGMeshWrapper* meshWrapper = new MVGMeshWrapper(mesh);
+    _meshesList.append(meshWrapper);
+}
+
+void MVGProjectWrapper::removeMeshFromUI(const MDagPath& meshPath)
+{
+    MVGMesh mesh(meshPath);
+    if(!meshPath.isValid())
+        return;
+
+    for(int i = 0; i < _meshesList.count(); ++i)
+    {
+        MVGMeshWrapper* meshWraper = static_cast<MVGMeshWrapper*>(_meshesList.at(i));
+        if(!meshWraper)
+            continue;
+        if(meshWraper->getMesh().getName() != mesh.getName())
+            continue;
+        _meshesList.removeAt(i);
+    }
+}
 
 void MVGProjectWrapper::emitCurrentUnitChanged()
 {
     Q_EMIT currentUnitChanged();
+}
+
+void MVGProjectWrapper::clearCameraSelection()
+{
+    for(QStringList::const_iterator it = _selectedCameras.begin(); it != _selectedCameras.end();
+        ++it)
+    {
+        std::map<std::string, MVGCameraWrapper*>::const_iterator foundIt =
+            _camerasByName.find(it->toStdString());
+        if(foundIt != _camerasByName.end())
+            foundIt->second->setIsSelected(false);
+    }
+    _selectedCameras.clear();
+}
+
+void MVGProjectWrapper::clearMeshSelection()
+{
+    for(QStringList::const_iterator it = _selectedMeshes.begin(); it != _selectedMeshes.end(); ++it)
+    {
+        std::map<std::string, MVGMeshWrapper*>::const_iterator foundIt =
+            _meshesByName.find(it->toStdString());
+        if(foundIt != _meshesByName.end())
+            foundIt->second->setIsSelected(false);
+    }
+    _selectedMeshes.clear();
 }
 
 void MVGProjectWrapper::reloadMVGCamerasFromMaya()
@@ -295,22 +372,29 @@ void MVGProjectWrapper::reloadMVGCamerasFromMaya()
     _cameraList.clear();
     _camerasByName.clear();
     _activeCameraNameByView.clear();
-    if(!_project.isValid())
-    {
-        LOG_ERROR("Project is not valid");
-        return;
-    }
-    Q_EMIT projectDirectoryChanged();
+
     const std::vector<MVGCamera>& cameraList = MVGCamera::getCameras();
     std::vector<MVGCamera>::const_iterator it = cameraList.begin();
     for(; it != cameraList.end(); ++it)
     {
         MVGCameraWrapper* cameraWrapper = new MVGCameraWrapper(*it);
         _cameraList.append(cameraWrapper);
-        _camerasByName[it->getName()] = cameraWrapper;
+        _camerasByName[it->getDagPathAsString()] = cameraWrapper;
     }
-    Q_EMIT cameraModelChanged();
     // TODO : Camera selection
+}
+
+void MVGProjectWrapper::reloadMVGMeshesFromMaya()
+{
+    _meshesList.clear();
+    const std::vector<MVGMesh>& meshList = MVGMesh::listAllMeshes();
+    std::vector<MVGMesh>::const_iterator it = meshList.begin();
+    for(; it != meshList.end(); ++it)
+    {
+        MVGMeshWrapper* meshWrapper = new MVGMeshWrapper(*it);
+        _meshesList.append(meshWrapper);
+        _meshesByName[it->getDagPathAsString()] = meshWrapper;
+    }
 }
 
 } // namespace

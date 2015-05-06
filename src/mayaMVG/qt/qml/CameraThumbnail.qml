@@ -67,9 +67,7 @@ Rectangle {
                 opacity: 0.6
                 property variant views: m.camera.views
                 property bool isInView: false
-                onViewsChanged: {
-                    isInView = m.camera.isInView(model.modelData.name)
-                }
+                onViewsChanged: isInView = m.camera.isInView(model.modelData.name)
                 states: [
                     State {
                         name: "HOVER"

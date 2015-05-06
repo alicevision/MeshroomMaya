@@ -11,8 +11,8 @@ class MVGNodeWrapper
 
 public:
     MVGNodeWrapper();
-    MVGNodeWrapper(const std::string& name);
-    MVGNodeWrapper(const MString& name);
+    MVGNodeWrapper(const std::string& dagPathAsString);
+    MVGNodeWrapper(const MString& dagPathAsString);
     MVGNodeWrapper(const MDagPath& dagPath);
     MVGNodeWrapper(const MObject& object);
     virtual ~MVGNodeWrapper() {}
@@ -23,6 +23,7 @@ public:
 
 public:
     const MDagPath& getDagPath() const;
+    const std::string getDagPathAsString() const;
     const MObject& getObject() const;
     std::string getName() const;
     void setName(const std::string&) const;

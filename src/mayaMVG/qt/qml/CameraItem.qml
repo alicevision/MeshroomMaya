@@ -5,6 +5,7 @@ import QtDesktop 0.1
 Rectangle {
     id: cameraItem
     border.color: "black"
+    color: "#262626"
     height: m.baseHeight
     property alias camera: m.camera
     property alias project: m.project
@@ -40,9 +41,7 @@ Rectangle {
         height: parent.height
         spacing: 10
         visible: false
-        Component.onCompleted: {
-            visible = true
-        }
+        Component.onCompleted: visible = true
 
         CameraThumbnail {
             implicitWidth: height * m.thumbRatio
@@ -62,9 +61,8 @@ Rectangle {
                 onClicked: {
                     if(mouse.modifiers & Qt.ShiftModifier)
                         multipleSelection(index)
-                    else {
+                    else
                         selection(index)
-                    }
                 }
             }
             ColumnLayout {

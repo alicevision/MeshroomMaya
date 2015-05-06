@@ -13,6 +13,7 @@ class MVGCameraWrapper : public QObject
     Q_OBJECT
 
     Q_PROPERTY(QString name READ getName CONSTANT)
+    Q_PROPERTY(QString dagPath READ getDagPathAsString CONSTANT)
     Q_PROPERTY(QString imagePath READ getImagePath CONSTANT)
     Q_PROPERTY(bool isSelected READ isSelected WRITE setIsSelected NOTIFY isSelectedChanged)
     Q_PROPERTY(QStringList views READ getViews NOTIFY viewsChanged)
@@ -26,6 +27,7 @@ public:
 
 public Q_SLOTS:
     const QString getName() const { return QString::fromStdString(_camera.getName()); }
+    const QString getDagPathAsString() const;
     const QString getImagePath() const { return QString::fromStdString(_camera.getImagePlane()); }
     bool isSelected() const { return _isSelected; }
     void setIsSelected(const bool isSelected);

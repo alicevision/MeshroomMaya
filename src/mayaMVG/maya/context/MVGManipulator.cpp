@@ -169,7 +169,7 @@ void MVGManipulator::drawIntersection2D(const MPointArray& intersectedVSPoints,
 {
     const int arrayLength = intersectedVSPoints.length();
     assert(arrayLength < 3);
-    if(intersectedVSPoints.length() <= 0)
+    if(arrayLength <= 0)
         return;
 
     switch(intersectionType)

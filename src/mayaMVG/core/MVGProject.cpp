@@ -208,6 +208,13 @@ bool MVGProject::scaleScene(const double scaleSize) const
         selectionIt.getDagPath(item, component);
         if(component.apiType() != MFn::kMeshPolygonComponent)
             continue;
+        LOG_INFO("Mesh path : " << item.fullPathName())
+        MVGMesh mesh(item);
+        if(!mesh.isActive())
+        {
+            LOG_ERROR("Mesh is not active in MayaMVG : " << mesh.getName())
+            return false;
+        }
         selectedFace = true;
         MItMeshPolygon polyIt(item, component);
         A = polyIt.point(0);
@@ -226,6 +233,11 @@ bool MVGProject::scaleScene(const double scaleSize) const
         MVGMesh mesh(_MESH);
         if(!mesh.isValid())
             return false;
+        if(!mesh.isActive())
+        {
+            LOG_ERROR("Mesh is not active in MayaMVG : " << mesh.getName())
+            return false;
+        }
         mesh.getPoint(0, A);
         mesh.getPoint(1, B);
         mesh.getPoint(3, C);
@@ -271,8 +283,7 @@ bool MVGProject::scaleScene(const double scaleSize) const
         }
     }
     MGlobal::executePythonCommand("from mayaMVG import scale");
-    MGlobal::executePythonCommand("scale.scaleScene('" + matrix + "', '" + _PROJECT.c_str() +
-                                      "', '" + meshName.c_str() + "')",
+    MGlobal::executePythonCommand("scale.scaleScene('" + matrix + "', '" + _PROJECT.c_str() + "')",
                                   false, true);
 
     // Update cache
@@ -340,13 +351,25 @@ const bool MVGProject::isProjectDirectoryValid(const std::string& projectDirecto
     return true;
 }
 
-void MVGProject::selectCameras(std::vector<std::string> cameraNames) const
+void MVGProject::selectCameras(const std::vector<std::string>& cameraNames) const
 {
     MSelectionList list;
-    for(std::vector<std::string>::iterator it = cameraNames.begin(); it != cameraNames.end(); ++it)
+    for(std::vector<std::string>::const_iterator it = cameraNames.begin(); it != cameraNames.end();
+        ++it)
     {
         MVGCamera camera(*it);
         list.add(camera.getDagPath());
+    }
+    MGlobal::setActiveSelectionList(list);
+}
+
+void MVGProject::selectMeshes(const std::vector<std::string>& meshes) const
+{
+    MSelectionList list;
+    for(std::vector<std::string>::const_iterator it = meshes.begin(); it != meshes.end(); ++it)
+    {
+        MVGMesh mesh(*it);
+        list.add(mesh.getDagPath());
     }
     MGlobal::setActiveSelectionList(list);
 }

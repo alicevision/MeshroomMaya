@@ -32,19 +32,14 @@ Item {
             onSettingProjectLoaded: contextBar.settingsVisibility = false
             thumbSize: sliderMinValue
         }
-        // PointCloudItem {
-        //     implicitWidth: parent.width
-        //     Layout.minimumHeight: childrenRect.height
-        //     Layout.maximumHeight: childrenRect.height
-        //     Layout.verticalSizePolicy: Layout.Expanding
-        //     thumbSize: settings.thumbSize
-        // }
-        CameraList {
-            id: cameraList
+
+        MVGPanel {
+            id: componentList
             implicitWidth: parent.width
             Layout.verticalSizePolicy: Layout.Expanding
             thumbSize: settings.thumbSize
             project: _project
+            mode: contextBar.mode
         }
     }
 
@@ -75,5 +70,5 @@ Item {
             }
         }
     }
-    Keys.onPressed: cameraList.keyPressed(event.key)
+    Keys.onPressed: componentList.keyPressed(event.key)
 }

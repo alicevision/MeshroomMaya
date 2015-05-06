@@ -4,16 +4,18 @@
 namespace mayaMVG
 {
 
-MVGPanelWrapper::MVGPanelWrapper(QString name, QString label)
+MVGPanelWrapper::MVGPanelWrapper(const QString& name, const QString& label)
     : _name(name)
     , _label(label)
     , _isVisible(true)
 {
 }
 
-MVGPanelWrapper::MVGPanelWrapper(QString name)
+MVGPanelWrapper::MVGPanelWrapper(const QString& name)
+    : _name(name)
+    , _label(name)
+    , _isVisible(true)
 {
-    MVGPanelWrapper(name, name);
 }
 
 MVGPanelWrapper::~MVGPanelWrapper()

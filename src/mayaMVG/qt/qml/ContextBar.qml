@@ -5,10 +5,14 @@ Item {
 
     property alias settingsVisibility: m.settingsVisibility
     property alias project: m.project
+    property string mode: m.mode
+    signal showMeshSignal
+    signal showCameraSignal
     QtObject {
         id: m
         property variant project
         property bool settingsVisibility
+        property string mode: "camera"
     }
     RowLayout
     {
@@ -27,6 +31,29 @@ Item {
         }
         Rectangle {
             Layout.horizontalSizePolicy: Layout.Expanding
+        }
+        ToolButton {
+            id: showCameraButton
+            iconSource: "img/camera.png"
+            tooltip: "Show cameras"
+            iconSize: 20
+            checked: (m.mode === "camera")
+            onClicked: m.mode = "camera"
+        }
+
+        ToolButton {
+            id: showMeshButton
+            iconSource: "img/cube.png"
+            iconSize: 20
+            tooltip: "Show meshes"
+            checked: (m.mode === "mesh")
+            onClicked:
+            {
+                m.mode = "mesh";
+                // Should not call this function here
+                // Problem with callbacks and refresh of the list
+                _project.reloadMVGMeshesFromMaya();
+            }
         }
 
         ToolButton {

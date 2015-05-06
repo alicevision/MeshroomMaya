@@ -90,14 +90,14 @@ const MVGManipulatorCache::MeshData& MVGManipulatorCache::getMeshData(const std:
 }
 void MVGManipulatorCache::rebuildMeshesCache()
 {
-    // List all meshes
+    // List all meshes currently stored in meshData
     std::list<std::string> meshesList;
     for(std::map<std::string, MeshData>::iterator it = _meshData.begin(); it != _meshData.end();
         ++it)
         meshesList.push_back(it->first);
 
-    // rebuild cache
-    std::vector<MVGMesh> meshes = MVGMesh::list();
+    // Update all meshes
+    std::vector<MVGMesh> meshes = MVGMesh::listAllMeshes();
     std::vector<MVGMesh>::const_iterator it = meshes.begin();
     for(; it != meshes.end(); ++it)
     {
@@ -114,10 +114,18 @@ void MVGManipulatorCache::rebuildMeshesCache()
 
 void MVGManipulatorCache::rebuildMeshCache(const MDagPath& path)
 {
-    MVGMesh mesh(path);
-    if(!mesh.isValid())
+    if(!path.isValid())
         return;
-
+    MVGMesh mesh(path);
+    // Remove non active mesh
+    if(!mesh.isActive())
+    {
+        std::map<std::string, MeshData>::iterator foundIt =
+            _meshData.find(path.fullPathName().asChar());
+        if(foundIt != _meshData.end())
+            _meshData.erase(foundIt);
+        return;
+    }
     // Retrieve selectedComponent info
     MDagPath meshPath = _selectedComponent.meshPath;
     MFn::Type type = MFn::kInvalid;
@@ -186,6 +194,54 @@ void MVGManipulatorCache::rebuildMeshCache(const MDagPath& path)
 
     if(meshPath == path)
         updateSelectedComponent(meshPath, type, index);
+}
+
+void MVGManipulatorCache::checkForCameraSpacePositions(M3dView& view, MeshData& meshData,
+                                                       const int cameraID)
+{
+    if(meshData.vertices.empty())
+        return;
+    std::map<int, MPoint>& cameraSpacePoints = meshData.vertices.begin()->cameraSpacePoints;
+    std::map<int, MPoint>::iterator cameraIt = cameraSpacePoints.find(cameraID);
+    // We compute position only if there are not in the cache to avoid computing them all the time
+    if(cameraIt == cameraSpacePoints.end())
+        computeMeshCacheForCameraID(view, meshData, cameraID);
+}
+
+/**
+ *
+ * @param view
+ * @param meshData
+ * @param cameraID
+ * @brief Compute camera space coordinates and add it to mesh cache
+ */
+void MVGManipulatorCache::computeMeshCacheForCameraID(M3dView& view, MeshData& meshData,
+                                                      const int cameraID)
+{
+    std::vector<VertexData>& vertices = meshData.vertices;
+    for(std::vector<VertexData>::iterator vertexIt = vertices.begin(); vertexIt != vertices.end();
+        ++vertexIt)
+    {
+        // Add new camera
+        std::map<int, MPoint>& cameraSpacePoints = vertexIt->cameraSpacePoints;
+        cameraSpacePoints[cameraID] =
+            MVGGeometryUtil::worldToCameraSpace(view, vertexIt->worldPosition);
+    }
+}
+
+void MVGManipulatorCache::removeMeshCacheForCameraID(const int cameraID)
+{
+    for(std::map<std::string, MeshData>::iterator meshIt = _meshData.begin();
+        meshIt != _meshData.end(); ++meshIt)
+    {
+        std::vector<VertexData>& vertices = meshIt->second.vertices;
+        for(std::vector<VertexData>::iterator vertexIt = vertices.begin();
+            vertexIt != vertices.end(); ++vertexIt)
+        {
+            std::map<int, MPoint>& cameraSpacePoints = vertexIt->cameraSpacePoints;
+            cameraSpacePoints.erase(cameraID);
+        }
+    }
 }
 
 void MVGManipulatorCache::setSelectedComponent(const MVGComponent& selectedComponent)
@@ -268,18 +324,23 @@ bool MVGManipulatorCache::isIntersectingPoint(const double tolerance, const MPoi
         return false;
     // compute tolerance
     double threshold = (tolerance * _activeCamera.getZoom()) / (double)_activeView.portWidth();
-    // check each mesh vertices
+
+    int cameraID = _activeCamera.getId();
+    // check each mesh vertice
     std::map<std::string, MeshData>::iterator meshIt = _meshData.begin();
     for(; meshIt != _meshData.end(); ++meshIt)
     {
+        // Check for cameraSpace coordinates
+        // We compute position only if there are not in the cache to avoid computing them all the
+        // time
+        checkForCameraSpacePositions(_activeView, meshIt->second, cameraID);
+
         std::vector<VertexData>& vertices = meshIt->second.vertices;
         std::vector<VertexData>::iterator vertexIt = vertices.begin();
         for(; vertexIt < vertices.end(); ++vertexIt)
         {
             // check if we intersect w/ the real vertex position projection
-            MPoint realCSVertexPosition;
-            MVGGeometryUtil::worldToCameraSpace(_activeView, vertexIt->worldPosition,
-                                                realCSVertexPosition);
+            MPoint& realCSVertexPosition = vertexIt->cameraSpacePoints[cameraID];
             if(mouseCSPosition.x <= realCSVertexPosition.x + threshold &&
                mouseCSPosition.x >= realCSVertexPosition.x - threshold &&
                mouseCSPosition.y <= realCSVertexPosition.y + threshold &&
@@ -304,20 +365,23 @@ bool MVGManipulatorCache::isIntersectingEdge(const double tolerance, const MPoin
         return false;
     // compute tolerance
     double threshold = (tolerance * _activeCamera.getZoom()) / (double)_activeView.portWidth();
+
+    int cameraID = _activeCamera.getId();
     // check each mesh edges
     std::map<std::string, MeshData>::iterator meshIt = _meshData.begin();
     for(; meshIt != _meshData.end(); ++meshIt)
     {
+        // Check for cameraSpace coordinates
+        // We compute position only if there are not in the cache to avoid computing them all the
+        // time
+        checkForCameraSpacePositions(_activeView, meshIt->second, cameraID);
+
         std::vector<EdgeData>& edges = meshIt->second.edges;
         std::vector<EdgeData>::iterator edgeIt = edges.begin();
         for(; edgeIt < edges.end(); ++edgeIt)
         {
-            MPoint vertex1CSPosition;
-            MPoint vertex2CSPosition;
-            MVGGeometryUtil::worldToCameraSpace(_activeView, edgeIt->vertex1->worldPosition,
-                                                vertex1CSPosition);
-            MVGGeometryUtil::worldToCameraSpace(_activeView, edgeIt->vertex2->worldPosition,
-                                                vertex2CSPosition);
+            MPoint& vertex1CSPosition = edgeIt->vertex1->cameraSpacePoints[cameraID];
+            MPoint& vertex2CSPosition = edgeIt->vertex2->cameraSpacePoints[cameraID];
             if(minimumDistanceToEdge(vertex1CSPosition, vertex2CSPosition, mouseCSPosition) <
                threshold)
             {

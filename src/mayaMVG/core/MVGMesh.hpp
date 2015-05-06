@@ -22,8 +22,8 @@ public:
     };
 
 public:
-    MVGMesh(const std::string& name);
-    MVGMesh(const MString& name);
+    MVGMesh(const std::string& dagPathAsString);
+    MVGMesh(const MString& dagPathAsString);
     MVGMesh(const MDagPath& dagPath);
     MVGMesh(const MObject& object);
     virtual ~MVGMesh() {}
@@ -33,9 +33,12 @@ public:
 
 public:
     static MVGMesh create(const std::string& name);
-    static std::vector<MVGMesh> list();
+    static std::vector<MVGMesh> listActiveMeshes();
+    static std::vector<MVGMesh> listAllMeshes();
 
 public:
+    void setIsActive(const bool value) const;
+    bool isActive() const;
     bool addPolygon(const MPointArray& pointArray, int& index) const;
     bool deletePolygon(const int index) const;
     MStatus getPoints(MPointArray& pointArray) const;
@@ -59,6 +62,7 @@ public:
 
 private:
     static int _blindDataID;
+    static MString _MVG;
 };
 
 } // namespace

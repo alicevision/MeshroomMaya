@@ -48,6 +48,11 @@ void MVGCameraWrapper::setInView(const QString& viewName, const bool value)
     }
 }
 
+const QString MVGCameraWrapper::getDagPathAsString() const
+{
+    return QString::fromStdString(_camera.getDagPathAsString());
+}
+
 void MVGCameraWrapper::setIsSelected(const bool isSelected)
 {
     if(_isSelected == isSelected)
