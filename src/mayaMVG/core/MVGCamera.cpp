@@ -461,8 +461,8 @@ const std::pair<double, double> MVGCamera::getImageSize() const
     MStatus status;
     MFnDagNode fnImage(getImagePlaneShapeDagPath(), &status);
     CHECK(status)
-    size.first = fnImage.findPlug("coverageX").asDouble();
-    size.second = fnImage.findPlug("coverageY").asDouble();
+    size.first = fnImage.findPlug("width").asDouble();
+    size.second = fnImage.findPlug("height").asDouble();
     return size;
 }
 
