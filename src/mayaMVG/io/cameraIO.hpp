@@ -80,12 +80,13 @@ bool readCameras(std::string filePath, std::string imageDir, std::string cameraD
         // Set camera parameters
         MFnCamera fnCamera(camera.getDagPath());
         double focalLengthPixel = camera.getPinholeCamera()._K(0, 0);
+        fnCamera.setPanZoomEnabled(true);
+        fnCamera.setAspectRatio((double)width / (double)height);
+        fnCamera.setFilmFit(MFnCamera::kHorizontalFilmFit);
         fnCamera.setHorizontalFieldOfView(
             (2.0 * atan((double)width / (2.0 * (double)focalLengthPixel))));
-        fnCamera.setPanZoomEnabled(true);
-        fnCamera.setFilmFit(MFnCamera::kHorizontalFilmFit);
+
         // TODO : set camera aperture according to camera model
-        fnCamera.setAspectRatio((double)width / (double)height);
 
         camera.setImagePlane(stlplus::create_filespec(imageDir, imageName), width, height);
         camera.setId(cameraId);

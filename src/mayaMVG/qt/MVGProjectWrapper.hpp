@@ -85,9 +85,11 @@ public:
     Q_INVOKABLE void setCamerasNear(const double near);
     Q_INVOKABLE void setCamerasFar(const double far);
     Q_INVOKABLE void setCameraLocatorScale(const double scale);
+    Q_INVOKABLE void configureCameras(const double horizontalAperture,
+                                      const double verticalAperture);
     // Should be a private and non invokable function
     Q_INVOKABLE void reloadMVGMeshesFromMaya();
-    
+
     // Clear
     void clear();
     void clearImageCache();
@@ -98,7 +100,7 @@ public:
     void addMeshToUI(const MDagPath& meshPath);
     void removeMeshFromUI(const MDagPath& meshPath);
     // Signals
-    void emitCurrentUnitChanged(); 
+    void emitCurrentUnitChanged();
     // Setter not callable from QML
     void setEditMode(const int mode);
     void setMoveMode(const int mode);

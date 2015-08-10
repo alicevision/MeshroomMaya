@@ -57,6 +57,7 @@ public:
     void setNear(const double near) const;
     void setFar(const double far) const;
     void setLocatorScale(const double scale) const;
+    void configure(const double horizontalAperture, const double verticalAperture) const;
 
     const std::pair<double, double> getImageSize() const;
 
