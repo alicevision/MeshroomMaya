@@ -288,6 +288,32 @@ void MVGProjectWrapper::setCameraLocatorScale(const double scale)
         it->second->getCamera().setLocatorScale(scale);
 }
 
+void MVGProjectWrapper::configureCameras(const double horizontalAperture,
+                                         const double verticalAperture)
+{
+    // If no selection : configure all cameras
+    if(_selectedCameras.empty())
+    {
+        LOG_INFO("Configure all cameras")
+        for(std::map<std::string, MVGCameraWrapper*>::const_iterator it = _camerasByName.begin();
+            it != _camerasByName.end(); ++it)
+            it->second->getCamera().configure(horizontalAperture, verticalAperture);
+        return;
+    }
+
+    // Only configure selected cameras
+    LOG_INFO("Configure selected cameras")
+    for(QStringList::const_iterator it = _selectedCameras.begin(); it != _selectedCameras.end();
+        ++it)
+    {
+        LOG_INFO(it->toStdString())
+        std::map<std::string, MVGCameraWrapper*>::const_iterator foundIt =
+            _camerasByName.find(it->toStdString());
+        if(foundIt != _camerasByName.end())
+            foundIt->second->getCamera().configure(horizontalAperture, verticalAperture);
+    }
+}
+
 void MVGProjectWrapper::clear()
 {
     _cameraList.clear();
@@ -385,7 +411,7 @@ void MVGProjectWrapper::emitCurrentUnitChanged()
 {
     Q_EMIT currentUnitChanged();
 }
-    
+
 void MVGProjectWrapper::setEditMode(const int mode)
 {
     if(_editMode == mode)

@@ -455,6 +455,37 @@ void MVGCamera::setLocatorScale(const double scale) const
     CHECK_RETURN(status)
 }
 
+void MVGCamera::configure(const double horizontalAperture, const double verticalAperture) const
+{
+    MStatus status;
+    MFnCamera fnCamera(getDagPath(), &status);
+    CHECK_RETURN(status)
+    openMVG::PinholeCamera pinhole = getPinholeCamera();
+    const double focalLengthPixel = pinhole._K(0, 0);
+    std::pair<double, double> size = getImageSize();
+    const double width = size.first;
+    const double height = size.second;
+    const double fieldOfView = 2.0 * atan((double)width / (2.0 * (double)focalLengthPixel));
+
+    fnCamera.setAspectRatio((double)width / (double)height);
+    fnCamera.setHorizontalFilmAperture(horizontalAperture);
+    fnCamera.setVerticalFilmAperture(verticalAperture);
+    fnCamera.setHorizontalFieldOfView(fieldOfView);
+    fnCamera.setFilmFit(MFnCamera::kHorizontalFilmFit);
+
+    // Image plane parameters
+    MDagPath imagePath = getImagePlaneShapeDagPath();
+    MFnDagNode fnImage(imagePath, &status);
+    CHECK_RETURN(status)
+
+    const double offsetX = width * 0.5 - pinhole._K(0, 2);
+    const double offsetY = height * 0.5 - pinhole._K(1, 2);
+    fnImage.findPlug("sizeX").setValue(horizontalAperture);
+    fnImage.findPlug("sizeY").setValue(verticalAperture);
+    fnImage.findPlug("offsetX").setValue(offsetX / width * horizontalAperture);
+    fnImage.findPlug("offsetY").setValue(-offsetY / width * horizontalAperture);
+}
+
 const std::pair<double, double> MVGCamera::getImageSize() const
 {
     std::pair<double, double> size;
