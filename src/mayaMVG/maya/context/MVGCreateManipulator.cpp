@@ -125,7 +125,8 @@ void MVGCreateManipulator::draw(M3dView& view, const MDagPath& path, M3dView::Di
                     MVGGeometryUtil::worldToViewSpace(view, _finalWSPoints[_snapedPoints[1]]),
                     MVGDrawUtil::_intersectionColor, 3.0);
         }
-
+        if(_displayVisiblePoints)
+            drawVisibleItems(view);
         MVGDrawUtil::end2DDrawing();
     }
     glDisable(GL_BLEND);
