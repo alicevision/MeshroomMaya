@@ -27,6 +27,8 @@ class MVGProjectWrapper : public QObject
     Q_PROPERTY(QString currentUnit READ getCurrentUnit NOTIFY currentUnitChanged);
     Q_PROPERTY(QString pluginVersion READ getPluginVersion CONSTANT);
     Q_PROPERTY(bool isProjectLoading READ getIsProjectLoading NOTIFY isProjectLoadingChanged);
+    Q_PROPERTY(bool activeSynchro READ getActiveSynchro WRITE setActiveSynchro
+                   NOTIFY activeSynchroChanged);
 
 public:
     MVGProjectWrapper();
@@ -48,6 +50,8 @@ public Q_SLOTS:
     const QString getPluginVersion() const;
     const bool getIsProjectLoading() const { return _isProjectLoading; }
     void setIsProjectLoading(const bool value);
+    bool getActiveSynchro() const { return _activeSynchro; }
+    void setActiveSynchro(const bool value);
 
 Q_SIGNALS:
     void projectDirectoryChanged();
@@ -59,6 +63,7 @@ Q_SIGNALS:
     void panelListChanged();
     void currentUnitChanged();
     void isProjectLoadingChanged();
+    void activeSynchroChanged();
     void centerCameraListByIndex(const int cameraIndex);
     void centerMeshListByIndex(const int meshIndex);
 
@@ -123,6 +128,7 @@ private:
     int _editMode;
     int _moveMode;
     bool _isProjectLoading;
+    bool _activeSynchro;
 
     std::map<std::string, MVGCameraWrapper*> _camerasByName;
     std::map<std::string, MVGMeshWrapper*> _meshesByName;

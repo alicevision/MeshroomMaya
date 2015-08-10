@@ -28,11 +28,11 @@ Item {
         var end = Math.max(oldIndex, newIndex) + 1;
 
         for(var i = begin; i < end; ++i)
-        {
             qlist[qlist.length] = m.project.cameraModel.get(i).dagPath;
-        }
+
         m.project.addCamerasToIHMSelection(qlist);
-        m.project.addCamerasToMayaSelection(qlist);
+        if(m.project.activeSynchro)
+            m.project.addCamerasToMayaSelection(qlist);
     }
 
     function center(index, itemHeight, listView) {
