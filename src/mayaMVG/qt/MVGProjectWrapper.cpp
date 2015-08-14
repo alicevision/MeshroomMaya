@@ -38,6 +38,7 @@ MVGProjectWrapper::MVGProjectWrapper()
 
     // Init _isProjectLoading
     _isProjectLoading = false;
+    _activeSynchro = true;
 }
 
 MVGProjectWrapper::~MVGProjectWrapper()
@@ -79,6 +80,13 @@ void MVGProjectWrapper::setIsProjectLoading(const bool value)
         return;
     _isProjectLoading = value;
     Q_EMIT isProjectLoadingChanged();
+}
+void MVGProjectWrapper::setActiveSynchro(const bool value)
+{
+    if(value == _activeSynchro)
+        return;
+    _activeSynchro = value;
+    Q_EMIT activeSynchroChanged();
 }
 
 void MVGProjectWrapper::setProjectDirectory(const QString& directory)
@@ -185,6 +193,11 @@ void MVGProjectWrapper::loadNewProject(const QString& projectDirectoryPath)
     }
 }
 
+/**
+ * 
+ * @param[in] selectedCameraNames Names list of the cameras to add to IHM selection
+ * @param[in] center Boolean indicating if we center the camera list on the new selection
+ */
 void MVGProjectWrapper::addCamerasToIHMSelection(const QStringList& selectedCameraNames,
                                                  bool center)
 {
@@ -203,12 +216,17 @@ void MVGProjectWrapper::addCamerasToIHMSelection(const QStringList& selectedCame
         // TODO : let the user define in which viewport he wants to display the selected camera
         if(center && camera->getDagPathAsString() == selectedCameraNames[0])
         {
-            setCameraToView(camera, static_cast<MVGPanelWrapper*>(_panelList.get(0))->getName());
+            setCameraToView(camera,
+                            static_cast<MVGPanelWrapper*>(_panelList.get(0))->getName());
             Q_EMIT centerCameraListByIndex(_cameraList.indexOf(camera));
         }
     }
 }
 
+/**
+ * 
+ * @param[in] cameraNames Names list of the cameras to add to IHM selection
+ */
 void MVGProjectWrapper::addCamerasToMayaSelection(const QStringList& cameraNames) const
 {
     if(!_project.isValid())
@@ -294,7 +312,6 @@ void MVGProjectWrapper::configureCameras(const double horizontalAperture,
     // If no selection : configure all cameras
     if(_selectedCameras.empty())
     {
-        LOG_INFO("Configure all cameras")
         for(std::map<std::string, MVGCameraWrapper*>::const_iterator it = _camerasByName.begin();
             it != _camerasByName.end(); ++it)
             it->second->getCamera().configure(horizontalAperture, verticalAperture);
@@ -302,11 +319,9 @@ void MVGProjectWrapper::configureCameras(const double horizontalAperture,
     }
 
     // Only configure selected cameras
-    LOG_INFO("Configure selected cameras")
     for(QStringList::const_iterator it = _selectedCameras.begin(); it != _selectedCameras.end();
         ++it)
     {
-        LOG_INFO(it->toStdString())
         std::map<std::string, MVGCameraWrapper*>::const_iterator foundIt =
             _camerasByName.find(it->toStdString());
         if(foundIt != _camerasByName.end())

@@ -33,7 +33,7 @@ Item {
             State {
                 name: "OPEN"
                 when: m.isOpen
-                PropertyChanges { target: settings; height: 330; }
+                PropertyChanges { target: settings; height: 360; }
                 PropertyChanges { target: settings; opacity: 1; }
             }
         ]
@@ -204,6 +204,44 @@ Item {
                     TooltipArea {
                         anchors.fill: parent
                         text: "Scene scale"
+                    }
+                }
+
+                // Active synchro
+                Item {
+                    implicitWidth: parent.width
+                    Layout.minimumHeight: 25
+                    RowLayout {
+                        anchors.fill: parent
+                        Text {
+                            width: 25
+                            height: parent.height
+                            text: "Active synchronization : "
+                            verticalAlignment: Text.AlignVCenter
+                            color: m.textColor
+                            font.pointSize: m.textSize
+                        }
+                        CheckBox {
+                            id: cameraSynchroCheckBox
+                            implicitHeight: parent.height
+                            implicitWidth: parent.height
+                            checked: m.project.activeSynchro
+                            
+                        }
+                        MouseArea {
+                            anchors.fill: parent
+                            onClicked: m.project.activeSynchro = !cameraSynchroCheckBox.checked
+                        }
+
+                        Rectangle {
+                            implicitWidth: 80
+                            Layout.horizontalSizePolicy: Layout.Expanding
+                            color: "blue"
+                        }
+                    }
+                    TooltipArea {
+                        anchors.fill: parent
+                        text: "Camera synchronization"
                     }
                 }
                 // Camera parameters

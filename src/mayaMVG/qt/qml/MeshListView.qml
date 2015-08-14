@@ -28,11 +28,10 @@ Item {
         var end = Math.max(oldIndex, newIndex) + 1;
 
         for(var i = begin; i < end; ++i)
-        {
             qlist[qlist.length] = m.project.meshModel.get(i).dagPath;
-        }
         m.project.addMeshesToIHMSelection(qlist);
-        m.project.addMeshesToMayaSelection(qlist);
+        if(m.project.activeSynchro)
+            m.project.addMeshesToMayaSelection(qlist);
     }
 
     function center(index, itemHeight, listView) {

@@ -9,7 +9,6 @@
 
 namespace mayaMVG
 {
-
 class MVGManipulator : public MPxManipulatorNode
 {
 public:
@@ -51,6 +50,7 @@ public:
 public:
     static void drawIntersection2D(const MPointArray& intersectedVSPoints,
                                    const MFn::Type intersectionType);
+    void drawVisibleItems(M3dView& view) const;
 
 protected:
     MVGEditCmd* newEditCmd();
@@ -65,6 +65,9 @@ protected:
     int _cameraID;
     std::vector<MVGPointCloudItem> _visiblePointCloudItems;
     MIntArray _snapedPoints;
+
+public:
+    static bool _displayVisiblePoints;
 
 private:
     MVGContext* _context;

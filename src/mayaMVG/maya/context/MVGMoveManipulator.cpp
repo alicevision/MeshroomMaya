@@ -219,14 +219,13 @@ void MVGMoveManipulator::draw(M3dView& view, const MDagPath& path, M3dView::Disp
             view.endGL();
             return;
         }
-        // Draw point to be placed
-        if(!_doDrag)
-            drawPointToBePlaced(view, camera, selectedComponent, mouseVSPosition);
         // Draw vertex information on hover
         drawVertexOnHover(view, _cache, getMousePosition(view, kView));
-        // draw intersection
         if(!_doDrag)
         {
+            // Draw point to be placed
+            drawPointToBePlaced(view, camera, selectedComponent, mouseVSPosition);
+            // Draw intersection
             MPointArray intersectedVSPoints;
             getIntersectedPoints(view, intersectedVSPoints, MVGManipulator::kView);
             MVGManipulator::drawIntersection2D(intersectedVSPoints, intersectedComponentType);
@@ -243,6 +242,9 @@ void MVGMoveManipulator::draw(M3dView& view, const MDagPath& path, M3dView::Disp
         }
         if(_doDrag)
             MVGDrawUtil::drawLineLoop2D(_intermediateVSPoints, MVGDrawUtil::_errorColor, 3.0);
+
+        if(_displayVisiblePoints)
+            drawVisibleItems(view);
         MVGDrawUtil::end2DDrawing();
     }
 

@@ -4,6 +4,8 @@
 namespace mayaMVG
 {
 
+bool MVGManipulator::_displayVisiblePoints = false;
+
 MVGManipulator::MVGManipulator()
 {
     _cameraID = -1;
@@ -192,6 +194,17 @@ void MVGManipulator::drawIntersection2D(const MPointArray& intersectedVSPoints,
         default:
             break;
     }
+}
+
+// Draw visible items
+void MVGManipulator::drawVisibleItems(M3dView& view) const
+{
+    MPointArray visiblesItemsPositions;
+    for(std::vector<MVGPointCloudItem>::const_iterator itemIt = _visiblePointCloudItems.begin();
+        itemIt != _visiblePointCloudItems.end(); ++itemIt)
+        visiblesItemsPositions.append(MVGGeometryUtil::worldToViewSpace(view, itemIt->_position));
+    MColor red(1.0, 0.0, 0.0);
+    MVGDrawUtil::drawPoints2D(visiblesItemsPositions, red, 2.f);
 }
 
 } // namespace
