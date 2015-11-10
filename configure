@@ -1,2 +1,11 @@
 #! /bin/bash
-(mkdir -p build&&cd build >/dev/null 2>&1 && cmake ../src "$@")
+(
+mkdir -p build_release &&
+cd build_release &&
+rez env maya-2014 openMVG cmake -- cmake ../src -DCMAKE_BUILD_TYPE=RELEASE "$@" &&
+cd .. &&
+mkdir -p build_debug &&
+cd build_debug &&
+rez env maya-2014 openMVG cmake -- cmake ../src -DCMAKE_BUILD_TYPE=DEBUG "$@"
+)
+

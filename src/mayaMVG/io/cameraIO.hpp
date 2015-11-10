@@ -2,7 +2,7 @@
 
 #include "mayaMVG/core/MVGCamera.hpp"
 #include "mayaMVG/core/MVGLog.hpp"
-#include <third_party/stlplus3/filesystemSimplified/file_system.hpp>
+#include <stlplus3/filesystemSimplified/file_system.hpp>
 #include <fstream>
 #include <maya/MFnCamera.h>
 
@@ -39,7 +39,8 @@ bool setPinholeFromBinary(mayaMVG::MVGCamera& camera, const std::string& binaryP
 namespace mayaMVG
 {
 
-bool readCameras(std::string filePath, std::string imageDir, std::string cameraDir)
+bool readCameras(const std::string& filePath, const std::string& imageDir,
+                 const std::string& cameraDir)
 {
     std::ifstream infile(filePath.c_str());
     if(!infile.is_open())
@@ -89,6 +90,7 @@ bool readCameras(std::string filePath, std::string imageDir, std::string cameraD
         // TODO : set camera aperture according to camera model
 
         camera.setImagePlane(stlplus::create_filespec(imageDir, imageName), width, height);
+        // TODO: camera.setImageName(imageName)
         camera.setId(cameraId);
         cameraId++;
 

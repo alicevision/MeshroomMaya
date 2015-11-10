@@ -8,14 +8,14 @@ set(PLUGIN_VERSION_MINOR 0)
 # Compiler settings
 #
 if(UNIX)
-	set(CMAKE_C_COMPILER gcc)
-	set(CMAKE_CXX_COMPILER g++)
+  set(CMAKE_C_COMPILER gcc)
+  set(CMAKE_CXX_COMPILER g++)
 endif()
 
 #
 # Project Search Paths
 #
-include_directories(${PROJECT_SOURCE_DIR}/..)
+include_directories(${CMAKE_SOURCE_DIR})
 
 #
 # Maya dependency
@@ -35,9 +35,9 @@ include(${QT_USE_FILE})
 #
 # OpenMVG dependency
 #
-include_directories(
-			../openMVG/src
-			../openMVG/src/third_party/eigen)
+find_package(OpenMVG REQUIRED)
+include_directories(${OPENMVG_INCLUDE_DIR})
+link_directories(${OPENMVG_LIBRARIES})
 
 #
 # OpenGL dependency
@@ -78,7 +78,7 @@ include_directories(${CMAKE_CURRENT_BINARY_DIR})
 add_library(${project_BIN} SHARED
 				${PLUGIN_SRCS}
 				${MOC_SRCS}
-                                ./io/Ply.cpp)
+				./io/Ply.cpp)
 target_link_libraries(
 				${project_BIN}
 				${MAYA_Foundation_LIBRARY}
@@ -86,9 +86,10 @@ target_link_libraries(
 				${MAYA_OpenMayaUI_LIBRARY}
 				${MAYA_OpenMayaFX_LIBRARY}
 				${MAYA_OpenMayaRender_LIBRARY}
-				stlplus
-				openMVG_numeric
-				openMVG_multiview
+                                ${OPENMVG_LIBRARIES}
+#				stlplus
+#				openMVG_numeric
+#				openMVG_multiview
 				${QT_LIBRARIES}
 				${OPENGL_LIBRARIES})
 maya_set_plugin_properties(${project_BIN})
@@ -96,10 +97,10 @@ maya_set_plugin_properties(${project_BIN})
 #
 # Install settings
 #
-### install path
-if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
-	set(CMAKE_INSTALL_PREFIX ${MAINFOLDER}/dist/plugin CACHE STRING "Plugin install path" FORCE)
-endif(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+#### install path
+#if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+#	set(CMAKE_INSTALL_PREFIX ${PROJECT_BINARY_DIR}/dist CACHE STRING "Plugin install path" FORCE)
+#endif(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
 
 ### plugin file
 install(TARGETS ${project_BIN}

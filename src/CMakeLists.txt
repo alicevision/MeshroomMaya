@@ -2,7 +2,6 @@
 cmake_minimum_required(VERSION 2.6.2)
 project(openMVG-UI)
 
-
 #
 # Compiler settings
 #
@@ -17,8 +16,12 @@ endif()
 set(MAINFOLDER "${PROJECT_SOURCE_DIR}/..")
 set(CMAKE_MODULE_PATH "${MAINFOLDER}/cmake")
 
+### install path
+if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+  set(CMAKE_INSTALL_PREFIX ${PROJECT_BINARY_DIR}/dist CACHE STRING "Plugin install path" FORCE)
+endif(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+
 #
 # Add Build Targets
 #
-add_subdirectory(openMVG/src EXCLUDE_FROM_ALL)
 add_subdirectory(mayaMVG)

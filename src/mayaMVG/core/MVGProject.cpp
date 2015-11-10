@@ -10,6 +10,7 @@
 #include <maya/MFnTypedAttribute.h>
 #include <maya/MSelectionList.h>
 #include <maya/MPlug.h>
+#include <stlplus3/filesystemSimplified/file_system.hpp>
 #include <maya/MQuaternion.h>
 #include <maya/MEulerRotation.h>
 #include <maya/MMatrix.h>
