@@ -33,7 +33,7 @@ Item {
             State {
                 name: "OPEN"
                 when: m.isOpen
-                PropertyChanges { target: settings; height: 360; }
+                PropertyChanges { target: settings; height: 330; }
                 PropertyChanges { target: settings; opacity: 1; }
             }
         ]
@@ -247,7 +247,7 @@ Item {
                 // Camera parameters
                 CameraSettings {
                     implicitWidth: parent.width
-                    Layout.minimumHeight: 160
+                    Layout.minimumHeight: 130
                     project: m.project
                 }
 

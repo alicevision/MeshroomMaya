@@ -56,6 +56,8 @@ struct MVGMayaUtil
                                         bool = false);
     static MStatus getIntAttribute(const MObject&, const MString&, int&, bool = false);
     static MStatus setIntAttribute(const MObject&, const MString&, const int&, bool = false);
+    static MStatus getDoubleAttribute(const MObject&, const MString&, double&, bool = false);
+    static MStatus setDoubleAttribute(const MObject&, const MString&, const double&, bool = false);
     static MStatus getDoubleArrayAttribute(const MObject&, const MString&, MDoubleArray&,
                                            bool = false);
     static MStatus setDoubleArrayAttribute(const MObject&, const MString&, const MDoubleArray&,

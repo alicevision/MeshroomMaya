@@ -4,7 +4,7 @@ import pymel.core as pm
 
 def mvgOpenProjectFileDialog():
     import maya.cmds as cmds
-    path = cmds.fileDialog2(caption='Select project path', fileMode=3, okCaption='Load')
+    path = cmds.fileDialog2(caption='Select project file', fileMode=1, fileFilter="*.abc", okCaption='Load')
     if path: return path[0]
     else: return ''
 

@@ -314,16 +314,12 @@ bool MVGGeometryUtil::projectPointsOnPlane(M3dView& view, const MPointArray& toP
                                            const PlaneKernel::Model& planeModel,
                                            MPointArray& projectedWSPoints)
 {
-    // compute camera center
+    // Retrieve camera center
     MDagPath cameraPath;
     view.getCamera(cameraPath);
     MVGCamera camera(cameraPath);
-    MPoint cameraCenter = TO_MPOINT(camera.getPinholeCamera()._C);
-    MVGPointCloud cloud(MVGProject::_CLOUD);
-    MMatrix inclusiveMatrix = MMatrix::identity;
-    if(cloud.isValid())
-        inclusiveMatrix = cloud.getDagPath().inclusiveMatrix();
-    cameraCenter *= inclusiveMatrix;
+    MPoint cameraCenter = camera.getCenter();
+
     // project points on computed plane
     MPoint projectedWSPoint;
     for(size_t i = 0; i < toProjectCSPoints.length(); ++i)

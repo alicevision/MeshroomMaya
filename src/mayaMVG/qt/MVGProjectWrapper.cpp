@@ -8,6 +8,7 @@
 #include "mayaMVG/maya/context/MVGContext.hpp"
 #include "mayaMVG/maya/context/MVGMoveManipulator.hpp"
 #include <maya/MQtUtil.h>
+#include "maya/MFnTypedAttribute.h"
 
 namespace mayaMVG
 {
@@ -148,53 +149,107 @@ void MVGProjectWrapper::loadExistingProject()
     Q_EMIT projectDirectoryChanged();
 }
 
-void MVGProjectWrapper::loadNewProject(const QString& projectDirectoryPath)
+void MVGProjectWrapper::loadABC(const QString& abcFilePath)
 {
+    MStatus status;
+
     // Cancel load
-    if(projectDirectoryPath.isEmpty())
+    if(abcFilePath.isEmpty())
         return;
 
-    clear();
-    activeSelectionContext();
-    if(!_project.isValid())
-        _project = MVGProject::create(MVGProject::_PROJECT);
-    setIsProjectLoading(true);
+    // Load abc
+    MString cmd;
+    cmd.format("AbcImport -mode import \"^1s\"", abcFilePath.toStdString().c_str());
+    status = MGlobal::executeCommand(cmd);
+    CHECK_RETURN(status)
 
-    // Loading project takes a lot of time.
-    // So we ask Qt to process events (UI) to display the "Loading" status
-    // before Maya will freeze the application.
-    qApp->processEvents();
+    // Set undistorted images
+    cmd.format("from mayaMVG import camera;\n"
+               "camera.setUndistortImage('^1s', '^2s')",
+               abcFilePath.toStdString().c_str(), MVGCamera::_MVG_IMAGE_PATH.asChar());
+    MGlobal::executePythonCommand(cmd);
 
-    if(!_project.load(projectDirectoryPath.toStdString()))
+    // Retrieve root node
+    MDagPath rootDagPath;
+    status = MVGMayaUtil::getDagPathByName(MVGProject::_PROJECT.c_str(), rootDagPath);
+    if(!status)
+        status = MVGMayaUtil::getDagPathByName(("*:" + MVGProject::_PROJECT).c_str(), rootDagPath);
+    CHECK_RETURN(status)
+
+    _project = MVGProject(rootDagPath);
+    // Add MVG attribute
+    MDagModifier dagModifier;
+    MFnTypedAttribute tAttr;
+    MObject pathAttr = tAttr.create(MVGProject::_MVG_PROJECTPATH, "mp", MFnData::kString);
+    dagModifier.addAttribute(rootDagPath.node(), pathAttr);
+    dagModifier.doIt();
+    setProjectDirectory(abcFilePath);
+
+    // Cameras group node
+    MObject cameraParent = rootDagPath.child(0);
+    MDagPath cameraGroupPath;
+    MDagPath::getAPathTo(cameraParent, cameraGroupPath);
+    // Cloud group node
+    MObject cloudParent = rootDagPath.child(1);
+    MDagPath cloudGroupPath;
+    MDagPath::getAPathTo(cloudParent, cloudGroupPath);
+
+    // Point cloud
+    if(cloudGroupPath.childCount() == 0)
     {
-        setProjectDirectory("");
-        setIsProjectLoading(false);
-        LOG_ERROR("An error occured when loading project.");
+        LOG_ERROR("Can't find point cloud in MVG hierarchy")
         return;
     }
-    _project.setProjectDirectory(projectDirectoryPath.toStdString());
-    Q_EMIT projectDirectoryChanged();
-    setIsProjectLoading(false);
+    MDagPath pointCloudDagPath;
+    MDagPath::getAPathTo(cloudGroupPath.child(0), pointCloudDagPath);
+    pointCloudDagPath.extendToShape();
+    MObject pointCloud = pointCloudDagPath.node();
 
+    // Visibility
+    MIntArray visibilitySizeArray;
+    status =
+        MVGMayaUtil::getIntArrayAttribute(pointCloud, "mvg_visibilitySize", visibilitySizeArray);
+    CHECK_RETURN(status)
+    MIntArray visibilityIDsArray;
+    status = MVGMayaUtil::getIntArrayAttribute(pointCloud, "mvg_visibilityIds", visibilityIDsArray);
+    CHECK_RETURN(status)
+
+    int k = 0;
+    std::map<int, MIntArray> itemsPerCam;
+    // Browse 3D points
+    for(int j = 0; j < visibilitySizeArray.length(); ++j)
+    {
+        int nbView = visibilitySizeArray[j];
+        int lastPosition = k + (nbView - 1) * 2;
+        // Browse visibility
+        for(; k < lastPosition + 1; k += 2)
+        {
+            int viewID = visibilityIDsArray[k];
+            itemsPerCam[viewID].append(j);
+        }
+    }
+
+    // Cameras
+    if(cameraGroupPath.childCount() == 0)
+    {
+        LOG_ERROR("Can't find cameras in MVG hierarchy")
+        return;
+    }
+    for(int i = 0; i < cameraGroupPath.childCount(); ++i)
+    {
+        MDagPath cameraDagPath;
+        MDagPath::getAPathTo(cameraGroupPath.child(i), cameraDagPath);
+        MVGCamera::create(cameraDagPath, itemsPerCam);
+    }
+
+    _project.lockProject();
+
+    // Update view
     reloadMVGCamerasFromMaya();
-    reloadMVGMeshesFromMaya();
-
-    // Loading image planes takes a lot of time.
-    // So before loading image planes, we ask Qt to process events (UI)
-    // before Maya will freeze the application.
-    qApp->processEvents();
-
-    // Select the two first cameras for the views
-    if(_cameraList.size() > 1 && _panelList.count() > 1)
-    {
-        QList<MVGCameraWrapper*>& cameras = _cameraList.asQList<MVGCameraWrapper>();
-        setCameraToView(cameras[0], static_cast<MVGPanelWrapper*>(_panelList.get(0))->getName());
-        setCameraToView(cameras[1], static_cast<MVGPanelWrapper*>(_panelList.get(1))->getName());
-    }
 }
 
 /**
- * 
+ *
  * @param[in] selectedCameraNames Names list of the cameras to add to IHM selection
  * @param[in] center Boolean indicating if we center the camera list on the new selection
  */
@@ -216,15 +271,14 @@ void MVGProjectWrapper::addCamerasToIHMSelection(const QStringList& selectedCame
         // TODO : let the user define in which viewport he wants to display the selected camera
         if(center && camera->getDagPathAsString() == selectedCameraNames[0])
         {
-            setCameraToView(camera,
-                            static_cast<MVGPanelWrapper*>(_panelList.get(0))->getName());
+            setCameraToView(camera, static_cast<MVGPanelWrapper*>(_panelList.get(0))->getName());
             Q_EMIT centerCameraListByIndex(_cameraList.indexOf(camera));
         }
     }
 }
 
 /**
- * 
+ *
  * @param[in] cameraNames Names list of the cameras to add to IHM selection
  */
 void MVGProjectWrapper::addCamerasToMayaSelection(const QStringList& cameraNames) const
@@ -306,29 +360,6 @@ void MVGProjectWrapper::setCameraLocatorScale(const double scale)
         it->second->getCamera().setLocatorScale(scale);
 }
 
-void MVGProjectWrapper::configureCameras(const double horizontalAperture,
-                                         const double verticalAperture)
-{
-    // If no selection : configure all cameras
-    if(_selectedCameras.empty())
-    {
-        for(std::map<std::string, MVGCameraWrapper*>::const_iterator it = _camerasByName.begin();
-            it != _camerasByName.end(); ++it)
-            it->second->getCamera().configure(horizontalAperture, verticalAperture);
-        return;
-    }
-
-    // Only configure selected cameras
-    for(QStringList::const_iterator it = _selectedCameras.begin(); it != _selectedCameras.end();
-        ++it)
-    {
-        std::map<std::string, MVGCameraWrapper*>::const_iterator foundIt =
-            _camerasByName.find(it->toStdString());
-        if(foundIt != _camerasByName.end())
-            foundIt->second->getCamera().configure(horizontalAperture, verticalAperture);
-    }
-}
-
 void MVGProjectWrapper::clear()
 {
     _cameraList.clear();
@@ -338,7 +369,6 @@ void MVGProjectWrapper::clear()
     _meshesList.clear();
     _meshesByName.clear();
     _selectedMeshes.clear();
-    Q_EMIT projectDirectoryChanged();
 }
 
 void MVGProjectWrapper::clearImageCache()

@@ -55,7 +55,7 @@ static void selectionChangedCB(void*)
 
     // Synchronisation between IHM/Maya selection
     if(!project->getActiveSynchro())
-      return;
+        return;
     // Compare IHM selection to Maya selection
     if(!selectedCameras.empty())
     {

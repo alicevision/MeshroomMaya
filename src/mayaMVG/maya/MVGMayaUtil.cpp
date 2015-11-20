@@ -268,6 +268,30 @@ MStatus MVGMayaUtil::setIntAttribute(const MObject& object, const MString& param
     return status;
 }
 
+MStatus MVGMayaUtil::getDoubleAttribute(const MObject& object, const MString& param, double& value,
+                                        bool networked)
+{
+    MStatus status;
+    MFnDependencyNode fn(object, &status);
+    CHECK_RETURN_STATUS(status);
+    MPlug plug(fn.findPlug(param, networked, &status));
+    CHECK_RETURN_STATUS(status);
+    value = plug.asDouble();
+    return status;
+}
+
+MStatus MVGMayaUtil::setDoubleAttribute(const MObject& object, const MString& param,
+                                        const double& value, bool networked)
+{
+    MStatus status;
+    MFnDependencyNode fn(object, &status);
+    CHECK_RETURN_STATUS(status);
+    MPlug plug(fn.findPlug(param, networked, &status));
+    CHECK_RETURN_STATUS(status);
+    plug.setDouble(value);
+    return status;
+}
+
 MStatus MVGMayaUtil::getDoubleArrayAttribute(const MObject& object, const MString& param,
                                              MDoubleArray& doubleArray, bool networked)
 {

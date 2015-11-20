@@ -1,8 +1,7 @@
 #include "mayaMVG/core/MVGProject.hpp"
+#include "mayaMVG/core/MVGCamera.hpp"
 #include "mayaMVG/core/MVGMesh.hpp"
 #include "mayaMVG/core/MVGLog.hpp"
-#include "mayaMVG/io/cameraIO.hpp"
-#include "mayaMVG/io/pointCloudIO.hpp"
 #include "mayaMVG/maya/MVGMayaUtil.hpp"
 #include <maya/MFnTransform.h>
 #include <maya/MItDependencyNodes.h>
@@ -58,21 +57,13 @@ void unlockNode(MObject obj)
 namespace mayaMVG
 {
 
+std::string MVGProject::_CAMERAS_GROUP = "mvgCameras";
+std::string MVGProject::_CLOUD_GROUP = "mvgCloud";
 std::string MVGProject::_CLOUD = "mvgPointCloud";
 std::string MVGProject::_MESH = "mvgMesh";
-std::string MVGProject::_PROJECT = "mayaMVG";
-MString MVGProject::_PROJECTPATH = "projectPath";
+std::string MVGProject::_PROJECT = "mvgRoot";
+MString MVGProject::_MVG_PROJECTPATH = "mvgProjectPath";
 
-// Paths
-std::string MVGProject::_cameraRelativeDirectory =
-    stlplus::folder_append_separator("SfM_output") + stlplus::folder_append_separator("cameras");
-std::string MVGProject::_imageRelativeDirectory =
-    stlplus::folder_append_separator("SfM_output") + stlplus::folder_append_separator("images");
-std::string MVGProject::_cameraRelativeFile =
-    stlplus::folder_append_separator("SfM_output") + "views.txt";
-std::string MVGProject::_pointCloudRelativeFile = stlplus::folder_append_separator("SfM_output") +
-                                                  stlplus::folder_append_separator("clouds") +
-                                                  "calib.ply";
 // Image cache
 // List of camera by name or dagpath according to uniqueness
 std::list<std::string> MVGProject::_cachedImagePlanes;
@@ -99,43 +90,10 @@ bool MVGProject::isValid() const
         return false;
     MFnTransform fn(_dagpath);
     MStatus status;
-    fn.findPlug(_PROJECTPATH, false, &status);
+    fn.findPlug(_MVG_PROJECTPATH, false, &status);
     if(!status)
         return false;
     return true;
-}
-
-// static
-MVGProject MVGProject::create(const std::string& name)
-{
-    MStatus status;
-    MFnTransform fn;
-    MDagPath path;
-
-    // root node
-    MObject transform = fn.create(MObject::kNullObj, &status);
-    CHECK(status)
-    // root/cameras
-    MObject cameras = fn.create(transform, &status);
-    fn.setName("cameras");
-    lockNode(cameras);
-    // root/clouds
-    MObject clouds = fn.create(transform, &status);
-    fn.setName("clouds");
-    lockNode(clouds);
-
-    MDagPath::getAPathTo(transform, path);
-    MVGProject project(path);
-    project.setName(name);
-
-    // Add root attributes
-    MDagModifier dagModifier;
-    MFnTypedAttribute tAttr;
-    MObject projectAttr = tAttr.create(_PROJECTPATH, "prp", MFnData::kString);
-    dagModifier.addAttribute(path.node(), projectAttr);
-    dagModifier.doIt();
-
-    return project;
 }
 
 // static
@@ -153,39 +111,6 @@ std::vector<MVGProject> MVGProject::list()
             list.push_back(project);
     }
     return list;
-}
-
-bool MVGProject::load(const std::string& projectDirectoryPath)
-{
-    // TODO: remove when multiproject
-    clear();
-
-    if(!isProjectDirectoryValid(projectDirectoryPath))
-        return false;
-    // Load new elements
-    if(!loadCameras(projectDirectoryPath))
-        return false;
-    if(!loadPointCloud(projectDirectoryPath))
-        return false;
-    return true;
-}
-
-bool MVGProject::loadCameras(const std::string& projectDirectoryPath)
-{
-    std::string cameraFile =
-        stlplus::folder_append_separator(projectDirectoryPath) + _cameraRelativeFile;
-    std::string imageDirectory =
-        stlplus::folder_append_separator(projectDirectoryPath) + _imageRelativeDirectory;
-    std::string cameraDirectory =
-        stlplus::folder_append_separator(projectDirectoryPath) + _cameraRelativeDirectory;
-    return readCameras(cameraFile, imageDirectory, cameraDirectory);
-}
-
-bool MVGProject::loadPointCloud(const std::string& projectDirectoryPath)
-{
-    std::string pointCloudFile =
-        stlplus::folder_append_separator(projectDirectoryPath) + _pointCloudRelativeFile;
-    return readPointCloud(pointCloudFile);
 }
 
 bool MVGProject::scaleScene(const double scaleSize) const
@@ -294,14 +219,14 @@ bool MVGProject::scaleScene(const double scaleSize) const
 void MVGProject::clear()
 {
     MDagPath camerasDagPath;
-    MVGMayaUtil::getDagPathByName("cameras", camerasDagPath);
+    MVGMayaUtil::getDagPathByName(MVGProject::_CAMERAS_GROUP.c_str(), camerasDagPath);
     for(int i = camerasDagPath.childCount(); i > 0; --i)
     {
         MObject child = camerasDagPath.child(i - 1);
         MGlobal::deleteNode(child);
     }
     MDagPath pointCloudDagPath;
-    MVGMayaUtil::getDagPathByName("clouds", pointCloudDagPath);
+    MVGMayaUtil::getDagPathByName(MVGProject::_CLOUD_GROUP.c_str(), pointCloudDagPath);
     for(int i = pointCloudDagPath.childCount(); i > 0; --i)
     {
         MObject child = pointCloudDagPath.child(i - 1);
@@ -315,7 +240,7 @@ const std::string MVGProject::getProjectDirectory() const
     // Retrive it by its name
     MDagPath path;
     MVGMayaUtil::getDagPathByName(_PROJECT.c_str(), path);
-    MVGMayaUtil::getStringAttribute(path.node(), _PROJECTPATH, directory);
+    MVGMayaUtil::getStringAttribute(path.node(), _MVG_PROJECTPATH, directory);
     return (directory.length() > 0) ? directory.asChar() : "";
 }
 
@@ -324,31 +249,7 @@ void MVGProject::setProjectDirectory(const std::string& directory) const
     // Retrive it by its name
     MDagPath path;
     MVGMayaUtil::getDagPathByName(_PROJECT.c_str(), path);
-    MVGMayaUtil::setStringAttribute(path.node(), _PROJECTPATH, directory.c_str());
-}
-
-const bool MVGProject::isProjectDirectoryValid(const std::string& projectDirectoryPath) const
-{
-    // Camera file
-    std::string cameraFile =
-        stlplus::folder_append_separator(projectDirectoryPath) + _cameraRelativeFile;
-    std::ifstream infile(cameraFile.c_str());
-    if(!infile.is_open())
-    {
-        LOG_ERROR("Camera file not found (" << cameraFile << ")")
-        return false;
-    }
-    // Cloud file
-    std::string pointCloudFile =
-        stlplus::folder_append_separator(projectDirectoryPath) + _pointCloudRelativeFile;
-    Ply ply;
-    if(!ply.open(pointCloudFile))
-    {
-        LOG_ERROR("Point cloud file not found (" << pointCloudFile << ")")
-        ply.close();
-        return false;
-    }
-    return true;
+    MVGMayaUtil::setStringAttribute(path.node(), _MVG_PROJECTPATH, directory.c_str());
 }
 
 void MVGProject::selectCameras(const std::vector<std::string>& cameraNames) const

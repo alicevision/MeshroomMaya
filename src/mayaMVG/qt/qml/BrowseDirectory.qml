@@ -37,21 +37,20 @@ Item {
             }
             TooltipArea {
                 anchors.fill: parent
-                text: "Project root path"
+                text: "Project file (.abc)"
             }
         }
         ToolButton {
             implicitWidth: 30
             height: 30
             iconSource: "img/Folder.png"
-            tooltip: "Select project root path"
+            tooltip: "Select project file (.abc)"
             MouseArea {
                 id: folderButtonMouseArea
                 anchors.fill: parent
                 onClicked: {
-                    var projectPath = m.project.openFileDialog()
-                    m.project.loadNewProject(projectPath)
-                    browserProjectLoaded()
+                    var abcFile = m.project.openFileDialog()
+                    m.project.loadABC(abcFile)
                 }
             }
         }

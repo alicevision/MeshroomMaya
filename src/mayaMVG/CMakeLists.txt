@@ -77,8 +77,7 @@ include_directories(${CMAKE_CURRENT_BINARY_DIR})
 #
 add_library(${project_BIN} SHARED
 				${PLUGIN_SRCS}
-				${MOC_SRCS}
-                                ./io/Ply.cpp)
+				${MOC_SRCS})
 target_link_libraries(
 				${project_BIN}
 				${MAYA_Foundation_LIBRARY}

@@ -15,8 +15,7 @@ class MVGProjectWrapper : public QObject
 {
     Q_OBJECT
 
-    Q_PROPERTY(QString projectDirectory READ getProjectDirectory WRITE setProjectDirectory NOTIFY
-                   projectDirectoryChanged);
+    Q_PROPERTY(QString projectDirectory READ getProjectDirectory NOTIFY projectDirectoryChanged);
     Q_PROPERTY(int editMode READ getEditMode NOTIFY editModeChanged);
     Q_PROPERTY(int moveMode READ getMoveMode NOTIFY moveModeChanged);
     Q_PROPERTY(QObjectListModel* cameraModel READ getCameraModel NOTIFY cameraModelChanged);
@@ -27,8 +26,8 @@ class MVGProjectWrapper : public QObject
     Q_PROPERTY(QString currentUnit READ getCurrentUnit NOTIFY currentUnitChanged);
     Q_PROPERTY(QString pluginVersion READ getPluginVersion CONSTANT);
     Q_PROPERTY(bool isProjectLoading READ getIsProjectLoading NOTIFY isProjectLoadingChanged);
-    Q_PROPERTY(bool activeSynchro READ getActiveSynchro WRITE setActiveSynchro
-                   NOTIFY activeSynchroChanged);
+    Q_PROPERTY(bool activeSynchro READ getActiveSynchro WRITE setActiveSynchro NOTIFY
+                   activeSynchroChanged);
 
 public:
     MVGProjectWrapper();
@@ -78,7 +77,7 @@ public:
     Q_INVOKABLE void setAdjacentPlaneMode();
     // Project
     Q_INVOKABLE void loadExistingProject();
-    Q_INVOKABLE void loadNewProject(const QString& projectDirectoryPath);
+    Q_INVOKABLE void loadABC(const QString& abcFilePath);
     // Selection
     Q_INVOKABLE void addCamerasToIHMSelection(const QStringList& cameraNames, bool center = false);
     Q_INVOKABLE void addCamerasToMayaSelection(const QStringList& cameraNames) const;
@@ -90,8 +89,6 @@ public:
     Q_INVOKABLE void setCamerasNear(const double near);
     Q_INVOKABLE void setCamerasFar(const double far);
     Q_INVOKABLE void setCameraLocatorScale(const double scale);
-    Q_INVOKABLE void configureCameras(const double horizontalAperture,
-                                      const double verticalAperture);
     // Should be a private and non invokable function
     Q_INVOKABLE void reloadMVGMeshesFromMaya();
 

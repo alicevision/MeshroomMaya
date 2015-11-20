@@ -5,6 +5,7 @@
 #include "mayaMVG/core/MVGPointCloudItem.hpp"
 #include "mayaMVG/maya/MVGMayaUtil.hpp"
 #include "mayaMVG/maya/cmd/MVGImagePlaneCmd.hpp"
+#include <maya/MPoint.h>
 #include <maya/MMatrix.h>
 #include <maya/MQuaternion.h>
 #include <maya/MFnCamera.h>
@@ -20,10 +21,14 @@ namespace mayaMVG
 {
 
 // dynamic attributes
-MString MVGCamera::_ID = "cameraId";
-MString MVGCamera::_PINHOLE = "pinholeProjectionMatrix";
-MString MVGCamera::_ITEMS = "visibleItems";
-MString MVGCamera::_DEFERRED = "imageNameDeferred";
+MString MVGCamera::_MVG_ITEMS = "mvg_visibleItems";
+
+MString MVGCamera::_MVG_INTRINSIC_ID = "mvg_intrinsicId";
+MString MVGCamera::_MVG_VIEW_ID = "mvg_viewId";
+MString MVGCamera::_MVG_INTRINSIC_TYPE = "mvg_intrinsicType";
+MString MVGCamera::_MVG_INTRINSICS_PARAMS = "mvg_intrinsicParams";
+MString MVGCamera::_MVG_IMAGE_PATH = "mvg_imagePath";
+MString MVGCamera::_MVG_SENSOR_WIDTH = "mvg_sensorWidth_pix";
 
 MVGCamera::MVGCamera()
     : MVGNodeWrapper()
@@ -76,62 +81,66 @@ bool MVGCamera::isValid() const
         return false;
     MFnCamera fn(_dagpath);
     MStatus status;
-    fn.findPlug(_ID, false, &status);
+    fn.findPlug(_MVG_INTRINSIC_ID, false, &status);
     if(!status)
         return false;
-    fn.findPlug(_PINHOLE, false, &status);
+    fn.findPlug(_MVG_VIEW_ID, false, &status);
     if(!status)
         return false;
-    fn.findPlug(_ITEMS, false, &status);
+    fn.findPlug(_MVG_INTRINSIC_TYPE, false, &status);
     if(!status)
         return false;
-    // Check for image plane connection
-    MPlug imagePlanePlug = fn.findPlug("imagePlane", false, &status);
-    CHECK(status)
-    if(imagePlanePlug.numElements() < 1)
+    fn.findPlug(_MVG_INTRINSICS_PARAMS, false, &status);
+    if(!status)
+        return false;
+    fn.findPlug(_MVG_IMAGE_PATH, false, &status);
+    if(!status)
+        return false;
+    fn.findPlug(_MVG_SENSOR_WIDTH, false, &status);
+    if(!status)
+        return false;
+    fn.findPlug(_MVG_ITEMS, false, &status);
+    if(!status)
         return false;
     return true;
 }
 
-MVGCamera MVGCamera::create(const std::string& name)
+MVGCamera MVGCamera::create(MDagPath& cameraDagPath, std::map<int, MIntArray>& itemsPerCamera)
 {
     MStatus status;
-    MFnCamera fnCamera;
-    MDagPath path;
 
-    // get project root node
-    MVGProject project(MVGProject::_PROJECT);
-    MObject parent = project.getDagPath().child(0); // cameras transform
+    cameraDagPath.extendToShape();
+    MObject cameraNode = cameraDagPath.node();
 
-    // create maya camera
-    MObject transform = fnCamera.create(parent, &status);
-    CHECK(status)
+    MVGCamera camera(cameraDagPath);
+    //    camera.setName(name);
 
-    // initialize MVGCamera from maya node
-    MDagPath::getAPathTo(transform, path);
-    path.extendToShape();
-    MVGCamera camera(path);
-    camera.setName(name);
+    // Configure camera
+    MFnCamera fnCamera(cameraDagPath);
+    fnCamera.setPanZoomEnabled(true);
 
-    // add MayaMVG attributes
+    // Add MVG attributes
     MDagModifier dagModifier;
-    MFnNumericAttribute nAttr;
     MFnTypedAttribute tAttr;
-    MObject idAttr = nAttr.create(_ID, "id", MFnNumericData::kInt);
-    dagModifier.addAttribute(path.node(), idAttr);
-    MObject pinholeAttr = tAttr.create(_PINHOLE, "ppm", MFnData::kDoubleArray);
-    dagModifier.addAttribute(path.node(), pinholeAttr);
-    MObject itemsAttr = tAttr.create(_ITEMS, "itm", MFnData::kIntArray);
-    dagModifier.addAttribute(path.node(), itemsAttr);
+    // Visibility
+    int viewID;
+    MVGMayaUtil::getIntAttribute(cameraNode, "mvg_viewId", viewID);
+    MObject itemsAttr = tAttr.create(MVGCamera::_MVG_ITEMS, "itm", MFnData::kIntArray);
+    dagModifier.addAttribute(cameraNode, itemsAttr);
     dagModifier.doIt();
+
+    // Set MVG attributes
+    MVGMayaUtil::setIntArrayAttribute(cameraNode, MVGCamera::_MVG_ITEMS, itemsPerCamera[viewID]);
 
     // create, reparent & connect image plane
     MString cmd;
     MGlobal::executePythonCommand("from mayaMVG import camera");
     MString fileName = "";
-    cmd.format("camera.mvgSetImagePlane(\'^1s\', \'^2s\')", path.fullPathName(), fileName);
+    cmd.format("camera.mvgSetImagePlane(\'^1s\', \'^2s\')", cameraDagPath.fullPathName(), fileName);
     MGlobal::executePythonCommand(cmd);
 
+    // Configure image plane
+    camera.setImagePlane();
     return camera;
 }
 
@@ -145,7 +154,7 @@ std::vector<MVGCamera> MVGCamera::getCameras()
     std::vector<MVGCamera> list;
     // Retrieve mayaMVG camera node
     MDagPath cameraDagPath;
-    status = MVGMayaUtil::getDagPathByName("cameras", cameraDagPath);
+    status = MVGMayaUtil::getDagPathByName(MVGProject::_CAMERAS_GROUP.c_str(), cameraDagPath);
     CHECK(status);
     MFnDagNode cameraDagNode(cameraDagPath);
     for(int i = 0; i < cameraDagNode.childCount(); ++i)
@@ -167,7 +176,7 @@ int MVGCamera::getId() const
 {
     int id = -1;
     MStatus status;
-    status = MVGMayaUtil::getIntAttribute(_dagpath.node(), _ID, id);
+    status = MVGMayaUtil::getIntAttribute(_dagpath.node(), _MVG_VIEW_ID, id);
     CHECK(status)
     return id;
 }
@@ -175,7 +184,7 @@ int MVGCamera::getId() const
 void MVGCamera::setId(const int& id) const
 {
     MStatus status;
-    status = MVGMayaUtil::setIntAttribute(_dagpath.node(), _ID, id);
+    status = MVGMayaUtil::setIntAttribute(_dagpath.node(), _MVG_VIEW_ID, id);
     CHECK(status)
 }
 
@@ -204,51 +213,28 @@ MDagPath MVGCamera::getImagePlaneShapeDagPath() const
 std::string MVGCamera::getImagePlane() const
 {
     MStatus status;
-    MFnDagNode fnImage(getImagePlaneShapeDagPath(), &status);
-    CHECK(status)
-    std::string imageName(fnImage.findPlug(_DEFERRED).asString().asChar());
+    MFnDagNode fn(_dagpath, &status);
+
+    std::string imageName(fn.findPlug(MVGCamera::_MVG_IMAGE_PATH).asString().asChar());
+
     return imageName;
 }
 
-void MVGCamera::setImagePlane(const std::string& img, int width, int height) const
+void MVGCamera::setImagePlane() const
 {
-    if(img.empty())
-        return;
-
-    // image plane parameters
     MStatus status;
+    // Configure image plane
     MDagPath imagePath = getImagePlaneShapeDagPath();
+
     MFnDagNode fnImage(imagePath, &status);
     CHECK_RETURN(status)
     fnImage.findPlug("depth").setValue(50);
     fnImage.findPlug("dic").setValue(1);
     fnImage.findPlug("fit").setValue(2);
-    fnImage.findPlug("width").setValue(width);
-    fnImage.findPlug("height").setValue(height);
+    const std::pair<double, double> imageSize = getImageSize();
+    fnImage.findPlug("width").setValue(imageSize.first);
+    fnImage.findPlug("height").setValue(imageSize.second);
     fnImage.findPlug("displayOnlyIfCurrent").setValue(1);
-
-    openMVG::PinholeCamera pinhole = getPinholeCamera();
-    double offsetX = width * 0.5 - pinhole._K(0, 2);
-    double offsetY = height * 0.5 - pinhole._K(1, 2);
-    double hAperture = getHorizontalFilmAperture();
-    fnImage.findPlug("offsetX").setValue(offsetX / width * hAperture);
-    fnImage.findPlug("offsetY").setValue(-offsetY / width * hAperture);
-
-    // handling deferred loading
-    if(fnImage.findPlug(_DEFERRED).isNull())
-    {
-        MDagModifier dagModifier;
-        MFnTypedAttribute tAttr;
-        MObject dynAttr = tAttr.create(_DEFERRED, "def", MFnData::kString);
-        dagModifier.addAttribute(imagePath.node(), dynAttr);
-        dagModifier.doIt();
-        fnImage.findPlug(_DEFERRED).setValue(img.c_str());
-    }
-    else
-    {
-        fnImage.findPlug(_DEFERRED).setValue(img.c_str());
-        fnImage.findPlug("imageName").setValue(img.c_str());
-    }
 }
 
 void MVGCamera::unloadImagePlane() const
@@ -265,66 +251,36 @@ void MVGCamera::unloadImagePlane() const
     CHECK_RETURN(status)
 }
 
-openMVG::PinholeCamera MVGCamera::getPinholeCamera() const
+MPoint MVGCamera::getCenter(MSpace::Space space) const
 {
-    // Retrieve pinhole from 'pinholeProjectionMatrix' attribute
-    MDoubleArray doubleArray;
-    MVGMayaUtil::getDoubleArrayAttribute(_dagpath.node(), _PINHOLE, doubleArray);
-    if(doubleArray.length() < 12)
-    {
-        LOG_ERROR("Unable to read " << _dagpath.fullPathName().asChar()
-                                    << "::pinholeProjectionMatrix attribute")
-        return openMVG::PinholeCamera();
-    }
-    openMVG::Mat34 P;
-    for(size_t i = 0; i < 3; ++i)
-        for(size_t j = 0; j < 4; ++j)
-            P(i, j) = doubleArray[4 * i + j];
-    return openMVG::PinholeCamera(P);
+    MStatus status;
+    MFnCamera fnCamera(getDagPath(), &status);
+    CHECK(status)
+    return fnCamera.eyePoint(space);
 }
 
-void MVGCamera::setPinholeCamera(const openMVG::PinholeCamera& pinhole) const
+double MVGCamera::getSensorWidth() const
 {
-    // set maya camera position
-    MFnTransform fnTransform(_dagpath.transform());
-    fnTransform.setTranslation(MVector(pinhole._C(0), pinhole._C(1), pinhole._C(2)),
-                               MSpace::kTransform);
+    MStatus status;
+    double sensorWidth;
+    status = MVGMayaUtil::getDoubleAttribute(_dagpath.node(), _MVG_SENSOR_WIDTH, sensorWidth);
+    CHECK(status)
+    return sensorWidth;
+}
 
-    // set maya camera orientation
-    MMatrix m = MMatrix::identity;
-    m[0][0] = pinhole._R(0, 0);
-    m[0][1] = pinhole._R(0, 1);
-    m[0][2] = pinhole._R(0, 2);
-    m[1][0] = pinhole._R(1, 0) * -1; // FIXME
-    m[1][1] = pinhole._R(1, 1) * -1; // ?
-    m[1][2] = pinhole._R(1, 2) * -1; // ?
-    m[2][0] = pinhole._R(2, 0) * -1; // ?
-    m[2][1] = pinhole._R(2, 1) * -1; // ?
-    m[2][2] = pinhole._R(2, 2) * -1; // ?
-    MQuaternion quaternion;
-    quaternion = m;
-    fnTransform.setRotation(quaternion, MSpace::kTransform);
-
-    // lock maya camera transform attributes
-    fnTransform.findPlug("translateX").setLocked(true);
-    fnTransform.findPlug("translateY").setLocked(true);
-    fnTransform.findPlug("translateZ").setLocked(true);
-    fnTransform.findPlug("rotateX").setLocked(true);
-    fnTransform.findPlug("rotateY").setLocked(true);
-    fnTransform.findPlug("rotateZ").setLocked(true);
-
-    // set pinhole attribute P (projection matrix P = K[R|t])
-    MDoubleArray doubleArray;
-    for(size_t i = 0; i < 3; ++i)
-        for(size_t j = 0; j < 4; ++j)
-            doubleArray.append(pinhole._P(i, j));
-    MVGMayaUtil::setDoubleArrayAttribute(_dagpath.node(), _PINHOLE, doubleArray);
+void MVGCamera::setSensorWidth(const double sensorWidth) const
+{
+    MStatus status;
+    status = MVGMayaUtil::setDoubleAttribute(_dagpath.node(), _MVG_SENSOR_WIDTH, sensorWidth);
+    CHECK_RETURN(status)
 }
 
 void MVGCamera::getVisibleItems(std::vector<MVGPointCloudItem>& visibleItems) const
 {
+    MStatus status;
     MIntArray visibleIndexes;
-    MVGMayaUtil::getIntArrayAttribute(_dagpath.node(), _ITEMS, visibleIndexes);
+    status = MVGMayaUtil::getIntArrayAttribute(_dagpath.node(), _MVG_ITEMS, visibleIndexes);
+    CHECK_RETURN(status)
     MVGPointCloud pointCloud(MVGProject::_CLOUD);
     pointCloud.getItems(visibleItems, visibleIndexes);
 }
@@ -335,7 +291,7 @@ void MVGCamera::setVisibleItems(const std::vector<MVGPointCloudItem>& items) con
     intArray.setLength(items.size());
     for(size_t i = 0; i < items.size(); ++i)
         intArray.set(items[i]._id, i);
-    MVGMayaUtil::setIntArrayAttribute(_dagpath.node(), _ITEMS, intArray);
+    MVGMayaUtil::setIntArrayAttribute(_dagpath.node(), _MVG_ITEMS, intArray);
 }
 
 double MVGCamera::getZoom() const
@@ -453,37 +409,6 @@ void MVGCamera::setLocatorScale(const double scale) const
     CHECK_RETURN(status)
     status = fnCamera.findPlug("locatorScale").setValue(scale);
     CHECK_RETURN(status)
-}
-
-void MVGCamera::configure(const double horizontalAperture, const double verticalAperture) const
-{
-    MStatus status;
-    MFnCamera fnCamera(getDagPath(), &status);
-    CHECK_RETURN(status)
-    openMVG::PinholeCamera pinhole = getPinholeCamera();
-    const double focalLengthPixel = pinhole._K(0, 0);
-    std::pair<double, double> size = getImageSize();
-    const double width = size.first;
-    const double height = size.second;
-    const double fieldOfView = 2.0 * atan((double)width / (2.0 * (double)focalLengthPixel));
-
-    fnCamera.setAspectRatio((double)width / (double)height);
-    fnCamera.setHorizontalFilmAperture(horizontalAperture);
-    fnCamera.setVerticalFilmAperture(verticalAperture);
-    fnCamera.setHorizontalFieldOfView(fieldOfView);
-    fnCamera.setFilmFit(MFnCamera::kHorizontalFilmFit);
-
-    // Image plane parameters
-    MDagPath imagePath = getImagePlaneShapeDagPath();
-    MFnDagNode fnImage(imagePath, &status);
-    CHECK_RETURN(status)
-
-    const double offsetX = width * 0.5 - pinhole._K(0, 2);
-    const double offsetY = height * 0.5 - pinhole._K(1, 2);
-    fnImage.findPlug("sizeX").setValue(horizontalAperture);
-    fnImage.findPlug("sizeY").setValue(verticalAperture);
-    fnImage.findPlug("offsetX").setValue(offsetX / width * horizontalAperture);
-    fnImage.findPlug("offsetY").setValue(-offsetY / width * horizontalAperture);
 }
 
 const std::pair<double, double> MVGCamera::getImageSize() const
