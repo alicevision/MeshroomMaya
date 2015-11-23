@@ -181,75 +181,7 @@ Item {
                         anchors.fill: parent
                         text: "Camera locator scale"
                     }
-                }
-                Item {
-                    implicitWidth: parent.width
-                    implicitHeight: 25
-                    RowLayout {
-                        anchors.fill: parent
-                        anchors.margins: 1
-                        Rectangle {
-                            implicitWidth: 50
-                            height: parent.height
-                            color: "grey"
-                            radius: 2
-
-                            TextInput {
-                                id: horizontalApertureValue
-                                width: parent.width
-                                horizontalAlignment: TextInput.AlignHCenter
-                                anchors.verticalCenter: parent.verticalCenter
-                                selectByMouse: true
-                                font.pointSize: m.textSize
-                                validator: DoubleValidator{bottom: 0.001;}
-                            }
-                            TooltipArea {
-                                anchors.fill: parent
-                                text: "Horizontal aperture"
-                            }
-                        }
-                        
-                        Rectangle {
-                            implicitWidth: 50
-                            height: parent.height
-                            color: "grey"
-                            radius: 2
-
-                            TextInput {
-                                id: verticalApertureValue
-                                width: parent.width
-                                horizontalAlignment: TextInput.AlignHCenter
-                                anchors.verticalCenter: parent.verticalCenter
-                                selectByMouse: true
-                                font.pointSize: m.textSize
-                                validator: DoubleValidator{bottom: 0.001;}
-                            }
-                            TooltipArea {
-                                anchors.fill: parent
-                                text: "Vertical aperture"
-                            }
-                        }
-
-                        Button {
-                            id: button
-                            height: parent.height
-                            text: "Reconfigure cameras"
-                    
-                            MouseArea {
-                                anchors.fill: parent
-                                onClicked:
-                                {
-                                    m.project.configureCameras(horizontalApertureValue.text, verticalApertureValue.text)
-                                }
-                            }
-                        }
-                        Rectangle {
-                            Layout.horizontalSizePolicy: Layout.Expanding
-                            color: "blue"
-                        }
-                    }
-                }
-             
+                }             
             }         
         }
     }

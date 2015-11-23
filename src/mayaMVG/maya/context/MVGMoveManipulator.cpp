@@ -32,22 +32,8 @@ void triangulatePoint(const std::map<int, MPoint>& point2dPerCamera_CS,
     assert(cameraCount > 1);
     // prepare n-view triangulation data
     openMVG::Mat2X imagePoints(2, cameraCount);
+
     std::vector<openMVG::Mat34> projectiveCameras;
-
-    // Retrieve transformation matrix of the Maya full DAG.
-    MVGPointCloud cloud(MVGProject::_CLOUD);
-    MMatrix mayaInclusiveMatrix = MMatrix::identity;
-    if(cloud.isValid() && cloud.getDagPath().isValid())
-        mayaInclusiveMatrix = cloud.getDagPath().inclusiveMatrix();
-    MTransformationMatrix transformMatrix(mayaInclusiveMatrix);
-    MMatrix rotationMatrix = transformMatrix.asRotateMatrix();
-    openMVG::Mat3 rotation;
-    for(int i = 0; i < 3; ++i)
-    {
-        for(int j = 0; j < 3; ++j)
-            rotation(i, j) = rotationMatrix[i][j];
-    }
-
     {
         std::map<int, MPoint>::const_iterator it = point2dPerCamera_CS.begin();
         for(size_t i = 0; it != point2dPerCamera_CS.end(); ++i, ++it)
@@ -55,7 +41,7 @@ void triangulatePoint(const std::map<int, MPoint>& point2dPerCamera_CS,
             MVGCamera camera(it->first);
             const MPoint& point2d_CS = it->second;
 
-            // Retrieve the intrinsic matrix.
+            // Retrieve the intrinsic matrix from 'pinholeProjectionMatrix' attribute
             //
             // K Matrix:
             // f*k_u     0      c_u
@@ -63,24 +49,44 @@ void triangulatePoint(const std::map<int, MPoint>& point2dPerCamera_CS,
             //   0       0       1
             // c_u, c_v : the principal point, which would be ideally in the centre of the image.
             //
-            // In maya we keep the camera with an ideal optical center at the center
-            // of the camera sensor: c_u = width/2 and c_v = height/2
-            // We compensate this offset on the image plane.
-            // So here, for the triangulation, we should use the ideal K.
-            openMVG::Mat3 K = camera.getPinholeCamera()._K;
-            std::pair<double, double> imageSize = camera.getImageSize();
-            K(0, 2) = imageSize.first * 0.5;
-            K(1, 2) = imageSize.second * 0.5;
+            MDoubleArray intrinsicsArray;
+            MVGMayaUtil::getDoubleArrayAttribute(camera.getDagPath().node(), "mvg_intrinsicParams",
+                                                 intrinsicsArray);
 
-            // Recompute the full Projection Matric P with the maya parent
-            // transformations applied.
-            MPoint cameraCenter = TO_MPOINT(camera.getPinholeCamera()._C);
-            cameraCenter *= mayaInclusiveMatrix;
-            const openMVG::Mat3 R = camera.getPinholeCamera()._R;
-            openMVG::Vec3 C = TO_VEC3(cameraCenter);
-            const openMVG::Vec3 t = -R * rotation * C;
+            openMVG::Mat3 K;
+            K(0, 0) = intrinsicsArray[0];
+            K(0, 1) = 0.0;
+            K(0, 2) = intrinsicsArray[1];
+            K(1, 0) = 0.0;
+            K(1, 1) = intrinsicsArray[0];
+            K(1, 2) = intrinsicsArray[2];
+            K(2, 0) = 0.0;
+            K(2, 2) = 1.0;
+
+            // Retrieve transformation matrix
+            MMatrix inclusiveMatrix = camera.getDagPath().inclusiveMatrix();
+            MTransformationMatrix transformMatrix(inclusiveMatrix);
+            openMVG::Mat3 R;
+            MMatrix rotationMatrix = transformMatrix.asRotateMatrix();
+            for(int m = 0; m < 3; ++m)
+            {
+                for(int j = 0; j < 3; ++j)
+                {
+                    // Maya has inverted Y and Z axes
+                    int sign = 1;
+                    if(m > 0)
+                        sign = -1;
+                    R(m, j) = sign * rotationMatrix[m][j];
+                }
+            }
+
+            // Retrieve translation vector
+            openMVG::Vec3 C = TO_VEC3(camera.getCenter());
+            openMVG::Vec3 t = -R * C;
+
+            // Compute projection matrix
             openMVG::Mat34 P;
-            openMVG::P_From_KRt(K, R * rotation, t, &P);
+            openMVG::P_From_KRt(K, R, t, &P);
             projectiveCameras.push_back(P);
 
             // clicked point matrix (image space)

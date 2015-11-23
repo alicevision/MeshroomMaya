@@ -31,10 +31,11 @@ def listMVGMeshesTransform():
     return mvgMeshes
 
 def scaleScene(transformMatrix, projectNodeName):
+    lockNode(projectNodeName, False)
     import maya.cmds as cmds
     relatives = cmds.listRelatives(projectNodeName, ad=True, pa=True, type="transform")
     for r in relatives:
-        lockNode(r, False)
+            lockNode(r, False)
     mvgMeshList = listMVGMeshesTransform()
     for mesh in mvgMeshList:
         lockNode(mesh, False)
@@ -46,7 +47,9 @@ def scaleScene(transformMatrix, projectNodeName):
     cmds.makeIdentity(projectNodeName, a=True)
     for mesh in mvgMeshList:
         cmds.xform(mesh, r=True, m=matrix)
-        cmds.makeIdentity(mesh, a=True)
+        cmds.makeIdentity(mesh, a=True) 
         lockNode(mesh, True)
     for r in relatives:
         lockNode(r, True)  
+    lockNode(projectNodeName, True)
+

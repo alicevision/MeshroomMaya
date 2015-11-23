@@ -16,7 +16,7 @@ class MVGProject : public MVGNodeWrapper
 {
 
 public:
-    MVGProject(const std::string& name = "mayaMVG");
+    MVGProject(const std::string& name = MVGProject::_PROJECT);
     MVGProject(const MDagPath& dagPath);
     virtual ~MVGProject();
 
@@ -24,20 +24,15 @@ public:
     virtual bool isValid() const;
 
 public:
-    static MVGProject create(const std::string& name);
     static std::vector<MVGProject> list();
 
 public:
-    bool load(const std::string& projectDirectoryPath);
-    bool loadCameras(const std::string& projectDirectoryPath);
-    bool loadPointCloud(const std::string& projectDirectoryPath);
     bool scaleScene(const double scaleSize) const;
     void clear();
 
 public:
     const std::string getProjectDirectory() const;
     void setProjectDirectory(const std::string&) const;
-    const bool isProjectDirectoryValid(const std::string&) const;
     void selectCameras(const std::vector<std::string>& cameraNames) const;
     void selectMeshes(const std::vector<std::string>& meshNames) const;
     void unlockProject() const;
@@ -53,15 +48,12 @@ public:
 
 public:
     // openMVG node names
+    static std::string _CAMERAS_GROUP;
+    static std::string _CLOUD_GROUP;
     static std::string _CLOUD;
     static std::string _MESH;
     static std::string _PROJECT;
-    // dynamic attributes
-    static MString _PROJECTPATH;
-    static std::string _cameraRelativeDirectory;
-    static std::string _imageRelativeDirectory;
-    static std::string _cameraRelativeFile;
-    static std::string _pointCloudRelativeFile;
+    static MString _MVG_PROJECTPATH;
 
     /// FIFO queue indicating the list of images/cameras keept in memory
     /// Cameras corresponding to current images seen in panels are not stored in this list.

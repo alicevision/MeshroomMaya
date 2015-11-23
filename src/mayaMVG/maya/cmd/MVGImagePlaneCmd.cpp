@@ -68,8 +68,8 @@ MStatus MVGImagePlaneCmd::doIt(const MArgList& args)
         list.getDagPath(0, dagPath);
         dagPath.extendToShape();
 
-        MFnDagNode fn(dagPath, &status);
-        MPlug imagePlanePlug = fn.findPlug("imagePlane", status);
+        MFnDagNode fnCamera(dagPath, &status);
+        MPlug imagePlanePlug = fnCamera.findPlug("imagePlane", status);
         CHECK_RETURN_STATUS(status)
         MPlug imagePlug = imagePlanePlug.elementByLogicalIndex(0, &status);
         MPlugArray connectedPlugs;
@@ -90,12 +90,12 @@ MStatus MVGImagePlaneCmd::doIt(const MArgList& args)
         MString imageNameValue;
         imageNamePlug.getValue(imageNameValue);
 
-        // Set "deferred" attribute into "imageName" attribute
-        MString deferred = fnImagePlane.findPlug(MVGCamera::_DEFERRED, &status).asString();
+        // Set "imageName" attribute on image plane
+        MString imagePath = fnCamera.findPlug(MVGCamera::_MVG_IMAGE_PATH, &status).asString();
         CHECK_RETURN_STATUS(status)
-        if(imageNameValue != deferred)
+        if(imageNameValue != imagePath)
         {
-            imageNamePlug.setValue(deferred);
+            imageNamePlug.setValue(imagePath);
 
             // Update cache
             MVGProject project(MVGProject::_PROJECT);

@@ -4,8 +4,11 @@
 #include "mayaMVG/core/MVGNodeWrapper.hpp"
 #include "openMVG/cameras/PinholeCamera.hpp"
 #include <vector>
+#include <map>
 
 class MString;
+class MPoint;
+class MIntArray;
 
 namespace mayaMVG
 {
@@ -29,7 +32,7 @@ public:
     virtual bool isValid() const;
 
 public:
-    static MVGCamera create(const std::string& name);
+    static MVGCamera create(MDagPath& cameraDagPath, std::map<int, MIntArray>& itemsPerCamera);
     static std::vector<MVGCamera> getCameras();
 
 public:
@@ -37,10 +40,11 @@ public:
     void setId(const int&) const;
     MDagPath getImagePlaneShapeDagPath() const;
     std::string getImagePlane() const;
-    void setImagePlane(const std::string&, int width, int height) const;
+    void setImagePlane() const;
     void unloadImagePlane() const;
-    openMVG::PinholeCamera getPinholeCamera() const;
-    void setPinholeCamera(const openMVG::PinholeCamera&) const;
+    MPoint getCenter(MSpace::Space space = MSpace::kWorld) const;
+    double getSensorWidth() const;
+    void setSensorWidth(const double sensorWidth) const;
     void getVisibleItems(std::vector<MVGPointCloudItem>& visibleItems) const;
     void setVisibleItems(const std::vector<MVGPointCloudItem>& item) const;
     double getZoom() const;
@@ -57,17 +61,19 @@ public:
     void setNear(const double near) const;
     void setFar(const double far) const;
     void setLocatorScale(const double scale) const;
-    void configure(const double horizontalAperture, const double verticalAperture) const;
 
     const std::pair<double, double> getImageSize() const;
 
 public:
-    static MString _DEFERRED;
+    static MString _MVG_IMAGE_PATH;
+    static MString _MVG_ITEMS;
 
 private:
-    static MString _ID;
-    static MString _PINHOLE;
-    static MString _ITEMS;
+    static MString _MVG_INTRINSIC_ID;
+    static MString _MVG_VIEW_ID;
+    static MString _MVG_INTRINSIC_TYPE;
+    static MString _MVG_INTRINSICS_PARAMS;
+    static MString _MVG_SENSOR_WIDTH;
 };
 
 } // namespace
