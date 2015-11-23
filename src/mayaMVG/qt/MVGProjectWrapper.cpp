@@ -163,12 +163,6 @@ void MVGProjectWrapper::loadABC(const QString& abcFilePath)
     status = MGlobal::executeCommand(cmd);
     CHECK_RETURN(status)
 
-    // Set undistorted images
-    cmd.format("from mayaMVG import camera;\n"
-               "camera.setUndistortImage('^1s', '^2s')",
-               abcFilePath.toStdString().c_str(), MVGCamera::_MVG_IMAGE_PATH.asChar());
-    MGlobal::executePythonCommand(cmd);
-
     // Retrieve root node
     MDagPath rootDagPath;
     status = MVGMayaUtil::getDagPathByName(MVGProject::_PROJECT.c_str(), rootDagPath);
@@ -241,6 +235,13 @@ void MVGProjectWrapper::loadABC(const QString& abcFilePath)
         MDagPath::getAPathTo(cameraGroupPath.child(i), cameraDagPath);
         MVGCamera::create(cameraDagPath, itemsPerCam);
     }
+
+    // Set images paths
+    cmd.format("from mayaMVG import camera;\n"
+               "camera.setImagesPaths('^1s', '^2s', '^3s')",
+               abcFilePath.toStdString().c_str(), MVGCamera::_MVG_IMAGE_PATH.asChar(),
+               MVGCamera::_MVG_THUMBNAIL_PATH.asChar());
+    MGlobal::executePythonCommand(cmd);
 
     _project.lockProject();
 

@@ -28,7 +28,10 @@ public:
 public Q_SLOTS:
     const QString getName() const { return QString::fromStdString(_camera.getName()); }
     const QString getDagPathAsString() const;
-    const QString getImagePath() const { return QString::fromStdString(_camera.getImagePlane()); }
+    const QString getImagePath() const
+    {
+        return QString::fromStdString(_camera.getThumbnailPath());
+    }
     bool isSelected() const { return _isSelected; }
     void setIsSelected(const bool isSelected);
     const QStringList& getViews() const { return _views; }

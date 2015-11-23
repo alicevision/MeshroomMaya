@@ -39,7 +39,7 @@ public:
     int getId() const;
     void setId(const int&) const;
     MDagPath getImagePlaneShapeDagPath() const;
-    std::string getImagePlane() const;
+    std::string getThumbnailPath() const;
     void setImagePlane() const;
     void unloadImagePlane() const;
     MPoint getCenter(MSpace::Space space = MSpace::kWorld) const;
@@ -66,6 +66,7 @@ public:
 
 public:
     static MString _MVG_IMAGE_PATH;
+    static MString _MVG_THUMBNAIL_PATH;
     static MString _MVG_ITEMS;
 
 private:

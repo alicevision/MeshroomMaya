@@ -16,17 +16,24 @@ def mvgSetImagePlane(cameraShape, imageFile):
     imagePlaneName = cmds.imagePlane(camera=cameraShape)
     cmds.setAttr( "%s.imageName" % imagePlaneName[0], imageFile, type="string")
 
-def setUndistortImage(abcFilePath, imageAttribute):
+def setImagesPaths(abcFilePath, imageAttribute, thumbnailAttribute):
   import os
   
   projectPath = os.path.dirname(abcFilePath)
   imageDir = os.path.join(projectPath, 'undistort/jpg/')
+  thumbnailDir = os.path.join(projectPath, 'undistort/thumbnail/')
   cameraList = cmds.ls(ca=True)
-  for c in cameraList:
-    if cmds.attributeQuery(imageAttribute, node=c, exists=True):    
-      imagePath = cmds.getAttr(c+'.'+imageAttribute)
-      basename = os.path.basename(imagePath)
-      fileName, fileExtension = os.path.splitext(basename)
-      fileName += "-UO-full.jpg"
+  for c in cameraList:    
+    if not cmds.attributeQuery(imageAttribute, node=c, exists=True):
+      continue
+    originalImagePath = cmds.getAttr(c+'.'+imageAttribute)
+    basename = os.path.basename(originalImagePath)
+    fileName, fileExtension = os.path.splitext(basename)
+    imageName = fileName + "-UO-full.jpg"
+    cmds.setAttr(c+'.'+imageAttribute, os.path.join(imageDir, imageName), type="string")
+    
+    if not cmds.attributeQuery(thumbnailAttribute, node=c, exists=True):
+      continue
+    imageName = fileName + "-UO-thumbnail.jpg"
+    cmds.setAttr(c+'.'+thumbnailAttribute, os.path.join(thumbnailDir, imageName), type="string")
 
-      cmds.setAttr(c+'.'+imageAttribute, os.path.join(imageDir, fileName), type="string")

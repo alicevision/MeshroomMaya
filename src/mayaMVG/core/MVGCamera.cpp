@@ -28,6 +28,7 @@ MString MVGCamera::_MVG_VIEW_ID = "mvg_viewId";
 MString MVGCamera::_MVG_INTRINSIC_TYPE = "mvg_intrinsicType";
 MString MVGCamera::_MVG_INTRINSICS_PARAMS = "mvg_intrinsicParams";
 MString MVGCamera::_MVG_IMAGE_PATH = "mvg_imagePath";
+MString MVGCamera::_MVG_THUMBNAIL_PATH = "mvg_thumbnailPath";
 MString MVGCamera::_MVG_SENSOR_WIDTH = "mvg_sensorWidth_pix";
 
 MVGCamera::MVGCamera()
@@ -127,6 +128,8 @@ MVGCamera MVGCamera::create(MDagPath& cameraDagPath, std::map<int, MIntArray>& i
     MVGMayaUtil::getIntAttribute(cameraNode, "mvg_viewId", viewID);
     MObject itemsAttr = tAttr.create(MVGCamera::_MVG_ITEMS, "itm", MFnData::kIntArray);
     dagModifier.addAttribute(cameraNode, itemsAttr);
+    MObject thumbnailAttr = tAttr.create(MVGCamera::_MVG_THUMBNAIL_PATH, "mtp", MFnData::kString);
+    dagModifier.addAttribute(cameraNode, thumbnailAttr);
     dagModifier.doIt();
 
     // Set MVG attributes
@@ -210,12 +213,11 @@ MDagPath MVGCamera::getImagePlaneShapeDagPath() const
     return path;
 }
 
-std::string MVGCamera::getImagePlane() const
+std::string MVGCamera::getThumbnailPath() const
 {
     MStatus status;
     MFnDagNode fn(_dagpath, &status);
-
-    std::string imageName(fn.findPlug(MVGCamera::_MVG_IMAGE_PATH).asString().asChar());
+    std::string imageName(fn.findPlug(MVGCamera::_MVG_THUMBNAIL_PATH).asString().asChar());
 
     return imageName;
 }
