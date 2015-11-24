@@ -249,6 +249,18 @@ void MVGProjectWrapper::loadABC(const QString& abcFilePath)
     reloadMVGCamerasFromMaya();
 }
 
+void MVGProjectWrapper::remapPaths(const QString& abcFilePath)
+{
+    MStatus status;
+    MString cmd;
+    cmd.format("camera.mapImagesPaths('^1s', '^2s', '^3s')", MVGCamera::_MVG_IMAGE_PATH.asChar(),
+               MVGCamera::_MVG_THUMBNAIL_PATH.asChar(), abcFilePath.toStdString().c_str());
+    MGlobal::executePythonCommand("from mayaMVG import camera");
+    status = MGlobal::executePythonCommand(cmd);
+    setProjectDirectory(abcFilePath);
+    CHECK(status)
+}
+
 /**
  *
  * @param[in] selectedCameraNames Names list of the cameras to add to IHM selection

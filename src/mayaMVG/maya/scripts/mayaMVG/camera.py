@@ -37,3 +37,23 @@ def setImagesPaths(abcFilePath, imageAttribute, thumbnailAttribute):
     imageName = fileName + "-UO-thumbnail.jpg"
     cmds.setAttr(c+'.'+thumbnailAttribute, os.path.join(thumbnailDir, imageName), type="string")
 
+def mapImagesPaths(imageAttribute, thumbnailAttribute, abcFilePath):
+  import os
+
+  projectPath = os.path.dirname(abcFilePath)
+  imageDir = os.path.join(projectPath, 'undistort/jpg/')
+  thumbnailDir = os.path.join(projectPath, 'undistort/thumbnail/')
+
+  cameraList = cmds.ls(ca=True)
+  for c in cameraList:      
+    if not cmds.attributeQuery(imageAttribute, node=c, exists=True) or not imageDir:
+      continue
+    originalImagePath = cmds.getAttr(c+'.'+imageAttribute)
+    basename = os.path.basename(originalImagePath)
+    cmds.setAttr(c+'.'+imageAttribute, os.path.join(imageDir, basename), type="string")
+
+    if not cmds.attributeQuery(thumbnailAttribute, node=c, exists=True) or not thumbnailDir:
+      continue
+    originalImagePath = cmds.getAttr(c+'.'+thumbnailAttribute)
+    basename = os.path.basename(originalImagePath)
+    cmds.setAttr(c+'.'+thumbnailAttribute, os.path.join(thumbnailDir, basename), type="string")
