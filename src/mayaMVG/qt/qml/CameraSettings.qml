@@ -181,7 +181,29 @@ Item {
                         anchors.fill: parent
                         text: "Camera locator scale"
                     }
-                }             
+                }
+                Item {
+                    width: parent.width
+                    implicitHeight: 25
+
+                    Button {
+                        text: "Remap images paths"
+                        height: parent.height
+                        width: 120
+                        MouseArea {
+                            anchors.fill: parent
+                            onClicked: {
+                                var abcFile = m.project.openFileDialog()
+                                m.project.remapPaths(abcFile)
+                            }
+                        }
+                    }
+
+                    TooltipArea {
+                        anchors.fill: parent
+                        text: "Remap paths from .abc file"
+                    }
+                }            
             }         
         }
     }

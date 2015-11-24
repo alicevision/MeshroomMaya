@@ -78,6 +78,7 @@ public:
     // Project
     Q_INVOKABLE void loadExistingProject();
     Q_INVOKABLE void loadABC(const QString& abcFilePath);
+    Q_INVOKABLE void remapPaths(const QString& abcFilePath);
     // Selection
     Q_INVOKABLE void addCamerasToIHMSelection(const QStringList& cameraNames, bool center = false);
     Q_INVOKABLE void addCamerasToMayaSelection(const QStringList& cameraNames) const;
