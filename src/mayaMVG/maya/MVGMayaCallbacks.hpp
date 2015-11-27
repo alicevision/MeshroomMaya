@@ -147,14 +147,6 @@ static void redoCB(void*)
     }
 }
 
-static void sceneSavedCB(void*)
-{
-    MVGProjectWrapper* project = getProjectWrapper();
-    if(!project)
-        return;
-    project->clearImageCache();
-}
-
 /**
  * @brief Listen to the Maya nodes creation to update the list of Meshes.
 **/

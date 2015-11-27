@@ -95,14 +95,15 @@ MStatus MVGImagePlaneCmd::doIt(const MArgList& args)
         CHECK_RETURN_STATUS(status)
         if(imageNameValue != imagePath)
         {
-            imageNamePlug.setValue(imagePath);
-
-            // Update cache
-            MVGProject project(MVGProject::_PROJECT);
-            const std::string lastLoadedCam = project.getLastLoadedCameraInView(panel.asChar());
-            project.updateImageCache(currentCamera.asChar(), lastLoadedCam);
-            project.setLastLoadedCameraInView(panel.asChar(), currentCamera.asChar());
+            status = imageNamePlug.setValue(imagePath);
+            CHECK_RETURN_STATUS(status)
         }
+
+        // Update cache
+        MVGProject project(MVGProject::_PROJECT);
+        const std::string lastLoadedCam = project.getLastLoadedCameraInView(panel.asChar());
+        project.updateImageCache(currentCamera.asChar(), lastLoadedCam);
+        project.setLastLoadedCameraInView(panel.asChar(), currentCamera.asChar());
     }
 
     return status;
