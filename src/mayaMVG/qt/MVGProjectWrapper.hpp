@@ -95,7 +95,7 @@ public:
 
     // Clear
     void clear();
-    void clearImageCache();
+    void clearAndUnloadImageCache();
     void clearCameraSelection();
     void clearMeshSelection();
     // UI
