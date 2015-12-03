@@ -161,9 +161,6 @@ MStatus initializePlugin(MObject obj)
     id = MEventMessage::addEventCallback("Redo", redoCB, &status);
     if(status)
         _callbacks.append(id);
-    id = MSceneMessage::addCallback(MSceneMessage::kBeforeSave, sceneSavedCB, &status);
-    if(status)
-        _callbacks.append(id);
     id = MEventMessage::addEventCallback("quitApplication", quitApplicationCB, &status);
     if(status)
         _callbacks.append(id);

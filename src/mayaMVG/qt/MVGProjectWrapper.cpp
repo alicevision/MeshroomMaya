@@ -146,6 +146,25 @@ void MVGProjectWrapper::loadExistingProject()
     _project = projects.front();
     reloadMVGCamerasFromMaya();
     reloadMVGMeshesFromMaya();
+
+    // Retrieve selection
+    MDagPath leftCameraPath;
+    MVGMayaUtil::getCameraInView(leftCameraPath, "mvgLPanel");
+    MString leftCameraXFormName = leftCameraPath.partialPathName();
+    leftCameraPath.extendToShape();
+    _activeCameraNameByView["mvgLPanel"] = leftCameraPath.fullPathName().asChar();
+    _project.setLastLoadedCameraInView("mvgLPanel", leftCameraXFormName.asChar());
+
+    MDagPath rightCameraPath;
+    MVGMayaUtil::getCameraInView(rightCameraPath, "mvgRPanel");
+    MString rightCameraXFormName = rightCameraPath.partialPathName();
+    rightCameraPath.extendToShape();
+    _activeCameraNameByView["mvgRPanel"] = rightCameraPath.fullPathName().asChar();
+    _project.setLastLoadedCameraInView("mvgRPanel", rightCameraXFormName.asChar());
+
+    // Clear cache
+    clearAndUnloadImageCache();
+
     Q_EMIT projectDirectoryChanged();
 }
 
@@ -384,8 +403,24 @@ void MVGProjectWrapper::clear()
     _selectedMeshes.clear();
 }
 
-void MVGProjectWrapper::clearImageCache()
+void MVGProjectWrapper::clearAndUnloadImageCache()
 {
+    std::vector<std::string> activeCameras;
+    std::map<std::string, std::string>::iterator it = _activeCameraNameByView.begin();
+    for(it; it != _activeCameraNameByView.end(); ++it)
+        activeCameras.push_back(it->second);
+
+    const std::vector<MVGCamera> cameras = MVGCamera::getCameras();
+    for(std::vector<MVGCamera>::const_iterator cameraIt = cameras.begin();
+        cameraIt != cameras.end(); ++cameraIt)
+    {
+        std::string cameraName = cameraIt->getDagPath().fullPathName().asChar();
+        std::vector<std::string>::iterator cameraFound =
+            std::find(activeCameras.begin(), activeCameras.end(), cameraName);
+        if(cameraFound == activeCameras.end())
+            cameraIt->unloadImagePlane();
+    }
+
     _project.clearImageCache();
 }
 

@@ -48,6 +48,7 @@ MVGMainWidget::MVGMainWidget(QWidget* parent)
 
 MVGMainWidget::~MVGMainWidget()
 {
+    _projectWrapper.clearAndUnloadImageCache();
 }
 
 void MVGMainWidget::focusOutEvent(QFocusEvent* event)

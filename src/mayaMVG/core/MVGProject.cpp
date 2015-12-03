@@ -336,7 +336,7 @@ void MVGProject::updateImageCache(const std::string& newCameraName,
     if(cameraIt != _cachedImagePlanes.end())
         _cachedImagePlanes.remove(newCameraName);
 
-    if(oldCameraName.length() > 0)
+    if(oldCameraName != newCameraName)
         pushImageInCache(oldCameraName);
 }
 
@@ -345,12 +345,6 @@ void MVGProject::updateImageCache(const std::string& newCameraName,
  */
 void MVGProject::clearImageCache()
 {
-    std::list<std::string>::iterator it = _cachedImagePlanes.begin();
-    for(; it != _cachedImagePlanes.end(); ++it)
-    {
-        MVGCamera camera(*it);
-        camera.unloadImagePlane();
-    }
     _cachedImagePlanes.clear();
 }
 
