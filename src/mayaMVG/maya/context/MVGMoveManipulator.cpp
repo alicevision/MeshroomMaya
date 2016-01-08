@@ -28,7 +28,7 @@ namespace // empty namespace
 void triangulatePoint(const std::map<int, MPoint>& point2dPerCamera_CS,
                       MPoint& outTriangulatedPoint_WS)
 {
-    size_t cameraCount = point2dPerCamera_CS.size();
+    const size_t cameraCount = point2dPerCamera_CS.size();
     assert(cameraCount > 1);
     // prepare n-view triangulation data
     openMVG::Mat2X imagePoints(2, cameraCount);
@@ -53,19 +53,15 @@ void triangulatePoint(const std::map<int, MPoint>& point2dPerCamera_CS,
             MVGMayaUtil::getDoubleArrayAttribute(camera.getDagPath().node(), "mvg_intrinsicParams",
                                                  intrinsicsArray);
 
+            // Keep ideal matrix with principal point centered
+            const std::pair<double, double> imageSize = camera.getImageSize();
             openMVG::Mat3 K;
-            K(0, 0) = intrinsicsArray[0];
-            K(0, 1) = 0.0;
-            K(0, 2) = intrinsicsArray[1];
-            K(1, 0) = 0.0;
-            K(1, 1) = intrinsicsArray[0];
-            K(1, 2) = intrinsicsArray[2];
-            K(2, 0) = 0.0;
-            K(2, 2) = 1.0;
+            K << intrinsicsArray[0], 0.0, imageSize.first / 2.0, 0.0, intrinsicsArray[0],
+                imageSize.second / 2.0, 0.0, 0.0, 1.0;
 
             // Retrieve transformation matrix
-            MMatrix inclusiveMatrix = camera.getDagPath().inclusiveMatrix();
-            MTransformationMatrix transformMatrix(inclusiveMatrix);
+            const MMatrix inclusiveMatrix = camera.getDagPath().inclusiveMatrix();
+            const MTransformationMatrix transformMatrix(inclusiveMatrix);
             openMVG::Mat3 R;
             MMatrix rotationMatrix = transformMatrix.asRotateMatrix();
             for(int m = 0; m < 3; ++m)
@@ -81,8 +77,8 @@ void triangulatePoint(const std::map<int, MPoint>& point2dPerCamera_CS,
             }
 
             // Retrieve translation vector
-            openMVG::Vec3 C = TO_VEC3(camera.getCenter());
-            openMVG::Vec3 t = -R * C;
+            const openMVG::Vec3 C = TO_VEC3(camera.getCenter());
+            const openMVG::Vec3 t = -R * C;
 
             // Compute projection matrix
             openMVG::Mat34 P;
