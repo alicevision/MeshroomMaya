@@ -161,7 +161,6 @@ std::vector<MVGCamera> MVGCamera::getCameras()
     // Retrieve mayaMVG camera node
     MDagPath cameraDagPath;
     status = MVGMayaUtil::getDagPathByName(MVGProject::_CAMERAS_GROUP.c_str(), cameraDagPath);
-    CHECK(status);
     MFnDagNode cameraDagNode(cameraDagPath);
     for(int i = 0; i < cameraDagNode.childCount(); ++i)
     {
