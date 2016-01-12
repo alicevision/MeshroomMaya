@@ -2,6 +2,7 @@
 #include "mayaMVG/core/MVGCamera.hpp"
 #include "mayaMVG/core/MVGMesh.hpp"
 #include "mayaMVG/core/MVGLog.hpp"
+#include "mayaMVG/maya/context/MVGContextCmd.hpp"
 #include "mayaMVG/maya/MVGMayaUtil.hpp"
 #include <maya/MFnTransform.h>
 #include <maya/MItDependencyNodes.h>
@@ -212,7 +213,9 @@ bool MVGProject::scaleScene(const double scaleSize) const
                                   false, true);
 
     // Update cache
-    MGlobal::executeCommand("mayaMVGTool -e -rebuild mayaMVGTool1");
+    MString cmd;
+    cmd.format("^1s -e -rebuild ^2s", MVGContextCmd::name, MVGContextCmd::instanceName);
+    MGlobal::executeCommand(cmd);
     return true;
 }
 

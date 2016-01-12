@@ -1,6 +1,7 @@
 #include "mayaMVG/core/MVGMesh.hpp"
 #include "mayaMVG/core/MVGLog.hpp"
 #include "mayaMVG/core/MVGProject.hpp"
+#include "mayaMVG/maya/context/MVGContextCmd.hpp"
 #include <maya/MFnMesh.h>
 #include <maya/MFnSet.h>
 #include <maya/MSelectionList.h>
@@ -201,7 +202,8 @@ void MVGMesh::setIsActive(const bool isActive) const
     }
     // Rebuild cache
     MString cmd;
-    cmd.format("mayaMVGTool -e -rebuild -mesh \"^1s\" mayaMVGTool1", _dagpath.fullPathName());
+    cmd.format("^1s -e -rebuild -mesh \"^2s\" ^3s", MVGContextCmd::name, _dagpath.fullPathName(),
+               MVGContextCmd::instanceName);
     status = MGlobal::executeCommand(cmd);
     CHECK(status)
 }

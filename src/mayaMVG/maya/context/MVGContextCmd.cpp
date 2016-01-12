@@ -26,6 +26,7 @@ namespace mayaMVG
 {
 
 MString MVGContextCmd::name("mayaMVGTool");
+MString MVGContextCmd::instanceName("mayaMVGTool1");
 
 MVGContextCmd::MVGContextCmd()
     : _context(NULL)
@@ -75,7 +76,7 @@ MStatus MVGContextCmd::doEditFlags()
 
         MString currentContext;
         MVGMayaUtil::getCurrentContext(currentContext);
-        if(currentContext != "mayaMVGTool1")
+        if(currentContext != MVGContextCmd::instanceName)
             MVGMayaUtil::activeContext();
 
         switch(editMode)

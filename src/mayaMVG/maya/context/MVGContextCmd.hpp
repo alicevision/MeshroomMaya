@@ -11,6 +11,7 @@ class MVGContextCmd : public MPxContextCommand
 {
 public:
     static MString name;
+    static MString instanceName;
 
 public:
     MVGContextCmd();

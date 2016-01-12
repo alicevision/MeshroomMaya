@@ -1,6 +1,7 @@
 #include "mayaMVG/maya/MVGMayaUtil.hpp"
 #include "mayaMVG/core/MVGCamera.hpp"
 #include "mayaMVG/core/MVGLog.hpp"
+#include "mayaMVG/maya/context/MVGContextCmd.hpp"
 #include <maya/MFnDependencyNode.h>
 #include <maya/MGlobal.h>
 #include <maya/MQtUtil.h>
@@ -125,8 +126,11 @@ MStatus MVGMayaUtil::deleteMVGContext()
 
 MStatus MVGMayaUtil::activeContext()
 {
-    return MGlobal::executePythonCommand("import maya.cmds as cmds\n"
-                                         "cmds.setToolTo('mayaMVGTool1')");
+    MString cmd;
+    cmd.format("import maya.cmds as cmds\n"
+               "cmds.setToolTo('^1s')",
+               MVGContextCmd::instanceName);
+    return MGlobal::executePythonCommand(cmd);
 }
 
 MStatus MVGMayaUtil::activeSelectionContext()
@@ -141,25 +145,41 @@ MStatus MVGMayaUtil::getCurrentContext(MString& context)
     return MGlobal::executePythonCommand("cmds.currentCtx()\n", context);
 }
 
+MStatus MVGMayaUtil::setCurrentContext(MString& context)
+{
+    MGlobal::executePythonCommand("import maya.cmds as cmds\n");
+    MString command;
+    command.format("cmds.setToolTo('^1s')", context);
+    return MGlobal::executePythonCommand(command);
+}
+
 // static
 MStatus MVGMayaUtil::setCreationMode()
 {
-    return MGlobal::executeCommandOnIdle("mayaMVGTool -e -em 0 mayaMVGTool1");
+    MString cmd;
+    cmd.format("^1s -e -em 0 ^2s", MVGContextCmd::name, MVGContextCmd::instanceName);
+    return MGlobal::executeCommandOnIdle(cmd);
 }
 // static
 MStatus MVGMayaUtil::setTriangulationMode()
 {
-    return MGlobal::executeCommandOnIdle("mayaMVGTool -e -em 1 -mv 0 mayaMVGTool1");
+    MString cmd;
+    cmd.format("^1s -e -em 1 -mv 0 ^2s", MVGContextCmd::name, MVGContextCmd::instanceName);
+    return MGlobal::executeCommandOnIdle(cmd);
 }
 // static
 MStatus MVGMayaUtil::setPointCloudMode()
 {
-    return MGlobal::executeCommandOnIdle("mayaMVGTool -e -em 1 -mv 1 mayaMVGTool1");
+    MString cmd;
+    cmd.format("^1s -e -em 1 -mv 1 ^2s", MVGContextCmd::name, MVGContextCmd::instanceName);
+    return MGlobal::executeCommandOnIdle(cmd);
 }
 // static
 MStatus MVGMayaUtil::setAdjacentPlaneMode()
 {
-    return MGlobal::executeCommandOnIdle("mayaMVGTool -e -em 1 -mv 2 mayaMVGTool1");
+    MString cmd;
+    cmd.format("^1s -e -em 1 -mv 2 ^2s", MVGContextCmd::name, MVGContextCmd::instanceName);
+    return MGlobal::executeCommandOnIdle(cmd);
 }
 
 MStatus MVGMayaUtil::setCameraInView(const MVGCamera& camera, const MString& viewName)
