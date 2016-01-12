@@ -221,10 +221,29 @@ bool MVGContext::eventFilter(QObject* obj, QEvent* e)
     else if(e->type() == QEvent::Leave)
     {
         _eventData.cameraPath = MDagPath();
+
+        // Update and retrieve last manipulator
+        if(widget->objectName() == "mayaMVG")
+        {
+            MVGMayaUtil::getCurrentContext(_lastMVGManipulator);
+            if(_lastMayaManipulator.length())
+                MVGMayaUtil::setCurrentContext(_lastMayaManipulator);
+        }
     }
     // mouse enters widget's boundaries
     else if(e->type() == QEvent::Enter)
     {
+        // Update and retrieve last manipulator.
+        if(widget->objectName() == "mayaMVG")
+        {
+            MVGMayaUtil::getCurrentContext(_lastMayaManipulator);
+            if(_lastMVGManipulator.length())
+            {
+                MVGMayaUtil::setCurrentContext(_lastMVGManipulator);
+                if(_lastMVGManipulator == MVGContextCmd::instanceName)
+                    updateManipulators();
+            }
+        }
         if(widget && !widget->isActiveWindow())
             return false;
 

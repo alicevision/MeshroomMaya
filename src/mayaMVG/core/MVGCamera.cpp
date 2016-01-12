@@ -375,7 +375,7 @@ void MVGCamera::resetZoomAndPan() const
 {
     MStatus status;
     MFnCamera fnCamera(getDagPath(), &status);
-    CHECK(status)
+    CHECK_RETURN(status)
     fnCamera.setZoom(1.f);
     fnCamera.setHorizontalPan(0.f);
     fnCamera.setVerticalPan(0.f);
@@ -420,7 +420,7 @@ const std::pair<double, double> MVGCamera::getImageSize() const
     std::pair<double, double> size;
     MStatus status;
     MFnDagNode fnImage(getImagePlaneShapeDagPath(), &status);
-    CHECK(status)
+    CHECK_RETURN_VARIABLE(status, size);
     size.first = fnImage.findPlug("coverageX").asDouble();
     size.second = fnImage.findPlug("coverageY").asDouble();
     return size;

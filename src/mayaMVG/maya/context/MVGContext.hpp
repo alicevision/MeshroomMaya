@@ -5,6 +5,7 @@
 #include <maya/MPxContext.h>
 #include <maya/MDagPath.h>
 
+
 class MPxManipulatorNode;
 class M3dView;
 
@@ -57,12 +58,15 @@ public:
 private:
     bool setFocusOnView(QObject* obj);
 
+private:
     EventData _eventData;
     MVGEventFilter<MVGContext> _filter;
     MVGEventFilter<MVGContext> _filterLV;
     MVGEventFilter<MVGContext> _filterRV;
     EEditMode _editMode;
     MVGManipulatorCache _manipulatorCache;
+    MString _lastMVGManipulator;
+    MString _lastMayaManipulator;
 };
 
 } // namespace
