@@ -58,6 +58,9 @@ public:
 private:
     bool setFocusOnView(QObject* obj);
 
+public:
+    static MString _lastMVGManipulator;
+    static MString _lastMayaManipulator;
 private:
     EventData _eventData;
     MVGEventFilter<MVGContext> _filter;
@@ -65,8 +68,6 @@ private:
     MVGEventFilter<MVGContext> _filterRV;
     EEditMode _editMode;
     MVGManipulatorCache _manipulatorCache;
-    MString _lastMVGManipulator;
-    MString _lastMayaManipulator;
 };
 
 } // namespace

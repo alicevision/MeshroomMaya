@@ -114,7 +114,7 @@ void MVGProjectWrapper::scaleScene(const double scaleSize) const
 
 void MVGProjectWrapper::activeSelectionContext() const
 {
-    MVGMayaUtil::activeSelectionContext();
+    MVGMayaUtil::activeMayaContext();
 }
 
 void MVGProjectWrapper::setCreationMode()

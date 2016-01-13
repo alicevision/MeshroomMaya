@@ -11,7 +11,9 @@
 
 namespace mayaMVG
 {
-
+MString MVGContext::_lastMVGManipulator("");
+MString MVGContext::_lastMayaManipulator("");
+    
 MVGContext::MVGContext()
     : _filter((QObject*)MVGMayaUtil::getMVGWindow(), this)
     , _filterLV((QObject*)MVGMayaUtil::getMVGViewportLayout("mvgLPanel"), this)
@@ -239,11 +241,10 @@ bool MVGContext::eventFilter(QObject* obj, QEvent* e)
         if(widget->objectName() == "mayaMVG")
         {
             MVGMayaUtil::getCurrentContext(_lastMayaManipulator);
-            if(_lastMVGManipulator.length())
+            if(_lastMVGManipulator == MVGContextCmd::instanceName)
             {
                 MVGMayaUtil::setCurrentContext(_lastMVGManipulator);
-                if(_lastMVGManipulator == MVGContextCmd::instanceName)
-                    updateManipulators();
+                updateManipulators();
             }
         }
         if(widget && !widget->isActiveWindow())

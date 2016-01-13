@@ -2,6 +2,7 @@
 #include "mayaMVG/core/MVGCamera.hpp"
 #include "mayaMVG/core/MVGLog.hpp"
 #include "mayaMVG/maya/context/MVGContextCmd.hpp"
+#include "mayaMVG/maya/context/MVGContext.hpp"
 #include <maya/MFnDependencyNode.h>
 #include <maya/MGlobal.h>
 #include <maya/MQtUtil.h>
@@ -133,10 +134,12 @@ MStatus MVGMayaUtil::activeContext()
     return MGlobal::executePythonCommand(cmd);
 }
 
-MStatus MVGMayaUtil::activeSelectionContext()
+MStatus MVGMayaUtil::activeMayaContext()
 {
-    return MGlobal::executePythonCommand("import maya.cmds as cmds\n"
-                                         "cmds.setToolTo('selectSuperContext')\n");
+    MGlobal::executePythonCommand("import maya.cmds as cmds\n");
+    MString cmd;
+    cmd.format("cmds.setToolTo('^1s')", MVGContext::_lastMayaManipulator);
+    return MGlobal::executePythonCommand(cmd);
 }
 
 MStatus MVGMayaUtil::getCurrentContext(MString& context)

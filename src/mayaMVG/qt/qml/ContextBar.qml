@@ -21,7 +21,7 @@ Item {
             iconSource: "img/mouse_select.png"
             tooltip: "Selection mode"
             onClicked: m.project.activeSelectionContext();
-            checked: (m.project.currentContext === "selectSuperContext")
+            checked: (m.project.currentContext !== "mayaMVGTool1")
         }
         ToolButton {
             iconSource: "img/create.png"
