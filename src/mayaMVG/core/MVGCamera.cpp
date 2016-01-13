@@ -119,6 +119,9 @@ MVGCamera MVGCamera::create(MDagPath& cameraDagPath, std::map<int, MIntArray>& i
     // Configure camera
     MFnCamera fnCamera(cameraDagPath);
     fnCamera.setPanZoomEnabled(true);
+    // Reset film offset (should not be necessary, but kept for compatibility)
+    fnCamera.setHorizontalFilmOffset((0.0));
+    fnCamera.setVerticalFilmOffset((0.0));
 
     // Add MVG attributes
     MDagModifier dagModifier;
@@ -419,8 +422,8 @@ const std::pair<double, double> MVGCamera::getImageSize() const
     MStatus status;
     MFnDagNode fnImage(getImagePlaneShapeDagPath(), &status);
     CHECK(status)
-    size.first = fnImage.findPlug("width").asDouble();
-    size.second = fnImage.findPlug("height").asDouble();
+    size.first = fnImage.findPlug("coverageX").asDouble();
+    size.second = fnImage.findPlug("coverageY").asDouble();
     return size;
 }
 
