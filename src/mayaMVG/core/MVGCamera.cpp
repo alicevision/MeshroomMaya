@@ -239,6 +239,8 @@ void MVGCamera::setImagePlane() const
     fnImage.findPlug("width").setValue(imageSize.first);
     fnImage.findPlug("height").setValue(imageSize.second);
     fnImage.findPlug("displayOnlyIfCurrent").setValue(1);
+    MFnCamera camera(_dagpath);
+    fnImage.findPlug("depth").setValue(camera.farClippingPlane() * 0.9);
 }
 
 void MVGCamera::unloadImagePlane() const
@@ -404,6 +406,15 @@ void MVGCamera::setFar(const double far) const
     CHECK_RETURN(status)
     status = fnCamera.setFarClippingPlane(far);
     CHECK_RETURN(status)
+}
+
+void MVGCamera::setImagePlaneDepth(const double depth) const
+{
+    MStatus status;
+    MDagPath imagePath = getImagePlaneShapeDagPath();
+    MFnDagNode fnImage(imagePath, &status);
+    CHECK_RETURN(status)
+    fnImage.findPlug("depth").setValue(depth);
 }
 
 void MVGCamera::setLocatorScale(const double scale) const

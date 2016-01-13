@@ -384,6 +384,13 @@ void MVGProjectWrapper::setCamerasFar(const double far)
         it->second->getCamera().setFar(far);
 }
 
+void MVGProjectWrapper::setCamerasDepth(const double depth)
+{
+    for(std::map<std::string, MVGCameraWrapper*>::const_iterator it = _camerasByName.begin();
+        it != _camerasByName.end(); ++it)
+        it->second->getCamera().setImagePlaneDepth(depth);
+}
+
 void MVGProjectWrapper::setCameraLocatorScale(const double scale)
 {
     // TODO : undoable ?

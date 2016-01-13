@@ -60,6 +60,7 @@ public:
     void setInView(const std::string& viewName) const;
     void setNear(const double near) const;
     void setFar(const double far) const;
+    void setImagePlaneDepth(const double depth) const;
     void setLocatorScale(const double scale) const;
 
     const std::pair<double, double> getImageSize() const;

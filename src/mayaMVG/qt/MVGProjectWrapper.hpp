@@ -89,6 +89,7 @@ public:
     Q_INVOKABLE void setCameraToView(QObject* camera, const QString& viewName);
     Q_INVOKABLE void setCamerasNear(const double near);
     Q_INVOKABLE void setCamerasFar(const double far);
+    Q_INVOKABLE void setCamerasDepth(const double far);
     Q_INVOKABLE void setCameraLocatorScale(const double scale);
     // Should be a private and non invokable function
     Q_INVOKABLE void reloadMVGMeshesFromMaya();
