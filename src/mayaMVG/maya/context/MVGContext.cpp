@@ -13,7 +13,7 @@ namespace mayaMVG
 {
 MString MVGContext::_lastMVGManipulator("");
 MString MVGContext::_lastMayaManipulator("");
-    
+
 MVGContext::MVGContext()
     : _filter((QObject*)MVGMayaUtil::getMVGWindow(), this)
     , _filterLV((QObject*)MVGMayaUtil::getMVGViewportLayout("mvgLPanel"), this)

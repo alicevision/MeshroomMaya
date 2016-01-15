@@ -40,7 +40,7 @@ Item {
             State {
                 name: "OPEN"
                 when: m.isOpen
-                PropertyChanges { target: settings; height: 380; }
+                PropertyChanges { target: settings; height: 410; }
                 PropertyChanges { target: settings; opacity: 1; }
             }
         ]
@@ -265,6 +265,28 @@ Item {
                         text: "Camera synchronization"
                     }
                 }
+
+                // Clear blind data
+                Item {
+                    implicitWidth: parent.width
+                    Layout.minimumHeight: 25
+                    Button {
+                        text: "Clear 2D points"
+                        height: parent.height
+                        width: 120
+                        MouseArea {
+                            anchors.fill: parent
+                            onClicked: {
+                                m.project.clearAllBlindData()
+
+                            }
+                        }
+                    }
+                    TooltipArea {
+                        anchors.fill: parent
+                        text: "Clear all 2D points (triangulation)"
+                    }
+                }  
                 // Camera parameters
                 CameraSettings {
                     implicitWidth: parent.width
@@ -275,7 +297,7 @@ Item {
                 // Version
                 Item
                 {
-                    width: parent.width
+                    implicitWidth: parent.width
                     Layout.minimumHeight: 25
                     Text {
                         anchors.fill: parent

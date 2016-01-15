@@ -5,7 +5,6 @@
 #include <maya/MPxContext.h>
 #include <maya/MDagPath.h>
 
-
 class MPxManipulatorNode;
 class M3dView;
 
@@ -61,6 +60,7 @@ private:
 public:
     static MString _lastMVGManipulator;
     static MString _lastMayaManipulator;
+
 private:
     EventData _eventData;
     MVGEventFilter<MVGContext> _filter;

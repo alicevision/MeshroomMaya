@@ -91,6 +91,8 @@ public:
     Q_INVOKABLE void setCamerasFar(const double far);
     Q_INVOKABLE void setCamerasDepth(const double far);
     Q_INVOKABLE void setCameraLocatorScale(const double scale);
+    // Meshes
+    Q_INVOKABLE void clearAllBlindData();
     // Should be a private and non invokable function
     Q_INVOKABLE void reloadMVGMeshesFromMaya();
 

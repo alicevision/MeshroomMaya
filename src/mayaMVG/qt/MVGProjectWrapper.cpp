@@ -5,10 +5,11 @@
 #include "mayaMVG/qt/MVGMeshWrapper.hpp"
 #include "mayaMVG/maya/MVGMayaUtil.hpp"
 #include "mayaMVG/core/MVGLog.hpp"
+#include "mayaMVG/maya/context/MVGContextCmd.hpp"
 #include "mayaMVG/maya/context/MVGContext.hpp"
 #include "mayaMVG/maya/context/MVGMoveManipulator.hpp"
 #include <maya/MQtUtil.h>
-#include "maya/MFnTypedAttribute.h"
+#include <maya/MFnTypedAttribute.h>
 
 namespace mayaMVG
 {
@@ -397,6 +398,19 @@ void MVGProjectWrapper::setCameraLocatorScale(const double scale)
     for(std::map<std::string, MVGCameraWrapper*>::const_iterator it = _camerasByName.begin();
         it != _camerasByName.end(); ++it)
         it->second->getCamera().setLocatorScale(scale);
+}
+
+void MVGProjectWrapper::clearAllBlindData()
+{
+    // Retrieve all meshes
+    std::vector<MVGMesh> meshes = MVGMesh::listAllMeshes();
+    for(std::vector<MVGMesh>::iterator it = meshes.begin(); it != meshes.end(); ++it)
+        it->unsetAllBlindData();
+
+    // Update cache
+    MString cmd;
+    cmd.format("^1s -e -rebuild ^2s", MVGContextCmd::name, MVGContextCmd::instanceName);
+    MGlobal::executeCommand(cmd);
 }
 
 void MVGProjectWrapper::clear()

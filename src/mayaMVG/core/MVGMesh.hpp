@@ -54,6 +54,7 @@ public:
     MStatus setBlindData(const int vertexId, std::vector<ClickedCSPosition>& data) const;
     MStatus getBlindData(const int vertexId, std::vector<ClickedCSPosition>& data) const;
     MStatus getBlindData(const int vertexId, std::map<int, MPoint>& cameraToClickedCSPoints) const;
+    MStatus unsetAllBlindData() const;
     MStatus unsetBlindData(const int vertexId) const;
     MStatus getBlindDataPerCamera(const int vertexId, const int cameraId, MPoint& point2D) const;
     MStatus setBlindDataPerCamera(const int vertexId, const int cameraId,
