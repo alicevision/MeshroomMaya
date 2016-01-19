@@ -60,5 +60,5 @@ def mvgCreateWindow():
     cmds.setParent('..')
     cmds.setParent('..')
     cmds.showWindow(win)
-    cmds.window(win, e=True, widthHeight=[920,700])
+    cmds.window(win, e=True, widthHeight=[1000,800])
     return win
