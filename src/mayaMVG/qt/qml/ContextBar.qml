@@ -18,7 +18,7 @@ Item {
     {
         anchors.fill: parent
         ToolButton {
-            iconSource: "img/mouse_select.png"
+            iconSource: "img/maya_logo.png"
             tooltip: "Selection mode"
             onClicked: m.project.activeSelectionContext();
             checked: (m.project.currentContext !== "mayaMVGTool1")
