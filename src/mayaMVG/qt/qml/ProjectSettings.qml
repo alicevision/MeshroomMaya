@@ -10,6 +10,13 @@ Item {
     property alias sliderMinValue: m.sliderMinValue
     property alias sliderMaxValue: m.sliderMaxValue
     signal settingProjectLoaded
+
+    // UI params
+    property int labelWidth: 160
+    property int fieldWidth: 50
+    property int fieldMargin: 4
+    property int buttonWidth: 50
+
     QtObject {
         id: m
         property variant project
@@ -33,7 +40,7 @@ Item {
             State {
                 name: "OPEN"
                 when: m.isOpen
-                PropertyChanges { target: settings; height: 355; }
+                PropertyChanges { target: settings; height: 410; }
                 PropertyChanges { target: settings; opacity: 1; }
             }
         ]
@@ -65,10 +72,14 @@ Item {
                     implicitWidth: parent.width
                     RowLayout {
                         anchors.fill: parent
-                        Text {
-                            text: "Thumbnail size"
-                            color: m.textColor
-                            font.pointSize: m.textSize
+                        Item {
+                            implicitWidth: labelWidth
+                            implicitHeight: parent.height
+                            Text {
+                                text: "Thumbnail size"
+                                color: m.textColor
+                                font.pointSize: m.textSize
+                            }
                         }
                         Slider {
                             Layout.horizontalSizePolicy: Layout.Expanding
@@ -96,12 +107,17 @@ Item {
 
                     RowLayout {
                         anchors.fill: parent
-                        Text {
-                            width: text.length
-                            text: "Display point cloud : "
-                            color: m.textColor
-                            font.pointSize: m.textSize
+                        Item {
+                            implicitWidth: labelWidth
+                            implicitHeight: parent.height
+
+                            Text {
+                                text: "Display point cloud"
+                                color: m.textColor
+                                font.pointSize: m.textSize
+                            }
                         }
+                        
                         CheckBox {
                             id: pointCloudLCheckBox
                             implicitHeight: parent.height
@@ -152,17 +168,20 @@ Item {
                     Layout.minimumHeight: 25
                     RowLayout {
                         anchors.fill: parent
-                        Text {
-                            width: 25
-                            height: parent.height
-                            text: "Scene scale : "
-                            verticalAlignment: Text.AlignVCenter
-                            color: m.textColor
-                            font.pointSize: m.textSize
+                        Item {
+                            implicitWidth: labelWidth
+                            implicitHeight: parent.height
+                            Text {
+                                height: parent.height
+                                text: "Scene scale"
+                                verticalAlignment: Text.AlignVCenter
+                                color: m.textColor
+                                font.pointSize: m.textSize
+                            }
                         }
                         Rectangle {
-                            implicitWidth: 35
-                            height: parent.height -2
+                            implicitWidth: fieldWidth
+                            height: parent.height - fieldMargin
                             color: "grey"
                             radius: 2
                             TextInput {
@@ -183,7 +202,7 @@ Item {
                         }
                         Button {
                             text: "Apply"
-                            height: parent.height
+                            height: parent.height -fieldMargin/2
                             implicitWidth: 50
                             MouseArea {
                                 anchors.fill: parent
@@ -213,13 +232,15 @@ Item {
                     Layout.minimumHeight: 25
                     RowLayout {
                         anchors.fill: parent
-                        Text {
-                            width: 25
-                            height: parent.height
-                            text: "Active synchronization : "
-                            verticalAlignment: Text.AlignVCenter
-                            color: m.textColor
-                            font.pointSize: m.textSize
+                        Item {
+                            implicitWidth: labelWidth
+                            implicitHeight: parent.height
+                            Text {
+                                text: "Active synchronization"
+                                verticalAlignment: Text.AlignVCenter
+                                color: m.textColor
+                                font.pointSize: m.textSize
+                            }
                         }
                         CheckBox {
                             id: cameraSynchroCheckBox
@@ -244,17 +265,39 @@ Item {
                         text: "Camera synchronization"
                     }
                 }
+
+                // Clear blind data
+                Item {
+                    implicitWidth: parent.width
+                    Layout.minimumHeight: 25
+                    Button {
+                        text: "Clear 2D points"
+                        height: parent.height
+                        width: 120
+                        MouseArea {
+                            anchors.fill: parent
+                            onClicked: {
+                                m.project.clearAllBlindData()
+
+                            }
+                        }
+                    }
+                    TooltipArea {
+                        anchors.fill: parent
+                        text: "Clear all 2D points (triangulation)"
+                    }
+                }  
                 // Camera parameters
                 CameraSettings {
                     implicitWidth: parent.width
-                    Layout.minimumHeight: 155
+                    Layout.minimumHeight: 180
                     project: m.project
                 }
 
                 // Version
                 Item
                 {
-                    width: parent.width
+                    implicitWidth: parent.width
                     Layout.minimumHeight: 25
                     Text {
                         anchors.fill: parent

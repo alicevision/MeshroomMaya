@@ -37,8 +37,9 @@ struct MVGMayaUtil
     static MStatus createMVGContext();
     static MStatus deleteMVGContext();
     static MStatus activeContext();
-    static MStatus activeSelectionContext();
+    static MStatus activeMayaContext();
     static MStatus getCurrentContext(MString& context);
+    static MStatus setCurrentContext(MString& context);
     static MStatus setCreationMode();
     static MStatus setTriangulationMode();
     static MStatus setPointCloudMode();

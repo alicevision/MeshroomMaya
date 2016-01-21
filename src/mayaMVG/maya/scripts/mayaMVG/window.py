@@ -12,54 +12,53 @@ def mvgDeleteWindow():
     import maya.cmds as cmds
     if cmds.window('mayaMVG', exists=True):
         cmds.deleteUI('mayaMVG', window=True)
+    if cmds.modelPanel('mvgLPanel', q=True, ex=True):
+        cmds.deleteUI('mvgLPanel', pnl=True)
+    if cmds.modelPanel('mvgRPanel', q=True, ex=True):
+        cmds.deleteUI('mvgRPanel', pnl=True)
 
-def mvgCreateWindow():
+def mvgReloadPanels():
     import maya.cmds as cmds
-    win = cmds.window('mayaMVG')
-    cmds.paneLayout('mainPane', configuration='vertical3')
     # first modelPanel
-    cmds.paneLayout('leftPane')
-    if cmds.modelPanel('mvgLPanel', ex=True):
-        cmds.modelPanel('mvgLPanel', e=True, p='leftPane')
-    else:
-        cmds.modelPanel('mvgLPanel', mbv=False, l='MVG leftView')
+    i = 0
+    if not cmds.paneLayout('leftPane', q=True, ex=True):
+        cmds.paneLayout('leftPane')
+        i += 1
+    if not cmds.modelPanel('mvgLPanel', q=True, ex=True):
+        cmds.modelPanel('mvgLPanel', mbv=False, l='MVG leftView', p='leftPane')
         cmds.modelEditor('mvgLPanel', e=True, allObjects=False, grid=False, hud=False, polymeshes=True, imagePlane=True)
         cmds.modelEditor('mvgLPanel', e=True, xray=1, displayAppearance='smoothShaded', wireframeOnShaded=True)
-        #cmds.modelEditor('mvgLPanel', e=True, rendererName="vp2Renderer")
-    cmds.setParent('..')
-    cmds.setParent('..')
+        cmds.modelEditor('mvgLPanel', e=True, rendererName="base_OpenGL_Renderer")
+        i += 1
+    for j in range(i):
+        cmds.setParent('..')
     # second modelPanel
-    cmds.paneLayout('rightPane')
-    if cmds.modelPanel('mvgRPanel', ex=True):
-        cmds.modelPanel('mvgRPanel', e=True, p='rightPane')
-    else:
-        cmds.modelPanel('mvgRPanel', mbv=False, l='MVG rightView')
+    i = 0
+    if not cmds.paneLayout('rightPane', q=True, ex=True):
+        cmds.paneLayout('rightPane')
+        i += 1
+    if not cmds.modelPanel('mvgRPanel', q=True, ex=True):
+        cmds.modelPanel('mvgRPanel', mbv=False, l='MVG rightView', p='rightPane')
         cmds.modelEditor('mvgRPanel', e=True, allObjects=False, grid=False, hud=False, polymeshes=True, imagePlane=True)
         cmds.modelEditor('mvgRPanel', e=True, xray=1, displayAppearance='smoothShaded', wireframeOnShaded=True)
-        #cmds.modelEditor('mvgRPanel', e=True, rendererName="vp2Renderer")
-    cmds.setParent('..')
-    cmds.setParent('..')
+        cmds.modelEditor('mvgRPanel', e=True, rendererName="base_OpenGL_Renderer")
+        i += 1
+    for j in range(i):
+        cmds.setParent('..')
+
+
+def mvgCreateWindow():
+    
+    import maya.cmds as cmds
+    mvgDeleteWindow()
+ 
+    win = cmds.window('mayaMVG')
+    cmds.paneLayout('mainPane', configuration='vertical3')
+    mvgReloadPanels()
     # custom Qt content
     cmds.paneLayout('mvgMenuPanel')
     cmds.setParent('..')
     cmds.setParent('..')
     cmds.showWindow(win)
-    cmds.window(win, e=True, widthHeight=[920,700])
+    cmds.window(win, e=True, widthHeight=[1000,800])
     return win
-
-def mvgReloadPanels():
-    import maya.cmds as cmds
-    if(cmds.paneLayout('leftPane', ex=True)):
-        if not cmds.modelPanel('mvgLPanel', ex=True):
-			cmds.modelPanel('mvgLPanel', mbv=False, l='MVG leftView', p='leftPane')
-			cmds.modelEditor('mvgLPanel', e=True, allObjects=False, grid=False, hud=False, polymeshes=True, imagePlane=True)
-			cmds.modelEditor('mvgLPanel', e=True, xray=1, displayAppearance='smoothShaded', wireframeOnShaded=True)
-            #cmds.modelPanel('mvgLPanel', mbv=False, l='MVG leftView', p='leftPane')
-            #cmds.modelEditor('mvgLPanel', e=True, grid=False, cameras=False, dynamics=False)
-    if(cmds.paneLayout('rightPane', ex=True)):
-        if not cmds.modelPanel('mvgRPanel', ex=True):
-			cmds.modelPanel('mvgRPanel', mbv=False, l='MVG rightView', p='rightPane')
-			cmds.modelEditor('mvgRPanel', e=True, allObjects=False, grid=False, hud=False, polymeshes=True, imagePlane=True)
-			cmds.modelEditor('mvgRPanel', e=True, xray=1, displayAppearance='smoothShaded', wireframeOnShaded=True)
-            #cmds.modelPanel('mvgRPanel', mbv=False, l='MVG rightView', p='rightPane')
-            #cmds.modelEditor('mvgRPanel', e=True, grid=False, cameras=False, dynamics=False)

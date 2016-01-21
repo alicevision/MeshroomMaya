@@ -27,17 +27,19 @@ Item {
                     RowLayout {
                         anchors.fill: parent
                         anchors.margins: 1
-                        Text {
-                            width: 25
-                            height: parent.height
-                            text: "Near : "
-                            verticalAlignment: Text.AlignVCenter
-                            color: m.textColor
-                            font.pointSize: m.textSize
+                        Item {
+                            implicitWidth: labelWidth
+                            implicitHeight: parent.height
+                            Text {
+                                text: "Near"
+                                verticalAlignment: Text.AlignVCenter
+                                color: m.textColor
+                                font.pointSize: m.textSize
+                            }
                         }
                         Rectangle {
-                            implicitWidth: 50
-                            height: parent.height - 2
+                            implicitWidth: fieldWidth
+                            height: parent.height - fieldMargin
                             color: "grey"
                             radius: 2
 
@@ -53,8 +55,8 @@ Item {
                         }
                         Button {
                             text: "Set"
-                            height: parent.height
-                            implicitWidth: 30
+                            height: parent.height -fieldMargin/2
+                            implicitWidth: buttonWidth
                             MouseArea {
                                 anchors.fill: parent
                                 onClicked: {
@@ -81,17 +83,19 @@ Item {
                     RowLayout {
                         anchors.fill: parent
                         anchors.margins: 1
-                        Text {
-                            width: 25
-                            height: parent.height
-                            text: "Far :   "
-                            verticalAlignment: Text.AlignVCenter
-                            color: m.textColor
-                            font.pointSize: m.textSize
+                        Item {
+                            implicitWidth: labelWidth
+                            implicitHeight: parent.height
+                            Text {
+                                text: "Far"
+                                verticalAlignment: Text.AlignVCenter
+                                color: m.textColor
+                                font.pointSize: m.textSize
+                            }
                         }
                         Rectangle {
-                            implicitWidth: 50
-                            height: parent.height - 2
+                            implicitWidth: fieldWidth
+                            height: parent.height - fieldMargin
                             color: "grey"
                             radius: 2
 
@@ -107,8 +111,8 @@ Item {
                         }
                         Button {
                             text: "Set"
-                            height: parent.height
-                            implicitWidth: 30
+                            height: parent.height -fieldMargin/2
+                            implicitWidth: buttonWidth
                             MouseArea {
                                 anchors.fill: parent
                                 onClicked: {
@@ -134,17 +138,76 @@ Item {
                     RowLayout {
                         anchors.fill: parent
                         anchors.margins: 1
-                        Text {
-                            width: 25
-                            height: parent.height
-                            text: "Locator scale :   "
-                            verticalAlignment: Text.AlignVCenter
-                            color: m.textColor
-                            font.pointSize: m.textSize
+                        Item {
+                            implicitWidth: labelWidth
+                            implicitHeight: parent.height
+                            Text {
+                                text: "Image plane depth"
+                                verticalAlignment: Text.AlignVCenter
+                                color: m.textColor
+                                font.pointSize: m.textSize
+                            }
                         }
                         Rectangle {
-                            implicitWidth: 35
-                            height: parent.height - 2
+                            implicitWidth: fieldWidth
+                            height: parent.height - fieldMargin
+                            color: "grey"
+                            radius: 2
+
+                            TextInput {
+                                id: depthValue
+                                width: parent.width
+                                horizontalAlignment: TextInput.AlignHCenter
+                                anchors.verticalCenter: parent.verticalCenter
+                                selectByMouse: true
+                                font.pointSize: m.textSize
+                                validator: DoubleValidator{bottom: 0.001;}
+                            }
+                        }
+                        Button {
+                            text: "Set"
+                            height: parent.height -fieldMargin/2
+                            implicitWidth: buttonWidth
+                            MouseArea {
+                                anchors.fill: parent
+                                onClicked: {
+                                    m.project.setCamerasDepth(depthValue.text)
+                                    depthValue.text = ""
+                                }
+                            }
+                        }
+                        Rectangle {
+                            Layout.horizontalSizePolicy: Layout.Expanding
+                            color: "blue"
+                        }
+                    }
+
+                    TooltipArea {
+                        anchors.fill: parent
+                        text: "Camera far"
+                    }
+                }
+                Item {
+                    width: parent.width
+                    implicitHeight: 25
+                    RowLayout {
+                        anchors.fill: parent
+                        anchors.margins: 1
+                        Item {
+                            implicitWidth: labelWidth
+                            implicitHeight: parent.height
+                            Text {
+                                width: 25
+                                height: parent.height
+                                text: "Locator scale"
+                                verticalAlignment: Text.AlignVCenter
+                                color: m.textColor
+                                font.pointSize: m.textSize
+                            }
+                        }
+                        Rectangle {
+                            implicitWidth: fieldWidth
+                            height: parent.height - fieldMargin
                             color: "grey"
                             radius: 2
 
@@ -160,8 +223,8 @@ Item {
                         }
                         Button {
                             text: "Set"
-                            height: parent.height
-                            implicitWidth: 30
+                            height: parent.height -fieldMargin/2
+                            implicitWidth: buttonWidth
                             MouseArea {
                                 anchors.fill: parent
                                 onClicked:

@@ -45,7 +45,8 @@ MStatus registerMVGHotkeys()
     // MVGCreateCommand
     commandName = "MVGCreateCommand";
     editModeString = MVGContext::eEditModeCreate;
-    cmd.format("mayaMVGTool -e -em ^1s mayaMVGTool1", editModeString);
+    cmd.format("^1s -e -em ^2s ^3s", MVGContextCmd::name, editModeString,
+               MVGContextCmd::instanceName);
     keySequence = "0";
     cmd.format("context.initMVGCommand(\"^1s\", \"^2s\", \"mel\", \"^3s\", False, True)",
                commandName, cmd, keySequence);
@@ -56,7 +57,8 @@ MStatus registerMVGHotkeys()
     commandName = "MVGTriangulationCommand";
     editModeString = MVGContext::eEditModeMove;
     moveModeString = MVGMoveManipulator::eMoveModeNViewTriangulation;
-    cmd.format("mayaMVGTool -e -em ^1s -mv ^2s mayaMVGTool1", editModeString, moveModeString);
+    cmd.format("^1s -e -em ^2s -mv ^3s ^4s", MVGContextCmd::name, editModeString, moveModeString,
+               MVGContextCmd::instanceName);
     keySequence = "1";
     cmd.format("context.initMVGCommand(\"^1s\", \"^2s\", \"mel\", \"^3s\", False, True)",
                commandName, cmd, keySequence);
@@ -67,7 +69,8 @@ MStatus registerMVGHotkeys()
     commandName = "MVGMovePointCloudCommand";
     editModeString = MVGContext::eEditModeMove;
     moveModeString = MVGMoveManipulator::eMoveModePointCloudProjection;
-    cmd.format("mayaMVGTool -e -em ^1s -mv ^2s mayaMVGTool1", editModeString, moveModeString);
+    cmd.format("^1s -e -em ^2s -mv ^3s ^4s", MVGContextCmd::name, editModeString, moveModeString,
+               MVGContextCmd::instanceName);
     keySequence = "2";
     cmd.format("context.initMVGCommand(\"^1s\", \"^2s\", \"mel\", \"^3s\", False, True)",
                commandName, cmd, keySequence);
@@ -78,7 +81,8 @@ MStatus registerMVGHotkeys()
     commandName = "MVGMoveAdjacentFaceCommand";
     editModeString = MVGContext::eEditModeMove;
     moveModeString = MVGMoveManipulator::eMoveModeAdjacentFaceProjection;
-    cmd.format("mayaMVGTool -e -em ^1s -mv ^2s mayaMVGTool1", editModeString, moveModeString);
+    cmd.format("^1s -e -em ^2s -mv ^3s ^4s", MVGContextCmd::name, editModeString, moveModeString,
+               MVGContextCmd::instanceName);
     keySequence = "3";
     cmd.format("context.initMVGCommand(\"^1s\", \"^2s\", \"mel\", \"^3s\", False, True)",
                commandName, cmd, keySequence);

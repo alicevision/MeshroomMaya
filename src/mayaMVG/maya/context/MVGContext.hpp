@@ -57,6 +57,11 @@ public:
 private:
     bool setFocusOnView(QObject* obj);
 
+public:
+    static MString _lastMVGManipulator;
+    static MString _lastMayaManipulator;
+
+private:
     EventData _eventData;
     MVGEventFilter<MVGContext> _filter;
     MVGEventFilter<MVGContext> _filterLV;

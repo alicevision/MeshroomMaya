@@ -1,6 +1,9 @@
 #include "mayaMVG/core/MVGMesh.hpp"
 #include "mayaMVG/core/MVGLog.hpp"
 #include "mayaMVG/core/MVGProject.hpp"
+#include "mayaMVG/maya/context/MVGContextCmd.hpp"
+#include "mayaMVG/maya/context/MVGContext.hpp"
+#include "mayaMVG/maya/cmd/MVGEditCmd.hpp"
 #include <maya/MFnMesh.h>
 #include <maya/MFnSet.h>
 #include <maya/MSelectionList.h>
@@ -14,6 +17,7 @@
 #include <maya/MFloatPointArray.h>
 #include <maya/MFnNumericAttribute.h>
 #include <maya/MPlug.h>
+#include <maya/MArgList.h>
 #include <cassert>
 #include <cstring>
 
@@ -201,7 +205,8 @@ void MVGMesh::setIsActive(const bool isActive) const
     }
     // Rebuild cache
     MString cmd;
-    cmd.format("mayaMVGTool -e -rebuild -mesh \"^1s\" mayaMVGTool1", _dagpath.fullPathName());
+    cmd.format("^1s -e -rebuild -mesh \"^2s\" ^3s", MVGContextCmd::name, _dagpath.fullPathName(),
+               MVGContextCmd::instanceName);
     status = MGlobal::executeCommand(cmd);
     CHECK(status)
 }
@@ -405,6 +410,33 @@ MStatus MVGMesh::getBlindData(const int vertexId,
     return status;
 }
 
+MStatus MVGMesh::unsetAllBlindData() const
+{
+    MStatus status;
+
+    // Get all vertices
+    MItMeshVertex vIt(_dagpath, MObject::kNullObj, &status);
+    vIt.updateSurface();
+    vIt.geomChanged();
+    MIntArray componentId;
+    while(!vIt.isDone())
+    {
+        const int index = vIt.index(&status);
+        componentId.append(index);
+        vIt.next();
+    }
+    MVGEditCmd* cmd = new MVGEditCmd();
+    if(cmd)
+    {
+        cmd->clearBD(_dagpath, componentId);
+        MArgList args;
+        if(cmd->doIt(args))
+            cmd->finalize();
+    }
+    delete cmd;
+
+    return status;
+}
 MStatus MVGMesh::unsetBlindData(const int vertexId) const
 {
     MStatus status;

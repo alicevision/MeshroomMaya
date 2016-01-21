@@ -4,6 +4,7 @@
 #include "mayaMVG/qt/MVGMainWidget.hpp"
 #include "mayaMVG/maya/context/MVGMoveManipulator.hpp"
 #include "mayaMVG/maya/context/MVGContext.hpp"
+#include "mayaMVG/maya/context/MVGContextCmd.hpp"
 #include <maya/MFnDependencyNode.h>
 #include <maya/MFnDagNode.h>
 #include <maya/MSelectionList.h>
@@ -97,7 +98,9 @@ static void sceneChangedCB(void*)
     MGlobal::executePythonCommand("from mayaMVG import window;\n"
                                   "window.mvgReloadPanels()");
     project->loadExistingProject();
-    MGlobal::executeCommand("mayaMVGTool -e -rebuild mayaMVGTool1");
+    MString cmd;
+    cmd.format("^1s -e -rebuild ^2s", MVGContextCmd::name, MVGContextCmd::instanceName);
+    MGlobal::executeCommand(cmd);
 }
 
 static void newSceneCB(void*)
@@ -115,7 +118,11 @@ static void undoCB(void*)
     int spaceIndex = redoName.index(' ');
     MString cmdName = redoName.substring(0, spaceIndex - 1);
     if(cmdName != "select" && cmdName != "miCreateDefaultPresets")
-        MGlobal::executeCommand("mayaMVGTool -e -rebuild mayaMVGTool1");
+    {
+        MString cmd;
+        cmd.format("^1s -e -rebuild ^2s", MVGContextCmd::name, MVGContextCmd::instanceName);
+        MGlobal::executeCommand(cmd);
+    }
     if(cmdName == "doDelete")
     {
         MVGProjectWrapper* project = getProjectWrapper();
@@ -135,7 +142,11 @@ static void redoCB(void*)
     int spaceIndex = undoName.index(' ');
     MString cmdName = undoName.substring(0, spaceIndex - 1);
     if(cmdName != "select" && cmdName != "miCreateDefaultPresets")
-        MGlobal::executeCommand("mayaMVGTool -e -rebuild mayaMVGTool1");
+    {
+        MString cmd;
+        cmd.format("^1s -e -rebuild ^2s", MVGContextCmd::name, MVGContextCmd::instanceName);
+        MGlobal::executeCommand(cmd);
+    }
     if(cmdName == "doDelete")
     {
         MVGProjectWrapper* project = getProjectWrapper();
@@ -203,7 +214,9 @@ static void nodeRemovedCB(MObject& node, void*)
                 return;
             project->removeMeshFromUI(mesh.getDagPath());
             // TODO : remove only this mesh from cache
-            MGlobal::executeCommand("mayaMVGTool -e -rebuild mayaMVGTool1");
+            MString cmd;
+            cmd.format("^1s -e -rebuild ^2s", MVGContextCmd::name, MVGContextCmd::instanceName);
+            MGlobal::executeCommand(cmd);
             break;
         }
         default:
@@ -239,9 +252,12 @@ static void modeChangedCB(void* /*data*/)
     if(!project)
         return;
     int editMode, moveMode;
-    MGlobal::executeCommand("mayaMVGTool -q -editMode mayaMVGTool1", editMode);
+    MString cmd;
+    cmd.format("^1s -q -editMode ^2s", MVGContextCmd::name, MVGContextCmd::instanceName);
+    MGlobal::executeCommand(cmd, editMode);
     project->setEditMode(editMode);
-    MGlobal::executeCommand("mayaMVGTool -q -moveMode mayaMVGTool1", moveMode);
+    cmd.format("^1s -q -moveMode ^2s", MVGContextCmd::name, MVGContextCmd::instanceName);
+    MGlobal::executeCommand(cmd, moveMode);
     project->setMoveMode(moveMode);
 }
 } // namespace

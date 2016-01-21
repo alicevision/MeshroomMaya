@@ -1,6 +1,7 @@
 #include "mayaMVG/maya/context/MVGContext.hpp"
 #include "mayaMVG/maya/context/MVGCreateManipulator.hpp"
 #include "mayaMVG/maya/context/MVGMoveManipulator.hpp"
+#include "mayaMVG/maya/context/MVGContextCmd.hpp"
 #include "mayaMVG/maya/MVGMayaUtil.hpp"
 #include "mayaMVG/core/MVGCamera.hpp"
 #include "mayaMVG/qt/MVGQt.hpp"
@@ -10,6 +11,8 @@
 
 namespace mayaMVG
 {
+MString MVGContext::_lastMVGManipulator("");
+MString MVGContext::_lastMayaManipulator("");
 
 MVGContext::MVGContext()
     : _filter((QObject*)MVGMayaUtil::getMVGWindow(), this)
@@ -33,7 +36,7 @@ void MVGContext::toolOffCleanup()
 
 void MVGContext::getClassName(MString& name) const
 {
-    name.set("mayaMVGTool");
+    name.set(MVGContextCmd::name.asChar());
 }
 
 void MVGContext::updateManipulators()
@@ -45,7 +48,8 @@ void MVGContext::updateManipulators()
     {
         MString moveMode;
         moveMode += MVGMoveManipulator::_mode;
-        cmd.format("mayaMVGTool -e -em ^1s -mv ^2s mayaMVGTool1", editMode, moveMode);
+        cmd.format("^1s -e -em ^2s -mv ^3s ^4s", MVGContextCmd::name, editMode, moveMode,
+                   MVGContextCmd::instanceName);
         MGlobal::executeCommand(cmd);
         return;
     }
@@ -221,10 +225,28 @@ bool MVGContext::eventFilter(QObject* obj, QEvent* e)
     else if(e->type() == QEvent::Leave)
     {
         _eventData.cameraPath = MDagPath();
+
+        // Update and retrieve last manipulator
+        if(widget->objectName() == "mayaMVG")
+        {
+            MVGMayaUtil::getCurrentContext(_lastMVGManipulator);
+            if(_lastMayaManipulator.length())
+                MVGMayaUtil::setCurrentContext(_lastMayaManipulator);
+        }
     }
     // mouse enters widget's boundaries
     else if(e->type() == QEvent::Enter)
     {
+        // Update and retrieve last manipulator.
+        if(widget->objectName() == "mayaMVG")
+        {
+            MVGMayaUtil::getCurrentContext(_lastMayaManipulator);
+            if(_lastMVGManipulator == MVGContextCmd::instanceName)
+            {
+                MVGMayaUtil::setCurrentContext(_lastMVGManipulator);
+                updateManipulators();
+            }
+        }
         if(widget && !widget->isActiveWindow())
             return false;
 

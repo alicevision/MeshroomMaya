@@ -161,7 +161,6 @@ std::vector<MVGCamera> MVGCamera::getCameras()
     // Retrieve mayaMVG camera node
     MDagPath cameraDagPath;
     status = MVGMayaUtil::getDagPathByName(MVGProject::_CAMERAS_GROUP.c_str(), cameraDagPath);
-    CHECK(status);
     MFnDagNode cameraDagNode(cameraDagPath);
     for(int i = 0; i < cameraDagNode.childCount(); ++i)
     {
@@ -240,6 +239,8 @@ void MVGCamera::setImagePlane() const
     fnImage.findPlug("width").setValue(imageSize.first);
     fnImage.findPlug("height").setValue(imageSize.second);
     fnImage.findPlug("displayOnlyIfCurrent").setValue(1);
+    MFnCamera camera(_dagpath);
+    fnImage.findPlug("depth").setValue(camera.farClippingPlane() * 0.9);
 }
 
 void MVGCamera::unloadImagePlane() const
@@ -376,7 +377,7 @@ void MVGCamera::resetZoomAndPan() const
 {
     MStatus status;
     MFnCamera fnCamera(getDagPath(), &status);
-    CHECK(status)
+    CHECK_RETURN(status)
     fnCamera.setZoom(1.f);
     fnCamera.setHorizontalPan(0.f);
     fnCamera.setVerticalPan(0.f);
@@ -407,6 +408,15 @@ void MVGCamera::setFar(const double far) const
     CHECK_RETURN(status)
 }
 
+void MVGCamera::setImagePlaneDepth(const double depth) const
+{
+    MStatus status;
+    MDagPath imagePath = getImagePlaneShapeDagPath();
+    MFnDagNode fnImage(imagePath, &status);
+    CHECK_RETURN(status)
+    fnImage.findPlug("depth").setValue(depth);
+}
+
 void MVGCamera::setLocatorScale(const double scale) const
 {
     MStatus status;
@@ -421,7 +431,7 @@ const std::pair<double, double> MVGCamera::getImageSize() const
     std::pair<double, double> size;
     MStatus status;
     MFnDagNode fnImage(getImagePlaneShapeDagPath(), &status);
-    CHECK(status)
+    CHECK_RETURN_VARIABLE(status, size);
     size.first = fnImage.findPlug("coverageX").asDouble();
     size.second = fnImage.findPlug("coverageY").asDouble();
     return size;
