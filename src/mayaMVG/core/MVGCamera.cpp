@@ -27,6 +27,7 @@ MString MVGCamera::_MVG_INTRINSIC_ID = "mvg_intrinsicId";
 MString MVGCamera::_MVG_VIEW_ID = "mvg_viewId";
 MString MVGCamera::_MVG_INTRINSIC_TYPE = "mvg_intrinsicType";
 MString MVGCamera::_MVG_INTRINSICS_PARAMS = "mvg_intrinsicParams";
+MString MVGCamera::_MVG_IMAGE_SOURCE_PATH = "mvg_imageSourcePath";
 MString MVGCamera::_MVG_IMAGE_PATH = "mvg_imagePath";
 MString MVGCamera::_MVG_THUMBNAIL_PATH = "mvg_thumbnailPath";
 MString MVGCamera::_MVG_SENSOR_WIDTH = "mvg_sensorWidth_pix";
@@ -133,6 +134,9 @@ MVGCamera MVGCamera::create(MDagPath& cameraDagPath, std::map<int, MIntArray>& i
     dagModifier.addAttribute(cameraNode, itemsAttr);
     MObject thumbnailAttr = tAttr.create(MVGCamera::_MVG_THUMBNAIL_PATH, "mtp", MFnData::kString);
     dagModifier.addAttribute(cameraNode, thumbnailAttr);
+    MObject imgSourceAttr =
+        tAttr.create(MVGCamera::_MVG_IMAGE_SOURCE_PATH, "misp", MFnData::kString);
+    dagModifier.addAttribute(cameraNode, imgSourceAttr);
     dagModifier.doIt();
 
     // Set MVG attributes

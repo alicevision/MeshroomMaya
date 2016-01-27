@@ -16,7 +16,7 @@ def mvgSetImagePlane(cameraShape, imageFile):
     imagePlaneName = cmds.imagePlane(camera=cameraShape)
     cmds.setAttr( "%s.imageName" % imagePlaneName[0], imageFile, type="string")
 
-def setImagesPaths(abcFilePath, imageAttribute, thumbnailAttribute):
+def setImagesPaths(abcFilePath, imageAttribute, imageSourceAttribute, thumbnailAttribute):
   import os
   
   projectPath = os.path.dirname(abcFilePath)
@@ -27,6 +27,7 @@ def setImagesPaths(abcFilePath, imageAttribute, thumbnailAttribute):
     if not cmds.attributeQuery(imageAttribute, node=c, exists=True):
       continue
     originalImagePath = cmds.getAttr(c+'.'+imageAttribute)
+    cmds.setAttr(c+'.'+imageSourceAttribute, originalImagePath, type="string")
     basename = os.path.basename(originalImagePath)
     fileName, fileExtension = os.path.splitext(basename)
     imageName = fileName + "-UO-full.jpg"
