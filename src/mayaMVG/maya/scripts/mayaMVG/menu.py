@@ -3,34 +3,6 @@ import pymel.core as pm
 import os
 
 '''
-Add a new 'imagePath' attribute to each Maya camera transform node
-  in the scene (only when the camera is connected to a valid ImagePlane
-  node)
-'''
-def addImagePathAttribute():
-    cameras = pm.ls(type='camera')
-    for c in cameras:
-        # retrieve connected imgplane
-        imgplanes = c.imagePlane.listConnections(shapes=True, type='imagePlane')
-        if not imgplanes:
-            continue
-        # retrieve the imgplane file path
-        path = imgplanes[0].imageName.get()
-        # if no imageName, check for 'imageNameDeferred' attribute
-        if not path:
-            if not pm.attributeQuery('imageNameDeferred', node=imgplanes[0], exists=True):
-               continue
-            path = imgplanes[0].imageNameDeferred.get()
-            if not path:
-                continue
-        # add a new 'imagePath' attribute on camera transform
-        transform = c.getParent()
-        if not transform.hasAttr('imagePath'):
-            transform.addAttr('imagePath', dt='string')
-        # fill this new attribute w/ the imgplane file path
-        transform.imagePath.set(path)
-
-'''
 Export the current selection to an ABC archive, w/ the following options:
   - the worldSpace option
   - the uvWrite option
@@ -56,7 +28,7 @@ def exportSelectionAsABC():
     # ensure we use a '*.abc' file extension
     outfile = os.path.splitext(outfile[0])[0]+'.abc'
     # build the AbcExport command
-    exportCmd = '-worldSpace -attr imagePath -attr mvg_intrinsicParams -file %s -uvWrite'%outfile
+    exportCmd = '-worldSpace -attr mvg_imageSourcePath -attr mvg_intrinsicParams -file %s -uvWrite'%outfile
     for p in nodePathtoExport:
         exportCmd += ' -root %s'%p
     exportCmd = '''
@@ -65,7 +37,6 @@ pm.AbcExport(j="%s")'''%exportCmd
     pm.evalDeferred(exportCmd)
 
 def exportSelectionAsABC_CB():
-    addImagePathAttribute()
     exportSelectionAsABC()
       
 def openMVGWindow_CB():

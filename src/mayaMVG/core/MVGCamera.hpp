@@ -67,6 +67,7 @@ public:
 
 public:
     static MString _MVG_IMAGE_PATH;
+    static MString _MVG_IMAGE_SOURCE_PATH;
     static MString _MVG_THUMBNAIL_PATH;
     static MString _MVG_ITEMS;
 

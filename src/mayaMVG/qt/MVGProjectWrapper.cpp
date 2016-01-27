@@ -258,9 +258,9 @@ void MVGProjectWrapper::loadABC(const QString& abcFilePath)
 
     // Set images paths
     cmd.format("from mayaMVG import camera;\n"
-               "camera.setImagesPaths('^1s', '^2s', '^3s')",
+               "camera.setImagesPaths('^1s', '^2s', '^3s', '^4s')",
                abcFilePath.toStdString().c_str(), MVGCamera::_MVG_IMAGE_PATH.asChar(),
-               MVGCamera::_MVG_THUMBNAIL_PATH.asChar());
+               MVGCamera::_MVG_IMAGE_SOURCE_PATH.asChar(), MVGCamera::_MVG_THUMBNAIL_PATH.asChar());
     MGlobal::executePythonCommand(cmd);
 
     _project.lockProject();
