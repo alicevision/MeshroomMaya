@@ -18,31 +18,31 @@ def mvgSetImagePlane(cameraShape, imageFile):
 
 def setImagesPaths(abcFilePath, imageAttribute, imageSourceAttribute, thumbnailAttribute):
   import os
-  
+
   projectPath = os.path.dirname(abcFilePath)
-  imageDir = os.path.join(projectPath, 'undistort/jpg/')
+  imageDir = os.path.join(projectPath, 'undistort/proxy/')
   thumbnailDir = os.path.join(projectPath, 'undistort/thumbnail/')
   cameraList = cmds.ls(ca=True)
-  for c in cameraList:    
+  for c in cameraList:
     if not cmds.attributeQuery(imageAttribute, node=c, exists=True):
       continue
     originalImagePath = cmds.getAttr(c+'.'+imageAttribute)
     cmds.setAttr(c+'.'+imageSourceAttribute, originalImagePath, type="string")
     basename = os.path.basename(originalImagePath)
     fileName, fileExtension = os.path.splitext(basename)
-    imageName = fileName + "-UO-full.jpg"
+    imageName = fileName + "-UOP.jpg"
     cmds.setAttr(c+'.'+imageAttribute, os.path.join(imageDir, imageName), type="string")
-    
+
     if not cmds.attributeQuery(thumbnailAttribute, node=c, exists=True):
       continue
-    imageName = fileName + "-UO-thumbnail.jpg"
+    imageName = fileName + "-UOT.jpg"
     cmds.setAttr(c+'.'+thumbnailAttribute, os.path.join(thumbnailDir, imageName), type="string")
 
 def mapImagesPaths(imageAttribute, thumbnailAttribute, abcFilePath):
   import os
 
   projectPath = os.path.dirname(abcFilePath)
-  imageDir = os.path.join(projectPath, 'undistort/jpg/')
+  imageDir = os.path.join(projectPath, 'undistort/proxy/')
   thumbnailDir = os.path.join(projectPath, 'undistort/thumbnail/')
 
   cameraList = cmds.ls(ca=True)
