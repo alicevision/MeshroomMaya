@@ -43,8 +43,7 @@ public:
     void setImagePlane() const;
     void unloadImagePlane() const;
     MPoint getCenter(MSpace::Space space = MSpace::kWorld) const;
-    double getSensorWidth() const;
-    void setSensorWidth(const double sensorWidth) const;
+    void getSensorSize(MIntArray& sensorSize) const;
     void getVisibleItems(std::vector<MVGPointCloudItem>& visibleItems) const;
     void setVisibleItems(const std::vector<MVGPointCloudItem>& item) const;
     double getZoom() const;
@@ -76,7 +75,7 @@ private:
     static MString _MVG_VIEW_ID;
     static MString _MVG_INTRINSIC_TYPE;
     static MString _MVG_INTRINSICS_PARAMS;
-    static MString _MVG_SENSOR_WIDTH;
+    static MString _MVG_SENSOR_SIZE;
 };
 
 } // namespace

@@ -223,8 +223,11 @@ void MVGGeometryUtil::cameraToImageSpace(MVGCamera& camera, const MPoint& camera
                                          MPoint& imagePoint)
 {
     MFnDagNode fnImage(camera.getImagePlaneShapeDagPath());
-    const double width = fnImage.findPlug("coverageX").asDouble();
-    const double height = fnImage.findPlug("coverageY").asDouble();
+
+    MIntArray sensorSize;
+    camera.getSensorSize(sensorSize);
+    const double width = sensorSize[0];
+    const double height = sensorSize[1];
     assert(camera.getHorizontalFilmAperture() != 0.0);
     MPoint pointCenteredNorm = cameraPoint / camera.getHorizontalFilmAperture();
     const double verticalMargin = (width - height) / 2.0;

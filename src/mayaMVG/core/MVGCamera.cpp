@@ -30,7 +30,7 @@ MString MVGCamera::_MVG_INTRINSICS_PARAMS = "mvg_intrinsicParams";
 MString MVGCamera::_MVG_IMAGE_SOURCE_PATH = "mvg_imageSourcePath";
 MString MVGCamera::_MVG_IMAGE_PATH = "mvg_imagePath";
 MString MVGCamera::_MVG_THUMBNAIL_PATH = "mvg_thumbnailPath";
-MString MVGCamera::_MVG_SENSOR_WIDTH = "mvg_sensorWidth_pix";
+MString MVGCamera::_MVG_SENSOR_SIZE = "mvg_sensorSizePix";
 
 MVGCamera::MVGCamera()
     : MVGNodeWrapper()
@@ -98,7 +98,7 @@ bool MVGCamera::isValid() const
     fn.findPlug(_MVG_IMAGE_PATH, false, &status);
     if(!status)
         return false;
-    fn.findPlug(_MVG_SENSOR_WIDTH, false, &status);
+    fn.findPlug(_MVG_SENSOR_SIZE, false, &status);
     if(!status)
         return false;
     fn.findPlug(_MVG_ITEMS, false, &status);
@@ -269,20 +269,11 @@ MPoint MVGCamera::getCenter(MSpace::Space space) const
     return fnCamera.eyePoint(space);
 }
 
-double MVGCamera::getSensorWidth() const
+void MVGCamera::getSensorSize(MIntArray& sensorSize) const
 {
     MStatus status;
-    double sensorWidth;
-    status = MVGMayaUtil::getDoubleAttribute(_dagpath.node(), _MVG_SENSOR_WIDTH, sensorWidth);
+    status = MVGMayaUtil::getIntArrayAttribute(_dagpath.node(), _MVG_SENSOR_SIZE, sensorSize);
     CHECK(status)
-    return sensorWidth;
-}
-
-void MVGCamera::setSensorWidth(const double sensorWidth) const
-{
-    MStatus status;
-    status = MVGMayaUtil::setDoubleAttribute(_dagpath.node(), _MVG_SENSOR_WIDTH, sensorWidth);
-    CHECK_RETURN(status)
 }
 
 void MVGCamera::getVisibleItems(std::vector<MVGPointCloudItem>& visibleItems) const

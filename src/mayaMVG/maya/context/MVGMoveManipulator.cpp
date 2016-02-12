@@ -52,12 +52,13 @@ void triangulatePoint(const std::map<int, MPoint>& point2dPerCamera_CS,
             MDoubleArray intrinsicsArray;
             MVGMayaUtil::getDoubleArrayAttribute(camera.getDagPath().node(), "mvg_intrinsicParams",
                                                  intrinsicsArray);
+            MIntArray sensorSize;
+            camera.getSensorSize(sensorSize);
 
             // Keep ideal matrix with principal point centered
-            const std::pair<double, double> imageSize = camera.getImageSize();
             openMVG::Mat3 K;
-            K << intrinsicsArray[0], 0.0, imageSize.first / 2.0, 0.0, intrinsicsArray[0],
-                imageSize.second / 2.0, 0.0, 0.0, 1.0;
+            K << intrinsicsArray[0], 0.0, sensorSize[0] / 2.0, 0.0, intrinsicsArray[0],
+                sensorSize[1] / 2.0, 0.0, 0.0, 1.0;
 
             // Retrieve transformation matrix
             const MMatrix inclusiveMatrix = camera.getDagPath().inclusiveMatrix();
