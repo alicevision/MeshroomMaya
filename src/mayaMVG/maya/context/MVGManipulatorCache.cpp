@@ -39,6 +39,8 @@ MVGManipulatorCache::MVGManipulatorCache()
 void MVGManipulatorCache::setActiveView(const M3dView& view)
 {
     _activeView = view;
+    // Needed to have correct model view matrix
+    _activeView.updateViewingParameters();
     MDagPath cameraPath;
     _activeView.getCamera(cameraPath);
     _activeCamera = MVGCamera(cameraPath);

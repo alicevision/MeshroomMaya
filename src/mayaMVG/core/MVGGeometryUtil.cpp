@@ -98,7 +98,6 @@ MPointArray MVGGeometryUtil::cameraToViewSpace(M3dView& view, const MPointArray&
 void MVGGeometryUtil::worldToViewSpace(M3dView& view, const MPoint& worldPoint, MPoint& viewPoint)
 {
     // don't use M3dView::worldToView() because of the cast to short values
-    MStatus status;
     MMatrix modelViewMatrix, projectionMatrix;
     CHECK(view.modelViewMatrix(modelViewMatrix))
     CHECK(view.projectionMatrix(projectionMatrix))
