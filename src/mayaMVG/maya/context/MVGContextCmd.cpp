@@ -90,6 +90,7 @@ MStatus MVGContextCmd::doEditFlags()
                 if(!manip)
                     return MS::kFailure;
                 _context->setEditMode(MVGContext::eEditModeCreate);
+                cache.clearSelectedComponent();
                 cache.rebuildMeshesCache();
                 manip->setContext(_context);
                 manip->setCache(&cache);
@@ -123,6 +124,10 @@ MStatus MVGContextCmd::doEditFlags()
         argData.getFlagArgument(moveModeFlag, 0, moveModeString);
         MVGMoveManipulator::_mode =
             static_cast<MVGMoveManipulator::EMoveMode>(moveModeString.asInt());
+        // Remove selection
+        if(MVGMoveManipulator::_mode == MVGMoveManipulator::eMoveModeAdjacentFaceProjection ||
+           MVGMoveManipulator::_mode == MVGMoveManipulator::eMoveModePointCloudProjection)
+            _context->getCache().clearSelectedComponent();
     }
     MUserEventMessage::postUserEvent("modeChangedEvent");
     return MS::kSuccess;
