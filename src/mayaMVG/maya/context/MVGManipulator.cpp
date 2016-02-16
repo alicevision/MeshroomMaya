@@ -7,6 +7,7 @@ namespace mayaMVG
 bool MVGManipulator::_displayVisiblePoints = false;
 
 MVGManipulator::MVGManipulator()
+    : _doDrag(false)
 {
     _cameraID = -1;
 }

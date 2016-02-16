@@ -65,6 +65,7 @@ protected:
     int _cameraID;
     std::vector<MVGPointCloudItem> _visiblePointCloudItems;
     MIntArray _snapedPoints;
+    bool _doDrag;
 
 public:
     static bool _displayVisiblePoints;
