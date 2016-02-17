@@ -69,10 +69,10 @@ public:
     static MString _MVG_IMAGE_SOURCE_PATH;
     static MString _MVG_THUMBNAIL_PATH;
     static MString _MVG_ITEMS;
+    static MString _MVG_VIEW_ID;
 
 private:
     static MString _MVG_INTRINSIC_ID;
-    static MString _MVG_VIEW_ID;
     static MString _MVG_INTRINSIC_TYPE;
     static MString _MVG_INTRINSICS_PARAMS;
     static MString _MVG_SENSOR_SIZE;

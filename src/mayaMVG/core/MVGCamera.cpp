@@ -115,7 +115,6 @@ MVGCamera MVGCamera::create(MDagPath& cameraDagPath, std::map<int, MIntArray>& i
     MObject cameraNode = cameraDagPath.node();
 
     MVGCamera camera(cameraDagPath);
-    //    camera.setName(name);
 
     // Configure camera
     MFnCamera fnCamera(cameraDagPath);

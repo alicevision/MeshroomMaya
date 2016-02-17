@@ -152,7 +152,8 @@ void MVGGeometryUtil::viewToWorldSpace(M3dView& view, const MPointArray& viewPoi
     worldPoints.setLength(viewPoints.length());
     MPoint worldDir;
     for(size_t i = 0; i < viewPoints.length(); ++i)
-        CHECK(view.viewToWorld((short)viewPoints[i].x, (short)viewPoints[i].y, worldPoints[i], worldDir))
+        CHECK(view.viewToWorld((short)viewPoints[i].x, (short)viewPoints[i].y, worldPoints[i],
+                               worldDir))
 }
 
 MPointArray MVGGeometryUtil::viewToWorldSpace(M3dView& view, const MPointArray& viewPoints)
