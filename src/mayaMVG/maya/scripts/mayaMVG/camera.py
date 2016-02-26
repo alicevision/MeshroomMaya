@@ -16,7 +16,7 @@ def mvgSetImagePlane(cameraShape, imageFile):
     imagePlaneName = cmds.imagePlane(camera=cameraShape)
     cmds.setAttr( "%s.imageName" % imagePlaneName[0], imageFile, type="string")
 
-def setImagesPaths(abcFilePath, imageAttribute, imageSourceAttribute, thumbnailAttribute):
+def setImagesPaths(abcFilePath, imageAttribute, imageSourceAttribute, thumbnailAttribute, viewIDAttribute):
   import os
 
   projectPath = os.path.dirname(abcFilePath)
@@ -30,12 +30,13 @@ def setImagesPaths(abcFilePath, imageAttribute, imageSourceAttribute, thumbnailA
     cmds.setAttr(c+'.'+imageSourceAttribute, originalImagePath, type="string")
     basename = os.path.basename(originalImagePath)
     fileName, fileExtension = os.path.splitext(basename)
-    imageName = fileName + "-UOP.jpg"
-    cmds.setAttr(c+'.'+imageAttribute, os.path.join(imageDir, imageName), type="string")
+    viewID = cmds.getAttr(c+'.'+viewIDAttribute)
+    imageName = fileName + "-" + str(viewID) + "-UOP.jpg"
+    cmds.setAttr(c+'.'+imageAttribute, os.path.join(imageDir, imageName,), type="string")
 
     if not cmds.attributeQuery(thumbnailAttribute, node=c, exists=True):
       continue
-    imageName = fileName + "-UOT.jpg"
+    imageName = fileName + "-" + str(viewID) + "-UOT.jpg"
     cmds.setAttr(c+'.'+thumbnailAttribute, os.path.join(thumbnailDir, imageName), type="string")
 
 def mapImagesPaths(imageAttribute, thumbnailAttribute, abcFilePath):

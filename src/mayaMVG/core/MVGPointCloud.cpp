@@ -34,7 +34,7 @@ int isLeft(const MPoint& P0, const MPoint& P1, const MPoint& P2)
     //            =0 for P2  on the line
     //            <0 for P2  right of the line
     //    See: Algorithm 1 "Area of Triangles and Polygons"
-    return ((P1.x - P0.x) * (P2.y - P0.y) - (P2.x - P0.x) * (P1.y - P0.y));
+    return (int)((P1.x - P0.x) * (P2.y - P0.y) - (P2.x - P0.x) * (P1.y - P0.y));
 }
 
 int wn_PnPoly(const MPoint& P, const MPointArray& V)
