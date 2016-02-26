@@ -286,7 +286,29 @@ Item {
                         anchors.fill: parent
                         text: "Clear all 2D points (triangulation)"
                     }
-                }  
+                }
+                // Select closest cam from persp
+                Item {
+                    implicitWidth: parent.width
+                    Layout.minimumHeight: 25
+                    Button {
+                        text: "Select closest cam"
+                        height: parent.height
+                        width: 120
+                        MouseArea {
+                            anchors.fill: parent
+                            onClicked: {
+                                m.project.selectClosestCam()
+
+                            }
+                        }
+                    }
+                    TooltipArea {
+                        anchors.fill: parent
+                        text: "Select closest camera"
+                    }
+                }
+
                 // Camera parameters
                 CameraSettings {
                     implicitWidth: parent.width
