@@ -68,7 +68,8 @@ Q_SIGNALS:
 
 public:
     Q_INVOKABLE QString openFileDialog() const;
-    Q_INVOKABLE void scaleScene(const double scaleSize) const;
+    Q_INVOKABLE void applySceneTransformation() const;
+    Q_INVOKABLE void createLocator() const;
     // Context & Modes
     Q_INVOKABLE void activeSelectionContext() const;
     Q_INVOKABLE void setCreationMode();

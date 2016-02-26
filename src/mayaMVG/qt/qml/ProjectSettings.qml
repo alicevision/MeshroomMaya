@@ -168,51 +168,26 @@ Item {
                     Layout.minimumHeight: 25
                     RowLayout {
                         anchors.fill: parent
-                        Item {
-                            implicitWidth: labelWidth
-                            implicitHeight: parent.height
-                            Text {
-                                height: parent.height
-                                text: "Scene scale"
-                                verticalAlignment: Text.AlignVCenter
-                                color: m.textColor
-                                font.pointSize: m.textSize
-                            }
-                        }
-                        Rectangle {
-                            implicitWidth: fieldWidth
-                            height: parent.height - fieldMargin
-                            color: "grey"
-                            radius: 2
-                            TextInput {
-                                id: scaleValue
-                                width: parent.width
-                                horizontalAlignment: TextInput.AlignHCenter
-                                anchors.verticalCenter: parent.verticalCenter
-                                selectByMouse: true
-                                font.pointSize: m.textSize
-                                text: "1"
-                                validator: DoubleValidator{bottom: 0.1;}
-                            }
-                        }
-                        Text {
-                            text: m.project.currentUnit
-                            color: m.textColor
-                            font.pointSize: m.textSize
-                        }
+
                         Button {
-                            text: "Apply"
+                            text: "Create locator"
                             height: parent.height -fieldMargin/2
-                            implicitWidth: 50
+                            implicitWidth: 120
                             MouseArea {
                                 anchors.fill: parent
-                                onClicked:
-                                {
-                                    m.project.scaleScene(scaleValue.text)
-                                    scaleValue.text = "1"
-                                }
+                                onClicked: m.project.createLocator()
                             }
                         }
+                        Button {
+                            text: "Apply transformation"
+                            height: parent.height -fieldMargin/2
+                            implicitWidth: 120
+                            MouseArea {
+                                anchors.fill: parent
+                                onClicked: m.project.applySceneTransformation()
+                            }
+                        }
+
 
                         Rectangle {
                             implicitWidth: 80

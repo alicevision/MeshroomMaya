@@ -30,33 +30,4 @@ def listMVGMeshesTransform():
             mvgMeshes.append(r)
     return mvgMeshes
 
-def scaleScene(transformMatrix, projectNodeName):
-    lockNode(projectNodeName, False)
-    import maya.cmds as cmds
-    # Unlock nodes
-    relatives = cmds.listRelatives(projectNodeName, ad=True, pa=True, type="transform")
-    for r in relatives:
-        lockNode(r, False)
-    mvgMeshList = listMVGMeshesTransform()
-    for mesh in mvgMeshList:
-        lockNode(mesh, False)
-    # Apply transformation
-    matrix = [];
-    tm = transformMatrix.split(" ")
-    for i in tm:
-        matrix.append(float(i))
-    cmds.xform(projectNodeName, r=True, m=matrix)
-    cmds.makeIdentity(projectNodeName, a=True)
-    # Set camera scale to 1
-    cameraTransformList = cmds.listRelatives(cmds.ls(type='camera'), type='transform', p=True, pa=True)
-    for c in cameraTransformList:
-        cmds.setAttr(c+'.scale', 1.0, 1.0, 1.0, type="double3")
-    for mesh in mvgMeshList:
-        cmds.xform(mesh, r=True, m=matrix)
-        cmds.makeIdentity(mesh, a=True)
-        lockNode(mesh, True)
-    # Lock nodes
-    for r in relatives:
-        lockNode(r, True)
-    lockNode(projectNodeName, True)
 

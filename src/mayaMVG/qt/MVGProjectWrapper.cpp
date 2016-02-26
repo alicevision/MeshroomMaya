@@ -8,8 +8,10 @@
 #include "mayaMVG/maya/context/MVGContextCmd.hpp"
 #include "mayaMVG/maya/context/MVGContext.hpp"
 #include "mayaMVG/maya/context/MVGMoveManipulator.hpp"
+#include "mayaMVG/maya/MVGDummyLocator.h"
 #include <maya/MQtUtil.h>
 #include <maya/MFnTypedAttribute.h>
+#include <maya/MFnTransform.h>
 
 namespace mayaMVG
 {
@@ -106,11 +108,35 @@ QString MVGProjectWrapper::openFileDialog() const
     return MQtUtil::toQString(directoryPath);
 }
 
-void MVGProjectWrapper::scaleScene(const double scaleSize) const
+void MVGProjectWrapper::applySceneTransformation() const
 {
-    double internalUnit = MDistance::uiToInternal(scaleSize);
-    if(!_project.scaleScene(internalUnit))
-        LOG_ERROR("Cannot scale scene")
+    _project.applySceneTransformation();
+}
+
+void MVGProjectWrapper::createLocator() const
+{
+    MStatus status;
+
+    // Check locator does not exist
+    const MString locatorName(MVGProject::_LOCATOR.c_str());
+    MObject locatorObject;
+    status = MVGMayaUtil::getObjectByName(locatorName, locatorObject);
+    if(status == MStatus::kSuccess)
+    {
+        LOG_INFO("Locator already exists.")
+        return;
+    }
+
+    // Create locator
+    MDagModifier dagModifier;
+    const MObject rootObject = _project.getObject();
+    MObject locatorTransform = dagModifier.createNode("transform", rootObject, &status);
+    MFnTransform locatorTransformFn(locatorTransform);
+    MString localName(MVGProject::_LOCATOR.c_str());
+    locatorTransformFn.setName(localName, status);
+    dagModifier.createNode("MVGDummyLocator", locatorTransform, &status);
+    status = dagModifier.doIt();
+    CHECK(status)
 }
 
 void MVGProjectWrapper::activeSelectionContext() const
