@@ -24,6 +24,24 @@ Item {
                 Item {
                     width: parent.width
                     implicitHeight: 25
+
+                    ToolButton {
+                        iconSource: "img/mapPathFromABC.png"
+                        tooltip: "Remap paths from .abc file"
+                        height: parent.height
+                        width: parent.height
+                        MouseArea {
+                            anchors.fill: parent
+                            onClicked: {
+                                var abcFile = m.project.openFileDialog()
+                                m.project.remapPaths(abcFile)
+                            }
+                        }
+                    }
+                }
+                Item {
+                    width: parent.width
+                    implicitHeight: 25
                     RowLayout {
                         anchors.fill: parent
                         anchors.margins: 1
@@ -245,28 +263,6 @@ Item {
                         text: "Camera locator scale"
                     }
                 }
-                Item {
-                    width: parent.width
-                    implicitHeight: 25
-
-                    Button {
-                        text: "Remap images paths"
-                        height: parent.height
-                        width: 120
-                        MouseArea {
-                            anchors.fill: parent
-                            onClicked: {
-                                var abcFile = m.project.openFileDialog()
-                                m.project.remapPaths(abcFile)
-                            }
-                        }
-                    }
-
-                    TooltipArea {
-                        anchors.fill: parent
-                        text: "Remap paths from .abc file"
-                    }
-                }            
             }         
         }
     }
