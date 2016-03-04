@@ -16,10 +16,7 @@ public:
     };
 
 public:
-    MVGMoveManipulator()
-        : _doDrag(false)
-    {
-    }
+    MVGMoveManipulator() {}
     virtual ~MVGMoveManipulator() {}
 
 public:
@@ -67,7 +64,6 @@ public:
     static MString _drawDbClassification;
     static MString _drawRegistrantID;
     static EMoveMode _mode;
-    bool _doDrag;
 
 private:
     /// 2D view space points of the moved face.

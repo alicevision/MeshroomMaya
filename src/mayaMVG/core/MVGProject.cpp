@@ -280,12 +280,32 @@ void MVGProject::selectMeshes(const std::vector<std::string>& meshes) const
 
 void MVGProject::unlockProject() const
 {
-    unlockNode(getObject());
+    // Camera group
+    MObject cameraGroup;
+    const MString cameraGroupString(_CAMERAS_GROUP.c_str());
+    MVGMayaUtil::getObjectByName(cameraGroupString, cameraGroup);
+    unlockNode(cameraGroup);
+
+    // Cloud group
+    MObject cloudGroup;
+    const MString cloudGroupString(_CLOUD_GROUP.c_str());
+    MVGMayaUtil::getObjectByName(cloudGroupString, cloudGroup);
+    unlockNode(cloudGroup);
 }
 
 void MVGProject::lockProject() const
 {
-    lockNode(getObject());
+    // Camera group
+    MObject cameraGroup;
+    const MString cameraGroupString(_CAMERAS_GROUP.c_str());
+    MVGMayaUtil::getObjectByName(cameraGroupString, cameraGroup);
+    lockNode(cameraGroup);
+
+    // Cloud group
+    MObject cloudGroup;
+    const MString cloudGroupString(_CLOUD_GROUP.c_str());
+    MVGMayaUtil::getObjectByName(cloudGroupString, cloudGroup);
+    lockNode(cloudGroup);
 }
 
 void MVGProject::pushImageInCache(const std::string& cameraName)

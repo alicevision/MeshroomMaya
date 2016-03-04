@@ -98,7 +98,6 @@ MPointArray MVGGeometryUtil::cameraToViewSpace(M3dView& view, const MPointArray&
 void MVGGeometryUtil::worldToViewSpace(M3dView& view, const MPoint& worldPoint, MPoint& viewPoint)
 {
     // don't use M3dView::worldToView() because of the cast to short values
-    MStatus status;
     MMatrix modelViewMatrix, projectionMatrix;
     CHECK(view.modelViewMatrix(modelViewMatrix))
     CHECK(view.projectionMatrix(projectionMatrix))
@@ -137,7 +136,7 @@ MPointArray MVGGeometryUtil::worldToViewSpace(M3dView& view, const MPointArray& 
 void MVGGeometryUtil::viewToWorldSpace(M3dView& view, const MPoint& viewPoint, MPoint& worldPoint)
 {
     MPoint worldDir;
-    CHECK(view.viewToWorld(viewPoint.x, viewPoint.y, worldPoint, worldDir))
+    CHECK(view.viewToWorld((short)viewPoint.x, (short)viewPoint.y, worldPoint, worldDir))
 }
 
 MPoint MVGGeometryUtil::viewToWorldSpace(M3dView& view, const MPoint& viewPoint)
@@ -153,7 +152,8 @@ void MVGGeometryUtil::viewToWorldSpace(M3dView& view, const MPointArray& viewPoi
     worldPoints.setLength(viewPoints.length());
     MPoint worldDir;
     for(size_t i = 0; i < viewPoints.length(); ++i)
-        CHECK(view.viewToWorld(viewPoints[i].x, viewPoints[i].y, worldPoints[i], worldDir))
+        CHECK(view.viewToWorld((short)viewPoints[i].x, (short)viewPoints[i].y, worldPoints[i],
+                               worldDir))
 }
 
 MPointArray MVGGeometryUtil::viewToWorldSpace(M3dView& view, const MPointArray& viewPoints)
@@ -223,8 +223,11 @@ void MVGGeometryUtil::cameraToImageSpace(MVGCamera& camera, const MPoint& camera
                                          MPoint& imagePoint)
 {
     MFnDagNode fnImage(camera.getImagePlaneShapeDagPath());
-    const double width = fnImage.findPlug("coverageX").asDouble();
-    const double height = fnImage.findPlug("coverageY").asDouble();
+
+    MIntArray sensorSize;
+    camera.getSensorSize(sensorSize);
+    const double width = sensorSize[0];
+    const double height = sensorSize[1];
     assert(camera.getHorizontalFilmAperture() != 0.0);
     MPoint pointCenteredNorm = cameraPoint / camera.getHorizontalFilmAperture();
     const double verticalMargin = (width - height) / 2.0;

@@ -85,6 +85,7 @@ public:
     Q_INVOKABLE void addMeshesToIHMSelection(const QStringList& selectedMeshes,
                                              bool center = false);
     Q_INVOKABLE void addMeshesToMayaSelection(const QStringList& meshes) const;
+    Q_INVOKABLE void selectClosestCam() const;
     // Cameras
     Q_INVOKABLE void setCameraToView(QObject* camera, const QString& viewName);
     Q_INVOKABLE void setCamerasNear(const double near);

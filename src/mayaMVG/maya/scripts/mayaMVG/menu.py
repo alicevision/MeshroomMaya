@@ -40,6 +40,12 @@ def exportSelectionAsABC_CB():
     exportSelectionAsABC()
       
 def openMVGWindow_CB():
+    # ToolStats
+    try:
+        from toolStats import toolUsage
+        toolUsage.addUsage('MayaMVG','vfx.mikros.int')
+    except:
+        print "WARNING : ToolStats module not found."
     pm.MVGCmd()
 
 def mvgCreateMenu():

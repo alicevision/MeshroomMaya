@@ -258,9 +258,10 @@ void MVGProjectWrapper::loadABC(const QString& abcFilePath)
 
     // Set images paths
     cmd.format("from mayaMVG import camera;\n"
-               "camera.setImagesPaths('^1s', '^2s', '^3s', '^4s')",
+               "camera.setImagesPaths('^1s', '^2s', '^3s', '^4s', '^5s')",
                abcFilePath.toStdString().c_str(), MVGCamera::_MVG_IMAGE_PATH.asChar(),
-               MVGCamera::_MVG_IMAGE_SOURCE_PATH.asChar(), MVGCamera::_MVG_THUMBNAIL_PATH.asChar());
+               MVGCamera::_MVG_IMAGE_SOURCE_PATH.asChar(), MVGCamera::_MVG_THUMBNAIL_PATH.asChar(),
+               MVGCamera::_MVG_VIEW_ID.asChar());
     MGlobal::executePythonCommand(cmd);
 
     _project.lockProject();
@@ -352,6 +353,37 @@ void MVGProjectWrapper::addMeshesToMayaSelection(const QStringList& meshesPath) 
     for(QStringList::const_iterator it = meshesPath.begin(); it != meshesPath.end(); ++it)
         meshes.push_back(it->toStdString());
     _project.selectMeshes(meshes);
+}
+
+void MVGProjectWrapper::selectClosestCam() const
+{
+
+    // Retrieve perspective matrix
+    MDagPath perspDagPath;
+    MVGMayaUtil::getDagPathByName("perspShape", perspDagPath);
+
+    // Browse all MVG cameras
+    std::multimap<float, MString> camMap;
+    std::vector<MVGCamera> mvgCameras = MVGCamera::getCameras();
+    for(std::vector<MVGCamera>::iterator it = mvgCameras.begin(); it != mvgCameras.end(); ++it)
+    {
+        // Compute Frobenius norm
+        MDagPath camDagPath = it->getDagPath();
+        MMatrix matrix = perspDagPath.inclusiveMatrix() - camDagPath.inclusiveMatrix();
+        float norm = 0;
+        for(size_t i = 0; i < 4; ++i)
+            for(size_t j = 0; j < 4; ++j)
+                norm += std::pow(matrix[i][j], 2.0);
+        camMap.insert(std::make_pair(norm, camDagPath.partialPathName()));
+    }
+
+    // Update selection
+    if(!camMap.empty())
+    {
+        QStringList cameraList;
+        cameraList.append(MQtUtil::toQString(camMap.begin()->second));
+        addCamerasToMayaSelection(cameraList);
+    }
 }
 
 void MVGProjectWrapper::setCameraToView(QObject* camera, const QString& viewName)

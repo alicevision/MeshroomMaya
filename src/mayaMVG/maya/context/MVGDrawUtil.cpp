@@ -48,7 +48,7 @@ void MVGDrawUtil::drawLine2D(const MPoint& A, const MPoint& B, const MColor& col
     if(stipple)
     {
         glEnable(GL_LINE_STIPPLE);
-        glLineStipple(1.f, 0x5555);
+        glLineStipple((GLint)1.f, (GLushort)0x5555);
     }
     glColor4f(color.r, color.g, color.b, alpha);
     glLineWidth(lineWidth);
@@ -69,7 +69,7 @@ void MVGDrawUtil::drawLine3D(const MPoint& A, const MPoint& B, const MColor& col
     if(stipple)
     {
         glEnable(GL_LINE_STIPPLE);
-        glLineStipple(1.f, 0x5555);
+        glLineStipple((GLint)1.f, (GLushort)0x5555);
     }
     glColor4f(color.r, color.g, color.b, alpha);
     glLineWidth(lineWidth);

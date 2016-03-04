@@ -108,9 +108,12 @@ void MVGCreateManipulator::draw(M3dView& view, const MDagPath& path, M3dView::Di
             return;
         }
         // draw intersection
-        MPointArray intersectedVSPoints;
-        getIntersectedPoints(view, intersectedVSPoints, MVGManipulator::kView);
-        MVGManipulator::drawIntersection2D(intersectedVSPoints, _cache->getIntersectionType());
+        if(!_doDrag && !_doSnap)
+        {
+            MPointArray intersectedVSPoints;
+            getIntersectedPoints(view, intersectedVSPoints, MVGManipulator::kView);
+            MVGManipulator::drawIntersection2D(intersectedVSPoints, _cache->getIntersectionType());
+        }
 
         // Draw snaped element
         if(_doSnap)
@@ -127,6 +130,7 @@ void MVGCreateManipulator::draw(M3dView& view, const MDagPath& path, M3dView::Di
         }
         if(_displayVisiblePoints)
             drawVisibleItems(view);
+
         MVGDrawUtil::end2DDrawing();
     }
     glDisable(GL_BLEND);
@@ -140,6 +144,8 @@ MStatus MVGCreateManipulator::doPress(M3dView& view)
     // use only the left mouse button
     if(!(QApplication::mouseButtons() & Qt::LeftButton))
         return MPxManipulatorNode::doPress(view);
+
+    _doDrag = true;
     const MVGCamera& camera = _cache->getActiveCamera();
     if(!camera.isValid())
         return MPxManipulatorNode::doPress(view);
@@ -168,6 +174,7 @@ MStatus MVGCreateManipulator::doPress(M3dView& view)
 
 MStatus MVGCreateManipulator::doRelease(M3dView& view)
 {
+    _doDrag = false;
     if(!MVGMayaUtil::isActiveView(view) || !MVGMayaUtil::isMVGView(view))
         return MPxManipulatorNode::doRelease(view);
 
@@ -299,7 +306,9 @@ void MVGCreateManipulator::computeFinalWSPoints(M3dView& view)
     getIntermediateCSEdgePoints(view, _onPressIntersectedComponent.edge, _onPressCSPoint,
                                 intermediateCSEdgePoints);
     assert(intermediateCSEdgePoints.length() == 2);
-    if(_doSnap)
+    if(_doSnap &&
+       mouseIntersectedComponent.meshPath.fullPathName() ==
+           _onPressIntersectedComponent.meshPath.fullPathName())
     {
         // Snap to intersected edge
         if(snapToIntersectedEdge(view, _finalWSPoints, mouseIntersectedComponent))
@@ -414,6 +423,9 @@ bool MVGCreateManipulator::snapToIntersectedEdge(
     finalWSPoints.append(intersectedVertex2);
     finalWSPoints.append(intersectedVertex1);
 
+    _snapedPoints.append(finalWSPoints.length() - 2);
+    _snapedPoints.append(finalWSPoints.length() - 1);
+
     // Check points order
     MPoint A = MVGGeometryUtil::worldToCameraSpace(view, finalWSPoints[0]);
     MPoint B = MVGGeometryUtil::worldToCameraSpace(view, finalWSPoints[1]);
@@ -424,6 +436,9 @@ bool MVGCreateManipulator::snapToIntersectedEdge(
         MPointArray tmp = finalWSPoints;
         finalWSPoints[3] = tmp[2];
         finalWSPoints[2] = tmp[3];
+
+        _snapedPoints[0] = finalWSPoints.length() - 1;
+        _snapedPoints[1] = finalWSPoints.length() - 2;
     }
     return true;
 }

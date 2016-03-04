@@ -52,12 +52,13 @@ void triangulatePoint(const std::map<int, MPoint>& point2dPerCamera_CS,
             MDoubleArray intrinsicsArray;
             MVGMayaUtil::getDoubleArrayAttribute(camera.getDagPath().node(), "mvg_intrinsicParams",
                                                  intrinsicsArray);
+            MIntArray sensorSize;
+            camera.getSensorSize(sensorSize);
 
             // Keep ideal matrix with principal point centered
-            const std::pair<double, double> imageSize = camera.getImageSize();
             openMVG::Mat3 K;
-            K << intrinsicsArray[0], 0.0, imageSize.first / 2.0, 0.0, intrinsicsArray[0],
-                imageSize.second / 2.0, 0.0, 0.0, 1.0;
+            K << intrinsicsArray[0], 0.0, sensorSize[0] / 2.0, 0.0, intrinsicsArray[0],
+                sensorSize[1] / 2.0, 0.0, 0.0, 1.0;
 
             // Retrieve transformation matrix
             const MMatrix inclusiveMatrix = camera.getDagPath().inclusiveMatrix();
@@ -291,9 +292,7 @@ MStatus MVGMoveManipulator::doPress(M3dView& view)
     if(_mode == eMoveModeNViewTriangulation)
     {
         _cache->checkIntersection(10.0, getMousePosition(view), true);
-        if(_onPressIntersectedComponent.type == MFn::kBlindData ||
-           _onPressIntersectedComponent.type == MFn::kMeshVertComponent)
-            _cache->setSelectedComponent(_onPressIntersectedComponent);
+        _cache->setSelectedComponent(_onPressIntersectedComponent);
     }
 
     // compute final positions
@@ -405,9 +404,7 @@ MStatus MVGMoveManipulator::doRelease(M3dView& view)
     {
         _cache->checkIntersection(10.0, getMousePosition(view), true);
         MVGManipulatorCache::MVGComponent intersectedComponent = _cache->getIntersectedComponent();
-        if(intersectedComponent.type == MFn::kBlindData ||
-           intersectedComponent.type == MFn::kMeshVertComponent)
-            _cache->setSelectedComponent(intersectedComponent);
+        _cache->setSelectedComponent(intersectedComponent);
     }
     return MPxManipulatorNode::doRelease(view);
 }
@@ -889,20 +886,23 @@ void MVGMoveManipulator::drawPlacedPoints(
             if(currentData == verticesIt->blindData.end())
                 continue;
 
-            // Don't draw if point is currently moving
-            if(onPressIntersectedComponent.type == MFn::kMeshVertComponent ||
-               (onPressIntersectedComponent.type == MFn::kBlindData &&
-                _mode == eMoveModeNViewTriangulation))
+            // Don't draw if point is currently moving //in the current view
+            if(onPressIntersectedComponent.meshPath.fullPathName().asChar() == it->first)
             {
-                if(onPressIntersectedComponent.vertex->index == verticesIt->index)
-                    continue;
-            }
-            if(onPressIntersectedComponent.type == MFn::kMeshEdgeComponent)
-            {
-                if(onPressIntersectedComponent.edge->vertex1->index == verticesIt->index)
-                    continue;
-                if(onPressIntersectedComponent.edge->vertex2->index == verticesIt->index)
-                    continue;
+                if(onPressIntersectedComponent.type == MFn::kMeshVertComponent ||
+                   (onPressIntersectedComponent.type == MFn::kBlindData &&
+                    _mode == eMoveModeNViewTriangulation))
+                {
+                    if(onPressIntersectedComponent.vertex->index == verticesIt->index)
+                        continue;
+                }
+                if(onPressIntersectedComponent.type == MFn::kMeshEdgeComponent)
+                {
+                    if(onPressIntersectedComponent.edge->vertex1->index == verticesIt->index)
+                        continue;
+                    if(onPressIntersectedComponent.edge->vertex2->index == verticesIt->index)
+                        continue;
+                }
             }
 
             // 2D position

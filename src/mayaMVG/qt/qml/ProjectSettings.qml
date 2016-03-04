@@ -66,6 +66,52 @@ Item {
                     implicitWidth: parent.width
                     onBrowserProjectLoaded: settingProjectLoaded()
                 }
+
+                // Toolbar
+                Item {
+                    implicitWidth: parent.width
+                    Layout.minimumHeight: 25
+                    RowLayout {
+                        anchors.fill: parent
+                        // Clear blind data
+                        Item {
+                            implicitWidth: 30
+                            implicitHeight: 30
+                            Layout.minimumHeight: 30
+                            ToolButton {
+                                iconSource: "img/clearBD.png"
+                                height: parent.height
+                                width: parent.height
+                                tooltip: "Clear all 2D points (triangulation)"
+                                MouseArea {
+                                    anchors.fill: parent
+                                    onClicked: m.project.clearAllBlindData()
+                                }
+                            }
+                        }
+                        // Select closest cam from persp
+                        Item {
+                            implicitWidth: 30
+                            implicitHeight: 30
+                            Layout.minimumHeight: 30
+
+                            ToolButton {
+                                iconSource: "img/greenCamera.png"
+                                tooltip: "Select closest cam"
+                                height: parent.height
+                                width: parent.height
+                                MouseArea {
+                                    anchors.fill: parent
+                                    onClicked: m.project.selectClosestCam()
+                                }
+                            }
+                        }
+                        Rectangle {
+                            Layout.horizontalSizePolicy: Layout.Expanding
+                        }
+                    }
+                }
+
                 // thumbnail slider
                 Item {
                     Layout.minimumHeight: 25
@@ -266,27 +312,6 @@ Item {
                     }
                 }
 
-                // Clear blind data
-                Item {
-                    implicitWidth: parent.width
-                    Layout.minimumHeight: 25
-                    Button {
-                        text: "Clear 2D points"
-                        height: parent.height
-                        width: 120
-                        MouseArea {
-                            anchors.fill: parent
-                            onClicked: {
-                                m.project.clearAllBlindData()
-
-                            }
-                        }
-                    }
-                    TooltipArea {
-                        anchors.fill: parent
-                        text: "Clear all 2D points (triangulation)"
-                    }
-                }  
                 // Camera parameters
                 CameraSettings {
                     implicitWidth: parent.width
