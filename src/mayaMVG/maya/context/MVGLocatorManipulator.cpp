@@ -74,7 +74,7 @@ void MVGLocatorManipulator::draw(M3dView& view, const MDagPath& path, M3dView::D
                 VSPoint = mouseVSPosition;
             else
                 VSPoint = MVGGeometryUtil::cameraToViewSpace(view, it->second);
-            MVGDrawUtil::drawFullCross(VSPoint, 10, 1.5f, MVGDrawUtil::_okayColor);
+            MVGDrawUtil::drawFullCross(VSPoint, 10, 1.5f, MVGDrawUtil::_triangulateColor);
         }
 
         // Draw in active view
@@ -150,7 +150,8 @@ void MVGLocatorManipulator::drawCursor(const MPoint& originVS)
     MVGDrawUtil::drawArrowsCursor(originVS, MVGDrawUtil::_cursorColor);
 
     MPoint offsetMouseVSPosition = originVS + MPoint(10, 10);
-    MVGDrawUtil::drawFullCross(offsetMouseVSPosition, 5, 1, MVGDrawUtil::_triangulateColor);
+    MVGDrawUtil::drawLocatorCursorItem(offsetMouseVSPosition);
+    //    MVGDrawUtil::drawFullCross(offsetMouseVSPosition, 5, 1, MVGDrawUtil::_triangulateColor);
 }
 
 void MVGLocatorManipulator::createLocator(const MString& locatorName)
