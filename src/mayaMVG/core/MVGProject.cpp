@@ -151,6 +151,27 @@ bool MVGProject::applySceneTransformation() const
     MFnTransform rootTransform(rootObject);
     rootTransform.set(inverseTransformMatrix);
 
+    // Set transformation to selection
+    MSelectionList selection;
+    MGlobal::getActiveSelectionList(selection);
+
+    for(size_t i = 0; i < selection.length(); i++)
+    {
+        MDagPath path;
+        selection.getDagPath(i, path);
+        if(path.apiType() != MFn::kTransform)
+            continue;
+        MObject obj;
+        MVGMayaUtil::getObjectByName(path.partialPathName(), obj);
+        MFnTransform transform(path);
+        if(transform.isChildOf(rootObject))
+            continue;
+        unlockNode(obj);
+        status = transform.set(inverseTransformMatrix);
+        lockNode(obj);
+        CHECK(status)
+    }
+
     return true;
 }
 
