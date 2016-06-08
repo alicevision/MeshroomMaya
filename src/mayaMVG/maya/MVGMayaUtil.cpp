@@ -184,6 +184,13 @@ MStatus MVGMayaUtil::setAdjacentPlaneMode()
     cmd.format("^1s -e -em 1 -mv 2 ^2s", MVGContextCmd::name, MVGContextCmd::instanceName);
     return MGlobal::executeCommandOnIdle(cmd);
 }
+// static
+MStatus MVGMayaUtil::setLocatorMode()
+{
+    MString cmd;
+    cmd.format("^1s -e -em 2 ^2s", MVGContextCmd::name, MVGContextCmd::instanceName);
+    return MGlobal::executeCommandOnIdle(cmd);
+}
 
 MStatus MVGMayaUtil::setCameraInView(const MVGCamera& camera, const MString& viewName)
 {

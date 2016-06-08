@@ -115,6 +115,11 @@ std::vector<MVGProject> MVGProject::list()
     return list;
 }
 
+/**
+ * Apply transformation on scene :
+ * Get locator an apply and set it as origin of scene.
+ *
+ */
 bool MVGProject::applySceneTransformation() const
 {
     MStatus status;
@@ -129,7 +134,7 @@ bool MVGProject::applySceneTransformation() const
     status = MVGMayaUtil::getObjectByName(locatorName, locatorObject);
     if(!status)
     {
-        LOG_ERROR("Can't find locator.")
+        LOG_ERROR("Can't find \"" << locatorName << "\" locator.")
         return false;
     }
     MFnTransform locatorTransform(locatorObject);

@@ -40,7 +40,7 @@ Item {
             State {
                 name: "OPEN"
                 when: m.isOpen
-                PropertyChanges { target: settings; height: 410; }
+                PropertyChanges { target: settings; height: 440; }
                 PropertyChanges { target: settings; opacity: 1; }
             }
         ]
@@ -162,7 +162,7 @@ Item {
                     }
                 }
 
-                // Scale
+                // Reorient scene
                 Item {
                     implicitWidth: parent.width
                     Layout.minimumHeight: 25
@@ -170,16 +170,7 @@ Item {
                         anchors.fill: parent
 
                         Button {
-                            text: "Create locator"
-                            height: parent.height -fieldMargin/2
-                            implicitWidth: 120
-                            MouseArea {
-                                anchors.fill: parent
-                                onClicked: m.project.createLocator()
-                            }
-                        }
-                        Button {
-                            text: "Apply transformation"
+                            text: "Reorient scene"
                             height: parent.height -fieldMargin/2
                             implicitWidth: 120
                             MouseArea {
@@ -194,10 +185,6 @@ Item {
                             Layout.horizontalSizePolicy: Layout.Expanding
                             color: "blue"
                         }
-                    }
-                    TooltipArea {
-                        anchors.fill: parent
-                        text: "Scene scale"
                     }
                 }
 

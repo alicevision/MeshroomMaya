@@ -53,6 +53,11 @@ void MVGContext::updateManipulators()
         MGlobal::executeCommand(cmd);
         return;
     }
+    else if(_editMode == eEditModeLocator)
+    {
+        MVGMayaUtil::setLocatorMode();
+        return;
+    }
     MVGMayaUtil::setCreationMode();
 }
 

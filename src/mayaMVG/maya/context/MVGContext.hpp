@@ -34,7 +34,8 @@ public:
     enum EEditMode
     {
         eEditModeCreate = 0,
-        eEditModeMove = 1
+        eEditModeMove = 1,
+        eEditModeLocator = 2,
     };
 
 public:

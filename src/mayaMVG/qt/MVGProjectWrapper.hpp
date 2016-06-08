@@ -69,13 +69,13 @@ Q_SIGNALS:
 public:
     Q_INVOKABLE QString openFileDialog() const;
     Q_INVOKABLE void applySceneTransformation() const;
-    Q_INVOKABLE void createLocator() const;
     // Context & Modes
     Q_INVOKABLE void activeSelectionContext() const;
     Q_INVOKABLE void setCreationMode();
     Q_INVOKABLE void setTriangulationMode();
     Q_INVOKABLE void setPointCloudMode();
     Q_INVOKABLE void setAdjacentPlaneMode();
+    Q_INVOKABLE void setLocatorMode();
     // Project
     Q_INVOKABLE void loadExistingProject();
     Q_INVOKABLE void loadABC(const QString& abcFilePath);
