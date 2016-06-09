@@ -40,7 +40,7 @@ Item {
             State {
                 name: "OPEN"
                 when: m.isOpen
-                PropertyChanges { target: settings; height: 440; }
+                PropertyChanges { target: settings; height: 380; }
                 PropertyChanges { target: settings; opacity: 1; }
             }
         ]
@@ -66,6 +66,70 @@ Item {
                     implicitWidth: parent.width
                     onBrowserProjectLoaded: settingProjectLoaded()
                 }
+
+                // Toolbar
+                Item {
+                    implicitWidth: parent.width
+                    Layout.minimumHeight: 25
+                    RowLayout {
+                        anchors.fill: parent
+                        // Clear blind data
+                        Item {
+                            implicitWidth: 30
+                            implicitHeight: 30
+                            Layout.minimumHeight: 30
+                            ToolButton {
+                                iconSource: "img/clearBD.png"
+                                height: parent.height
+                                width: parent.height
+                                tooltip: "Clear all 2D points (triangulation)"
+                                MouseArea {
+                                    anchors.fill: parent
+                                    onClicked: m.project.clearAllBlindData()
+                                }
+                            }
+                        }
+                        // Select closest cam from persp
+                        Item {
+                            implicitWidth: 30
+                            implicitHeight: 30
+                            Layout.minimumHeight: 30
+
+                            ToolButton {
+                                iconSource: "img/greenCamera.png"
+                                tooltip: "Select closest cam"
+                                height: parent.height
+                                width: parent.height
+                                MouseArea {
+                                    anchors.fill: parent
+                                    onClicked: m.project.selectClosestCam()
+                                }
+                            }
+                        }
+
+                        // Reorient scene
+                        Item {
+                            implicitWidth: 30
+                            implicitHeight: 30
+                            Layout.minimumHeight: 30
+
+                            ToolButton {
+                                iconSource: "img/locatorMode.png"
+                                tooltip: "Reorient scene"
+                                height: parent.height
+                                width: parent.height
+                                MouseArea {
+                                    anchors.fill: parent
+                                    onClicked: m.project.applySceneTransformation()
+                                }
+                            }
+                        }
+                        Rectangle {
+                            Layout.horizontalSizePolicy: Layout.Expanding
+                        }
+                    }
+                }
+
                 // thumbnail slider
                 Item {
                     Layout.minimumHeight: 25
@@ -162,32 +226,6 @@ Item {
                     }
                 }
 
-                // Reorient scene
-                Item {
-                    implicitWidth: parent.width
-                    Layout.minimumHeight: 25
-                    RowLayout {
-                        anchors.fill: parent
-
-                        Button {
-                            text: "Reorient scene"
-                            height: parent.height -fieldMargin/2
-                            implicitWidth: 120
-                            MouseArea {
-                                anchors.fill: parent
-                                onClicked: m.project.applySceneTransformation()
-                            }
-                        }
-
-
-                        Rectangle {
-                            implicitWidth: 80
-                            Layout.horizontalSizePolicy: Layout.Expanding
-                            color: "blue"
-                        }
-                    }
-                }
-
                 // Active synchro
                 Item {
                     implicitWidth: parent.width
@@ -225,49 +263,6 @@ Item {
                     TooltipArea {
                         anchors.fill: parent
                         text: "Camera synchronization"
-                    }
-                }
-
-                // Clear blind data
-                Item {
-                    implicitWidth: parent.width
-                    Layout.minimumHeight: 25
-                    Button {
-                        text: "Clear 2D points"
-                        height: parent.height
-                        width: 120
-                        MouseArea {
-                            anchors.fill: parent
-                            onClicked: {
-                                m.project.clearAllBlindData()
-
-                            }
-                        }
-                    }
-                    TooltipArea {
-                        anchors.fill: parent
-                        text: "Clear all 2D points (triangulation)"
-                    }
-                }
-                // Select closest cam from persp
-                Item {
-                    implicitWidth: parent.width
-                    Layout.minimumHeight: 25
-                    Button {
-                        text: "Select closest cam"
-                        height: parent.height
-                        width: 120
-                        MouseArea {
-                            anchors.fill: parent
-                            onClicked: {
-                                m.project.selectClosestCam()
-
-                            }
-                        }
-                    }
-                    TooltipArea {
-                        anchors.fill: parent
-                        text: "Select closest camera"
                     }
                 }
 
