@@ -128,6 +128,15 @@ bool MVGProject::applySceneTransformation() const
     if(!isValid())
         return false;
 
+    // Retieve old transformation (in mvgRoot)
+    MString rootName(_PROJECT.c_str());
+    MObject rootObject;
+    MVGMayaUtil::getObjectByName(rootName, rootObject);
+    MFnTransform rootTransform(rootObject);
+
+    // L1(-1)
+    MTransformationMatrix rootTransformation = rootTransform.transformation();
+
     // Retrieve locator
     const MString locatorName(_LOCATOR.c_str());
     MObject locatorObject;
@@ -138,38 +147,46 @@ bool MVGProject::applySceneTransformation() const
         return false;
     }
     MFnTransform locatorTransform(locatorObject);
+    // L2
+    MTransformationMatrix locatorTransformation = locatorTransform.transformation();
 
-    // Object space transformation
-    MTransformationMatrix transformMatrix = locatorTransform.transformation();
-    MMatrix inverse = transformMatrix.asMatrixInverse();
-    MTransformationMatrix inverseTransformMatrix(inverse);
+    // L12(-1))
+    MMatrix transformationMatrix =
+        rootTransformation.asMatrixInverse() * locatorTransformation.asMatrixInverse();
+    MTransformationMatrix transformation(transformationMatrix);
 
     // Set transformation to root
-    MString rootName(_PROJECT.c_str());
-    MObject rootObject;
-    MVGMayaUtil::getObjectByName(rootName, rootObject);
-    MFnTransform rootTransform(rootObject);
-    rootTransform.set(inverseTransformMatrix);
+    MMatrix newRootTranformationMatrix = rootTransformation.asMatrix() * transformation.asMatrix();
+    MTransformationMatrix newRootTranformation(newRootTranformationMatrix);
+    rootTransform.set(newRootTranformation);
 
-    // Set transformation to selection
-    MSelectionList selection;
-    MGlobal::getActiveSelectionList(selection);
-
-    for(size_t i = 0; i < selection.length(); i++)
+    // Set transformation to mesh
+    std::vector<MVGMesh> activeMeshes = MVGMesh::listActiveMeshes();
+    for(std::vector<MVGMesh>::iterator it = activeMeshes.begin(); it != activeMeshes.end(); ++it)
     {
-        MDagPath path;
-        selection.getDagPath(i, path);
-        if(path.apiType() != MFn::kTransform)
-            continue;
-        MObject obj;
-        MVGMayaUtil::getObjectByName(path.partialPathName(), obj);
-        MFnTransform transform(path);
-        if(transform.isChildOf(rootObject))
-            continue;
-        unlockNode(obj);
-        status = transform.set(inverseTransformMatrix);
-        lockNode(obj);
+        MDagPath path = it->getDagPath();
+
+        // Retrieve transform
+        path.pop();
+        MObject transformObj = path.node();
+        unlockNode(transformObj);
+        MFnTransform transform(path, &status);
         CHECK(status)
+
+        // Apply transformation
+        // X(L1))
+        MTransformationMatrix meshTransformation = transform.transformation();
+        MMatrix newMeshTransformationMatrix = meshTransformation.asMatrix() * transformationMatrix;
+        MTransformationMatrix newMeshTransformation(newMeshTransformationMatrix);
+        status = transform.set(newMeshTransformation);
+        if(!status)
+            LOG_ERROR(status.errorString())
+        CHECK(status)
+        MString cmd;
+        cmd.format("makeIdentity -apply true \"^1s\"", path.fullPathName());
+        status = MGlobal::executeCommand(cmd);
+        CHECK(status)
+        lockNode(transformObj);
     }
 
     return true;

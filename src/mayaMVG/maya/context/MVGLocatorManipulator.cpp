@@ -151,7 +151,6 @@ void MVGLocatorManipulator::drawCursor(const MPoint& originVS)
 
     MPoint offsetMouseVSPosition = originVS + MPoint(10, 10);
     MVGDrawUtil::drawLocatorCursorItem(offsetMouseVSPosition);
-    //    MVGDrawUtil::drawFullCross(offsetMouseVSPosition, 5, 1, MVGDrawUtil::_triangulateColor);
 }
 
 void MVGLocatorManipulator::createLocator(const MString& locatorName)
