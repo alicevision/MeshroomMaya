@@ -133,11 +133,10 @@ bool MVGProject::applySceneTransformation() const
     MObject rootObject;
     MVGMayaUtil::getObjectByName(rootName, rootObject);
     MFnTransform rootTransform(rootObject);
-
-    // L1(-1)
+    // L1(-1))
     MTransformationMatrix rootTransformation = rootTransform.transformation();
 
-    // Retrieve locator
+    // Retrieve locator transformation
     const MString locatorName(_LOCATOR.c_str());
     MObject locatorObject;
     status = MVGMayaUtil::getObjectByName(locatorName, locatorObject);
@@ -150,7 +149,7 @@ bool MVGProject::applySceneTransformation() const
     // L2
     MTransformationMatrix locatorTransformation = locatorTransform.transformation();
 
-    // L12(-1))
+    // Compute L12(-1) - inverse transfer matrix from old system to new system
     MMatrix transformationMatrix =
         rootTransformation.asMatrixInverse() * locatorTransformation.asMatrixInverse();
     MTransformationMatrix transformation(transformationMatrix);
