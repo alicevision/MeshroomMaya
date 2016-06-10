@@ -46,9 +46,7 @@ def createLocator(locatorPosition):
     if not list:
         transformNode = cmds.createNode('transform', name=mvgLocator, parent=mvgRoot)
         cmds.createNode( 'MVGDummyLocator', parent=transformNode)
-    cmds.setAttr( '%s.translateX'%mvgLocator, locatorPosition[0])
-    cmds.setAttr( '%s.translateY'%mvgLocator, locatorPosition[1])
-    cmds.setAttr( '%s.translateZ'%mvgLocator, locatorPosition[2])
+    cmds.xform(mvgLocator, ws=True, r=True, t=locatorPosition)
 
 
 def createLocatorFromVertex():
