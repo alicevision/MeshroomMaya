@@ -33,9 +33,6 @@ public:
                                          const MPointArray& faceCSPoints,
                                          const MPointArray& constraintedWSPoints,
                                          const MPoint& mouseCSPoint, MPoint& projectedWSMouse);
-
-private:
-    static MString _RGBPP;
 };
 
 } // namespace

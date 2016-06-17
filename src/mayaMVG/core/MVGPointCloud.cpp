@@ -20,9 +20,6 @@
 namespace mayaMVG
 {
 
-// dynamic attributes
-MString MVGPointCloud::_RGBPP = "rgbPP";
-
 namespace
 { // empty namespace
 
