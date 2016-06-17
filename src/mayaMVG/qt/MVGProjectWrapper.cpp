@@ -8,8 +8,10 @@
 #include "mayaMVG/maya/context/MVGContextCmd.hpp"
 #include "mayaMVG/maya/context/MVGContext.hpp"
 #include "mayaMVG/maya/context/MVGMoveManipulator.hpp"
+#include "mayaMVG/maya/MVGDummyLocator.h"
 #include <maya/MQtUtil.h>
 #include <maya/MFnTypedAttribute.h>
+#include <maya/MFnTransform.h>
 
 namespace mayaMVG
 {
@@ -106,11 +108,9 @@ QString MVGProjectWrapper::openFileDialog() const
     return MQtUtil::toQString(directoryPath);
 }
 
-void MVGProjectWrapper::scaleScene(const double scaleSize) const
+void MVGProjectWrapper::applySceneTransformation() const
 {
-    double internalUnit = MDistance::uiToInternal(scaleSize);
-    if(!_project.scaleScene(internalUnit))
-        LOG_ERROR("Cannot scale scene")
+    _project.applySceneTransformation();
 }
 
 void MVGProjectWrapper::activeSelectionContext() const
@@ -136,6 +136,11 @@ void MVGProjectWrapper::setPointCloudMode()
 void MVGProjectWrapper::setAdjacentPlaneMode()
 {
     MVGMayaUtil::setAdjacentPlaneMode();
+}
+
+void MVGProjectWrapper::setLocatorMode()
+{
+    MVGMayaUtil::setLocatorMode();
 }
 
 void MVGProjectWrapper::loadExistingProject()

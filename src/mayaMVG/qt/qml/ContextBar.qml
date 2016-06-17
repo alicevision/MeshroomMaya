@@ -53,6 +53,13 @@ Item {
             onClicked: m.project.setAdjacentPlaneMode();
             iconSize: 20
         }
+        ToolButton {
+            iconSource: "img/locatorMode.png"
+            tooltip: "Locator mode"
+            checked: (m.project.currentContext === "mayaMVGTool1") && (m.project.editMode === 2)
+            onClicked: m.project.setLocatorMode();
+            iconSize: 20
+        }
         Rectangle {
             Layout.horizontalSizePolicy: Layout.Expanding
         }

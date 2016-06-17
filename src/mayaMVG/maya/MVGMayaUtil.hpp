@@ -44,6 +44,7 @@ struct MVGMayaUtil
     static MStatus setTriangulationMode();
     static MStatus setPointCloudMode();
     static MStatus setAdjacentPlaneMode();
+    static MStatus setLocatorMode();
     // cameras
     static MStatus setCameraInView(const MVGCamera& camera, const MString& viewName);
     static MStatus getCameraInView(MDagPath& path, const MString& viewName);

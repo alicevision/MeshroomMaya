@@ -47,6 +47,7 @@ struct MVGDrawUtil
     static void drawExtendCursorItem(const MPoint& originVS, const MColor& color);
     static void drawPointCloudCursorItem(const MPoint& originVS, const MColor& color);
     static void drawPlaneCursorItem(const MPoint& originVS, const MColor& color);
+    static void drawLocatorCursorItem(const MPoint& originVS);
 
     // Points
     // Lines and polygons on create

@@ -3,6 +3,7 @@
 #include "mayaMVG/core/MVGPlaneKernel.hpp"
 #include "mayaMVG/core/MVGLineConstrainedPlaneKernel.hpp"
 #include <maya/MVector.h>
+#include <map>
 
 class MPoint;
 class MPointArray;
@@ -72,6 +73,10 @@ struct MVGGeometryUtil
                                      MPointArray& projectedWSPoints);
     static bool projectPointOnPlane(M3dView& view, const MPoint& toProjectCSPoint,
                                     const PlaneKernel::Model& planeModel, MPoint& projectedWSPoint);
+
+    // triangulation
+    static void triangulatePoint(const std::map<int, MPoint>& point2dPerCamera_CS,
+                                 MPoint& outTriangulatedPoint_WS);
 
     // intersections
     static double crossProduct2D(MVector& A, MVector& B);

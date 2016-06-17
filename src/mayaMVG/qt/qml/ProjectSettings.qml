@@ -40,7 +40,7 @@ Item {
             State {
                 name: "OPEN"
                 when: m.isOpen
-                PropertyChanges { target: settings; height: 410; }
+                PropertyChanges { target: settings; height: 380; }
                 PropertyChanges { target: settings; opacity: 1; }
             }
         ]
@@ -103,6 +103,24 @@ Item {
                                 MouseArea {
                                     anchors.fill: parent
                                     onClicked: m.project.selectClosestCam()
+                                }
+                            }
+                        }
+
+                        // Reorient scene
+                        Item {
+                            implicitWidth: 30
+                            implicitHeight: 30
+                            Layout.minimumHeight: 30
+
+                            ToolButton {
+                                iconSource: "img/locatorMode.png"
+                                tooltip: "Reorient scene"
+                                height: parent.height
+                                width: parent.height
+                                MouseArea {
+                                    anchors.fill: parent
+                                    onClicked: m.project.applySceneTransformation()
                                 }
                             }
                         }
@@ -205,70 +223,6 @@ Item {
                                 onClicked: displayPointCloudItem.rightPanel.isPointCloudDisplayed = !pointCloudRCheckBox.checked
                             }
                         }
-                    }
-                }
-
-                // Scale
-                Item {
-                    implicitWidth: parent.width
-                    Layout.minimumHeight: 25
-                    RowLayout {
-                        anchors.fill: parent
-                        Item {
-                            implicitWidth: labelWidth
-                            implicitHeight: parent.height
-                            Text {
-                                height: parent.height
-                                text: "Scene scale"
-                                verticalAlignment: Text.AlignVCenter
-                                color: m.textColor
-                                font.pointSize: m.textSize
-                            }
-                        }
-                        Rectangle {
-                            implicitWidth: fieldWidth
-                            height: parent.height - fieldMargin
-                            color: "grey"
-                            radius: 2
-                            TextInput {
-                                id: scaleValue
-                                width: parent.width
-                                horizontalAlignment: TextInput.AlignHCenter
-                                anchors.verticalCenter: parent.verticalCenter
-                                selectByMouse: true
-                                font.pointSize: m.textSize
-                                text: "1"
-                                validator: DoubleValidator{bottom: 0.1;}
-                            }
-                        }
-                        Text {
-                            text: m.project.currentUnit
-                            color: m.textColor
-                            font.pointSize: m.textSize
-                        }
-                        Button {
-                            text: "Apply"
-                            height: parent.height -fieldMargin/2
-                            implicitWidth: 50
-                            MouseArea {
-                                anchors.fill: parent
-                                onClicked:
-                                {
-                                    m.project.scaleScene(scaleValue.text)
-                                    scaleValue.text = "1"
-                                }
-                            }
-                        }
-
-                        Rectangle {
-                            implicitWidth: 80
-                            Layout.horizontalSizePolicy: Layout.Expanding
-                            color: "blue"
-                        }
-                    }
-                    TooltipArea {
-                        anchors.fill: parent
-                        text: "Scene scale"
                     }
                 }
 

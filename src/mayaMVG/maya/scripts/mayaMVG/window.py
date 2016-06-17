@@ -26,7 +26,7 @@ def mvgReloadPanels():
         i += 1
     if not cmds.modelPanel('mvgLPanel', q=True, ex=True):
         cmds.modelPanel('mvgLPanel', mbv=False, l='MVG leftView', p='leftPane')
-        cmds.modelEditor('mvgLPanel', e=True, allObjects=False, grid=False, hud=False, polymeshes=True, imagePlane=True)
+        cmds.modelEditor('mvgLPanel', e=True, allObjects=False, grid=False, hud=False, polymeshes=True, imagePlane=True, locators=True)
         cmds.modelEditor('mvgLPanel', e=True, xray=1, displayAppearance='smoothShaded', wireframeOnShaded=True)
         cmds.modelEditor('mvgLPanel', e=True, rendererName="base_OpenGL_Renderer")
         i += 1
@@ -39,7 +39,7 @@ def mvgReloadPanels():
         i += 1
     if not cmds.modelPanel('mvgRPanel', q=True, ex=True):
         cmds.modelPanel('mvgRPanel', mbv=False, l='MVG rightView', p='rightPane')
-        cmds.modelEditor('mvgRPanel', e=True, allObjects=False, grid=False, hud=False, polymeshes=True, imagePlane=True)
+        cmds.modelEditor('mvgRPanel', e=True, allObjects=False, grid=False, hud=False, polymeshes=True, imagePlane=True, locators=True)
         cmds.modelEditor('mvgRPanel', e=True, xray=1, displayAppearance='smoothShaded', wireframeOnShaded=True)
         cmds.modelEditor('mvgRPanel', e=True, rendererName="base_OpenGL_Renderer")
         i += 1

@@ -63,6 +63,7 @@ std::string MVGProject::_CLOUD_GROUP = "mvgCloud";
 std::string MVGProject::_CLOUD = "mvgPointCloud";
 std::string MVGProject::_MESH = "mvgMesh";
 std::string MVGProject::_PROJECT = "mvgRoot";
+std::string MVGProject::_LOCATOR = "mvgLocator";
 MString MVGProject::_MVG_PROJECTPATH = "mvgProjectPath";
 
 // Image cache
@@ -114,108 +115,79 @@ std::vector<MVGProject> MVGProject::list()
     return list;
 }
 
-bool MVGProject::scaleScene(const double scaleSize) const
+/**
+ * Apply transformation on scene :
+ * Get locator an apply and set it as origin of scene.
+ *
+ */
+bool MVGProject::applySceneTransformation() const
 {
+    MStatus status;
+
     // Check for root node
     if(!isValid())
         return false;
-    // Retrieve reference face
-    std::string meshName;
-    MPoint A, B, C;
-    // Use Maya selection if a mesh face is selected
-    MSelectionList selectionList;
-    MGlobal::getActiveSelectionList(selectionList);
-    bool selectedFace = false;
-    MItSelectionList selectionIt(selectionList);
-    for(; !selectionIt.isDone(); selectionIt.next())
-    {
-        MDagPath item;
-        MObject component;
-        selectionIt.getDagPath(item, component);
-        if(component.apiType() != MFn::kMeshPolygonComponent)
-            continue;
-        LOG_INFO("Mesh path : " << item.fullPathName())
-        MVGMesh mesh(item);
-        if(!mesh.isActive())
-        {
-            LOG_ERROR("Mesh is not active in MayaMVG : " << mesh.getName())
-            return false;
-        }
-        selectedFace = true;
-        MItMeshPolygon polyIt(item, component);
-        A = polyIt.point(0);
-        B = polyIt.point(1);
-        C = polyIt.point(3);
 
-        MObject transform = item.transform();
-        MDagPath::getAPathTo(transform, item);
-        meshName = item.partialPathName().asChar();
-        break;
-    }
-    // Else use the first face of the first created mesh
-    if(!selectedFace)
-    {
-        // Check for mesh node
-        MVGMesh mesh(_MESH);
-        if(!mesh.isValid())
-            return false;
-        if(!mesh.isActive())
-        {
-            LOG_ERROR("Mesh is not active in MayaMVG : " << mesh.getName())
-            return false;
-        }
-        mesh.getPoint(0, A);
-        mesh.getPoint(1, B);
-        mesh.getPoint(3, C);
-        meshName = _MESH;
-    }
-    MVector AB = B - A;
-    double scaleFactor = scaleSize / AB.length();
-    AB.normalize();
-    MVector AC = C - A;
-    AC.normalize();
-    MVector RZ = (AC ^ AB);
-    RZ.normalize();
-    MVector RX = (AB ^ RZ);
-    RX.normalize();
-    MVector RY = (RZ ^ RX);
-    RY.normalize();
-    // Compute rotateScale matrix
-    MMatrix rotateScaleMatrix;
-    rotateScaleMatrix[0][0] = scaleFactor * RX[0];
-    rotateScaleMatrix[0][1] = scaleFactor * RY[0];
-    rotateScaleMatrix[0][2] = scaleFactor * RZ[0];
-    rotateScaleMatrix[1][0] = scaleFactor * RX[1];
-    rotateScaleMatrix[1][1] = scaleFactor * RY[1];
-    rotateScaleMatrix[1][2] = scaleFactor * RZ[1];
-    rotateScaleMatrix[2][0] = scaleFactor * RX[2];
-    rotateScaleMatrix[2][1] = scaleFactor * RY[2];
-    rotateScaleMatrix[2][2] = scaleFactor * RZ[2];
-    // Compute translation matrix
-    MMatrix translateMatrix;
-    translateMatrix[3][0] = -A.x;
-    translateMatrix[3][1] = -A.y;
-    translateMatrix[3][2] = -A.z;
-    // Apply transformation
-    MMatrix transformMatrix = translateMatrix * rotateScaleMatrix;
-    MString matrix;
-    for(int i = 0; i < 4; ++i)
-    {
-        for(int j = 0; j < 4; ++j)
-        {
-            matrix += transformMatrix[i][j];
-            if(!(i == 3 && j == 3))
-                matrix += " ";
-        }
-    }
-    MGlobal::executePythonCommand("from mayaMVG import scale");
-    MGlobal::executePythonCommand("scale.scaleScene('" + matrix + "', '" + _PROJECT.c_str() + "')",
-                                  false, true);
+    // Retieve old transformation (in mvgRoot)
+    MString rootName(_PROJECT.c_str());
+    MObject rootObject;
+    MVGMayaUtil::getObjectByName(rootName, rootObject);
+    MFnTransform rootTransform(rootObject);
+    // L1(-1))
+    MTransformationMatrix rootTransformation = rootTransform.transformation();
 
-    // Update cache
-    MString cmd;
-    cmd.format("^1s -e -rebuild ^2s", MVGContextCmd::name, MVGContextCmd::instanceName);
-    MGlobal::executeCommand(cmd);
+    // Retrieve locator transformation
+    const MString locatorName(_LOCATOR.c_str());
+    MObject locatorObject;
+    status = MVGMayaUtil::getObjectByName(locatorName, locatorObject);
+    if(!status)
+    {
+        LOG_ERROR("Can't find \"" << locatorName << "\" locator.")
+        return false;
+    }
+    MFnTransform locatorTransform(locatorObject);
+    // L2
+    MTransformationMatrix locatorTransformation = locatorTransform.transformation();
+
+    // Compute L12(-1) - inverse transfer matrix from old system to new system
+    MMatrix transformationMatrix =
+        rootTransformation.asMatrixInverse() * locatorTransformation.asMatrixInverse();
+    MTransformationMatrix transformation(transformationMatrix);
+
+    // Set transformation to root
+    MMatrix newRootTranformationMatrix = rootTransformation.asMatrix() * transformation.asMatrix();
+    MTransformationMatrix newRootTranformation(newRootTranformationMatrix);
+    rootTransform.set(newRootTranformation);
+
+    // Set transformation to mesh
+    std::vector<MVGMesh> activeMeshes = MVGMesh::listActiveMeshes();
+    for(std::vector<MVGMesh>::iterator it = activeMeshes.begin(); it != activeMeshes.end(); ++it)
+    {
+        MDagPath path = it->getDagPath();
+
+        // Retrieve transform
+        path.pop();
+        MObject transformObj = path.node();
+        unlockNode(transformObj);
+        MFnTransform transform(path, &status);
+        CHECK(status)
+
+        // Apply transformation
+        // X(L1))
+        MTransformationMatrix meshTransformation = transform.transformation();
+        MMatrix newMeshTransformationMatrix = meshTransformation.asMatrix() * transformationMatrix;
+        MTransformationMatrix newMeshTransformation(newMeshTransformationMatrix);
+        status = transform.set(newMeshTransformation);
+        if(!status)
+            LOG_ERROR(status.errorString())
+        CHECK(status)
+        MString cmd;
+        cmd.format("makeIdentity -apply true \"^1s\"", path.fullPathName());
+        status = MGlobal::executeCommand(cmd);
+        CHECK(status)
+        lockNode(transformObj);
+    }
+
     return true;
 }
 

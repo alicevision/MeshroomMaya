@@ -1,4 +1,4 @@
-
+import maya.cmds as cmds
 import pymel.core as pm
 import os
 
@@ -36,6 +36,32 @@ import pymel.core as pm
 pm.AbcExport(j="%s")'''%exportCmd
     pm.evalDeferred(exportCmd)
 
+
+def createLocator(locatorPosition):
+    mvgRoot = 'mvgRoot'
+    mvgLocator = 'mvgLocator'
+    # Create or retrieve locator
+    list = cmds.ls(mvgLocator)
+
+    if not list:
+        transformNode = cmds.createNode('transform', name=mvgLocator, parent=mvgRoot)
+        cmds.createNode( 'MVGDummyLocator', parent=transformNode)
+    cmds.xform(mvgLocator, ws=True, r=True, t=locatorPosition)
+
+
+def createLocatorFromVertex():
+
+    # Get selected vertex
+    selection = cmds.ls('*.vtx[*]', selection=True, fl=True)
+    if len(selection) != 1:
+        print "You need to select one vertex (and one only)."
+        return
+    vertex = selection[0]
+    vertexPosition = cmds.xform(vertex, q=True, ws=True, t=True)
+
+    createLocator(vertexPosition)
+
+
 def exportSelectionAsABC_CB():
     exportSelectionAsABC()
       
@@ -48,6 +74,9 @@ def openMVGWindow_CB():
         print "WARNING : ToolStats module not found."
     pm.MVGCmd()
 
+def createLocatorFromVertex_CB():
+    createLocatorFromVertex()
+
 def mvgCreateMenu():
     gMainWindow = pm.mel.eval('$tmpVar=$gMainWindow')
     menuName = "mvgMenu"
@@ -59,6 +88,7 @@ def mvgCreateMenu():
         menu = pm.menu(menuName, label=menuLabel, tearOff=True)
         pm.menuItem(parent=menu, label='Open...', command=pm.Callback(openMVGWindow_CB))
         pm.menuItem(parent=menu, label='Export selection as ABC', command=pm.Callback(exportSelectionAsABC_CB))
+        pm.menuItem(parent=menu, label='Create locator from vertex', command=pm.Callback(createLocatorFromVertex_CB))
         pm.menuItem(parent=menu, divider=True)
 
 def mvgDeleteMenu():

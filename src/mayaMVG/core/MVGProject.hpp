@@ -27,7 +27,7 @@ public:
     static std::vector<MVGProject> list();
 
 public:
-    bool scaleScene(const double scaleSize) const;
+    bool applySceneTransformation() const;
     void clear();
 
 public:
@@ -53,6 +53,7 @@ public:
     static std::string _CLOUD;
     static std::string _MESH;
     static std::string _PROJECT;
+    static std::string _LOCATOR;
     static MString _MVG_PROJECTPATH;
 
     /// FIFO queue indicating the list of images/cameras keept in memory

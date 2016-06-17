@@ -25,11 +25,6 @@ public:
     virtual bool isValid() const;
 
 public:
-    static MVGPointCloud create(const std::string& name);
-
-public:
-    void setItems(const std::vector<MVGPointCloudItem>& items);
-    MStatus getAllItems(std::vector<MVGPointCloudItem>& items) const;
     MStatus getItems(std::vector<MVGPointCloudItem>& items, const MIntArray& indexes) const;
     bool projectPoints(M3dView& view, const std::vector<MVGPointCloudItem>& visibleItems,
                        const MPointArray& faceCSPoints, MPointArray& faceWSPoints);
@@ -38,9 +33,6 @@ public:
                                          const MPointArray& faceCSPoints,
                                          const MPointArray& constraintedWSPoints,
                                          const MPoint& mouseCSPoint, MPoint& projectedWSMouse);
-
-private:
-    static MString _RGBPP;
 };
 
 } // namespace

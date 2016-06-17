@@ -8,9 +8,11 @@
 #include "mayaMVG/maya/context/MVGContextCmd.hpp"
 #include "mayaMVG/maya/context/MVGCreateManipulator.hpp"
 #include "mayaMVG/maya/context/MVGMoveManipulator.hpp"
+#include "mayaMVG/maya/context/MVGLocatorManipulator.hpp"
 #include "mayaMVG/maya/context/MVGCreateManipulatorDrawOverride.hpp"
 #include "mayaMVG/maya/context/MVGMoveManipulatorDrawOverride.hpp"
 #include "mayaMVG/maya/mesh/MVGMeshEditNode.hpp"
+#include "mayaMVG/maya/MVGDummyLocator.h"
 #include <maya/MFnPlugin.h>
 #include <maya/MCallbackIdArray.h>
 #include <maya/MEventMessage.h>
@@ -132,6 +134,12 @@ MStatus initializePlugin(MObject obj)
                               &MVGMoveManipulator::creator, &MVGMoveManipulator::initialize,
                               MPxNode::kManipulatorNode,
                               &MVGMoveManipulator::_drawDbClassification))
+    CHECK(plugin.registerNode("MVGLocatorManipulator", MVGLocatorManipulator::_id,
+                              &MVGLocatorManipulator::creator, &MVGLocatorManipulator::initialize,
+                              MPxNode::kManipulatorNode,
+                              &MVGLocatorManipulator::_drawDbClassification))
+    CHECK(plugin.registerNode("MVGDummyLocator", MVGDummyLocator::_id, &MVGDummyLocator::creator,
+                              &MVGDummyLocator::initialize, MPxNode::kLocatorNode))
     CHECK(plugin.registerNode("MVGMeshEditNode", MVGMeshEditNode::_id, MVGMeshEditNode::creator,
                               MVGMeshEditNode::initialize))
 
@@ -219,7 +227,9 @@ MStatus uninitializePlugin(MObject obj)
     CHECK(plugin.deregisterContextCommand(MVGContextCmd::name, MVGEditCmd::_name))
     CHECK(plugin.deregisterNode(MVGCreateManipulator::_id))
     CHECK(plugin.deregisterNode(MVGMoveManipulator::_id))
+    CHECK(plugin.deregisterNode(MVGLocatorManipulator::_id))
     CHECK(plugin.deregisterNode(MVGMeshEditNode::_id))
+    CHECK(plugin.deregisterNode(MVGDummyLocator::_id))
 
     // Deregister draw overrides
     CHECK(MHWRender::MDrawRegistry::deregisterDrawOverrideCreator(

@@ -3,6 +3,7 @@
 #include "mayaMVG/core/MVGMesh.hpp"
 #include "mayaMVG/maya/context/MVGCreateManipulator.hpp"
 #include "mayaMVG/maya/context/MVGMoveManipulator.hpp"
+#include "mayaMVG/maya/context/MVGLocatorManipulator.hpp"
 #include "mayaMVG/maya/MVGMayaUtil.hpp"
 #include "mayaMVG/core/MVGLog.hpp"
 #include <maya/MPxManipulatorNode.h>
@@ -105,6 +106,21 @@ MStatus MVGContextCmd::doEditFlags()
                     return MS::kFailure;
                 _context->setEditMode(MVGContext::eEditModeMove);
                 cache.rebuildMeshesCache();
+                manip->setContext(_context);
+                manip->setCache(&cache);
+                break;
+            }
+            case MVGContext::eEditModeLocator:
+            {
+                MVGLocatorManipulator* manip =
+                    static_cast<MVGLocatorManipulator*>(MPxManipulatorNode::newManipulator(
+                        "MVGLocatorManipulator", manipObject, &status));
+                CHECK_RETURN_STATUS(status)
+                if(!manip)
+                    return MS::kFailure;
+                _context->setEditMode(MVGContext::eEditModeLocator);
+                cache.rebuildMeshesCache();
+                manip->clearCameraIDToClickedCSPoint();
                 manip->setContext(_context);
                 manip->setCache(&cache);
                 break;

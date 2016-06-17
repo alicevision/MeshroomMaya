@@ -380,6 +380,24 @@ void MVGDrawUtil::drawPlaneCursorItem(const MPoint& originVS, const MColor& colo
     glPopAttrib();
 }
 
+void MVGDrawUtil::drawLocatorCursorItem(const MPoint& originVS)
+{
+    const MColor red = MColor(1.0, 0.0, 0.0, 1.0);
+    const MColor green = MColor(0.0, 1.0, 0.0, 0.0);
+    const MColor blue = MColor(0.0, 0.0, 1.0);
+
+    GLfloat width = 10;
+    GLfloat lineWidth = 1.0;
+
+    const MPoint A(originVS.x, originVS.y);
+    const MPoint B(originVS.x, originVS.y + width);
+    const MPoint C(originVS.x + width, originVS.y);
+    const MPoint D(originVS.x + width / 4 * 3, originVS.y + width / 4 * 3);
+    MVGDrawUtil::drawLine2D(A, B, green, lineWidth);
+    MVGDrawUtil::drawLine2D(A, C, red, lineWidth);
+    MVGDrawUtil::drawLine2D(A, D, blue, lineWidth);
+}
+
 // Create manipulator
 // static
 void MVGDrawUtil::drawClickedPoints(const MPointArray& clickedVSPoints, const MColor color)

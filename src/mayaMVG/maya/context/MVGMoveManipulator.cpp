@@ -7,7 +7,6 @@
 #include "mayaMVG/core/MVGProject.hpp"
 #include "mayaMVG/qt/MVGUserLog.hpp"
 #include "mayaMVG/qt/MVGQt.hpp"
-#include <openMVG/multiview/triangulation_nview.hpp>
 #include <maya/MArgList.h>
 #include <maya/MFnPointArrayData.h>
 #include <maya/MFnTypedAttribute.h>
@@ -15,99 +14,6 @@
 
 namespace mayaMVG
 {
-
-namespace // empty namespace
-{
-
-/**
- * @brief N-View triangulation.
- *
- * @param point2dPerCamera_CS map of 2d points per camera in Camera Space
- * @param outTriangulatedPoint_WS 3D triangulated point in World Space
- */
-void triangulatePoint(const std::map<int, MPoint>& point2dPerCamera_CS,
-                      MPoint& outTriangulatedPoint_WS)
-{
-    const size_t cameraCount = point2dPerCamera_CS.size();
-    assert(cameraCount > 1);
-    // prepare n-view triangulation data
-    openMVG::Mat2X imagePoints(2, cameraCount);
-
-    std::vector<openMVG::Mat34> projectiveCameras;
-    {
-        std::map<int, MPoint>::const_iterator it = point2dPerCamera_CS.begin();
-        for(size_t i = 0; it != point2dPerCamera_CS.end(); ++i, ++it)
-        {
-            MVGCamera camera(it->first);
-            const MPoint& point2d_CS = it->second;
-
-            // Retrieve the intrinsic matrix from 'pinholeProjectionMatrix' attribute
-            //
-            // K Matrix:
-            // f*k_u     0      c_u
-            //   0     f*k_v    c_v
-            //   0       0       1
-            // c_u, c_v : the principal point, which would be ideally in the centre of the image.
-            //
-            MDoubleArray intrinsicsArray;
-            MVGMayaUtil::getDoubleArrayAttribute(camera.getDagPath().node(), "mvg_intrinsicParams",
-                                                 intrinsicsArray);
-            MIntArray sensorSize;
-            camera.getSensorSize(sensorSize);
-
-            // Keep ideal matrix with principal point centered
-            openMVG::Mat3 K;
-            K << intrinsicsArray[0], 0.0, sensorSize[0] / 2.0, 0.0, intrinsicsArray[0],
-                sensorSize[1] / 2.0, 0.0, 0.0, 1.0;
-
-            // Retrieve transformation matrix
-            const MMatrix inclusiveMatrix = camera.getDagPath().inclusiveMatrix();
-            const MTransformationMatrix transformMatrix(inclusiveMatrix);
-            openMVG::Mat3 R;
-            MMatrix rotationMatrix = transformMatrix.asRotateMatrix();
-            for(int m = 0; m < 3; ++m)
-            {
-                for(int j = 0; j < 3; ++j)
-                {
-                    // Maya has inverted Y and Z axes
-                    int sign = 1;
-                    if(m > 0)
-                        sign = -1;
-                    R(m, j) = sign * rotationMatrix[m][j];
-                }
-            }
-
-            // Retrieve translation vector
-            const openMVG::Vec3 C = TO_VEC3(camera.getCenter());
-            const openMVG::Vec3 t = -R * C;
-
-            // Compute projection matrix
-            openMVG::Mat34 P;
-            openMVG::P_From_KRt(K, R, t, &P);
-            projectiveCameras.push_back(P);
-
-            // clicked point matrix (image space)
-            MPoint clickedISPosition;
-            MVGGeometryUtil::cameraToImageSpace(camera, point2d_CS, clickedISPosition);
-            imagePoints.col(i) = openMVG::Vec2(clickedISPosition.x, clickedISPosition.y);
-        }
-    }
-
-    // call n-view triangulation function
-    openMVG::Vec4 result;
-    openMVG::TriangulateNViewAlgebraic(imagePoints, projectiveCameras, &result);
-    outTriangulatedPoint_WS.x = result(0);
-    outTriangulatedPoint_WS.y = result(1);
-    outTriangulatedPoint_WS.z = result(2);
-    if(result(3) == 0.0)
-    {
-        LOG_ERROR("Triangulated point w = 0")
-        return;
-    }
-    outTriangulatedPoint_WS = outTriangulatedPoint_WS / result(3);
-}
-
-} // empty namespace
 
 MTypeId MVGMoveManipulator::_id(0x99222); // FIXME
 MString MVGMoveManipulator::_drawDbClassification("drawdb/geometry/moveManipulator");
@@ -831,7 +737,7 @@ bool MVGMoveManipulator::triangulate(M3dView& view, MVGManipulatorCache::VertexD
     blindData[_cache->getActiveCamera().getId()] = currentVertexPositionsInActiveView;
     if(blindData.size() < 2)
         return false;
-    triangulatePoint(blindData, triangulatedWSPoint);
+    MVGGeometryUtil::triangulatePoint(blindData, triangulatedWSPoint);
     return true;
 }
 
