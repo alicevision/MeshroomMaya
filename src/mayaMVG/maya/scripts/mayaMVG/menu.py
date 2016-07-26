@@ -61,10 +61,39 @@ def createLocatorFromVertex():
 
     createLocator(vertexPosition)
 
+def loadPCColor():
+    pointCloud = 'mvgPointCloud'
+    particleShape = 'particleShape1'
+    colorR = cmds.getAttr('{}.mvg_R'.format(particleShape))
+    colorG = cmds.getAttr('{}.mvg_G'.format(particleShape))
+    colorB = cmds.getAttr('{}.mvg_B'.format(particleShape))
 
-def exportSelectionAsABC_CB():
-    exportSelectionAsABC()
-      
+    if not cmds.attributeQuery('rgbPP', node='particleShape1', exists=True):
+        cmds.addAttr(particleShape, shortName='rgbPP', longName='rgbPP', dt='vectorArray')
+
+    totalParticle = cmds.particle(pointCloud, query=True, count=True)
+    for i in range(totalParticle):
+        cmds.particle(particleShape, edit=True, id=i, attribute='rgbPP', vectorValue=(colorR[i]/255., colorG[i]/255., colorB[i]/255.))
+
+def loadPCDebugColor():
+    import colorsys
+
+    pointCloud = 'mvgPointCloud'
+    particleShape = 'particleShape1'
+
+    if not cmds.attributeQuery('rgbPP', node='particleShape1', exists=True):
+        cmds.addAttr(particleShape, shortName='rgbPP', longName='rgbPP', dt='vectorArray')
+
+    totalParticle = cmds.particle(pointCloud, query=True, count=True)
+    visibilitySizePerPoint = cmds.getAttr('{}.mvg_visibilitySize'.format(pointCloud))
+    maxVisibility = float(max(visibilitySizePerPoint))
+    for id in range(totalParticle):
+        v = visibilitySizePerPoint[id] / maxVisibility
+        myColor = colorsys.hsv_to_rgb(v, 1.0, 1.0)
+        if visibilitySizePerPoint[id] < 3:
+            myColor = [1, 0, 0]
+        cmds.particle(pointCloud, edit=True, attribute='rgbPP', order=id, vectorValue=myColor)
+
 def openMVGWindow_CB():
     # ToolStats
     try:
@@ -74,8 +103,17 @@ def openMVGWindow_CB():
         print "WARNING : ToolStats module not found."
     pm.MVGCmd()
 
+def exportSelectionAsABC_CB():
+    exportSelectionAsABC()
+
 def createLocatorFromVertex_CB():
     createLocatorFromVertex()
+
+def loadPCColor_CB():
+    loadPCColor()
+
+def loadPCDebugColor_CB():
+    loadPCDebugColor()
 
 def mvgCreateMenu():
     gMainWindow = pm.mel.eval('$tmpVar=$gMainWindow')
@@ -90,6 +128,8 @@ def mvgCreateMenu():
         pm.menuItem(parent=menu, label='Export selection as ABC', command=pm.Callback(exportSelectionAsABC_CB))
         pm.menuItem(parent=menu, label='Create locator from vertex', command=pm.Callback(createLocatorFromVertex_CB))
         pm.menuItem(parent=menu, divider=True)
+        pm.menuItem(parent=menu, label='Load pointcloud color', command=pm.Callback(loadPCColor_CB))
+        pm.menuItem(parent=menu, label='Load pointcloud debug color', command=pm.Callback(loadPCDebugColor_CB))
 
 def mvgDeleteMenu():
     menuName = "mvgMenu"
