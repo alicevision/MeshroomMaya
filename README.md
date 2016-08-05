@@ -13,6 +13,7 @@ Requirements
 Installation
 ============
 ```
+> git submodule update --init --recursive
 > ./configure -DMAYA_EXECUTABLE=$MAYA_BIN -DQT_QMAKE_EXECUTABLE=$MAYA_QMAKE_PATH -DCMAKE_INSTALL_PREFIX=$INSTALL_DIRECTORY -DCMAKE_BUILD_TYPE=release
 > make
 > make install
