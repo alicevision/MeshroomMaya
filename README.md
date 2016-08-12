@@ -23,3 +23,12 @@ Installation
 Documentation
 =============
 Plugin documentation is available [here](doc/Documentation.v0.4.2.md)
+
+
+Development
+===========
+Clang format rules for MayaMVG can be found [here](.clang-format).
+To format code easily, install Clang (dont forget to add bin path to PATH) and execute :
+```
+> ./format_all_files.sh
+```
