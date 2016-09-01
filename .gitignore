@@ -21,7 +21,7 @@
 *.py[cod]
 
 # Distribution & packaging
-build/
+/build*/
 lib/
 bin/
 dist/
