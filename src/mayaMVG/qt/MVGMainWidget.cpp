@@ -22,10 +22,6 @@ MVGMainWidget::MVGMainWidget(QWidget* parent)
 
     _projectWrapper.loadExistingProject();
     QString importDirectory = QString(MVGMayaUtil::getModulePath().asChar()) + "/qml";
-    const char* devQmlPath = std::getenv("MAYAMVG_QML_PATH");
-    QString sourceDirectory = importDirectory + "/mvg/main.qml";
-    if(devQmlPath)
-        sourceDirectory = "./src/mayaMVG/qt/qml/main.qml";
 
     // QtDesktop Components
     _view->engine()->addPluginPath(importDirectory);
@@ -35,15 +31,19 @@ MVGMainWidget::MVGMainWidget(QWidget* parent)
     _view->rootContext()->setContextProperty("_project", &_projectWrapper);
 
     // Qml source
-    _view->setSource(QUrl::fromLocalFile(sourceDirectory));
-    _view->setResizeMode(QDeclarativeView::SizeRootObjectToView);
-
-    // Instant coding
+    const char* devQmlPath = std::getenv("MAYAMVG_QML_PATH");
+    QString mainQml = importDirectory + "/mvg/main.qml";
     if(devQmlPath)
     {
+        QDir qmlFolder = QFileInfo(__FILE__).dir();
+        qmlFolder.cd("qml");
+        mainQml = QFileInfo(qmlFolder, "main.qml").absoluteFilePath();
+        
         QmlInstantCoding* qic = new QmlInstantCoding(_view, true);
-        qic->addFilesFromDirectory(devQmlPath, true);
+        qic->addFilesFromDirectory(qmlFolder.absolutePath(), true);
     }
+    _view->setSource(QUrl::fromLocalFile(mainQml));
+    _view->setResizeMode(QDeclarativeView::SizeRootObjectToView);
 }
 
 MVGMainWidget::~MVGMainWidget()
