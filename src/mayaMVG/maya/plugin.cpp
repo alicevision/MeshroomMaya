@@ -45,6 +45,10 @@ MStatus registerMVGHotkeys()
     MString moveModeString;
 
     MGlobal::executePythonCommand("from mayaMVG import context");
+    
+    // Use or create a writable hotkey set
+    MGlobal::executePythonCommand("context.initHotkeySet()");
+
     // MVGCreateCommand
     commandName = "MVGCreateCommand";
     editModeString = MVGContext::eEditModeCreate;

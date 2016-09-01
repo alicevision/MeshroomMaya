@@ -16,6 +16,19 @@ def mvgCreateContext():
         cmds.deleteUI('mayaMVGTool1', toolContext=True)
     cmds.mayaMVGTool('mayaMVGTool1')
 
+def initHotkeySet():
+    """ For Maya >=2016, ensure the current hotkey set is writable. """
+    if cmds.about(version=True) < "2016":
+        return
+    currentSet = cmds.hotkeySet(current=True, q=True)
+    if currentSet == "Maya_Default":  # Read-only set
+        writableSetName = "Maya_Default_MVG"
+        # Select or create writable hotkey set
+        if cmds.hotkeySet(writableSetName, exists=True):
+            cmds.hotkeySet(writableSetName, current=True, edit=True)
+        else:
+            cmds.hotkeySet(writableSetName, current=True)
+
 # source_type = "mel" or "python"
 def initMVGCommand(name, script, source_type, key_sequence, alt=False, ctl=False, command=False, release=False):
     # Runtime command
