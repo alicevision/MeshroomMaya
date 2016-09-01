@@ -5,6 +5,7 @@
 #include "mayaMVG/maya/cmd/MVGCmd.hpp"
 #include "mayaMVG/maya/cmd/MVGEditCmd.hpp"
 #include "mayaMVG/maya/cmd/MVGImagePlaneCmd.hpp"
+#include "mayaMVG/maya/cmd/MVGSelectClosestCamCmd.hpp"
 #include "mayaMVG/maya/context/MVGContextCmd.hpp"
 #include "mayaMVG/maya/context/MVGCreateManipulator.hpp"
 #include "mayaMVG/maya/context/MVGMoveManipulator.hpp"
@@ -123,6 +124,7 @@ MStatus initializePlugin(MObject obj)
     CHECK(plugin.registerCommand("MVGCmd", MVGCmd::creator))
     CHECK(plugin.registerCommand("MVGImagePlaneCmd", MVGImagePlaneCmd::creator,
                                  MVGImagePlaneCmd::newSyntax))
+    CHECK(plugin.registerCommand(MVGSelectClosestCamCmd::_name, MVGSelectClosestCamCmd::creator))
     CHECK(plugin.registerContextCommand(MVGContextCmd::name, &MVGContextCmd::creator,
                                         MVGEditCmd::_name, MVGEditCmd::creator,
                                         MVGEditCmd::newSyntax))
@@ -223,6 +225,7 @@ MStatus uninitializePlugin(MObject obj)
 
     // Deregister Maya context, commands & nodes
     CHECK(plugin.deregisterCommand("MVGCmd"))
+    CHECK(plugin.deregisterCommand("MVGSelectClosestCamCmd"))
     CHECK(plugin.deregisterCommand("MVGImagePlaneCmd"))
     CHECK(plugin.deregisterContextCommand(MVGContextCmd::name, MVGEditCmd::_name))
     CHECK(plugin.deregisterNode(MVGCreateManipulator::_id))
