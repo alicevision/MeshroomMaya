@@ -96,6 +96,16 @@ MStatus registerMVGHotkeys()
     status = MGlobal::executePythonCommand(cmd);
     CHECK_RETURN_STATUS(status)
     _commands.append(commandName);
+    
+    // MVGSelectClosestCamCommand
+    commandName = "MVGSelectClosestCamCommand";
+    cmd.format("^1s", MVGSelectClosestCamCmd::_name);
+    keySequence = "F";
+    cmd.format("context.initMVGCommand(\"^1s\", \"^2s\", \"mel\", \"^3s\", False, True)",
+               commandName, cmd, keySequence);
+    status = MGlobal::executePythonCommand(cmd);
+    CHECK_RETURN_STATUS(status)
+    _commands.append(commandName);
 
     return status;
 }
