@@ -1,6 +1,7 @@
 #include "mayaMVG/qt/QmlInstantCoding.hpp"
 #include "mayaMVG/core/MVGLog.hpp"
 #include <QDir>
+#include <unistd.h> 
 
 namespace mayaMVG
 {

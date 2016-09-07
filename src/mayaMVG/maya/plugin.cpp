@@ -5,6 +5,7 @@
 #include "mayaMVG/maya/cmd/MVGCmd.hpp"
 #include "mayaMVG/maya/cmd/MVGEditCmd.hpp"
 #include "mayaMVG/maya/cmd/MVGImagePlaneCmd.hpp"
+#include "mayaMVG/maya/cmd/MVGSelectClosestCamCmd.hpp"
 #include "mayaMVG/maya/context/MVGContextCmd.hpp"
 #include "mayaMVG/maya/context/MVGCreateManipulator.hpp"
 #include "mayaMVG/maya/context/MVGMoveManipulator.hpp"
@@ -44,6 +45,10 @@ MStatus registerMVGHotkeys()
     MString moveModeString;
 
     MGlobal::executePythonCommand("from mayaMVG import context");
+    
+    // Use or create a writable hotkey set
+    MGlobal::executePythonCommand("context.initHotkeySet()");
+
     // MVGCreateCommand
     commandName = "MVGCreateCommand";
     editModeString = MVGContext::eEditModeCreate;
@@ -91,6 +96,16 @@ MStatus registerMVGHotkeys()
     status = MGlobal::executePythonCommand(cmd);
     CHECK_RETURN_STATUS(status)
     _commands.append(commandName);
+    
+    // MVGSelectClosestCamCommand
+    commandName = "MVGSelectClosestCamCommand";
+    cmd.format("^1s", MVGSelectClosestCamCmd::_name);
+    keySequence = "F";
+    cmd.format("context.initMVGCommand(\"^1s\", \"^2s\", \"mel\", \"^3s\", False, True)",
+               commandName, cmd, keySequence);
+    status = MGlobal::executePythonCommand(cmd);
+    CHECK_RETURN_STATUS(status)
+    _commands.append(commandName);
 
     return status;
 }
@@ -123,6 +138,7 @@ MStatus initializePlugin(MObject obj)
     CHECK(plugin.registerCommand("MVGCmd", MVGCmd::creator))
     CHECK(plugin.registerCommand("MVGImagePlaneCmd", MVGImagePlaneCmd::creator,
                                  MVGImagePlaneCmd::newSyntax))
+    CHECK(plugin.registerCommand(MVGSelectClosestCamCmd::_name, MVGSelectClosestCamCmd::creator))
     CHECK(plugin.registerContextCommand(MVGContextCmd::name, &MVGContextCmd::creator,
                                         MVGEditCmd::_name, MVGEditCmd::creator,
                                         MVGEditCmd::newSyntax))
@@ -223,6 +239,7 @@ MStatus uninitializePlugin(MObject obj)
 
     // Deregister Maya context, commands & nodes
     CHECK(plugin.deregisterCommand("MVGCmd"))
+    CHECK(plugin.deregisterCommand("MVGSelectClosestCamCmd"))
     CHECK(plugin.deregisterCommand("MVGImagePlaneCmd"))
     CHECK(plugin.deregisterContextCommand(MVGContextCmd::name, MVGEditCmd::_name))
     CHECK(plugin.deregisterNode(MVGCreateManipulator::_id))
