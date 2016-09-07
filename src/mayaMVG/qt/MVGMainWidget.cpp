@@ -31,9 +31,9 @@ MVGMainWidget::MVGMainWidget(QWidget* parent)
     _view->rootContext()->setContextProperty("_project", &_projectWrapper);
 
     // Qml source
-    const char* devQmlPath = std::getenv("MAYAMVG_QML_PATH");
+    const char* instantCoding = std::getenv("MAYAMVG_USE_QMLINSTANTCODING");
     QString mainQml = importDirectory + "/mvg/main.qml";
-    if(devQmlPath)
+    if(instantCoding)
     {
         QDir qmlFolder = QFileInfo(__FILE__).dir();
         qmlFolder.cd("qml");
