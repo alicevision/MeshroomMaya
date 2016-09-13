@@ -5,17 +5,71 @@
 #include "mayaMVG/qt/MVGMeshWrapper.hpp"
 #include "mayaMVG/maya/MVGMayaUtil.hpp"
 #include "mayaMVG/core/MVGLog.hpp"
+#include "mayaMVG/core/MVGPointCloud.hpp"
 #include "mayaMVG/maya/context/MVGContextCmd.hpp"
 #include "mayaMVG/maya/context/MVGContext.hpp"
 #include "mayaMVG/maya/context/MVGMoveManipulator.hpp"
 #include "mayaMVG/maya/MVGDummyLocator.h"
+#include "mayaMVG/maya/MVGCameraPointsLocator.hpp"
 #include "mayaMVG/maya/cmd/MVGSelectClosestCamCmd.hpp"
+#include "Eigen/src/StlSupport/StdVector.h"
 #include <maya/MQtUtil.h>
 #include <maya/MFnTypedAttribute.h>
 #include <maya/MFnTransform.h>
+#include <maya/MFnIntArrayData.h>
+#include <maya/MDagPath.h>
+#include <maya/MNodeMessage.h>
+#include <set>
 
 namespace mayaMVG
 {
+
+namespace  // Utility functions
+{
+
+/**
+ * Give the number of occurrences of each element in the given sets.
+ * 
+ * @param sets the sets to consider
+ * @return a map element => count
+ */
+template <typename T>
+std::map<T, int> countElements(const std::vector< std::set<T> >& sets)
+{  
+    std::map<T, int> idWeights;
+    for(typename std::vector< std::set<T> >::const_iterator setsIt = sets.begin(); setsIt != sets.end(); ++setsIt)
+    {
+        for(typename std::set<T>::const_iterator it = setsIt->begin(); it != setsIt->end(); ++it)
+        {
+            if(idWeights.find(*it) != idWeights.end())
+                idWeights[*it]++;
+            else
+                idWeights[*it] = 1;
+        }
+    }
+    return idWeights;
+}
+
+/**
+ * Returns the intersection (common elements) of the given sets.
+ * 
+ * @param sets the sets to consider
+ * @return the intersection of all the sets
+ */
+template <typename T>
+std::set<T> setsIntersection(const std::vector< std::set<T> >& sets)
+{
+    std::set<T> intersection;
+    const std::map<T, int> weights = countElements(sets);
+    for(typename std::map<T, int>::const_iterator it = weights.begin(); it != weights.end(); ++it)
+    {
+        if((*it).second > 1)
+            intersection.insert((*it).first);
+    }
+    return intersection;
+}
+
+}
 
 MVGProjectWrapper::MVGProjectWrapper()
 {
@@ -99,6 +153,37 @@ void MVGProjectWrapper::setProjectDirectory(const QString& directory)
     if(_project.isValid())
         _project.setProjectDirectory(directory.toStdString());
     Q_EMIT projectDirectoryChanged();
+}
+
+const int MVGProjectWrapper::getCameraPointsDisplayMode() const 
+{
+    MObject locator;
+    MVGMayaUtil::getObjectByName(MVGProject::_CAMERA_POINTS_LOCATOR.c_str(), locator);
+    if(locator.isNull())
+        return 0;
+    int displayMode;
+    MVGMayaUtil::getIntAttribute(locator, "mvgDisplayMode", displayMode);
+    return displayMode;
+}
+
+void MVGProjectWrapper::setCameraPointsDisplayMode(int displayMode)
+{
+    if(getCameraPointsDisplayMode() == displayMode)
+        return;
+    MObject locator;
+    MVGMayaUtil::getObjectByName(MVGProject::_CAMERA_POINTS_LOCATOR.c_str(), locator);
+    MVGMayaUtil::setIntAttribute(locator, "mvgDisplayMode", displayMode, false);
+    // Notify signal emitted in onCameraPointsLocatorAttrChanged
+}
+
+void onCameraPointsLocatorAttrChanged(MNodeMessage::AttributeMessage msg, MPlug& plug, MPlug& other, void* data)
+{
+    MVGProjectWrapper* wrapper = static_cast<MVGProjectWrapper*>(data);
+    if(msg & MNodeMessage::kAttributeSet)
+    {
+        if(plug.partialName() == "mvgdm")
+            wrapper->emitCameraPointsDisplayModeChanged();
+    }
 }
 
 QString MVGProjectWrapper::openFileDialog() const
@@ -213,6 +298,12 @@ void MVGProjectWrapper::loadABC(const QString& abcFilePath)
     MObject cloudParent = rootDagPath.child(1);
     MDagPath cloudGroupPath;
     MDagPath::getAPathTo(cloudParent, cloudGroupPath);
+
+    // Camera points locator
+    MObject cpLocator;
+    status = MVGMayaUtil::addLocator("MVGCameraPointsLocator", MVGProject::_CAMERA_POINTS_LOCATOR.c_str(), _project.getObject(), cpLocator);
+    CHECK_RETURN(status);
+    MNodeMessage::addAttributeChangedCallback(cpLocator, onCameraPointsLocatorAttrChanged, (void*)this);
 
     // Point cloud
     if(cloudGroupPath.childCount() == 0)
@@ -380,6 +471,84 @@ void MVGProjectWrapper::setCameraToView(QObject* camera, const QString& viewName
     // Update active camera
     _activeCameraNameByView[viewName.toStdString()] =
         cameraWrapper->getDagPathAsString().toStdString();
+    updatePointsVisibility();
+}
+
+
+void MVGProjectWrapper::updatePointsVisibility()
+{
+    std::vector< std::set<int> > pointsSets;
+    pointsSets.reserve(_activeCameraNameByView.size());
+    std::map< std::string, std::set<int>* > pointsPerCamera;
+    for(std::map<std::string, std::string>::const_iterator camIt = _activeCameraNameByView.begin();
+            camIt != _activeCameraNameByView.end(); ++camIt)
+    {
+        const std::string& camName = camIt->second;
+        if(camName.empty())
+            return;
+        std::set<int> visibility;
+        MIntArray visibleIndexes;
+        _camerasByName[camName]->getCamera().getVisibleIndexes(visibleIndexes);
+        for(int i = 0; i < visibleIndexes.length(); ++i)
+            visibility.insert(visibleIndexes[i]);
+        pointsSets.push_back(visibility);
+        // pointsSets won't be resized (because reserved);
+        // we can use pointers to avoid data duplication
+        pointsPerCamera[camName] = &pointsSets.back();
+    }
+    
+    // Remove common points from individual camera points lists
+    // to avoid z-fighting when drawing them
+    const std::set<int> intersection = setsIntersection(pointsSets);
+    for(std::map< std::string, std::set<int>* >::iterator pointsIt = pointsPerCamera.begin(); 
+            pointsIt != pointsPerCamera.end(); ++pointsIt )
+    {
+        for(std::set<int>::const_iterator it = intersection.begin(); it != intersection.end(); ++it)
+        {
+            pointsIt->second->erase(*it);
+        }
+    }
+    
+    MObject locator;
+    MStatus status;
+    status = MVGMayaUtil::getObjectByName(MVGProject::_CAMERA_POINTS_LOCATOR.c_str(), locator);
+    CHECK_RETURN(status)
+    MDagPath locatorPath;
+    status = MDagPath::getAPathTo(locator, locatorPath);
+    CHECK_RETURN(status)
+
+    std::vector<MVGPointCloudItem> allPoints;
+    MVGPointCloud pointCloud(MVGProject::_CLOUD);
+    pointCloud.getItems(allPoints);
+    
+    // PointCloudItem positions are in world space;
+    // multiply them by the locator inverse matrix to be independent from the locator transform
+    const MMatrix locatorInverseMatrix = locatorPath.inclusiveMatrixInverse().transpose();
+    
+    // Fill locator points attributes (based on panel name)
+    // TODO: make it more generic
+    for(std::map<std::string, std::string>::const_iterator camIt = _activeCameraNameByView.begin();
+            camIt != _activeCameraNameByView.end(); ++camIt)
+    {
+        const std::string& camName = camIt->second;
+        if(camName.empty())
+            return;
+        const std::string& attrName = camIt->first + "Points";
+        const std::set<int>* cameraPoints = pointsPerCamera[camName];
+        MPointArray array;
+        for(std::set<int>::const_iterator it = cameraPoints->begin(); it != cameraPoints->end(); ++it)
+        {
+            array.append(locatorInverseMatrix * allPoints[*it]._position);
+        }
+        MVGMayaUtil::setPointArrayAttribute(locator, attrName.c_str(), array);
+    }
+    
+    { // Common points
+        MPointArray array;
+        for(std::set<int>::const_iterator it = intersection.begin(); it != intersection.end(); ++it)
+            array.append(locatorInverseMatrix * allPoints[*it]._position);
+        MVGMayaUtil::setPointArrayAttribute(locator, "mvgCommonPoints", array);
+    }
 }
 
 void MVGProjectWrapper::setCamerasNear(const double near)
@@ -536,6 +705,11 @@ void MVGProjectWrapper::removeMeshFromUI(const MDagPath& meshPath)
 void MVGProjectWrapper::emitCurrentUnitChanged()
 {
     Q_EMIT currentUnitChanged();
+}
+
+void MVGProjectWrapper::emitCameraPointsDisplayModeChanged()
+{
+    Q_EMIT cameraPointsDisplayModeChanged();
 }
 
 void MVGProjectWrapper::setEditMode(const int mode)

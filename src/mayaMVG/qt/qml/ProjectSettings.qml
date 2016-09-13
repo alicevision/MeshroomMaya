@@ -37,7 +37,7 @@ Item {
             State {
                 name: "OPEN"
                 when: m.isOpen
-                PropertyChanges { target: settings; height: 370; }
+                PropertyChanges { target: settings; height: 395; }
                 PropertyChanges { target: settings; opacity: 1; }
             }
         ]
@@ -122,6 +122,24 @@ Item {
                         text: m.rightPanel.label
                         checked: m.rightPanel.isPointCloudDisplayed
                         onClicked: m.rightPanel.isPointCloudDisplayed = !m.rightPanel.isPointCloudDisplayed
+                    }
+                }
+
+                MSettingsEntry {
+                    label: "Cam. Visible Points"
+                    width: parent.width - 40
+                    ComboBox {
+                        implicitWidth: 120
+                        model: ListModel {
+                            ListElement { text: "None" }
+                            ListElement { text: "Both" }
+                            ListElement { text: "Each" }
+                            ListElement { text: "Common Points Only" }
+                        }
+                        activeFocusOnPress: true
+                        enabled: m.project.projectDirectory !== ""
+                        selectedIndex: m.project.cameraPointsDisplayMode
+                        onSelectedIndexChanged: if(activeFocus) m.project.cameraPointsDisplayMode = selectedIndex
                     }
                 }
 

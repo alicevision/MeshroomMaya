@@ -64,6 +64,7 @@ std::string MVGProject::_CLOUD = "mvgPointCloud";
 std::string MVGProject::_MESH = "mvgMesh";
 std::string MVGProject::_PROJECT = "mvgRoot";
 std::string MVGProject::_LOCATOR = "mvgLocator";
+std::string MVGProject::_CAMERA_POINTS_LOCATOR = "mvgCameraPointsLocator";
 MString MVGProject::_MVG_PROJECTPATH = "mvgProjectPath";
 
 // Image cache

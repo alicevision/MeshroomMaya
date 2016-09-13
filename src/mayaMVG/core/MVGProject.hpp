@@ -54,6 +54,7 @@ public:
     static std::string _MESH;
     static std::string _PROJECT;
     static std::string _LOCATOR;
+    static std::string _CAMERA_POINTS_LOCATOR;
     static MString _MVG_PROJECTPATH;
 
     /// FIFO queue indicating the list of images/cameras keept in memory
