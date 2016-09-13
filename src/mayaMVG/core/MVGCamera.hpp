@@ -44,6 +44,7 @@ public:
     void unloadImagePlane() const;
     MPoint getCenter(MSpace::Space space = MSpace::kWorld) const;
     void getSensorSize(MIntArray& sensorSize) const;
+    void getVisibleIndexes(MIntArray& visibleIndexes) const;
     void getVisibleItems(std::vector<MVGPointCloudItem>& visibleItems) const;
     void setVisibleItems(const std::vector<MVGPointCloudItem>& item) const;
     double getZoom() const;

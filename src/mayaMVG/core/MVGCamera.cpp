@@ -275,12 +275,17 @@ void MVGCamera::getSensorSize(MIntArray& sensorSize) const
     CHECK(status)
 }
 
-void MVGCamera::getVisibleItems(std::vector<MVGPointCloudItem>& visibleItems) const
+void MVGCamera::getVisibleIndexes(MIntArray& visibleIndexes) const
 {
     MStatus status;
-    MIntArray visibleIndexes;
     status = MVGMayaUtil::getIntArrayAttribute(_dagpath.node(), _MVG_ITEMS, visibleIndexes);
-    CHECK_RETURN(status)
+    CHECK(status)
+}
+
+void MVGCamera::getVisibleItems(std::vector<MVGPointCloudItem>& visibleItems) const
+{
+    MIntArray visibleIndexes;
+    getVisibleIndexes(visibleIndexes);
     MVGPointCloud pointCloud(MVGProject::_CLOUD);
     pointCloud.getItems(visibleItems, visibleIndexes);
 }
