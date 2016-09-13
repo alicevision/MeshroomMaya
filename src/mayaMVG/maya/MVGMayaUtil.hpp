@@ -5,11 +5,13 @@
 #include <vector>
 
 class MObject;
+class MPlug;
 class MIntArray;
 class MDoubleArray;
 class MPointArray;
 class MVectorArray;
 class MPoint;
+class MColor;
 class MDagPath;
 class M3dView;
 class QWidget;
@@ -74,10 +76,25 @@ struct MVGMayaUtil
                                           bool = false);
     static MStatus getStringAttribute(const MObject&, const MString&, MString&, bool = false);
     static MStatus setStringAttribute(const MObject&, const MString&, const MString&, bool = false);
+    static MStatus getColorAttribute(const MObject&, const MString&, MColor&, bool = false);
+
     static MStatus findConnectedNodes(const MObject&, const MString&, std::vector<MObject>&);
     // nodes
+    static MStatus getPlug(const MObject& node, const MString& plugName, bool networked, MPlug& plug);
     static MStatus getObjectByName(const MString&, MObject&);
     static MStatus getDagPathByName(const MString&, MDagPath&);
+    // DAG
+    /**
+     * Create a locator of the given type under parent.
+     * @param type the locator's type
+     * @param name the locator's name
+     * @param parent the parent node (MObject() to create the locator at root level)
+     * @param locator the created locator
+     * @param createTransform if True, create a transform between 'parent' and the locator
+     * @return the status of this operation
+     */
+    static MStatus addLocator(const MString& type, const MString& name, 
+                               const MObject& parent, MObject& locator, bool createTransform=true);
     // environment
     static MString getEnv(const MString&);
     static MString getModulePath();
