@@ -93,6 +93,7 @@ MStatus MVGPointCloud::getItems(std::vector<MVGPointCloudItem>& items,
     for(int i = 0; i < indexes.length(); ++i)
     {
         MVGPointCloudItem item;
+        item._id = indexes[i];
         item._position = positionArray[indexes[i]];
         items.push_back(item);
     }
