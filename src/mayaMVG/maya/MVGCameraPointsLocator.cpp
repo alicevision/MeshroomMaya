@@ -45,7 +45,7 @@ MStatus MVGCameraPointsLocator::initialize()
     tAttr.setStorable(true);
     CHECK_RETURN_STATUS(addAttribute(aLeftViewPoints))
 
-    aLeftPointsColor = nAttr.createColor("mvgLPointsColor", "mvglc");
+    aLeftPointsColor = nAttr.createColor("mvgLPanelColor", "mvglc");
     CHECK_RETURN_STATUS(status)
     nAttr.setDefault(MVGProject::_LEFT_PANEL_DEFAULT_COLOR.r, 
                      MVGProject::_LEFT_PANEL_DEFAULT_COLOR.g, 
@@ -58,7 +58,7 @@ MStatus MVGCameraPointsLocator::initialize()
     tAttr.setStorable(true);
     CHECK_RETURN_STATUS(addAttribute(aRightViewPoints))
             
-    aRightPointsColor = nAttr.createColor("mvgRPointsColor", "mvgrc");
+    aRightPointsColor = nAttr.createColor("mvgRPanelColor", "mvgrc");
     CHECK_RETURN_STATUS(status)
     nAttr.setStorable(true);
     nAttr.setDefault(MVGProject::_RIGHT_PANEL_DEFAULT_COLOR.r, 
