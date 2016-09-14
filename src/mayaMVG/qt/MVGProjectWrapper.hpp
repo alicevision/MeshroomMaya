@@ -121,6 +121,7 @@ public:
     void setMoveMode(const int mode);
 
 private:
+    void initCameraPointsLocator();
     void updatePointsVisibility();
     void reloadMVGCamerasFromMaya();
 
@@ -146,6 +147,8 @@ private:
     /// map view to active camera
     std::map<std::string, std::string> _activeCameraNameByView;
     QMap<MDistance::Unit, QString> _unitMap;
+    
+    MCallbackId _cameraPointsLocatorCB;
 };
 
 } // namespace

@@ -72,6 +72,8 @@ std::set<T> setsIntersection(const std::vector< std::set<T> >& sets)
 }
 
 MVGProjectWrapper::MVGProjectWrapper()
+MVGProjectWrapper::MVGProjectWrapper():
+_cameraPointsLocatorCB(0)
 {
     MVGPanelWrapper* leftPanel = new MVGPanelWrapper("mvgLPanel", "Left");
     MVGPanelWrapper* rightPanel = new MVGPanelWrapper("mvgRPanel", "Right");
@@ -102,6 +104,7 @@ MVGProjectWrapper::MVGProjectWrapper()
 
 MVGProjectWrapper::~MVGProjectWrapper()
 {
+    clear();
 }
 
 const QString MVGProjectWrapper::getProjectDirectory() const
@@ -236,6 +239,8 @@ void MVGProjectWrapper::loadExistingProject()
     if(projects.empty())
         return;
     _project = projects.front();
+    
+    initCameraPointsLocator();
     reloadMVGCamerasFromMaya();
     reloadMVGMeshesFromMaya();
 
@@ -300,10 +305,7 @@ void MVGProjectWrapper::loadABC(const QString& abcFilePath)
     MDagPath::getAPathTo(cloudParent, cloudGroupPath);
 
     // Camera points locator
-    MObject cpLocator;
-    status = MVGMayaUtil::addLocator("MVGCameraPointsLocator", MVGProject::_CAMERA_POINTS_LOCATOR.c_str(), _project.getObject(), cpLocator);
-    CHECK_RETURN(status);
-    MNodeMessage::addAttributeChangedCallback(cpLocator, onCameraPointsLocatorAttrChanged, (void*)this);
+    initCameraPointsLocator();
 
     // Point cloud
     if(cloudGroupPath.childCount() == 0)
@@ -474,6 +476,19 @@ void MVGProjectWrapper::setCameraToView(QObject* camera, const QString& viewName
     updatePointsVisibility();
 }
 
+void MVGProjectWrapper::initCameraPointsLocator() 
+{
+    MObject cpLocator;
+    MStatus status;
+    MVGMayaUtil::getObjectByName(MVGProject::_CAMERA_POINTS_LOCATOR.c_str(), cpLocator);
+    // If the locator does not exist, create it
+    if(cpLocator.isNull())
+    {
+        status = MVGMayaUtil::addLocator("MVGCameraPointsLocator", MVGProject::_CAMERA_POINTS_LOCATOR.c_str(), _project.getObject(), cpLocator);
+        CHECK_RETURN(status);
+    }
+    _cameraPointsLocatorCB = MNodeMessage::addAttributeChangedCallback(cpLocator, onCameraPointsLocatorAttrChanged, (void*)this);
+}
 
 void MVGProjectWrapper::updatePointsVisibility()
 {
@@ -603,6 +618,9 @@ void MVGProjectWrapper::clear()
     _meshesList.clear();
     _meshesByName.clear();
     _selectedMeshes.clear();
+    
+    if(_cameraPointsLocatorCB)
+        MNodeMessage::removeCallback(_cameraPointsLocatorCB);
 }
 
 void MVGProjectWrapper::clearAndUnloadImageCache()
