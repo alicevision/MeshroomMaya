@@ -3,6 +3,7 @@
 #include "MVGMayaUtil.hpp"
 #include "context/MVGDrawUtil.hpp"
 #include "mayaMVG/core/MVGLog.hpp"
+#include "mayaMVG/core/MVGProject.hpp"
 #include <maya/MFnTypedAttribute.h>
 #include <maya/MFnEnumAttribute.h>
 #include <maya/MPointArray.h>
@@ -46,7 +47,9 @@ MStatus MVGCameraPointsLocator::initialize()
 
     aLeftPointsColor = nAttr.createColor("mvgLPointsColor", "mvglc");
     CHECK_RETURN_STATUS(status)
-    nAttr.setDefault(0.0f, 0.4f, 1.0f);
+    nAttr.setDefault(MVGProject::_LEFT_PANEL_DEFAULT_COLOR.r, 
+                     MVGProject::_LEFT_PANEL_DEFAULT_COLOR.g, 
+                     MVGProject::_LEFT_PANEL_DEFAULT_COLOR.b);
     nAttr.setStorable(true);
     CHECK_RETURN_STATUS(addAttribute(aLeftPointsColor))
             
@@ -58,7 +61,9 @@ MStatus MVGCameraPointsLocator::initialize()
     aRightPointsColor = nAttr.createColor("mvgRPointsColor", "mvgrc");
     CHECK_RETURN_STATUS(status)
     nAttr.setStorable(true);
-    nAttr.setDefault(1.0f, 0.4f, 0.0f);
+    nAttr.setDefault(MVGProject::_RIGHT_PANEL_DEFAULT_COLOR.r, 
+                     MVGProject::_RIGHT_PANEL_DEFAULT_COLOR.g, 
+                     MVGProject::_RIGHT_PANEL_DEFAULT_COLOR.b);
     CHECK_RETURN_STATUS(addAttribute(aRightPointsColor))
 
     aCommonPoints = tAttr.create("mvgCommonPoints", "mvgcp", MFnData::kPointArray, &status);
@@ -69,7 +74,9 @@ MStatus MVGCameraPointsLocator::initialize()
     aCommonPointsColor = nAttr.createColor("mvgCommonPointsColor", "mvgcc");
     CHECK_RETURN_STATUS(status)
     nAttr.setStorable(true);
-    nAttr.setDefault(0.2f, 1.0f, 0.2f);
+    nAttr.setDefault(MVGProject::_COMMON_POINTS_DEFAULT_COLOR.r,
+                     MVGProject::_COMMON_POINTS_DEFAULT_COLOR.g, 
+                     MVGProject::_COMMON_POINTS_DEFAULT_COLOR.b);
     CHECK_RETURN_STATUS(addAttribute(aCommonPointsColor))
     
     // Display mode attribute
@@ -117,8 +124,8 @@ void MVGCameraPointsLocator::getDrawData(DrawData& data) const
         MVGMayaUtil::getPointArrayAttribute(thisMObject(), "mvgCommonPoints", data.cPoints);
     }
 
-    MVGMayaUtil::getColorAttribute(thisMObject(), "mvgLPointsColor", data.lColor);
-    MVGMayaUtil::getColorAttribute(thisMObject(), "mvgRPointsColor", data.rColor);
+    MVGMayaUtil::getColorAttribute(thisMObject(), "mvgLPanelColor", data.lColor);
+    MVGMayaUtil::getColorAttribute(thisMObject(), "mvgRPanelColor", data.rColor);
     MVGMayaUtil::getColorAttribute(thisMObject(), "mvgCommonPointsColor", data.cColor);
 
     // TODO: expose this as an attribute too
