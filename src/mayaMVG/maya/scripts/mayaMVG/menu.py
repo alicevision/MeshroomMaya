@@ -28,7 +28,7 @@ def exportSelectionAsABC():
     # ensure we use a '*.abc' file extension
     outfile = os.path.splitext(outfile[0])[0]+'.abc'
     # build the AbcExport command
-    exportCmd = '-worldSpace -attr mvg_imageSourcePath -attr mvg_intrinsicParams -file %s -uvWrite'%outfile
+    exportCmd = '-worldSpace -userAttrPrefix mvg_ -file %s -uvWrite' % outfile
     for p in nodePathtoExport:
         exportCmd += ' -root %s'%p
     exportCmd = '''
