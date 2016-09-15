@@ -71,12 +71,11 @@ std::set<T> setsIntersection(const std::vector< std::set<T> >& sets)
 
 }
 
-MVGProjectWrapper::MVGProjectWrapper()
 MVGProjectWrapper::MVGProjectWrapper():
 _cameraPointsLocatorCB(0)
 {
-    MVGPanelWrapper* leftPanel = new MVGPanelWrapper("mvgLPanel", "Left");
-    MVGPanelWrapper* rightPanel = new MVGPanelWrapper("mvgRPanel", "Right");
+    MVGPanelWrapper* leftPanel = new MVGPanelWrapper("mvgLPanel", "Left", MVGMayaUtil::fromMColor(MVGProject::_LEFT_PANEL_DEFAULT_COLOR));
+    MVGPanelWrapper* rightPanel = new MVGPanelWrapper("mvgRPanel", "Right", MVGMayaUtil::fromMColor(MVGProject::_RIGHT_PANEL_DEFAULT_COLOR));
     _panelList.append(leftPanel);
     _panelList.append(rightPanel);
     // Initialize currentContext
@@ -186,6 +185,17 @@ void onCameraPointsLocatorAttrChanged(MNodeMessage::AttributeMessage msg, MPlug&
     {
         if(plug.partialName() == "mvgdm")
             wrapper->emitCameraPointsDisplayModeChanged();
+        // Handle left/right color attributes changes
+        if(plug.partialName() == "mvglc" || plug.partialName() == "mvgrc")
+        {
+            // We now how our panel list is ordered ([0]left, [1]right)
+            // TODO: make this more robust to changes
+            const int idx = plug.partialName() == "mvglc" ? 0 : 1;
+            QObject* t = wrapper->getPanelList()->get(idx);
+            MVGPanelWrapper* w = dynamic_cast<MVGPanelWrapper*>(t);
+            // Update panel color
+            w->onColorAttributeChanged();
+        }
     }
 }
 

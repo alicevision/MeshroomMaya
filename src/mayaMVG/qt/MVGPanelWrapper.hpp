@@ -3,6 +3,7 @@
 #include <QObject>
 #include <maya/MCallbackIdArray.h>
 #include <maya/MEventMessage.h>
+#include <QColor>
 
 namespace mayaMVG
 {
@@ -16,14 +17,19 @@ class MVGPanelWrapper : public QObject
     Q_PROPERTY(bool isVisible READ getIsVisible)
     Q_PROPERTY(bool isPointCloudDisplayed READ isPointCloudDisplayed WRITE displayPointCloud NOTIFY
                    isPointCloudDisplayedChanged)
-
+    Q_PROPERTY(QColor color READ getColor WRITE setColor NOTIFY colorChanged)
+    
 public:
     MVGPanelWrapper(const QString& name);
-    MVGPanelWrapper(const QString& name, const QString& label);
+    MVGPanelWrapper(const QString& name, const QString& label, const QColor& color);
     ~MVGPanelWrapper();
 
 public:
+    QColor getColor() const;
+    void setColor(const QColor& color);
     void emitIsPointCloudDisplayedChanged();
+    /// Update panel's color according to the locator's attribute it relies on
+    void onColorAttributeChanged();
 
 public Q_SLOTS:
     inline QString getName() const { return _name; }
@@ -36,10 +42,19 @@ public Q_SLOTS:
 Q_SIGNALS:
     void isPointCloudDisplayedChanged();
     void labelChanged();
-
+    void colorChanged();
+    
+private:
+    /**
+     * Update container's stylesheet to add a border which color matches the result
+     * of getColor().
+     */
+    void updateStylesheet();
+    
 private:
     QString _name;
     QString _label;
+    QColor _defaultColor;
     bool _isVisible;
 };
 
