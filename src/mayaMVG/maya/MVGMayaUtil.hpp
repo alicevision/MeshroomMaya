@@ -15,6 +15,8 @@ class MColor;
 class MDagPath;
 class M3dView;
 class QWidget;
+class MColor;
+class QColor;
 
 namespace mayaMVG
 {
@@ -77,7 +79,7 @@ struct MVGMayaUtil
     static MStatus getStringAttribute(const MObject&, const MString&, MString&, bool = false);
     static MStatus setStringAttribute(const MObject&, const MString&, const MString&, bool = false);
     static MStatus getColorAttribute(const MObject&, const MString&, MColor&, bool = false);
-
+    static MStatus setColorAttribute(const MObject&, const MString&, const MColor&, bool);
     static MStatus findConnectedNodes(const MObject&, const MString&, std::vector<MObject>&);
     // nodes
     static MStatus getPlug(const MObject& node, const MString& plugName, bool networked, MPlug& plug);
@@ -95,6 +97,9 @@ struct MVGMayaUtil
      */
     static MStatus addLocator(const MString& type, const MString& name, 
                                const MObject& parent, MObject& locator, bool createTransform=true);
+    // Conversion
+    static MColor fromQColor(const QColor& color);
+    static QColor fromMColor(const MColor& color);
     // environment
     static MString getEnv(const MString&);
     static MString getModulePath();

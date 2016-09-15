@@ -462,6 +462,19 @@ MStatus MVGMayaUtil::getColorAttribute(const MObject& object, const MString& par
     return numDataFn.getData(color.r, color.g, color.b);
 }
 
+MStatus MVGMayaUtil::setColorAttribute(const MObject& object, const MString& param,
+                                        const MColor& color, bool networked)
+{
+    MPlug p;
+    CHECK_RETURN_STATUS(getPlug(object, param, networked, p));
+    MStatus status;
+    MFnNumericData data;
+    MObject obj = data.create(MFnNumericData::k3Float, &status);
+    CHECK_RETURN_STATUS(status);
+    data.setData(color.r, color.g, color.b);
+    p.setValue(obj);
+}
+
 MStatus MVGMayaUtil::findConnectedNodes(const MObject& object, const MString& param,
                                         std::vector<MObject>& nodes)
 {
@@ -544,6 +557,18 @@ MStatus MVGMayaUtil::addLocator(const MString& type, const MString& name, const 
     MFnDependencyNode locatorFn(locator);
     locatorFn.setName(name);
     return dagModifier.doIt();
+}
+
+MColor MVGMayaUtil::fromQColor(const QColor& color)
+{
+    return MColor(color.redF(), color.greenF(), color.blueF(), color.alphaF());
+}
+
+QColor MVGMayaUtil::fromMColor(const MColor& color)
+{
+    QColor c;
+    c.setRgbF(color.r, color.g, color.b, color.a);
+    return c;
 }
 
 MString MVGMayaUtil::getEnv(const MString& var)
