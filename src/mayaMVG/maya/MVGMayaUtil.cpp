@@ -472,7 +472,7 @@ MStatus MVGMayaUtil::setColorAttribute(const MObject& object, const MString& par
     MObject obj = data.create(MFnNumericData::k3Float, &status);
     CHECK_RETURN_STATUS(status);
     data.setData(color.r, color.g, color.b);
-    p.setValue(obj);
+    return p.setValue(obj);
 }
 
 MStatus MVGMayaUtil::findConnectedNodes(const MObject& object, const MString& param,
