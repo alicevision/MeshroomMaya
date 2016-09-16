@@ -188,13 +188,8 @@ void onCameraPointsLocatorAttrChanged(MNodeMessage::AttributeMessage msg, MPlug&
         // Handle left/right color attributes changes
         if(plug.partialName() == "mvglc" || plug.partialName() == "mvgrc")
         {
-            // We now how our panel list is ordered ([0]left, [1]right)
-            // TODO: make this more robust to changes
-            const int idx = plug.partialName() == "mvglc" ? 0 : 1;
-            QObject* t = wrapper->getPanelList()->get(idx);
-            MVGPanelWrapper* w = dynamic_cast<MVGPanelWrapper*>(t);
-            // Update panel color
-            w->onColorAttributeChanged();
+            const QString viewName = plug.partialName() == "mvglc" ? "mvgLPanel" : "mvgRPanel";
+            wrapper->updatePanelColor(viewName);
         }
     }
 }
@@ -477,12 +472,29 @@ void MVGProjectWrapper::setCameraToView(QObject* camera, const QString& viewName
     _project.pushLoadCurrentImagePlaneCommand(viewName.toStdString());
     // Set UI
     foreach(MVGCameraWrapper* c, _cameraList.asQList<MVGCameraWrapper>())
-        c->setInView(viewName, false);
-    MVGCameraWrapper* cam = qobject_cast<MVGCameraWrapper*>(camera);
-    cam->setInView(viewName, true);
+    {
+        if(c->isInView(viewName))
+        {
+            c->setInView(viewName, false);
+            c->getCamera().setLocatorCustomColor(false);
+        }
+    }
     // Update active camera
-    _activeCameraNameByView[viewName.toStdString()] =
-        cameraWrapper->getDagPathAsString().toStdString();
+    _activeCameraNameByView[viewName.toStdString()] = cameraWrapper->getDagPathAsString().toStdString();
+    
+    // Update data from new configuration
+    for(std::map<std::string, std::string>::const_iterator camIt = _activeCameraNameByView.begin();
+        camIt != _activeCameraNameByView.end(); ++camIt)
+    {
+        const QString view = QString::fromStdString(camIt->first);
+        MVGCameraWrapper* camWrapper = cameraFromViewName(view);
+        if(!camWrapper)
+            return;
+        camWrapper->setInView(view, true);
+        const MColor color = MVGMayaUtil::fromQColor(panelFromViewName(view)->getColor());
+        camWrapper->getCamera().setLocatorCustomColor(true, color);
+    }
+
     updatePointsVisibility();
 }
 
@@ -508,18 +520,18 @@ void MVGProjectWrapper::updatePointsVisibility()
     for(std::map<std::string, std::string>::const_iterator camIt = _activeCameraNameByView.begin();
             camIt != _activeCameraNameByView.end(); ++camIt)
     {
-        const std::string& camName = camIt->second;
-        if(camName.empty())
+        MVGCameraWrapper* camWrapper = cameraFromViewName(QString::fromStdString(camIt->first));
+        if(!camWrapper)
             return;
         std::set<int> visibility;
         MIntArray visibleIndexes;
-        _camerasByName[camName]->getCamera().getVisibleIndexes(visibleIndexes);
+        camWrapper->getCamera().getVisibleIndexes(visibleIndexes);
         for(int i = 0; i < visibleIndexes.length(); ++i)
             visibility.insert(visibleIndexes[i]);
         pointsSets.push_back(visibility);
         // pointsSets won't be resized (because reserved);
         // we can use pointers to avoid data duplication
-        pointsPerCamera[camName] = &pointsSets.back();
+        pointsPerCamera[camIt->second] = &pointsSets.back();
     }
     
     // Remove common points from individual camera points lists
@@ -771,6 +783,35 @@ void MVGProjectWrapper::reloadMVGCamerasFromMaya()
         _camerasByName[it->getDagPathAsString()] = cameraWrapper;
     }
     // TODO : Camera selection
+}
+
+void MVGProjectWrapper::updatePanelColor(const QString& viewName)
+{
+    // Update panel's color
+    MVGPanelWrapper* panel = panelFromViewName(viewName);
+    panel->onColorAttributeChanged();
+    // Update camera locator's color if any
+    MVGCameraWrapper* camWrapper = cameraFromViewName(viewName);
+    if(!camWrapper)
+        return;
+    const MColor color = MVGMayaUtil::fromQColor(panelFromViewName(viewName)->getColor());
+    camWrapper->getCamera().setLocatorCustomColor(true, color);
+}
+
+MVGCameraWrapper* MVGProjectWrapper::cameraFromViewName(const QString& viewName)
+{
+    const std::string camName = _activeCameraNameByView[viewName.toStdString()];
+    if(camName.empty())
+        return NULL;
+    return _camerasByName[camName];
+}
+
+MVGPanelWrapper* MVGProjectWrapper::panelFromViewName(const QString& viewName)
+{
+    foreach(MVGPanelWrapper* p, _panelList.asQList<MVGPanelWrapper>())
+        if(p->getName() == viewName)
+            return p;
+    return NULL;
 }
 
 void MVGProjectWrapper::reloadMVGMeshesFromMaya()

@@ -119,11 +119,14 @@ public:
     // Setter not callable from QML
     void setEditMode(const int mode);
     void setMoveMode(const int mode);
-
+    void updatePanelColor(const QString& viewName);
+    
 private:
     void initCameraPointsLocator();
     void updatePointsVisibility();
     void reloadMVGCamerasFromMaya();
+    MVGCameraWrapper* cameraFromViewName(const QString& viewName);
+    MVGPanelWrapper* panelFromViewName(const QString& viewName);
 
 private:
     QObjectListModel _cameraList;

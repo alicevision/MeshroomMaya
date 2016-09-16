@@ -425,6 +425,16 @@ void MVGCamera::setLocatorScale(const double scale) const
     CHECK_RETURN(status)
 }
 
+void MVGCamera::setLocatorCustomColor(bool useCustomColor, const MColor& color) const
+{
+    MStatus status;
+    MFnCamera fnCamera(getDagPath(), &status);
+    CHECK_RETURN(status)
+    fnCamera.setUseObjectColor(useCustomColor);
+    if(useCustomColor)
+        status = fnCamera.setObjectColor(color); // Only works in VP 2.0
+}
+
 const std::pair<double, double> MVGCamera::getImageSize() const
 {
     std::pair<double, double> size;
