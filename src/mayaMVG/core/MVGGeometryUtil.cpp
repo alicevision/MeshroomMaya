@@ -7,6 +7,8 @@
 #include "mayaMVG/core/MVGLineConstrainedPlaneKernel.hpp"
 #include "mayaMVG/maya/MVGMayaUtil.hpp"
 #include <openMVG/multiview/triangulation_nview.hpp>
+#include <openMVG/multiview/projection.hpp>
+#include <openMVG/robust_estimation/robust_estimator_LMeds.hpp>
 #include <maya/MPointArray.h>
 #include <maya/M3dView.h>
 #include <maya/MPlug.h>

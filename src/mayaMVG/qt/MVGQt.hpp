@@ -1,3 +1,8 @@
+// /!\ Include this file instead of QtCore / QtGui
+
+// X11 defines CamelCase macros that clash with Qt.
+// To avoid include-order based issues, we undefine those problematic names.
+
 #if defined(LINUX)
 #if defined(None)
 #undef None

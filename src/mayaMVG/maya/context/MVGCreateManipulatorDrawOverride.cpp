@@ -1,13 +1,15 @@
-#include "mayaMVG/maya/context/MVGCreateManipulatorDrawOverride.hpp"
+#include "mayaMVG/core/MVGLog.hpp"
 #include "mayaMVG/maya/context/MVGCreateManipulator.hpp"
+#include "mayaMVG/maya/context/MVGCreateManipulatorDrawOverride.hpp"
 #include "mayaMVG/maya/context/MVGDrawUtil.hpp"
 #include "mayaMVG/maya/MVGMayaUtil.hpp"
-#include "mayaMVG/core/MVGLog.hpp"
+
 #include <maya/MHWGeometryUtilities.h>
 #include <maya/MDrawContext.h>
 #include <maya/MDataHandle.h>
 #include <maya/MFnDependencyNode.h>
 #include <maya/MViewport2Renderer.h>
+
 
 namespace mayaMVG
 {

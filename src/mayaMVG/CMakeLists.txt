@@ -21,8 +21,6 @@ include_directories(${PROJECT_SOURCE_DIR}/..)
 # Maya dependency
 #
 find_package(Maya REQUIRED)
-include_directories(${MAYA_INCLUDE_DIR})
-link_directories(${MAYA_Foundation_LIBRARY} ${MAYA_OpenMaya_LIBRARY} ${MAYA_OpenMayaUI_LIBRARY} ${MAYA_OpenMayaFX_LIBRARY})
 
 #
 # Qt dependency
@@ -35,15 +33,13 @@ include(${QT_USE_FILE})
 #
 # OpenMVG dependency
 #
-include_directories(
-			../openMVG/src
-			../openMVG/src/third_party/eigen)
+find_package(OpenMVG REQUIRED)
+find_package(Ceres REQUIRED)
 
 #
 # OpenGL dependency
 #
 find_package(OpenGL REQUIRED)
-include_directories(${OPENGL_INCLUDE_DIR})
 
 #
 # Plugin name
@@ -76,20 +72,26 @@ include_directories(${CMAKE_CURRENT_BINARY_DIR})
 # Maya plugin properties
 #
 add_library(${project_BIN} SHARED
-				${PLUGIN_SRCS}
-				${MOC_SRCS})
-target_link_libraries(
-				${project_BIN}
-				${MAYA_Foundation_LIBRARY}
-				${MAYA_OpenMaya_LIBRARY}
-				${MAYA_OpenMayaUI_LIBRARY}
-				${MAYA_OpenMayaFX_LIBRARY}
-				${MAYA_OpenMayaRender_LIBRARY}
-				stlplus
-				openMVG_numeric
-				openMVG_multiview
-				${QT_LIBRARIES}
-				${OPENGL_LIBRARIES})
+    ${PLUGIN_SRCS}
+    ${MOC_SRCS})
+target_include_directories(${project_BIN} PUBLIC
+    ${MAYA_INCLUDE_DIR}
+    ${OPENMVG_INCLUDE_DIRS}
+    ${OPENGL_INCLUDE_DIR}
+    )
+target_link_libraries(${project_BIN} PUBLIC
+    ${MAYA_Foundation_LIBRARY}
+    ${MAYA_OpenMaya_LIBRARY}
+    ${MAYA_OpenMayaUI_LIBRARY}
+    ${MAYA_OpenMayaFX_LIBRARY}
+    ${MAYA_OpenMayaRender_LIBRARY}
+    ${OPENMVG_LIBRARY}
+    stlplus
+    openMVG_numeric
+    openMVG_multiview
+    ${QT_LIBRARIES}
+    ${OPENGL_LIBRARIES}
+    )
 maya_set_plugin_properties(${project_BIN})
 
 #

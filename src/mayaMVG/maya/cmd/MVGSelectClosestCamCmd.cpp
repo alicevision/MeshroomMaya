@@ -2,7 +2,10 @@
 #include "mayaMVG/core/MVGProject.hpp"
 #include "mayaMVG/core/MVGCamera.hpp"
 #include "mayaMVG/maya/MVGMayaUtil.hpp"
+
 #include <maya/MMatrix.h>
+
+#include <cmath>
 
 
 namespace mayaMVG

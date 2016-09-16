@@ -4,6 +4,7 @@
 #include "mayaMVG/core/MVGLog.hpp"
 #include "mayaMVG/maya/context/MVGContextCmd.hpp"
 #include "mayaMVG/maya/MVGMayaUtil.hpp"
+
 #include <maya/MFnTransform.h>
 #include <maya/MItDependencyNodes.h>
 #include <maya/MDagModifier.h>
@@ -15,6 +16,8 @@
 #include <maya/MMatrix.h>
 #include <maya/MItSelectionList.h>
 #include <maya/MItMeshPolygon.h>
+
+#include <algorithm>
 
 namespace
 { // empty namespace
