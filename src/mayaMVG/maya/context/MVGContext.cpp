@@ -78,9 +78,6 @@ bool MVGContext::eventFilter(QObject* obj, QEvent* e)
                 if(!MVGCreateManipulator::_doSnap)
                     MVGCreateManipulator::_doSnap = true;
                 break; // Spread event to Maya
-            case Qt::Key_D:
-                MVGManipulator::_displayVisiblePoints = true;
-                return true;
             default:
                 break;
         }
@@ -146,9 +143,6 @@ bool MVGContext::eventFilter(QObject* obj, QEvent* e)
                 case Qt::Key_V:
                     MVGCreateManipulator::_doSnap = false;
                     break; // Spread event to Maya
-                case Qt::Key_D:
-                    MVGManipulator::_displayVisiblePoints = false;
-                    return true;
                 default:
                     break;
             }

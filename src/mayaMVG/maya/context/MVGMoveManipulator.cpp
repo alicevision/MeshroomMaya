@@ -152,8 +152,6 @@ void MVGMoveManipulator::draw(M3dView& view, const MDagPath& path, M3dView::Disp
         if(_doDrag)
             MVGDrawUtil::drawLineLoop2D(_intermediateVSPoints, MVGDrawUtil::_errorColor, 3.0);
 
-        if(_displayVisiblePoints)
-            drawVisibleItems(view);
         MVGDrawUtil::end2DDrawing();
     }
 
