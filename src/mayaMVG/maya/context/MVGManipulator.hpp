@@ -50,7 +50,6 @@ public:
 public:
     static void drawIntersection2D(const MPointArray& intersectedVSPoints,
                                    const MFn::Type intersectionType);
-    void drawVisibleItems(M3dView& view) const;
 
 protected:
     MVGEditCmd* newEditCmd();
@@ -66,9 +65,6 @@ protected:
     std::vector<MVGPointCloudItem> _visiblePointCloudItems;
     MIntArray _snapedPoints;
     bool _doDrag;
-
-public:
-    static bool _displayVisiblePoints;
 
 private:
     MVGContext* _context;

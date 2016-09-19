@@ -1,6 +1,7 @@
 #pragma once
 
 #include "mayaMVG/core/MVGNodeWrapper.hpp"
+#include "maya/MColor.h"
 #include <vector>
 #include <list>
 #include <map>
@@ -54,6 +55,10 @@ public:
     static std::string _MESH;
     static std::string _PROJECT;
     static std::string _LOCATOR;
+    static std::string _CAMERA_POINTS_LOCATOR;
+    static MColor _LEFT_PANEL_DEFAULT_COLOR;
+    static MColor _RIGHT_PANEL_DEFAULT_COLOR;
+    static MColor _COMMON_POINTS_DEFAULT_COLOR;
     static MString _MVG_PROJECTPATH;
 
     /// FIFO queue indicating the list of images/cameras keept in memory

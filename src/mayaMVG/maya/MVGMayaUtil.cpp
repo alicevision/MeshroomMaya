@@ -18,6 +18,7 @@
 #include <maya/MPointArray.h>
 #include <maya/MVectorArray.h>
 #include <maya/MFnVectorArrayData.h>
+#include <maya/MDagModifier.h>
 
 namespace mayaMVG
 {
@@ -235,10 +236,8 @@ MStatus MVGMayaUtil::getIntArrayAttribute(const MObject& object, const MString& 
                                           MIntArray& intArray, bool networked)
 {
     MStatus status;
-    MFnDependencyNode fn(object, &status);
-    CHECK_RETURN_STATUS(status);
-    MPlug plug(fn.findPlug(param, networked, &status));
-    CHECK_RETURN_STATUS(status);
+    MPlug plug;
+    CHECK_RETURN_STATUS(getPlug(object, param, networked, plug));
     intArray.clear();
     if(plug.isArray())
     {
@@ -263,10 +262,8 @@ MStatus MVGMayaUtil::setIntArrayAttribute(const MObject& object, const MString& 
                                           const MIntArray& intArray, bool networked)
 {
     MStatus status;
-    MFnDependencyNode fn(object, &status);
-    CHECK_RETURN_STATUS(status);
-    MPlug plug(fn.findPlug(param, networked, &status));
-    CHECK_RETURN_STATUS(status);
+    MPlug plug;
+    CHECK_RETURN_STATUS(getPlug(object, param, networked, plug));
     MFnIntArrayData fnData;
     MObject obj = fnData.create(intArray, &status);
     CHECK_RETURN_STATUS(status);
@@ -277,59 +274,43 @@ MStatus MVGMayaUtil::setIntArrayAttribute(const MObject& object, const MString& 
 MStatus MVGMayaUtil::getIntAttribute(const MObject& object, const MString& param, int& value,
                                      bool networked)
 {
-    MStatus status;
-    MFnDependencyNode fn(object, &status);
-    CHECK_RETURN_STATUS(status);
-    MPlug plug(fn.findPlug(param, networked, &status));
-    CHECK_RETURN_STATUS(status);
+    MPlug plug;
+    CHECK_RETURN_STATUS(getPlug(object, param, networked, plug));
     value = plug.asInt();
-    return status;
+    return MStatus::kSuccess;
 }
 
 MStatus MVGMayaUtil::setIntAttribute(const MObject& object, const MString& param, const int& value,
-                                     bool networked)
+                                       bool networked)
 {
-    MStatus status;
-    MFnDependencyNode fn(object, &status);
-    CHECK_RETURN_STATUS(status);
-    MPlug plug(fn.findPlug(param, networked, &status));
-    CHECK_RETURN_STATUS(status);
-    plug.setInt(value);
-    return status;
+    MPlug plug;
+    CHECK_RETURN_STATUS(getPlug(object, param, networked, plug));
+    return plug.setInt(value);
 }
 
 MStatus MVGMayaUtil::getDoubleAttribute(const MObject& object, const MString& param, double& value,
                                         bool networked)
 {
-    MStatus status;
-    MFnDependencyNode fn(object, &status);
-    CHECK_RETURN_STATUS(status);
-    MPlug plug(fn.findPlug(param, networked, &status));
-    CHECK_RETURN_STATUS(status);
+    MPlug plug;
+    CHECK_RETURN_STATUS(getPlug(object, param, networked, plug));
     value = plug.asDouble();
-    return status;
+    return MStatus::kSuccess;
 }
 
 MStatus MVGMayaUtil::setDoubleAttribute(const MObject& object, const MString& param,
                                         const double& value, bool networked)
 {
-    MStatus status;
-    MFnDependencyNode fn(object, &status);
-    CHECK_RETURN_STATUS(status);
-    MPlug plug(fn.findPlug(param, networked, &status));
-    CHECK_RETURN_STATUS(status);
-    plug.setDouble(value);
-    return status;
+    MPlug plug;
+    CHECK_RETURN_STATUS(getPlug(object, param, networked, plug));
+    return plug.setDouble(value);
 }
 
 MStatus MVGMayaUtil::getDoubleArrayAttribute(const MObject& object, const MString& param,
                                              MDoubleArray& doubleArray, bool networked)
 {
     MStatus status;
-    MFnDependencyNode fn(object, &status);
-    CHECK_RETURN_STATUS(status);
-    MPlug plug(fn.findPlug(param, networked, &status));
-    CHECK_RETURN_STATUS(status);
+    MPlug plug;
+    CHECK_RETURN_STATUS(getPlug(object, param, networked, plug));
     doubleArray.clear();
     if(plug.isArray())
     {
@@ -356,10 +337,8 @@ MStatus MVGMayaUtil::setDoubleArrayAttribute(const MObject& object, const MStrin
                                              const MDoubleArray& doubleArray, bool networked)
 {
     MStatus status;
-    MFnDependencyNode fn(object, &status);
-    CHECK_RETURN_STATUS(status);
-    MPlug plug(fn.findPlug(param, networked, &status));
-    CHECK_RETURN_STATUS(status);
+    MPlug plug;
+    CHECK_RETURN_STATUS(getPlug(object, param, networked, plug));
     MFnDoubleArrayData fnData;
     MObject obj = fnData.create(doubleArray, &status);
     CHECK_RETURN_STATUS(status);
@@ -371,10 +350,8 @@ MStatus MVGMayaUtil::getVectorArrayAttribute(const MObject& object, const MStrin
                                              MVectorArray& vectorArray, bool networked)
 {
     MStatus status;
-    MFnDependencyNode fn(object, &status);
-    CHECK_RETURN_STATUS(status);
-    MPlug plug(fn.findPlug(param, networked, &status));
-    CHECK_RETURN_STATUS(status);
+    MPlug plug;
+    CHECK_RETURN_STATUS(getPlug(object, param, networked, plug));
     vectorArray.clear();
     if(plug.isArray())
     {
@@ -403,10 +380,8 @@ MStatus MVGMayaUtil::setVectorArrayAttribute(const MObject& object, const MStrin
                                              const MVectorArray& vectorArray, bool networked)
 {
     MStatus status;
-    MFnDependencyNode fn(object, &status);
-    CHECK_RETURN_STATUS(status);
-    MPlug plug(fn.findPlug(param, networked, &status));
-    CHECK_RETURN_STATUS(status);
+    MPlug plug;
+    CHECK_RETURN_STATUS(getPlug(object, param, networked, plug));
     MFnVectorArrayData fnData;
     MObject obj = fnData.create(vectorArray, &status);
     CHECK_RETURN_STATUS(status);
@@ -418,10 +393,8 @@ MStatus MVGMayaUtil::getPointArrayAttribute(const MObject& object, const MString
                                             MPointArray& pointArray, bool networked)
 {
     MStatus status;
-    MFnDependencyNode fn(object, &status);
-    CHECK_RETURN_STATUS(status);
-    MPlug plug(fn.findPlug(param, networked, &status));
-    CHECK_RETURN_STATUS(status);
+    MPlug plug;
+    CHECK_RETURN_STATUS(getPlug(object, param, networked, plug));
     pointArray.clear();
     if(plug.isArray())
     {
@@ -450,10 +423,8 @@ MStatus MVGMayaUtil::setPointArrayAttribute(const MObject& object, const MString
                                             const MPointArray& pointArray, bool networked)
 {
     MStatus status;
-    MFnDependencyNode fn(object, &status);
-    CHECK_RETURN_STATUS(status);
-    MPlug plug(fn.findPlug(param, networked, &status));
-    CHECK_RETURN_STATUS(status);
+    MPlug plug;
+    CHECK_RETURN_STATUS(getPlug(object, param, networked, plug));
     MFnPointArrayData fnData;
     MObject obj = fnData.create(pointArray, &status);
     CHECK_RETURN_STATUS(status);
@@ -465,10 +436,8 @@ MStatus MVGMayaUtil::getStringAttribute(const MObject& object, const MString& pa
                                         MString& string, bool networked)
 {
     MStatus status;
-    MFnDependencyNode fn(object, &status);
-    CHECK_RETURN_STATUS(status);
-    MPlug plug(fn.findPlug(param, networked, &status));
-    CHECK_RETURN_STATUS(status);
+    MPlug plug;
+    CHECK_RETURN_STATUS(getPlug(object, param, networked, plug));
     string = plug.asString();
     return status;
 }
@@ -477,22 +446,41 @@ MStatus MVGMayaUtil::setStringAttribute(const MObject& object, const MString& pa
                                         const MString& string, bool networked)
 {
     MStatus status;
-    MFnDependencyNode fn(object, &status);
-    CHECK_RETURN_STATUS(status);
-    MPlug plug(fn.findPlug(param, networked, &status));
-    CHECK_RETURN_STATUS(status);
+    MPlug plug;
+    CHECK_RETURN_STATUS(getPlug(object, param, networked, plug));
     plug.setString(string);
     return status;
+}
+
+MStatus MVGMayaUtil::getColorAttribute(const MObject& object, const MString& param, MColor& color, bool networked)
+{
+    MPlug plug;
+    MObject value;
+    CHECK_RETURN_STATUS(getPlug(object, param, networked, plug));
+    plug.getValue(value);
+    MFnNumericData numDataFn(value);
+    return numDataFn.getData(color.r, color.g, color.b);
+}
+
+MStatus MVGMayaUtil::setColorAttribute(const MObject& object, const MString& param,
+                                        const MColor& color, bool networked)
+{
+    MPlug p;
+    CHECK_RETURN_STATUS(getPlug(object, param, networked, p));
+    MStatus status;
+    MFnNumericData data;
+    MObject obj = data.create(MFnNumericData::k3Float, &status);
+    CHECK_RETURN_STATUS(status);
+    data.setData(color.r, color.g, color.b);
+    return p.setValue(obj);
 }
 
 MStatus MVGMayaUtil::findConnectedNodes(const MObject& object, const MString& param,
                                         std::vector<MObject>& nodes)
 {
     MStatus status;
-    MFnDependencyNode fn(object, &status);
-    CHECK_RETURN_STATUS(status);
-    MPlug plug = fn.findPlug(param, &status);
-    CHECK_RETURN_STATUS(status);
+    MPlug plug;
+    CHECK_RETURN_STATUS(getPlug(object, param, false, plug));
     if(plug.isArray())
     {
         plug.evaluateNumElements(&status);
@@ -523,6 +511,15 @@ MStatus MVGMayaUtil::findConnectedNodes(const MObject& object, const MString& pa
     return status;
 }
 
+MStatus MVGMayaUtil::getPlug(const MObject& node, const MString& plugName, bool networked, MPlug& plug)
+{
+    MStatus status;
+    MFnDependencyNode fn(node, &status);
+    CHECK_RETURN_STATUS(status);
+    plug = fn.findPlug(plugName, networked, &status);
+    return status;
+}
+
 MStatus MVGMayaUtil::getObjectByName(const MString& name, MObject& obj)
 {
     obj = MObject::kNullObj;
@@ -540,6 +537,38 @@ MStatus MVGMayaUtil::getDagPathByName(const MString& name, MDagPath& path)
     if(status == MS::kSuccess)
         status = list.getDagPath(0, path);
     return status;
+}
+
+MStatus MVGMayaUtil::addLocator(const MString& type, const MString& name, const MObject& parent, 
+                                 MObject& locator, bool createTransform )
+{
+    MStatus status;
+    MDagModifier dagModifier;
+    MObject parentNode = parent;
+    if(createTransform)
+    {
+        parentNode = dagModifier.createNode("transform", parent, &status);
+        CHECK_RETURN_STATUS(status);
+        MFnDependencyNode fn(parentNode);
+        fn.setName(name + "_transform");
+    }
+    locator = dagModifier.createNode(type, parentNode, &status);
+    CHECK_RETURN_STATUS(status);
+    MFnDependencyNode locatorFn(locator);
+    locatorFn.setName(name);
+    return dagModifier.doIt();
+}
+
+MColor MVGMayaUtil::fromQColor(const QColor& color)
+{
+    return MColor(color.redF(), color.greenF(), color.blueF(), color.alphaF());
+}
+
+QColor MVGMayaUtil::fromMColor(const MColor& color)
+{
+    QColor c;
+    c.setRgbF(color.r, color.g, color.b, color.a);
+    return c;
 }
 
 MString MVGMayaUtil::getEnv(const MString& var)

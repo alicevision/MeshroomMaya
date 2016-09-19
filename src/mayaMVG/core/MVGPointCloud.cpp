@@ -80,6 +80,24 @@ bool MVGPointCloud::isValid() const
     return _dagpath.isValid();
 }
 
+MStatus MVGPointCloud::getItems(std::vector<MVGPointCloudItem>& items) const
+{
+    MStatus status;
+    items.clear();
+    MFnParticleSystem fnParticle(_dagpath, &status);
+    CHECK_RETURN_STATUS(status)
+    MVectorArray positionArray;
+    fnParticle.position(positionArray);
+    items.resize(positionArray.length());
+    for(int i = 0; i < positionArray.length(); ++i)
+    {
+        MVGPointCloudItem& item = items[i];
+        item._id = i;
+        item._position = positionArray[i];
+    }
+    return status;
+}
+
 MStatus MVGPointCloud::getItems(std::vector<MVGPointCloudItem>& items,
                                 const MIntArray& indexes) const
 {
@@ -93,6 +111,7 @@ MStatus MVGPointCloud::getItems(std::vector<MVGPointCloudItem>& items,
     for(int i = 0; i < indexes.length(); ++i)
     {
         MVGPointCloudItem item;
+        item._id = indexes[i];
         item._position = positionArray[indexes[i]];
         items.push_back(item);
     }

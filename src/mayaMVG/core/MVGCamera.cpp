@@ -275,12 +275,17 @@ void MVGCamera::getSensorSize(MIntArray& sensorSize) const
     CHECK(status)
 }
 
-void MVGCamera::getVisibleItems(std::vector<MVGPointCloudItem>& visibleItems) const
+void MVGCamera::getVisibleIndexes(MIntArray& visibleIndexes) const
 {
     MStatus status;
-    MIntArray visibleIndexes;
     status = MVGMayaUtil::getIntArrayAttribute(_dagpath.node(), _MVG_ITEMS, visibleIndexes);
-    CHECK_RETURN(status)
+    CHECK(status)
+}
+
+void MVGCamera::getVisibleItems(std::vector<MVGPointCloudItem>& visibleItems) const
+{
+    MIntArray visibleIndexes;
+    getVisibleIndexes(visibleIndexes);
     MVGPointCloud pointCloud(MVGProject::_CLOUD);
     pointCloud.getItems(visibleItems, visibleIndexes);
 }
@@ -418,6 +423,16 @@ void MVGCamera::setLocatorScale(const double scale) const
     CHECK_RETURN(status)
     status = fnCamera.findPlug("locatorScale").setValue(scale);
     CHECK_RETURN(status)
+}
+
+void MVGCamera::setLocatorCustomColor(bool useCustomColor, const MColor& color) const
+{
+    MStatus status;
+    MFnCamera fnCamera(getDagPath(), &status);
+    CHECK_RETURN(status)
+    fnCamera.setUseObjectColor(useCustomColor);
+    if(useCustomColor)
+        status = fnCamera.setObjectColor(color); // Only works in VP 2.0
 }
 
 const std::pair<double, double> MVGCamera::getImageSize() const
