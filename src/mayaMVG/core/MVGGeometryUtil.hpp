@@ -2,8 +2,11 @@
 
 #include "mayaMVG/core/MVGPlaneKernel.hpp"
 #include "mayaMVG/core/MVGLineConstrainedPlaneKernel.hpp"
+
 #include <maya/MVector.h>
+
 #include <map>
+
 
 class MPoint;
 class MPointArray;

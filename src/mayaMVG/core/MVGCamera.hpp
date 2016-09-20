@@ -1,8 +1,6 @@
 #pragma once
 
-#undef Success // needed by eigen
 #include "mayaMVG/core/MVGNodeWrapper.hpp"
-#include "openMVG/cameras/PinholeCamera.hpp"
 #include <maya/MColor.h>
 #include <vector>
 #include <map>

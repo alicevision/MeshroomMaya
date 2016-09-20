@@ -3,6 +3,7 @@
 #include "mayaMVG/maya/context/MVGDrawUtil.hpp"
 #include "mayaMVG/maya/MVGMayaUtil.hpp"
 #include "mayaMVG/core/MVGLog.hpp"
+
 #include <maya/MHWGeometryUtilities.h>
 #include <maya/MDrawContext.h>
 #include <maya/MDataHandle.h>

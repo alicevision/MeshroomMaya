@@ -1,10 +1,12 @@
-#include "mayaMVG/maya/context/MVGManipulatorCache.hpp"
-#include "mayaMVG/maya/MVGMayaUtil.hpp"
 #include "mayaMVG/core/MVGGeometryUtil.hpp"
 #include "mayaMVG/core/MVGMesh.hpp"
 #include "mayaMVG/core/MVGLog.hpp"
+#include "mayaMVG/maya/context/MVGManipulatorCache.hpp"
+#include "mayaMVG/maya/MVGMayaUtil.hpp"
+
 #include <maya/MItMeshVertex.h>
 #include <maya/MItMeshEdge.h>
+
 #include <list>
 
 namespace mayaMVG

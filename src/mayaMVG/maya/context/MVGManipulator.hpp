@@ -1,11 +1,13 @@
 #pragma once
 
+#include "mayaMVG/core/MVGGeometryUtil.hpp"
+#include "mayaMVG/core/MVGPointCloudItem.hpp"
 #include "mayaMVG/maya/context/MVGManipulatorCache.hpp"
 #include "mayaMVG/maya/context/MVGContext.hpp"
-#include "mayaMVG/core/MVGPointCloudItem.hpp"
 #include "mayaMVG/maya/cmd/MVGEditCmd.hpp"
-#include "mayaMVG/core/MVGGeometryUtil.hpp"
+
 #include <maya/MPxManipulatorNode.h>
+
 
 namespace mayaMVG
 {

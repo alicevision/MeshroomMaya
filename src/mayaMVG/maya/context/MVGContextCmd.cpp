@@ -1,13 +1,16 @@
-#include "mayaMVG/maya/context/MVGContextCmd.hpp"
-#include "mayaMVG/maya/context/MVGContext.hpp"
+#include "MVGContextCmd.hpp"
+#include "MVGContext.hpp"
+
 #include "mayaMVG/core/MVGMesh.hpp"
 #include "mayaMVG/maya/context/MVGCreateManipulator.hpp"
 #include "mayaMVG/maya/context/MVGMoveManipulator.hpp"
 #include "mayaMVG/maya/context/MVGLocatorManipulator.hpp"
 #include "mayaMVG/maya/MVGMayaUtil.hpp"
 #include "mayaMVG/core/MVGLog.hpp"
+
 #include <maya/MPxManipulatorNode.h>
 #include <maya/MUserEventMessage.h>
+
 
 namespace
 { // empty namespace
