@@ -1,6 +1,7 @@
 #pragma once
 
 #include "mayaMVG/core/MVGNodeWrapper.hpp"
+#include <maya/MColor.h>
 #include <vector>
 #include <map>
 
@@ -42,6 +43,7 @@ public:
     void unloadImagePlane() const;
     MPoint getCenter(MSpace::Space space = MSpace::kWorld) const;
     void getSensorSize(MIntArray& sensorSize) const;
+    void getVisibleIndexes(MIntArray& visibleIndexes) const;
     void getVisibleItems(std::vector<MVGPointCloudItem>& visibleItems) const;
     void setVisibleItems(const std::vector<MVGPointCloudItem>& item) const;
     double getZoom() const;
@@ -59,6 +61,7 @@ public:
     void setFar(const double far) const;
     void setImagePlaneDepth(const double depth) const;
     void setLocatorScale(const double scale) const;
+    void setLocatorCustomColor(bool useCustomColor, const MColor& color=MColor()) const;
 
     const std::pair<double, double> getImageSize() const;
 

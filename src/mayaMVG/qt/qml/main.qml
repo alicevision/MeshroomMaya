@@ -2,8 +2,8 @@ import QtQuick 1.1
 import MyTools 1.0
 import QtDesktop 0.1
 
-Item {
-
+Rectangle {
+    color: "#444"
     // Needed to detect top focus changed
     TopFocusHandler {
         anchors.fill: parent

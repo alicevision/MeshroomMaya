@@ -25,6 +25,7 @@ public:
     virtual bool isValid() const;
 
 public:
+    MStatus getItems(std::vector<MVGPointCloudItem>& items) const;
     MStatus getItems(std::vector<MVGPointCloudItem>& items, const MIntArray& indexes) const;
     bool projectPoints(M3dView& view, const std::vector<MVGPointCloudItem>& visibleItems,
                        const MPointArray& faceCSPoints, MPointArray& faceWSPoints);

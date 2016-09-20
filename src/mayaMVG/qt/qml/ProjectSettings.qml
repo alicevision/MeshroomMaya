@@ -11,12 +11,6 @@ Item {
     property alias sliderMaxValue: m.sliderMaxValue
     signal settingProjectLoaded
 
-    // UI params
-    property int labelWidth: 160
-    property int fieldWidth: 50
-    property int fieldMargin: 4
-    property int buttonWidth: 50
-
     QtObject {
         id: m
         property variant project
@@ -26,7 +20,10 @@ Item {
         property int sliderMaxValue
         property color textColor: "white"
         property int textSize: 11
+        property variant leftPanel: m.project.panelList.get(0)
+        property variant rightPanel: m.project.panelList.get(1)
     }
+
     opacity: 0  // needed for animation
 
     StateGroup {
@@ -40,7 +37,7 @@ Item {
             State {
                 name: "OPEN"
                 when: m.isOpen
-                PropertyChanges { target: settings; height: 380; }
+                PropertyChanges { target: settings; height: 395; }
                 PropertyChanges { target: settings; opacity: 1; }
             }
         ]
@@ -57,234 +54,122 @@ Item {
             title: "Settings"
             anchors.fill: parent
             anchors.margins: 5
-            ColumnLayout {
+            Column {
                 anchors.fill: parent
+                spacing: 4
+                property int settingsEntryWidth: width - 40
                 // browse button
                 BrowseDirectory {
                     project: m.project
-                    Layout.minimumHeight: 25
-                    implicitWidth: parent.width
+                    width: parent.width
                     onBrowserProjectLoaded: settingProjectLoaded()
                 }
 
                 // Toolbar
-                Item {
-                    implicitWidth: parent.width
-                    Layout.minimumHeight: 25
-                    RowLayout {
-                        anchors.fill: parent
-                        // Clear blind data
-                        Item {
-                            implicitWidth: 30
-                            implicitHeight: 30
-                            Layout.minimumHeight: 30
-                            ToolButton {
-                                iconSource: "img/clearBD.png"
-                                height: parent.height
-                                width: parent.height
-                                tooltip: "Clear all 2D points (triangulation)"
-                                MouseArea {
-                                    anchors.fill: parent
-                                    onClicked: m.project.clearAllBlindData()
-                                }
-                            }
-                        }
-                        // Select closest cam from persp
-                        Item {
-                            implicitWidth: 30
-                            implicitHeight: 30
-                            Layout.minimumHeight: 30
-
-                            ToolButton {
-                                iconSource: "img/greenCamera.png"
-                                tooltip: "Select closest cam"
-                                height: parent.height
-                                width: parent.height
-                                MouseArea {
-                                    anchors.fill: parent
-                                    onClicked: m.project.selectClosestCam()
-                                }
-                            }
-                        }
-
-                        // Reorient scene
-                        Item {
-                            implicitWidth: 30
-                            implicitHeight: 30
-                            Layout.minimumHeight: 30
-
-                            ToolButton {
-                                iconSource: "img/locatorMode.png"
-                                tooltip: "Reorient scene"
-                                height: parent.height
-                                width: parent.height
-                                MouseArea {
-                                    anchors.fill: parent
-                                    onClicked: m.project.applySceneTransformation()
-                                }
-                            }
-                        }
-                        Rectangle {
-                            Layout.horizontalSizePolicy: Layout.Expanding
-                        }
+                Row {
+                    height: childrenRect.height
+                    spacing: 4
+                    // Clear blind data
+                    ToolButton {
+                        implicitWidth: 30
+                        implicitHeight: 30
+                        iconSource: "img/clearBD.png"
+                        tooltip: "Clear all 2D points (triangulation)"
+                        onClicked: m.project.clearAllBlindData()
+                    }
+                    // Select closest cam from persp
+                    ToolButton {
+                        implicitHeight: 30
+                        implicitWidth: 30
+                        iconSource: "img/greenCamera.png"
+                        tooltip: "Select closest cam"
+                        onClicked: m.project.selectClosestCam()
+                    }
+                    // Reorient scene
+                    ToolButton {
+                        implicitHeight: 30
+                        implicitWidth: 30
+                        iconSource: "img/locatorMode.png"
+                        tooltip: "Reorient scene"
+                        onClicked: m.project.applySceneTransformation()
                     }
                 }
 
-                // thumbnail slider
-                Item {
-                    Layout.minimumHeight: 25
-                    implicitWidth: parent.width
-                    RowLayout {
-                        anchors.fill: parent
-                        Item {
-                            implicitWidth: labelWidth
-                            implicitHeight: parent.height
-                            Text {
-                                text: "Thumbnail size"
-                                color: m.textColor
-                                font.pointSize: m.textSize
-                            }
-                        }
-                        Slider {
-                            Layout.horizontalSizePolicy: Layout.Expanding
-                            minimumValue: m.sliderMinValue
-                            maximumValue: m.sliderMaxValue
-                            value: m.thumbSize
-                            onValueChanged: {
-                                m.thumbSize = value
-                            }
-                        }
-                    }
-
-                    TooltipArea {
-                        anchors.fill: parent
-                        text: "Thumbnail size"
+                MSettingsEntry {
+                    label: "Thumbnail Size"
+                    width: parent.settingsEntryWidth
+                    Slider  {
+                        width: parent.width
+                        minimumValue: m.sliderMinValue
+                        maximumValue: m.sliderMaxValue
+                        value: m.thumbSize
+                        onValueChanged: m.thumbSize = value
                     }
                 }
 
-                Item {
-                    id: displayPointCloudItem
-                    Layout.minimumHeight: 25
-                    implicitWidth: parent.width
-                    property variant leftPanel: m.project.panelList.get(0)
-                    property variant rightPanel: m.project.panelList.get(1)
+                MSettingsEntry {
+                    label: "Display Point Cloud"
+                    width: parent.settingsEntryWidth
 
-                    RowLayout {
-                        anchors.fill: parent
-                        Item {
-                            implicitWidth: labelWidth
-                            implicitHeight: parent.height
-
-                            Text {
-                                text: "Display point cloud"
-                                color: m.textColor
-                                font.pointSize: m.textSize
-                            }
-                        }
-                        
-                        CheckBox {
-                            id: pointCloudLCheckBox
-                            implicitHeight: parent.height
-                            implicitWidth: parent.height
-                            checked: displayPointCloudItem.leftPanel.isPointCloudDisplayed
-                            MouseArea {
-                                anchors.fill: parent
-                                onClicked: displayPointCloudItem.leftPanel.isPointCloudDisplayed = !pointCloudLCheckBox.checked
-                            }
-                        }
-                        Text {
-                            width: text.length
-                            text: displayPointCloudItem.leftPanel.label
-                            color: m.textColor
-                            font.pointSize: m.textSize
-                            MouseArea {
-                                anchors.fill: parent
-                                onClicked: displayPointCloudItem.leftPanel.isPointCloudDisplayed = !pointCloudLCheckBox.checked
-                            }
-                        }
-                        CheckBox {
-                            id: pointCloudRCheckBox
-                            implicitHeight: parent.height
-                            implicitWidth: parent.height
-                            checked: displayPointCloudItem.rightPanel.isPointCloudDisplayed
-                            MouseArea {
-                                anchors.fill: parent
-                                onClicked: displayPointCloudItem.rightPanel.isPointCloudDisplayed = !pointCloudRCheckBox.checked
-                            }
-                        }
-                        Text {
-                            Layout.horizontalSizePolicy: Layout.Expanding
-                            width: text.length
-                            text: displayPointCloudItem.rightPanel.label
-                            color: m.textColor
-                            font.pointSize: m.textSize
-                            MouseArea {
-                                anchors.fill: parent
-                                onClicked: displayPointCloudItem.rightPanel.isPointCloudDisplayed = !pointCloudRCheckBox.checked
-                            }
-                        }
+                    MCheckBox {
+                        width: 40
+                        text: m.leftPanel.label
+                        checked: m.leftPanel.isPointCloudDisplayed
+                        onClicked: m.leftPanel.isPointCloudDisplayed = !m.leftPanel.isPointCloudDisplayed
+                    }
+                    MCheckBox {
+                        width: 40
+                        text: m.rightPanel.label
+                        checked: m.rightPanel.isPointCloudDisplayed
+                        onClicked: m.rightPanel.isPointCloudDisplayed = !m.rightPanel.isPointCloudDisplayed
                     }
                 }
 
-                // Active synchro
-                Item {
-                    implicitWidth: parent.width
-                    Layout.minimumHeight: 25
-                    RowLayout {
-                        anchors.fill: parent
-                        Item {
-                            implicitWidth: labelWidth
-                            implicitHeight: parent.height
-                            Text {
-                                text: "Active synchronization"
-                                verticalAlignment: Text.AlignVCenter
-                                color: m.textColor
-                                font.pointSize: m.textSize
-                            }
+                MSettingsEntry {
+                    label: "Cam. Visible Points"
+                    width: parent.width - 40
+                    ComboBox {
+                        implicitWidth: 120
+                        model: ListModel {
+                            ListElement { text: "None" }
+                            ListElement { text: "Both" }
+                            ListElement { text: "Each" }
+                            ListElement { text: "Common Points Only" }
                         }
-                        CheckBox {
-                            id: cameraSynchroCheckBox
-                            implicitHeight: parent.height
-                            implicitWidth: parent.height
-                            checked: m.project.activeSynchro
-                            
-                        }
-                        MouseArea {
-                            anchors.fill: parent
-                            onClicked: m.project.activeSynchro = !cameraSynchroCheckBox.checked
-                        }
-
-                        Rectangle {
-                            implicitWidth: 80
-                            Layout.horizontalSizePolicy: Layout.Expanding
-                            color: "blue"
-                        }
+                        activeFocusOnPress: true
+                        enabled: m.project.projectDirectory !== ""
+                        selectedIndex: m.project.cameraPointsDisplayMode
+                        onSelectedIndexChanged: if(activeFocus) m.project.cameraPointsDisplayMode = selectedIndex
                     }
-                    TooltipArea {
-                        anchors.fill: parent
-                        text: "Camera synchronization"
+                }
+
+                MSettingsEntry {
+                    width: parent.settingsEntryWidth
+                    MCheckBox {
+                        implicitWidth: parent.width
+                        Layout.minimumHeight: implicitHeight
+
+                        text: "Active Synchronization"
+                        tooltip: "Camera Synchronization"
+                        checked: m.project.activeSynchro
+                        onClicked: m.project.activeSynchro = !m.project.activeSynchro
                     }
                 }
 
                 // Camera parameters
                 CameraSettings {
                     implicitWidth: parent.width
-                    Layout.minimumHeight: 180
+                    height: 180
                     project: m.project
                 }
 
                 // Version
-                Item
-                {
-                    implicitWidth: parent.width
-                    Layout.minimumHeight: 25
-                    Text {
-                        anchors.fill: parent
-                        text: "MayaMVG " + m.project.getPluginVersion()
-                        color: m.textColor
-                        font.italic: true
-                        horizontalAlignment: Text.AlignRight
-                    }
+                Text {
+                    width: parent.width
+                    text: "MayaMVG " + m.project.getPluginVersion()
+                    color: m.textColor
+                    font.italic: true
+                    horizontalAlignment: Text.AlignRight
                 }
             }
         }

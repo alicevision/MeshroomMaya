@@ -5,22 +5,77 @@
 #include "mayaMVG/qt/MVGMeshWrapper.hpp"
 #include "mayaMVG/maya/MVGMayaUtil.hpp"
 #include "mayaMVG/core/MVGLog.hpp"
+#include "mayaMVG/core/MVGPointCloud.hpp"
 #include "mayaMVG/maya/context/MVGContextCmd.hpp"
 #include "mayaMVG/maya/context/MVGContext.hpp"
 #include "mayaMVG/maya/context/MVGMoveManipulator.hpp"
 #include "mayaMVG/maya/MVGDummyLocator.h"
+#include "mayaMVG/maya/MVGCameraPointsLocator.hpp"
 #include "mayaMVG/maya/cmd/MVGSelectClosestCamCmd.hpp"
+#include "Eigen/src/StlSupport/StdVector.h"
 #include <maya/MQtUtil.h>
 #include <maya/MFnTypedAttribute.h>
 #include <maya/MFnTransform.h>
+#include <maya/MFnIntArrayData.h>
+#include <maya/MDagPath.h>
+#include <maya/MNodeMessage.h>
+#include <set>
 
 namespace mayaMVG
 {
 
-MVGProjectWrapper::MVGProjectWrapper()
+namespace  // Utility functions
 {
-    MVGPanelWrapper* leftPanel = new MVGPanelWrapper("mvgLPanel", "Left");
-    MVGPanelWrapper* rightPanel = new MVGPanelWrapper("mvgRPanel", "Right");
+
+/**
+ * Give the number of occurrences of each element in the given sets.
+ * 
+ * @param sets the sets to consider
+ * @return a map element => count
+ */
+template <typename T>
+std::map<T, int> countElements(const std::vector< std::set<T> >& sets)
+{  
+    std::map<T, int> idWeights;
+    for(typename std::vector< std::set<T> >::const_iterator setsIt = sets.begin(); setsIt != sets.end(); ++setsIt)
+    {
+        for(typename std::set<T>::const_iterator it = setsIt->begin(); it != setsIt->end(); ++it)
+        {
+            if(idWeights.find(*it) != idWeights.end())
+                idWeights[*it]++;
+            else
+                idWeights[*it] = 1;
+        }
+    }
+    return idWeights;
+}
+
+/**
+ * Returns the intersection (common elements) of the given sets.
+ * 
+ * @param sets the sets to consider
+ * @return the intersection of all the sets
+ */
+template <typename T>
+std::set<T> setsIntersection(const std::vector< std::set<T> >& sets)
+{
+    std::set<T> intersection;
+    const std::map<T, int> weights = countElements(sets);
+    for(typename std::map<T, int>::const_iterator it = weights.begin(); it != weights.end(); ++it)
+    {
+        if((*it).second > 1)
+            intersection.insert((*it).first);
+    }
+    return intersection;
+}
+
+}
+
+MVGProjectWrapper::MVGProjectWrapper():
+_cameraPointsLocatorCB(0)
+{
+    MVGPanelWrapper* leftPanel = new MVGPanelWrapper("mvgLPanel", "Left", MVGMayaUtil::fromMColor(MVGProject::_LEFT_PANEL_DEFAULT_COLOR));
+    MVGPanelWrapper* rightPanel = new MVGPanelWrapper("mvgRPanel", "Right", MVGMayaUtil::fromMColor(MVGProject::_RIGHT_PANEL_DEFAULT_COLOR));
     _panelList.append(leftPanel);
     _panelList.append(rightPanel);
     // Initialize currentContext
@@ -48,6 +103,7 @@ MVGProjectWrapper::MVGProjectWrapper()
 
 MVGProjectWrapper::~MVGProjectWrapper()
 {
+    clear();
 }
 
 const QString MVGProjectWrapper::getProjectDirectory() const
@@ -101,6 +157,43 @@ void MVGProjectWrapper::setProjectDirectory(const QString& directory)
     Q_EMIT projectDirectoryChanged();
 }
 
+const int MVGProjectWrapper::getCameraPointsDisplayMode() const 
+{
+    MObject locator;
+    MVGMayaUtil::getObjectByName(MVGProject::_CAMERA_POINTS_LOCATOR.c_str(), locator);
+    if(locator.isNull())
+        return 0;
+    int displayMode;
+    MVGMayaUtil::getIntAttribute(locator, "mvgDisplayMode", displayMode);
+    return displayMode;
+}
+
+void MVGProjectWrapper::setCameraPointsDisplayMode(int displayMode)
+{
+    if(getCameraPointsDisplayMode() == displayMode)
+        return;
+    MObject locator;
+    MVGMayaUtil::getObjectByName(MVGProject::_CAMERA_POINTS_LOCATOR.c_str(), locator);
+    MVGMayaUtil::setIntAttribute(locator, "mvgDisplayMode", displayMode, false);
+    // Notify signal emitted in onCameraPointsLocatorAttrChanged
+}
+
+void onCameraPointsLocatorAttrChanged(MNodeMessage::AttributeMessage msg, MPlug& plug, MPlug& other, void* data)
+{
+    MVGProjectWrapper* wrapper = static_cast<MVGProjectWrapper*>(data);
+    if(msg & MNodeMessage::kAttributeSet)
+    {
+        if(plug.partialName() == "mvgdm")
+            wrapper->emitCameraPointsDisplayModeChanged();
+        // Handle left/right color attributes changes
+        if(plug.partialName() == "mvglc" || plug.partialName() == "mvgrc")
+        {
+            const QString viewName = plug.partialName() == "mvglc" ? "mvgLPanel" : "mvgRPanel";
+            wrapper->updatePanelColor(viewName);
+        }
+    }
+}
+
 QString MVGProjectWrapper::openFileDialog() const
 {
     MString directoryPath;
@@ -151,6 +244,8 @@ void MVGProjectWrapper::loadExistingProject()
     if(projects.empty())
         return;
     _project = projects.front();
+    
+    initCameraPointsLocator();
     reloadMVGCamerasFromMaya();
     reloadMVGMeshesFromMaya();
 
@@ -213,6 +308,9 @@ void MVGProjectWrapper::loadABC(const QString& abcFilePath)
     MObject cloudParent = rootDagPath.child(1);
     MDagPath cloudGroupPath;
     MDagPath::getAPathTo(cloudParent, cloudGroupPath);
+
+    // Camera points locator
+    initCameraPointsLocator();
 
     // Point cloud
     if(cloudGroupPath.childCount() == 0)
@@ -374,12 +472,120 @@ void MVGProjectWrapper::setCameraToView(QObject* camera, const QString& viewName
     _project.pushLoadCurrentImagePlaneCommand(viewName.toStdString());
     // Set UI
     foreach(MVGCameraWrapper* c, _cameraList.asQList<MVGCameraWrapper>())
-        c->setInView(viewName, false);
-    MVGCameraWrapper* cam = qobject_cast<MVGCameraWrapper*>(camera);
-    cam->setInView(viewName, true);
+    {
+        if(c->isInView(viewName))
+        {
+            c->setInView(viewName, false);
+            c->getCamera().setLocatorCustomColor(false);
+        }
+    }
     // Update active camera
-    _activeCameraNameByView[viewName.toStdString()] =
-        cameraWrapper->getDagPathAsString().toStdString();
+    _activeCameraNameByView[viewName.toStdString()] = cameraWrapper->getDagPathAsString().toStdString();
+    
+    // Update data from new configuration
+    for(std::map<std::string, std::string>::const_iterator camIt = _activeCameraNameByView.begin();
+        camIt != _activeCameraNameByView.end(); ++camIt)
+    {
+        const QString view = QString::fromStdString(camIt->first);
+        MVGCameraWrapper* camWrapper = cameraFromViewName(view);
+        if(!camWrapper)
+            return;
+        camWrapper->setInView(view, true);
+        const MColor color = MVGMayaUtil::fromQColor(panelFromViewName(view)->getColor());
+        camWrapper->getCamera().setLocatorCustomColor(true, color);
+    }
+
+    updatePointsVisibility();
+}
+
+void MVGProjectWrapper::initCameraPointsLocator() 
+{
+    MObject cpLocator;
+    MStatus status;
+    MVGMayaUtil::getObjectByName(MVGProject::_CAMERA_POINTS_LOCATOR.c_str(), cpLocator);
+    // If the locator does not exist, create it
+    if(cpLocator.isNull())
+    {
+        status = MVGMayaUtil::addLocator("MVGCameraPointsLocator", MVGProject::_CAMERA_POINTS_LOCATOR.c_str(), _project.getObject(), cpLocator);
+        CHECK_RETURN(status);
+    }
+    _cameraPointsLocatorCB = MNodeMessage::addAttributeChangedCallback(cpLocator, onCameraPointsLocatorAttrChanged, (void*)this);
+}
+
+void MVGProjectWrapper::updatePointsVisibility()
+{
+    std::vector< std::set<int> > pointsSets;
+    pointsSets.reserve(_activeCameraNameByView.size());
+    std::map< std::string, std::set<int>* > pointsPerCamera;
+    for(std::map<std::string, std::string>::const_iterator camIt = _activeCameraNameByView.begin();
+            camIt != _activeCameraNameByView.end(); ++camIt)
+    {
+        MVGCameraWrapper* camWrapper = cameraFromViewName(QString::fromStdString(camIt->first));
+        if(!camWrapper)
+            return;
+        std::set<int> visibility;
+        MIntArray visibleIndexes;
+        camWrapper->getCamera().getVisibleIndexes(visibleIndexes);
+        for(int i = 0; i < visibleIndexes.length(); ++i)
+            visibility.insert(visibleIndexes[i]);
+        pointsSets.push_back(visibility);
+        // pointsSets won't be resized (because reserved);
+        // we can use pointers to avoid data duplication
+        pointsPerCamera[camIt->second] = &pointsSets.back();
+    }
+    
+    // Remove common points from individual camera points lists
+    // to avoid z-fighting when drawing them
+    const std::set<int> intersection = setsIntersection(pointsSets);
+    for(std::map< std::string, std::set<int>* >::iterator pointsIt = pointsPerCamera.begin(); 
+            pointsIt != pointsPerCamera.end(); ++pointsIt )
+    {
+        for(std::set<int>::const_iterator it = intersection.begin(); it != intersection.end(); ++it)
+        {
+            pointsIt->second->erase(*it);
+        }
+    }
+    
+    MObject locator;
+    MStatus status;
+    status = MVGMayaUtil::getObjectByName(MVGProject::_CAMERA_POINTS_LOCATOR.c_str(), locator);
+    CHECK_RETURN(status)
+    MDagPath locatorPath;
+    status = MDagPath::getAPathTo(locator, locatorPath);
+    CHECK_RETURN(status)
+
+    std::vector<MVGPointCloudItem> allPoints;
+    MVGPointCloud pointCloud(MVGProject::_CLOUD);
+    pointCloud.getItems(allPoints);
+    
+    // PointCloudItem positions are in world space;
+    // multiply them by the locator inverse matrix to be independent from the locator transform
+    const MMatrix locatorInverseMatrix = locatorPath.inclusiveMatrixInverse().transpose();
+    
+    // Fill locator points attributes (based on panel name)
+    // TODO: make it more generic
+    for(std::map<std::string, std::string>::const_iterator camIt = _activeCameraNameByView.begin();
+            camIt != _activeCameraNameByView.end(); ++camIt)
+    {
+        const std::string& camName = camIt->second;
+        if(camName.empty())
+            return;
+        const std::string& attrName = camIt->first + "Points";
+        const std::set<int>* cameraPoints = pointsPerCamera[camName];
+        MPointArray array;
+        for(std::set<int>::const_iterator it = cameraPoints->begin(); it != cameraPoints->end(); ++it)
+        {
+            array.append(locatorInverseMatrix * allPoints[*it]._position);
+        }
+        MVGMayaUtil::setPointArrayAttribute(locator, attrName.c_str(), array);
+    }
+    
+    { // Common points
+        MPointArray array;
+        for(std::set<int>::const_iterator it = intersection.begin(); it != intersection.end(); ++it)
+            array.append(locatorInverseMatrix * allPoints[*it]._position);
+        MVGMayaUtil::setPointArrayAttribute(locator, "mvgCommonPoints", array);
+    }
 }
 
 void MVGProjectWrapper::setCamerasNear(const double near)
@@ -434,6 +640,9 @@ void MVGProjectWrapper::clear()
     _meshesList.clear();
     _meshesByName.clear();
     _selectedMeshes.clear();
+    
+    if(_cameraPointsLocatorCB)
+        MNodeMessage::removeCallback(_cameraPointsLocatorCB);
 }
 
 void MVGProjectWrapper::clearAndUnloadImageCache()
@@ -538,6 +747,11 @@ void MVGProjectWrapper::emitCurrentUnitChanged()
     Q_EMIT currentUnitChanged();
 }
 
+void MVGProjectWrapper::emitCameraPointsDisplayModeChanged()
+{
+    Q_EMIT cameraPointsDisplayModeChanged();
+}
+
 void MVGProjectWrapper::setEditMode(const int mode)
 {
     if(_editMode == mode)
@@ -569,6 +783,35 @@ void MVGProjectWrapper::reloadMVGCamerasFromMaya()
         _camerasByName[it->getDagPathAsString()] = cameraWrapper;
     }
     // TODO : Camera selection
+}
+
+void MVGProjectWrapper::updatePanelColor(const QString& viewName)
+{
+    // Update panel's color
+    MVGPanelWrapper* panel = panelFromViewName(viewName);
+    panel->onColorAttributeChanged();
+    // Update camera locator's color if any
+    MVGCameraWrapper* camWrapper = cameraFromViewName(viewName);
+    if(!camWrapper)
+        return;
+    const MColor color = MVGMayaUtil::fromQColor(panelFromViewName(viewName)->getColor());
+    camWrapper->getCamera().setLocatorCustomColor(true, color);
+}
+
+MVGCameraWrapper* MVGProjectWrapper::cameraFromViewName(const QString& viewName)
+{
+    const std::string camName = _activeCameraNameByView[viewName.toStdString()];
+    if(camName.empty())
+        return NULL;
+    return _camerasByName[camName];
+}
+
+MVGPanelWrapper* MVGProjectWrapper::panelFromViewName(const QString& viewName)
+{
+    foreach(MVGPanelWrapper* p, _panelList.asQList<MVGPanelWrapper>())
+        if(p->getName() == viewName)
+            return p;
+    return NULL;
 }
 
 void MVGProjectWrapper::reloadMVGMeshesFromMaya()

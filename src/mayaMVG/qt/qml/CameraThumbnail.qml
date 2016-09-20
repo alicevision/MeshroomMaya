@@ -12,8 +12,6 @@ Rectangle {
         property variant project
         property variant camera
         property string source: "img/Folder.png"
-        property color selectedColor: "#fec04c"
-        property color hoverColor: "white"
         property color normalColor: "transparent"
     }
 
@@ -58,26 +56,26 @@ Rectangle {
             orientation: ListView.Horizontal
             interactive: false
             property int itemWidth: (parent.width - spacing) / m.project.panelList.count
-            spacing: 2
             delegate: Rectangle {
                 id: cameraSelection
                 height: parent.height
                 width: viewList.itemWidth
                 color: m.normalColor
-                opacity: 0.6
+                opacity: 0.7
                 property variant views: m.camera.views
                 property bool isInView: false
                 onViewsChanged: isInView = m.camera.isInView(model.modelData.name)
+
                 states: [
                     State {
                         name: "HOVER"
                         when: camMouseArea.containsMouse
-                        PropertyChanges { target: cameraSelection; color: m.hoverColor}
+                        PropertyChanges { target: cameraSelection; color: Qt.lighter(model.modelData.color, 1.4)}
                     },
                     State {
                         name: "SELECTED"
                         when: cameraSelection.isInView
-                        PropertyChanges{ target: cameraSelection; color: m.selectedColor}
+                        PropertyChanges{ target: cameraSelection; color: model.modelData.color}
                     }
                 ]
                 MouseArea {

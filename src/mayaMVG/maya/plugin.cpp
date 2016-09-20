@@ -14,6 +14,7 @@
 #include "mayaMVG/maya/context/MVGMoveManipulatorDrawOverride.hpp"
 #include "mayaMVG/maya/mesh/MVGMeshEditNode.hpp"
 #include "mayaMVG/maya/MVGDummyLocator.h"
+#include "mayaMVG/maya/MVGCameraPointsLocator.hpp"
 #include <maya/MFnPlugin.h>
 #include <maya/MCallbackIdArray.h>
 #include <maya/MEventMessage.h>
@@ -156,6 +157,8 @@ MStatus initializePlugin(MObject obj)
                               &MVGLocatorManipulator::_drawDbClassification))
     CHECK(plugin.registerNode("MVGDummyLocator", MVGDummyLocator::_id, &MVGDummyLocator::creator,
                               &MVGDummyLocator::initialize, MPxNode::kLocatorNode))
+    CHECK(plugin.registerNode("MVGCameraPointsLocator", MVGCameraPointsLocator::_id, &MVGCameraPointsLocator::creator,
+                              &MVGCameraPointsLocator::initialize, MPxNode::kLocatorNode, &MVGCameraPointsLocator::classification))
     CHECK(plugin.registerNode("MVGMeshEditNode", MVGMeshEditNode::_id, MVGMeshEditNode::creator,
                               MVGMeshEditNode::initialize))
 
@@ -166,6 +169,10 @@ MStatus initializePlugin(MObject obj)
     CHECK(MHWRender::MDrawRegistry::registerDrawOverrideCreator(
         MVGMoveManipulator::_drawDbClassification, MVGMoveManipulator::_drawRegistrantID,
         MVGMoveManipulatorDrawOverride::creator))
+            
+    CHECK(MHWRender::MDrawRegistry::registerDrawOverrideCreator(
+        MVGCameraPointsLocator::classification, MVGCameraPointsLocator::registrantId,
+        MVGCameraPointsDrawOverride::creator)) 
 
     // Register Maya callbacks
     MCallbackId id;
@@ -247,12 +254,15 @@ MStatus uninitializePlugin(MObject obj)
     CHECK(plugin.deregisterNode(MVGLocatorManipulator::_id))
     CHECK(plugin.deregisterNode(MVGMeshEditNode::_id))
     CHECK(plugin.deregisterNode(MVGDummyLocator::_id))
+    CHECK(plugin.deregisterNode(MVGCameraPointsLocator::_id))
 
     // Deregister draw overrides
     CHECK(MHWRender::MDrawRegistry::deregisterDrawOverrideCreator(
         MVGCreateManipulator::_drawDbClassification, MVGCreateManipulator::_drawRegistrantID))
     CHECK(MHWRender::MDrawRegistry::deregisterDrawOverrideCreator(
         MVGMoveManipulator::_drawDbClassification, MVGMoveManipulator::_drawRegistrantID))
+    CHECK(MHWRender::MDrawRegistry::deregisterDrawOverrideCreator(
+    MVGCameraPointsLocator::classification, MVGCameraPointsLocator::registrantId))
 
     return status;
 }

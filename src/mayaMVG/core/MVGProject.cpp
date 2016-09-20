@@ -67,6 +67,10 @@ std::string MVGProject::_CLOUD = "mvgPointCloud";
 std::string MVGProject::_MESH = "mvgMesh";
 std::string MVGProject::_PROJECT = "mvgRoot";
 std::string MVGProject::_LOCATOR = "mvgLocator";
+std::string MVGProject::_CAMERA_POINTS_LOCATOR = "mvgCameraPointsLocator";
+MColor MVGProject::_LEFT_PANEL_DEFAULT_COLOR = MColor(0.29f, 0.57f, 1.0f);
+MColor MVGProject::_RIGHT_PANEL_DEFAULT_COLOR = MColor(1.0f, 1.0f, 0.35f);
+MColor MVGProject::_COMMON_POINTS_DEFAULT_COLOR = MColor(0.47f, 1.0f, 0.47f);
 MString MVGProject::_MVG_PROJECTPATH = "mvgProjectPath";
 
 // Image cache

@@ -28,6 +28,9 @@ class MVGProjectWrapper : public QObject
     Q_PROPERTY(bool isProjectLoading READ getIsProjectLoading NOTIFY isProjectLoadingChanged);
     Q_PROPERTY(bool activeSynchro READ getActiveSynchro WRITE setActiveSynchro NOTIFY
                    activeSynchroChanged);
+    
+    Q_PROPERTY(int cameraPointsDisplayMode READ getCameraPointsDisplayMode 
+               WRITE setCameraPointsDisplayMode NOTIFY cameraPointsDisplayModeChanged)
 
 public:
     MVGProjectWrapper();
@@ -38,6 +41,8 @@ public Q_SLOTS:
     void setProjectDirectory(const QString& directory);
     const int getEditMode() const { return _editMode; }
     const int getMoveMode() const { return _moveMode; }
+    const int getCameraPointsDisplayMode() const;
+    void setCameraPointsDisplayMode(int mode);
     QObjectListModel* getCameraModel() { return &_cameraList; }
     QObjectListModel* getMeshModel() { return &_meshesList; }
     QStringList& getSelectedCameras() { return _selectedCameras; }
@@ -65,6 +70,7 @@ Q_SIGNALS:
     void activeSynchroChanged();
     void centerCameraListByIndex(const int cameraIndex);
     void centerMeshListByIndex(const int meshIndex);
+    void cameraPointsDisplayModeChanged();
 
 public:
     Q_INVOKABLE QString openFileDialog() const;
@@ -109,12 +115,18 @@ public:
     void removeMeshFromUI(const MDagPath& meshPath);
     // Signals
     void emitCurrentUnitChanged();
+    void emitCameraPointsDisplayModeChanged();
     // Setter not callable from QML
     void setEditMode(const int mode);
     void setMoveMode(const int mode);
-
+    void updatePanelColor(const QString& viewName);
+    
 private:
+    void initCameraPointsLocator();
+    void updatePointsVisibility();
     void reloadMVGCamerasFromMaya();
+    MVGCameraWrapper* cameraFromViewName(const QString& viewName);
+    MVGPanelWrapper* panelFromViewName(const QString& viewName);
 
 private:
     QObjectListModel _cameraList;
@@ -138,6 +150,8 @@ private:
     /// map view to active camera
     std::map<std::string, std::string> _activeCameraNameByView;
     QMap<MDistance::Unit, QString> _unitMap;
+    
+    MCallbackId _cameraPointsLocatorCB;
 };
 
 } // namespace
