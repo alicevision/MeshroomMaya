@@ -87,102 +87,12 @@ MACRO( MAYA_SET_PLUGIN_PROPERTIES target)
 ENDMACRO(MAYA_SET_PLUGIN_PROPERTIES)
 
 
-SET(_maya_TEST_VERSIONS)
-SET(_maya_KNOWN_VERSIONS "2008" "2009" "2010" "2011" "2012" "2013" "2014" "2015")
-
 IF(APPLE)
   SET(MAYA_PLUGIN_SUFFIX ".bundle")
 ELSEIF(WIN32)
   SET(MAYA_PLUGIN_SUFFIX ".mll")
 ELSE() #LINUX
   SET(MAYA_PLUGIN_SUFFIX ".so")
-ENDIF()
-
-# generate list of versions to test
-IF(Maya_FIND_VERSION_EXACT)
-  LIST(APPEND _maya_TEST_VERSIONS "${Maya_FIND_VERSION}")
-ELSE(Maya_FIND_VERSION_EXACT)
-  IF(Maya_FIND_VERSION)
-    FOREACH(version ${_maya_KNOWN_VERSIONS})
-      IF(NOT "${version}" VERSION_LESS "${Maya_FIND_VERSION}")
-        LIST(APPEND _maya_TEST_VERSIONS "${version}" )
-      ENDIF()
-    ENDFOREACH(version)
-  ELSE(Maya_FIND_VERSION)
-    SET(_maya_TEST_VERSIONS ${_maya_KNOWN_VERSIONS})
-  ENDIF(Maya_FIND_VERSION)
-ENDIF(Maya_FIND_VERSION_EXACT)
-
-SET(_maya_TEST_PATHS)
-
-# generate list of paths to test
-FOREACH(version ${_maya_TEST_VERSIONS})
-  IF(APPLE)
-    LIST(APPEND _maya_TEST_PATHS "/Applications/Autodesk/maya${version}/Maya.app/Contents")
-  ELSEIF(WIN32)
-    SET(_maya_TEST_PATHS ${_maya_TEST_PATHS}
-      "$ENV{PROGRAMFILES}/Autodesk/Maya${version}-x64"
-      "$ENV{PROGRAMFILES}/Autodesk/Maya${version}"
-      "C:/Program Files/Autodesk/Maya${version}-x64"
-      "C:/Program Files/Autodesk/Maya${version}"
-      "C:/Program Files (x86)/Autodesk/Maya${version}"
-   )
-  ELSE() #Linux
-    SET(_maya_TEST_PATHS ${_maya_TEST_PATHS}
-      "/usr/autodesk/maya${version}-x64"
-      "/usr/autodesk/maya${version}"
-    )
-  ENDIF()
-ENDFOREACH(version)
-
-# search for maya within the MAYA_LOCATION and PATH env vars and test paths
-FIND_PROGRAM(MAYA_EXECUTABLE maya
-  PATHS
-    $ENV{MAYA_LOCATION}
-    ${_maya_TEST_PATHS}
-  PATH_SUFFIXES bin
-  NO_SYSTEM_ENVIRONMENT_PATH
-  DOC "Maya's executable path"
-)
-
-IF(MAYA_EXECUTABLE)
-  # TODO: use GET_FILENAME_COMPONENT here
-  STRING(REGEX REPLACE "/bin/maya.*" "" MAYA_LOCATION "${MAYA_EXECUTABLE}")
-
-  STRING(REGEX MATCH "20[0-9][0-9]" MAYA_VERSION "${MAYA_LOCATION}")
-
-  IF(Maya_FIND_VERSION)
-    # test that we've found a valid version
-    LIST(FIND _maya_TEST_VERSIONS ${MAYA_VERSION} _maya_FOUND_INDEX)
-    IF(${_maya_FOUND_INDEX} EQUAL -1)
-      MESSAGE(STATUS "Found Maya version ${MAYA_VERSION}, but requested at least ${Maya_FIND_VERSION}. Re-searching without environment variables...")
-      SET(MAYA_LOCATION NOTFOUND)
-      # search again, but don't use environment variables
-      # (these should be only paths we constructed based on requested version)
-      FIND_PATH(MAYA_LOCATION maya
-        PATHS
-          ${_maya_TEST_PATHS}
-        PATH_SUFFIXES bin
-        DOC "Maya's Base Directory"
-        NO_SYSTEM_ENVIRONMENT_PATH
-      )
-      SET(MAYA_EXECUTABLE "${MAYA_LOCATION}/bin/maya" CACHE PATH "Maya's executable path")
-      STRING(REGEX MATCH "20[0-9][0-9]" MAYA_VERSION "${MAYA_LOCATION}")
-    #ELSE: error?
-    ENDIF(${_maya_FOUND_INDEX} EQUAL -1)
-  ENDIF(Maya_FIND_VERSION)
-ENDIF(MAYA_EXECUTABLE)
-
-# Qt Versions
-IF(${MAYA_VERSION} STREQUAL "2011")
-  SET(MAYA_QT_VERSION_SHORT CACHE STRING "4.5")
-  SET(MAYA_QT_VERSION_LONG  CACHE STRING "4.5.3")
-ELSEIF(${MAYA_VERSION} STREQUAL "2012")
-  SET(MAYA_QT_VERSION_SHORT CACHE STRING "4.7")
-  SET(MAYA_QT_VERSION_LONG  CACHE STRING "4.7.1")
-ELSEIF(${MAYA_VERSION} STREQUAL "2013")
-  SET(MAYA_QT_VERSION_SHORT CACHE STRING "4.7")
-  SET(MAYA_QT_VERSION_LONG  CACHE STRING "4.7.1")
 ENDIF()
 
 # NOTE: the MAYA_LOCATION environment variable is often misunderstood.  On every OS it is expected to point
@@ -196,18 +106,32 @@ ENDIF()
 
 MESSAGE(STATUS "Maya location: ${MAYA_LOCATION}")
 
-FIND_PATH(MAYA_INCLUDE_DIR maya/MFn.h
+FIND_PATH(MAYA_INCLUDE_DIR maya/MTypes.h
   HINTS
     ${MAYA_LOCATION}
+    $ENV{MAYA_LOCATION}
   PATH_SUFFIXES
     include               # linux and windows
     ../../devkit/include  # osx
   DOC "Maya's include path"
 )
+MESSAGE(INFO "MAYA_INCLUDE_DIR: ${MAYA_INCLUDE_DIR}")
+
+IF(MAYA_INCLUDE_DIR)
+  MESSAGE(INFO "Check Maya Version in ${MAYA_INCLUDE_DIR}/maya/MTypes.h")
+  # Extract Maya Version
+  file(STRINGS "${MAYA_INCLUDE_DIR}/maya/MTypes.h" _maya_MTYPES_H_CONTENTS REGEX "#define MAYA_API_VERSION")
+  if("${_maya_MTYPES_H_CONTENTS}" MATCHES "#define MAYA_API_VERSION ([0-9]+)")
+    set(MAYA_API_VERSION "${CMAKE_MATCH_1}")
+  endif()
+  set(MAYA_VERSION "${MAYA_API_VERSION}")
+ENDIF()
+MESSAGE(INFO "MAYA_VERSION: ${MAYA_VERSION}")
 
 FIND_PATH(MAYA_LIBRARY_DIR libOpenMaya.dylib libOpenMaya.so OpenMaya.lib
   HINTS
     ${MAYA_LOCATION}
+    $ENV{MAYA_LOCATION}
   PATH_SUFFIXES
     lib    # linux and windows
     MacOS  # osx
@@ -265,33 +189,11 @@ FIND_PATH(MAYA_USER_DIR
   NO_SYSTEM_ENVIRONMENT_PATH
 )
 
-# IF (Maya_FOUND)
-#     IF (NOT Maya_FIND_QUIETLY)
-#       MESSAGE(STATUS "Maya version: ${Maya_MAJOR_VERSION}.${Maya_MINOR_VERSION}.${Maya_SUBMINOR_VERSION}")
-#     ENDIF(NOT Maya_FIND_QUIETLY)
-#     IF (NOT Maya_FIND_QUIETLY)
-#       MESSAGE(STATUS "Found the following Maya libraries:")
-#     ENDIF(NOT Maya_FIND_QUIETLY)
-#     FOREACH ( COMPONENT  ${Maya_FIND_COMPONENTS} )
-#       STRING( TOUPPER ${COMPONENT} UPPERCOMPONENT )
-#       IF ( Maya_${UPPERCOMPONENT}_FOUND )
-#         IF (NOT Maya_FIND_QUIETLY)
-#           MESSAGE (STATUS "  ${COMPONENT}")
-#         ENDIF(NOT Maya_FIND_QUIETLY)
-#         SET(Maya_LIBRARIES ${Maya_LIBRARIES} ${Maya_${UPPERCOMPONENT}_LIBRARY})
-#       ENDIF ( Maya_${UPPERCOMPONENT}_FOUND )
-#     ENDFOREACH(COMPONENT)
-# ELSE (Maya_FOUND)
-#     IF (Maya_FIND_REQUIRED)
-#       message(SEND_ERROR "Unable to find the requested Maya libraries.\n${Maya_ERROR_REASON}")
-#     ENDIF(Maya_FIND_REQUIRED)
-# ENDIF(Maya_FOUND)
-
 # handle the QUIETLY and REQUIRED arguments and SET MAYA_FOUND to TRUE if
 # all LISTed variables are TRUE
 INCLUDE(FindPackageHandleStandardArgs)
 FIND_PACKAGE_HANDLE_STANDARD_ARGS(Maya DEFAULT_MSG
-  MAYA_LIBRARIES MAYA_EXECUTABLE MAYA_INCLUDE_DIR MAYA_LIBRARY_DIR MAYA_VERSION MAYA_PLUGIN_SUFFIX MAYA_USER_DIR
+  MAYA_LIBRARIES MAYA_INCLUDE_DIR MAYA_LIBRARY_DIR MAYA_VERSION MAYA_PLUGIN_SUFFIX
 )
 
 #
