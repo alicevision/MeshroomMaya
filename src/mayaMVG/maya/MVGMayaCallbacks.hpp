@@ -123,15 +123,6 @@ static void undoCB(void*)
         cmd.format("^1s -e -rebuild ^2s", MVGContextCmd::name, MVGContextCmd::instanceName);
         MGlobal::executeCommand(cmd);
     }
-    if(cmdName == "doDelete")
-    {
-        MVGProjectWrapper* project = getProjectWrapper();
-        if(!project)
-            return;
-        MGlobal::executePythonCommand("from mayaMVG import window;\n"
-                                      "window.mvgReloadPanels()");
-        project->loadExistingProject();
-    }
 }
 
 static void redoCB(void*)
@@ -146,15 +137,6 @@ static void redoCB(void*)
         MString cmd;
         cmd.format("^1s -e -rebuild ^2s", MVGContextCmd::name, MVGContextCmd::instanceName);
         MGlobal::executeCommand(cmd);
-    }
-    if(cmdName == "doDelete")
-    {
-        MVGProjectWrapper* project = getProjectWrapper();
-        if(!project)
-            return;
-        MGlobal::executePythonCommand("from mayaMVG import window;\n"
-                                      "window.mvgReloadPanels()");
-        project->loadExistingProject();
     }
 }
 
