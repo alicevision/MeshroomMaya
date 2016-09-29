@@ -29,22 +29,22 @@ namespace  // Utility functions
 
 /**
  * Give the number of occurrences of each element in the given sets.
- * 
+ *
  * @param sets the sets to consider
  * @return a map element => count
  */
 template <typename T>
 std::map<T, int> countElements(const std::vector< std::set<T> >& sets)
-{  
+{
     std::map<T, int> idWeights;
-    for(typename std::vector< std::set<T> >::const_iterator setsIt = sets.begin(); setsIt != sets.end(); ++setsIt)
+    for(const auto& set : sets)
     {
-        for(typename std::set<T>::const_iterator it = setsIt->begin(); it != setsIt->end(); ++it)
+        for(const auto& elt : set)
         {
-            if(idWeights.find(*it) != idWeights.end())
-                idWeights[*it]++;
+            if(idWeights.find(elt) != idWeights.end())
+                idWeights[elt]++;
             else
-                idWeights[*it] = 1;
+                idWeights[elt] = 1;
         }
     }
     return idWeights;
@@ -52,7 +52,7 @@ std::map<T, int> countElements(const std::vector< std::set<T> >& sets)
 
 /**
  * Returns the intersection (common elements) of the given sets.
- * 
+ *
  * @param sets the sets to consider
  * @return the intersection of all the sets
  */
@@ -60,11 +60,11 @@ template <typename T>
 std::set<T> setsIntersection(const std::vector< std::set<T> >& sets)
 {
     std::set<T> intersection;
-    const std::map<T, int> weights = countElements(sets);
-    for(typename std::map<T, int>::const_iterator it = weights.begin(); it != weights.end(); ++it)
+    const auto weights = countElements(sets);
+    for(const auto& elt : weights)
     {
-        if((*it).second > 1)
-            intersection.insert((*it).first);
+        if(elt.second > 1)
+            intersection.insert(elt.first);
     }
     return intersection;
 }
@@ -481,12 +481,11 @@ void MVGProjectWrapper::setCameraToView(QObject* camera, const QString& viewName
     }
     // Update active camera
     _activeCameraNameByView[viewName.toStdString()] = cameraWrapper->getDagPathAsString().toStdString();
-    
+
     // Update data from new configuration
-    for(std::map<std::string, std::string>::const_iterator camIt = _activeCameraNameByView.begin();
-        camIt != _activeCameraNameByView.end(); ++camIt)
+    for(const auto& camByView : _activeCameraNameByView)
     {
-        const QString view = QString::fromStdString(camIt->first);
+        const QString view = QString::fromStdString(camByView.first);
         MVGCameraWrapper* camWrapper = cameraFromViewName(view);
         if(!camWrapper)
             return;
@@ -517,10 +516,9 @@ void MVGProjectWrapper::updatePointsVisibility()
     std::vector< std::set<int> > pointsSets;
     pointsSets.reserve(_activeCameraNameByView.size());
     std::map< std::string, std::set<int>* > pointsPerCamera;
-    for(std::map<std::string, std::string>::const_iterator camIt = _activeCameraNameByView.begin();
-            camIt != _activeCameraNameByView.end(); ++camIt)
+    for(const auto& camByView : _activeCameraNameByView)
     {
-        MVGCameraWrapper* camWrapper = cameraFromViewName(QString::fromStdString(camIt->first));
+        MVGCameraWrapper* camWrapper = cameraFromViewName(QString::fromStdString(camByView.first));
         if(!camWrapper)
             return;
         std::set<int> visibility;
@@ -531,21 +529,16 @@ void MVGProjectWrapper::updatePointsVisibility()
         pointsSets.push_back(visibility);
         // pointsSets won't be resized (because reserved);
         // we can use pointers to avoid data duplication
-        pointsPerCamera[camIt->second] = &pointsSets.back();
+        pointsPerCamera[camByView.second] = &pointsSets.back();
     }
-    
+
     // Remove common points from individual camera points lists
     // to avoid z-fighting when drawing them
     const std::set<int> intersection = setsIntersection(pointsSets);
-    for(std::map< std::string, std::set<int>* >::iterator pointsIt = pointsPerCamera.begin(); 
-            pointsIt != pointsPerCamera.end(); ++pointsIt )
-    {
-        for(std::set<int>::const_iterator it = intersection.begin(); it != intersection.end(); ++it)
-        {
-            pointsIt->second->erase(*it);
-        }
-    }
-    
+    for(const auto& cameraPoints : pointsPerCamera)
+        for(const auto& point : intersection)
+            cameraPoints.second->erase(point);
+
     MObject locator;
     MStatus status;
     status = MVGMayaUtil::getObjectByName(MVGProject::_CAMERA_POINTS_LOCATOR.c_str(), locator);
@@ -557,33 +550,30 @@ void MVGProjectWrapper::updatePointsVisibility()
     std::vector<MVGPointCloudItem> allPoints;
     MVGPointCloud pointCloud(MVGProject::_CLOUD);
     pointCloud.getItems(allPoints);
-    
+
     // PointCloudItem positions are in world space;
     // multiply them by the locator inverse matrix to be independent from the locator transform
     const MMatrix locatorInverseMatrix = locatorPath.inclusiveMatrixInverse().transpose();
-    
+
     // Fill locator points attributes (based on panel name)
     // TODO: make it more generic
-    for(std::map<std::string, std::string>::const_iterator camIt = _activeCameraNameByView.begin();
-            camIt != _activeCameraNameByView.end(); ++camIt)
+    for(const auto& camByView : _activeCameraNameByView)
     {
-        const std::string& camName = camIt->second;
+        const std::string& camName = camByView.second;
         if(camName.empty())
             return;
-        const std::string& attrName = camIt->first + "Points";
-        const std::set<int>* cameraPoints = pointsPerCamera[camName];
+        const std::string& attrName = camByView.first + "Points";
+        const auto& cameraPoints = *(pointsPerCamera[camName]);
         MPointArray array;
-        for(std::set<int>::const_iterator it = cameraPoints->begin(); it != cameraPoints->end(); ++it)
-        {
-            array.append(locatorInverseMatrix * allPoints[*it]._position);
-        }
+        for(const auto& point : cameraPoints)
+            array.append(locatorInverseMatrix * allPoints[point]._position);
         MVGMayaUtil::setPointArrayAttribute(locator, attrName.c_str(), array);
     }
-    
+
     { // Common points
         MPointArray array;
-        for(std::set<int>::const_iterator it = intersection.begin(); it != intersection.end(); ++it)
-            array.append(locatorInverseMatrix * allPoints[*it]._position);
+        for(const auto& point : intersection)
+            array.append(locatorInverseMatrix * allPoints[point]._position);
         MVGMayaUtil::setPointArrayAttribute(locator, "mvgCommonPoints", array);
     }
 }
