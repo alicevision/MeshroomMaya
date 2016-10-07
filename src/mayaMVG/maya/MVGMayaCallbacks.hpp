@@ -9,6 +9,8 @@
 #include <maya/MFnDagNode.h>
 #include <maya/MSelectionList.h>
 #include <maya/MQtUtil.h>
+#include <maya/MItSelectionList.h>
+#include <maya/MFnSingleIndexedComponent.h>
 
 namespace mayaMVG
 {
@@ -36,21 +38,42 @@ static void selectionChangedCB(void*)
         return;
     MSelectionList list;
     MGlobal::getActiveSelectionList(list);
+    MItSelectionList selectionIt(list);
     MDagPath path;
+    MObject component;
     QStringList selectedCameras;
     QStringList selectedMeshes;
-    for(size_t i = 0; i < list.length(); i++)
+    std::set<int> selectedParticles;
+    bool particleSelectionChanged = false;
+    
+    for (; !selectionIt.isDone(); selectionIt.next())
     {
-        list.getDagPath(i, path);
+        selectionIt.getDagPath(path, component);
         path.extendToShape();
-        // Check for camera
-        if(path.isValid() && (path.apiType() == MFn::kCamera))
-            selectedCameras.push_back(path.fullPathName().asChar());
-        // Check for mesh
-        if(path.isValid() &&
-           ((path.apiType() == MFn::kMesh) || (path.child(0).apiType() == MFn::kMesh)))
+        if(!path.isValid())
+            continue;
+                
+        switch(path.apiType())
         {
-            selectedMeshes.push_back(path.fullPathName().asChar());
+            case MFn::kCamera:
+                selectedCameras.push_back(path.fullPathName().asChar());
+                break;
+            case MFn::kMesh:
+                selectedMeshes.push_back(path.fullPathName().asChar());
+                break;
+            case MFn::kParticle:
+                if(!component.isNull())
+                {
+                    particleSelectionChanged = true;
+                    const MFnSingleIndexedComponent cpts(component);
+                    MIntArray indices;
+                    cpts.getElements(indices);
+                    for(unsigned int i = 0; i < indices.length(); ++i)
+                        selectedParticles.insert(indices[i]);
+                }
+                break;
+            default:
+                break;
         }
     }
 
@@ -78,6 +101,9 @@ static void selectionChangedCB(void*)
     }
     else
         project->clearMeshSelection();
+    
+    if(particleSelectionChanged)
+        project->updateParticleSelection(selectedParticles);
 }
 
 static void currentContextChangedCB(void*)
@@ -161,6 +187,11 @@ static void nodeAddedCB(MObject& node, void*)
                 project->addMeshToUI(mesh.getDagPath());
             break;
         }
+        case MFn::kSet:
+        {
+            if(MVGProject::isMVGCameraSet(node))
+                project->addCameraSetToUI(node);
+        }
         default:
             break;
     }
@@ -200,6 +231,11 @@ static void nodeRemovedCB(MObject& node, void*)
             cmd.format("^1s -e -rebuild ^2s", MVGContextCmd::name, MVGContextCmd::instanceName);
             MGlobal::executeCommand(cmd);
             break;
+        }
+        case MFn::kSet:
+        {
+            if(MVGProject::isMVGCameraSet(node))
+                project->removeCameraSetFromUI(node);
         }
         default:
             break;

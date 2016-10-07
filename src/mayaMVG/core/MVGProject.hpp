@@ -6,6 +6,7 @@
 #include <list>
 #include <map>
 
+
 namespace mayaMVG
 {
 #define IMAGE_CACHE_SIZE 3
@@ -26,6 +27,10 @@ public:
 
 public:
     static std::vector<MVGProject> list();
+    /// Get all the camera sets created by MayaMVG in the current Maya scene
+    static std::vector<MObject> getMVGCameraSets();
+    /// Return whether the given set is a camera set created by MayaMVG
+    static bool isMVGCameraSet(const MObject& obj);
 
 public:
     bool applySceneTransformation() const;
@@ -60,6 +65,7 @@ public:
     static MColor _RIGHT_PANEL_DEFAULT_COLOR;
     static MColor _COMMON_POINTS_DEFAULT_COLOR;
     static MString _MVG_PROJECTPATH;
+    static std::string _CAMERASET_PREFIX;
 
     /// FIFO queue indicating the list of images/cameras keept in memory
     /// Cameras corresponding to current images seen in panels are not stored in this list.

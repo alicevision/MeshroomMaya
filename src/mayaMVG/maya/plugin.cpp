@@ -217,6 +217,9 @@ MStatus initializePlugin(MObject obj)
     id = MDGMessage::addNodeRemovedCallback(nodeRemovedCB, "mesh", &status);
     if(status)
         _callbacks.append(id);
+    id = MDGMessage::addNodeAddedCallback(nodeAddedCB, "objectSet", &status);
+    if(status)
+        _callbacks.append(id);
 
     // Create custom GUI
     CHECK(plugin.registerUI("mayaMVGCreateUI", "mayaMVGDeleteUI"))

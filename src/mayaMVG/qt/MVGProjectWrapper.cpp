@@ -1,6 +1,7 @@
 #include "mayaMVG/qt/MVGProjectWrapper.hpp"
 #include "mayaMVG/version.hpp"
 #include <QCoreApplication>
+#include "MVGCameraSetWrapper.hpp"
 #include "mayaMVG/qt/MVGCameraWrapper.hpp"
 #include "mayaMVG/qt/MVGMeshWrapper.hpp"
 #include "mayaMVG/maya/MVGMayaUtil.hpp"
@@ -19,6 +20,11 @@
 #include <maya/MFnIntArrayData.h>
 #include <maya/MDagPath.h>
 #include <maya/MNodeMessage.h>
+#include <maya/MFnSet.h>
+#include <maya/MSelectionList.h>
+#include <maya/MItSelectionList.h>
+#include <maya/MObjectSetMessage.h>
+#include <maya/MDagModifier.h>
 #include <set>
 
 namespace mayaMVG
@@ -72,6 +78,12 @@ std::set<T> setsIntersection(const std::vector< std::set<T> >& sets)
 }
 
 MVGProjectWrapper::MVGProjectWrapper():
+_currentCameraSetId(0),
+_useParticleSelection(false),
+_selectionTolerance(25),
+_defaultCameraSet(new MVGCameraSetWrapper("- ALL -", this)),
+_currentCameraSet(_defaultCameraSet),
+_particleSelectionCameraSet(nullptr),
 _cameraPointsLocatorCB(0)
 {
     MVGPanelWrapper* leftPanel = new MVGPanelWrapper("mvgLPanel", "Left", MVGMayaUtil::fromMColor(MVGProject::_LEFT_PANEL_DEFAULT_COLOR));
@@ -99,6 +111,9 @@ _cameraPointsLocatorCB(0)
     // Init _isProjectLoading
     _isProjectLoading = false;
     _activeSynchro = true;
+
+    // Force re-evaluation of current camera set index whenever the cameraSet model is modified
+    connect(&_cameraSets, SIGNAL(countChanged()), this, SIGNAL(currentCameraSetIndexChanged()));
 }
 
 MVGProjectWrapper::~MVGProjectWrapper()
@@ -192,6 +207,82 @@ void onCameraPointsLocatorAttrChanged(MNodeMessage::AttributeMessage msg, MPlug&
             wrapper->updatePanelColor(viewName);
         }
     }
+}
+
+int MVGProjectWrapper::getCurrentCameraSetIndex() const
+{
+    if(!_currentCameraSet)
+        return -1;
+    return _cameraSets.indexOf(_currentCameraSet);
+}
+
+void MVGProjectWrapper::setCurrentCameraSetIndex(int idx)
+{
+    // Exclude invalid indices
+    if(idx < 0 || idx >= _cameraSets.count())
+        return;
+    setCurrentCameraSet(_cameraSets.asQList<MVGCameraSetWrapper>().at(idx));
+}
+
+void MVGProjectWrapper::setUseParticleSelection(bool value)
+{
+    if(value == _useParticleSelection)
+        return;
+
+    _useParticleSelection = value;
+
+    static const QString particleSetName = "- PARTICLE SELECTION -";
+    if(value)
+    {
+        // Would be better, but does not end up selecting the cloud node
+        // allowing immediate interactive selection of particles
+        //    MGlobal::selectByName(MVGProject::_CLOUD.c_str(), MGlobal::kReplaceList);
+        //    MGlobal::setSelectionMode(MGlobal::kSelectComponentMode);
+        MString cmd;
+        cmd.format("select \"^1s\"; selectMode -component", MVGProject::_CLOUD.c_str());
+        MGlobal::executeCommand(cmd);
+        // Create a temporary set for particle selection
+        _particleSelectionCameraSet = new MVGCameraSetWrapper(particleSetName);
+        _cameraSets.append(_particleSelectionCameraSet);
+        updateCamerasFromParticleSelection(true);
+        // Use selection set as current set
+        setCurrentCameraSet(_particleSelectionCameraSet);
+    }
+    else if(_particleSelectionCameraSet)
+    {
+        if(_currentCameraSet == _particleSelectionCameraSet)
+        {
+            _currentCameraSet = nullptr;
+            setCurrentCameraSet(_defaultCameraSet);
+        }
+        _cameraSets.remove(_particleSelectionCameraSet);
+        delete _particleSelectionCameraSet;
+        _particleSelectionCameraSet = nullptr;
+    }
+
+    Q_EMIT useParticleSelectionChanged();
+}
+
+void MVGProjectWrapper::updateParticleSelection(const std::set<int>& selection)
+{
+    if(!_useParticleSelection)
+        return;
+
+    _particleSelection = selection;
+    _selectionScorePerCamera.clear();
+
+    for(const auto& pointId : _particleSelection)
+    {
+        if(!_camerasPerPoint.count(pointId))
+            continue;
+        for(auto* camWrapper : _camerasPerPoint[pointId])
+        {
+            if(!_selectionScorePerCamera.count(camWrapper))
+                _selectionScorePerCamera[camWrapper] = 0;
+            _selectionScorePerCamera[camWrapper]++;
+        }
+    }
+    updateCamerasFromParticleSelection(true);
 }
 
 QString MVGProjectWrapper::openFileDialog() const
@@ -410,9 +501,10 @@ void MVGProjectWrapper::addCamerasToIHMSelection(const QStringList& selectedCame
         if(center && camera->getDagPathAsString() == selectedCameraNames[0])
         {
             setCameraToView(camera, static_cast<MVGPanelWrapper*>(_panelList.get(0))->getName());
-            Q_EMIT centerCameraListByIndex(_cameraList.indexOf(camera));
+            Q_EMIT centerCameraListByIndex(_currentCameraSet->getCameras()->indexOf(camera));
         }
     }
+    Q_EMIT cameraSelectionCountChanged();
 }
 
 /**
@@ -462,6 +554,14 @@ void MVGProjectWrapper::addMeshesToMayaSelection(const QStringList& meshesPath) 
 void MVGProjectWrapper::selectClosestCam() const
 {
     MGlobal::executeCommand(MVGSelectClosestCamCmd::_name);
+}
+
+void MVGProjectWrapper::deleteCameraSet(MVGCameraSetWrapper* setWrapper)
+{
+    // Use Maya delete command to make it undoable
+    MString cmd;
+    cmd.format("delete ^1s;", setWrapper->fnSet().name());
+    MGlobal::executeCommand(cmd, false, true);
 }
 
 void MVGProjectWrapper::setCameraToView(QObject* camera, const QString& viewName)
@@ -608,6 +708,49 @@ void MVGProjectWrapper::setCameraLocatorScale(const double scale)
         it->second->getCamera().setLocatorScale(scale);
 }
 
+void MVGProjectWrapper::createCameraSetFromSelection(const QString& name)
+{
+    createCameraSetFromDagPaths(name, _selectedCameras);
+}
+
+void MVGProjectWrapper::duplicateCameraSet(const QString& copyName, MVGCameraSetWrapper* sourceSet)
+{
+    auto cameraList = sourceSet->getCameras()->asQList<MVGCameraWrapper>();
+    QStringList dagPaths;
+    for(auto* wrapper : cameraList)
+        dagPaths.append(wrapper->getDagPathAsString());
+    createCameraSetFromDagPaths(copyName, dagPaths);
+}
+
+void MVGProjectWrapper::createCameraSetFromDagPaths(const QString& name, const QStringList& paths)
+{
+    MSelectionList l;
+    MFnSet set;
+
+    for(const auto& dagPath : paths)
+        l.add(dagPath.toStdString().c_str());
+
+    // Create the set
+    MObject setObj = set.create(l, MFnSet::kNone, false);
+    set.setName((MVGProject::_CAMERASET_PREFIX + name.toStdString()).c_str());
+    set.setAnnotation("MayaMVG Camera Set");
+
+    // Store currently selected points ids as a dynamic attribute
+    MFnTypedAttribute attr;
+    MObject attrObj = attr.create("mvg_pointSelectionIds", "mvg_pids", MFnData::kPointArray);
+    attr.setStorable(true);
+    set.addAttribute(attrObj);
+    MIntArray arr;
+    for(const auto& idx : _particleSelection)
+        arr.append(idx);
+    MVGMayaUtil::setIntArrayAttribute(setObj, "mvg_pointSelectionIds", arr);
+
+    // The set is created with a name by default
+    // MVGMayaCallbacks::setAddedCB does not consider it as a mayaMVG camera set
+    // So handle this manually here.
+    addCameraSetToUI(setObj, true);
+}
+
 void MVGProjectWrapper::clearAllBlindData()
 {
     // Retrieve all meshes
@@ -623,16 +766,24 @@ void MVGProjectWrapper::clearAllBlindData()
 
 void MVGProjectWrapper::clear()
 {
-    _cameraList.clear();
     _camerasByName.clear();
     _activeCameraNameByView.clear();
-    _selectedCameras.clear();
-    _meshesList.clear();
+    clearCameraSelection();
+
+    qDeleteAll(_cameraSets);
+    _cameraSetsByName.clear();
+    _cameraSets.clear();
+
     _meshesByName.clear();
+    _meshesList.clear();
     _selectedMeshes.clear();
-    
+
     if(_cameraPointsLocatorCB)
         MNodeMessage::removeCallback(_cameraPointsLocatorCB);
+
+    for(auto& cb : _nodeCallbacks)
+        MNodeMessage::removeCallbacks(cb.second);
+    _nodeCallbacks.clear();
 }
 
 void MVGProjectWrapper::clearAndUnloadImageCache()
@@ -667,6 +818,7 @@ void MVGProjectWrapper::clearCameraSelection()
             foundIt->second->setIsSelected(false);
     }
     _selectedCameras.clear();
+    Q_EMIT cameraSelectionCountChanged();
 }
 
 void MVGProjectWrapper::clearMeshSelection()
@@ -687,31 +839,36 @@ void MVGProjectWrapper::removeCameraFromUI(MDagPath& cameraPath)
     if(!camera.isValid())
         return;
 
-    for(int i = 0; i < _cameraList.count(); ++i)
+    auto* wrapper = _camerasByName[camera.getDagPathAsString()];
+    // Remove all occurences of the wrapper in the camera sets
+    for (MVGCameraSetWrapper* setWrapper : _cameraSets.asQList<MVGCameraSetWrapper>())
     {
-        MVGCameraWrapper* cameraWrapper = static_cast<MVGCameraWrapper*>(_cameraList.at(i));
-        if(!cameraWrapper)
-            continue;
-        if(cameraWrapper->getCamera().getName() != camera.getName())
-            continue;
-        MDagPath leftCameraPath, rightCameraPath;
-        MVGMayaUtil::getCameraInView(leftCameraPath, "mvgLPanel");
-        leftCameraPath.extendToShape();
-        if(leftCameraPath.fullPathName() == cameraPath.fullPathName())
-            MVGMayaUtil::clearCameraInView("mvgLPanel");
-        MVGMayaUtil::getCameraInView(rightCameraPath, "mvgRPanel");
-        rightCameraPath.extendToShape();
-        if(rightCameraPath.fullPathName() == cameraPath.fullPathName())
-            MVGMayaUtil::clearCameraInView("mvgRPanel");
-        // Remove cameraWrapper
-        _cameraList.removeAt(i);
+        const int idx = setWrapper->getCameras()->indexOf(wrapper);
+        if(idx > 0)
+            setWrapper->getCameras()->removeAt(idx);
     }
+
+    // Clear the views if needed
+    MDagPath leftCameraPath, rightCameraPath;
+    MVGMayaUtil::getCameraInView(leftCameraPath, "mvgLPanel");
+    leftCameraPath.extendToShape();
+    if(leftCameraPath.fullPathName() == cameraPath.fullPathName())
+        MVGMayaUtil::clearCameraInView("mvgLPanel");
+    MVGMayaUtil::getCameraInView(rightCameraPath, "mvgRPanel");
+    rightCameraPath.extendToShape();
+    if(rightCameraPath.fullPathName() == cameraPath.fullPathName())
+        MVGMayaUtil::clearCameraInView("mvgRPanel");
+
+    // Delete the wrapper
+    delete wrapper;
 }
+
 void MVGProjectWrapper::addMeshToUI(const MDagPath& meshPath)
 {
     MVGMesh mesh(meshPath);
 
     MVGMeshWrapper* meshWrapper = new MVGMeshWrapper(mesh);
+    _meshesByName[meshWrapper->getMesh().getName()] = meshWrapper;
     _meshesList.append(meshWrapper);
 }
 
@@ -729,7 +886,51 @@ void MVGProjectWrapper::removeMeshFromUI(const MDagPath& meshPath)
         if(meshWraper->getMesh().getName() != mesh.getName())
             continue;
         _meshesList.removeAt(i);
+        _meshesByName.erase(mesh.getName());
     }
+}
+
+void MVGProjectWrapper::addCameraSetToUI(MObject& set, bool makeCurrent)
+{
+    MVGCameraSetWrapper* wrapper = new MVGCameraSetWrapper(set);
+    _cameraSetsByName[wrapper->fnSet().name().asChar()] = wrapper;
+    _cameraSets.append(wrapper);
+    updateCameraSetWrapperMembers(set);
+    if(makeCurrent)
+        setCurrentCameraSet(wrapper);
+
+    MCallbackIdArray callbacks;
+    // Update camera set wrapper's members when the underlying Maya set is modified
+    MCallbackId cbId = MObjectSetMessage::addSetMembersModifiedCallback(set, [](MObject& node, void* projectWrapper) {
+        auto* project = static_cast<MVGProjectWrapper*>(projectWrapper);
+        project->updateCameraSetWrapperMembers(node);
+    }, static_cast<void*>(this));
+    callbacks.append(cbId);
+
+    cbId = MNodeMessage::addNodePreRemovalCallback(set, [](MObject& node, void* projectWrapper) {
+        auto* project = static_cast<MVGProjectWrapper*>(projectWrapper);
+        project->removeCameraSetFromUI(node);
+    }, static_cast<void*>(this));
+
+    callbacks.append(cbId);
+    _nodeCallbacks[wrapper->fnSet().name().asChar()] = callbacks;
+}
+
+void MVGProjectWrapper::removeCameraSetFromUI(MObject& set)
+{
+    MFnSet fnSet(set);
+    // Remove callbacks on this node
+    MMessage::removeCallbacks(_nodeCallbacks[fnSet.name().asChar()]);
+    _nodeCallbacks.erase(fnSet.name().asChar());
+
+    // Delete UI wrapper
+    const std::string setName = fnSet.name().asChar();
+    auto* wrapper = _cameraSetsByName[setName];
+    if(wrapper == _currentCameraSet)
+        setCurrentCameraSetIndex(getCurrentCameraSetIndex()-1);
+    _cameraSetsByName.erase(setName);
+    getCameraSets()->remove(wrapper);
+    delete wrapper;
 }
 
 void MVGProjectWrapper::emitCurrentUnitChanged()
@@ -760,19 +961,42 @@ void MVGProjectWrapper::setMoveMode(const int mode)
 
 void MVGProjectWrapper::reloadMVGCamerasFromMaya()
 {
-    _cameraList.clear();
     _camerasByName.clear();
     _activeCameraNameByView.clear();
+    _camerasPerPoint.clear();
+    _cameraSetsByName.clear();
+    _cameraSets.clear();
 
     const std::vector<MVGCamera>& cameraList = MVGCamera::getCameras();
-    std::vector<MVGCamera>::const_iterator it = cameraList.begin();
-    for(; it != cameraList.end(); ++it)
+    QObjectList camWrappers;
+    for(const auto& camera : cameraList)
     {
-        MVGCameraWrapper* cameraWrapper = new MVGCameraWrapper(*it);
-        _cameraList.append(cameraWrapper);
-        _camerasByName[it->getDagPathAsString()] = cameraWrapper;
+        MVGCameraWrapper* cameraWrapper = new MVGCameraWrapper(camera);
+        camWrappers.append(cameraWrapper);
+        _camerasByName[camera.getDagPathAsString()] = cameraWrapper;
+        MIntArray indices;
+        camera.getVisibleIndexes(indices);
+        for(unsigned int i = 0; i < indices.length(); ++i)
+        {
+            if(!_camerasPerPoint.count(indices[i]))
+                _camerasPerPoint.emplace(indices[i], std::vector<MVGCameraWrapper*>());
+            _camerasPerPoint[indices[i]].push_back(cameraWrapper);
+        }
     }
     // TODO : Camera selection
+
+    // Camera Sets
+    {
+    // - default set with all cams
+    //_defaultCameraSet = new MVGCameraSetWrapper("- ALL -");
+    _defaultCameraSet->setCameraWrappers(camWrappers);
+    _cameraSets.append(_defaultCameraSet);
+    setCurrentCameraSet(_defaultCameraSet);
+    // - sets from maya scene
+    std::vector<MObject> sets = MVGProject::getMVGCameraSets();
+    for(auto& set : sets)
+        addCameraSetToUI(set);
+    }
 }
 
 void MVGProjectWrapper::updatePanelColor(const QString& viewName)
@@ -786,6 +1010,76 @@ void MVGProjectWrapper::updatePanelColor(const QString& viewName)
         return;
     const MColor color = MVGMayaUtil::fromQColor(panelFromViewName(viewName)->getColor());
     camWrapper->getCamera().setLocatorCustomColor(true, color);
+}
+
+void MVGProjectWrapper::updateCamerasFromParticleSelection(bool force)
+{
+    if(!_useParticleSelection)
+        return;
+
+    QObjectList cams;
+
+    const auto maxIt = std::max_element(_selectionScorePerCamera.begin(), _selectionScorePerCamera.end(),
+            [](const std::pair<MVGCameraWrapper*, int>& p1, const std::pair<MVGCameraWrapper*, int>& p2)
+            {
+                return p1.second < p2.second;
+            });
+
+    const auto minScore = maxIt->second * (1.0f - (_selectionTolerance/100.0f));
+
+    // Keep only cameras meeting the minimum score requirement
+    for(const auto& elt : _selectionScorePerCamera)
+    {
+        if(elt.second >= minScore)
+            cams.append(elt.first);
+    }
+
+    // Unless forced to update, same size here means no changes
+    if(!force && cams.size() == _particleSelectionCameraSet->getCameras()->size())
+        return;
+
+    // Sort model by score
+    std::sort(cams.begin(), cams.end(),
+            [this](QObject* a, QObject* b){
+               return _selectionScorePerCamera[static_cast<MVGCameraWrapper*>(a)] > _selectionScorePerCamera[static_cast<MVGCameraWrapper*>(b)];
+            });
+    // Update particle selection set's camera wrappers
+    _particleSelectionCameraSet->setCameraWrappers(cams);
+}
+
+void MVGProjectWrapper::updateCameraSetWrapperMembers(const MObject &set)
+{
+    MFnSet fnSet(set);
+    MVGCameraSetWrapper* wrapper = _cameraSetsByName[fnSet.name().asChar()];
+    MSelectionList list;
+
+    wrapper->fnSet().getMembers(list, false);
+    MItSelectionList selectionIt(list);
+    MDagPath path;
+    QObjectList cams;
+    for (; !selectionIt.isDone(); selectionIt.next())
+    {
+        selectionIt.getDagPath(path);
+        path.extendToShape();
+        if(path.apiType() == MFn::kCamera)
+            cams.append(_camerasByName[path.fullPathName().asChar()]);
+    }
+    wrapper->setCameraWrappers(cams);
+}
+
+void MVGProjectWrapper::setCurrentCameraSet(MVGCameraSetWrapper* setWrapper)
+{
+    if(_currentCameraSet == setWrapper)
+        return;
+    // Disable particle selection if needed before changing the current set
+    if(_currentCameraSet == _particleSelectionCameraSet)
+        setUseParticleSelection(false);
+
+    int previousIdx = getCurrentCameraSetIndex();
+    _currentCameraSet = setWrapper;
+    Q_EMIT currentCameraSetChanged();
+    if(previousIdx != getCurrentCameraSetIndex())
+        Q_EMIT currentCameraSetIndexChanged();
 }
 
 MVGCameraWrapper* MVGProjectWrapper::cameraFromViewName(const QString& viewName)

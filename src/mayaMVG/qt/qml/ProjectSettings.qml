@@ -37,7 +37,7 @@ Item {
             State {
                 name: "OPEN"
                 when: m.isOpen
-                PropertyChanges { target: settings; height: 395; }
+                PropertyChanges { target: settings; height: 370; }
                 PropertyChanges { target: settings; opacity: 1; }
             }
         ]
@@ -92,18 +92,6 @@ Item {
                         iconSource: "img/locatorMode.png"
                         tooltip: "Reorient scene"
                         onClicked: m.project.applySceneTransformation()
-                    }
-                }
-
-                MSettingsEntry {
-                    label: "Thumbnail Size"
-                    width: parent.settingsEntryWidth
-                    Slider  {
-                        width: parent.width
-                        minimumValue: m.sliderMinValue
-                        maximumValue: m.sliderMaxValue
-                        value: m.thumbSize
-                        onValueChanged: m.thumbSize = value
                     }
                 }
 

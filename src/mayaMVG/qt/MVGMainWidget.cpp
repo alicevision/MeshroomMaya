@@ -3,6 +3,7 @@
 #include "mayaMVG/qt/QWheelArea.hpp"
 #include "mayaMVG/maya/MVGMayaUtil.hpp"
 #include "mayaMVG/qt/MVGCameraWrapper.hpp"
+#include "mayaMVG/qt/MVGCameraSetWrapper.hpp"
 #include <QtDeclarative/QDeclarativeView>
 #include <QtGui/QFocusEvent>
 
@@ -16,6 +17,7 @@ MVGMainWidget::MVGMainWidget(QWidget* parent)
 
     qmlRegisterType<MVGCameraWrapper>();
     qmlRegisterType<QObjectListModel>();
+    qmlRegisterType<MVGCameraSetWrapper>();
     qmlRegisterType<QWheelArea>("MyTools", 1, 0, "CustomWheelArea");
 
     _view = new QDeclarativeView(parent);
