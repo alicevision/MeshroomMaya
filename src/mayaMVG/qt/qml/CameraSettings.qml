@@ -37,32 +37,35 @@ Item {
                     label: "Near"
                     width: parent.width
 
-                    TextField {
+                    MTextField {
                         id: nearValue
                         width: 60
                         validator: DoubleValidator{bottom: 0.001;}
+                        onAccepted: commit()
+                        function commit() { m.project.setCamerasNear(nearValue.text) }
                     }
                     Button {
                         anchors.verticalCenter: parent.verticalCenter
                         text: "Set"
                         implicitWidth: 25
-                        onClicked: m.project.setCamerasNear(nearValue.text)
+                        onClicked: nearValue.commit()
                     }
                 }
                 MSettingsEntry {
                     label: "Far"
                     width: parent.width
-
-                    TextField {
+                    MTextField {
                         id: farValue
                         width: 60
                         validator: DoubleValidator{bottom: 0.001;}
+                        onAccepted: commit()
+                        function commit() { m.project.setCamerasFar(farValue.text) }
                     }
                     Button {
                         anchors.verticalCenter: parent.verticalCenter
                         text: "Set"
                         implicitWidth: 25
-                        onClicked: m.project.setCamerasFar(farValue.text)
+                        onClicked: farValue.commit()
                     }
                 }
 
@@ -70,16 +73,18 @@ Item {
                     label: "Image Plane Depth"
                     width: parent.width
 
-                    TextField {
+                    MTextField {
                         id: depthValue
                         width: 60
                         validator: DoubleValidator{bottom: 0.001;}
+                        onAccepted: commit()
+                        function commit() { m.project.setCamerasDepth(depthValue.text) }
                     }
                     Button {
                         anchors.verticalCenter: parent.verticalCenter
                         text: "Set"
                         implicitWidth: 25
-                        onClicked: m.project.setCamerasDepth(depthValue.text)
+                        onClicked: depthValue.commit()
                     }
                 }
                 MSettingsEntry {
@@ -92,7 +97,8 @@ Item {
                         minimumValue: 0.01
                         maximumValue: 1
                         value: 1
-                        onValueChanged: m.project.setCameraLocatorScale(value)
+                        activeFocusOnPress: true
+                        onValueChanged: if(activeFocus) m.project.setCameraLocatorScale(value)
                     }
                     Text {
                         anchors.verticalCenter: parent.verticalCenter
