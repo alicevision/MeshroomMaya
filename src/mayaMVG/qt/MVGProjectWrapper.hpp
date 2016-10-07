@@ -41,8 +41,10 @@ class MVGProjectWrapper : public QObject
     Q_PROPERTY(bool activeSynchro READ getActiveSynchro WRITE setActiveSynchro NOTIFY
                    activeSynchroChanged);
     
-    Q_PROPERTY(int cameraPointsDisplayMode READ getCameraPointsDisplayMode 
+
     Q_PROPERTY(int cameraSelectionCount READ getCameraSelectionCount NOTIFY cameraSelectionCountChanged)
+
+    Q_PROPERTY(int cameraPointsDisplayMode READ getCameraPointsDisplayMode
                WRITE setCameraPointsDisplayMode NOTIFY cameraPointsDisplayModeChanged)
 
 public:
