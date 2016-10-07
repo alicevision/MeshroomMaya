@@ -58,7 +58,6 @@ public Q_SLOTS:
     const int getMoveMode() const { return _moveMode; }
     const int getCameraPointsDisplayMode() const;
     void setCameraPointsDisplayMode(int mode);
-    QObjectListModel* getCameraModel() { return &_cameraList; }
 
     int getCurrentCameraSetIndex() const;
     void setCurrentCameraSetIndex(int value);

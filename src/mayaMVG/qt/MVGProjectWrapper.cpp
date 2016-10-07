@@ -571,12 +571,13 @@ void MVGProjectWrapper::setCameraToView(QObject* camera, const QString& viewName
     // Push command
     _project.pushLoadCurrentImagePlaneCommand(viewName.toStdString());
     // Set UI
-    foreach(MVGCameraWrapper* c, _cameraList.asQList<MVGCameraWrapper>())
+    for(const auto& cam : _camerasByName)
     {
-        if(c->isInView(viewName))
+        MVGCameraWrapper* camWrapper = cam.second;
+        if(camWrapper->isInView(viewName))
         {
-            c->setInView(viewName, false);
-            c->getCamera().setLocatorCustomColor(false);
+            camWrapper->setInView(viewName, false);
+            camWrapper->getCamera().setLocatorCustomColor(false);
         }
     }
     // Update active camera
