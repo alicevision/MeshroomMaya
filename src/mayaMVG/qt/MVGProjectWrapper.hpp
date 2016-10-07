@@ -17,11 +17,11 @@ class MVGProjectWrapper : public QObject
 {
     Q_OBJECT
 
-    Q_PROPERTY(QString projectDirectory READ getProjectDirectory NOTIFY projectDirectoryChanged);
-    Q_PROPERTY(int editMode READ getEditMode NOTIFY editModeChanged);
-    Q_PROPERTY(int moveMode READ getMoveMode NOTIFY moveModeChanged);
+    Q_PROPERTY(QString projectDirectory READ getProjectDirectory NOTIFY projectDirectoryChanged)
+    Q_PROPERTY(int editMode READ getEditMode NOTIFY editModeChanged)
+    Q_PROPERTY(int moveMode READ getMoveMode NOTIFY moveModeChanged)
     Q_PROPERTY(QObjectListModel* cameraSets READ getCameraSets CONSTANT)
-    Q_PROPERTY(QObjectListModel* meshModel READ getMeshModel NOTIFY meshModelChanged);
+    Q_PROPERTY(QObjectListModel* meshModel READ getMeshModel NOTIFY meshModelChanged)
 
     Q_PROPERTY(mayaMVG::MVGCameraSetWrapper* currentCameraSet READ getCurrentCameraSet
                NOTIFY currentCameraSetChanged)
@@ -33,13 +33,13 @@ class MVGProjectWrapper : public QObject
     Q_PROPERTY(int particleSelectionTolerance READ getParticleSelectionTolerance
                WRITE setParticleSelectionTolerance NOTIFY particleSelectionToleranceChanged)
     Q_PROPERTY(QString currentContext READ getCurrentContext WRITE setCurrentContext NOTIFY
-                   currentContextChanged);
-    Q_PROPERTY(QObjectListModel* panelList READ getPanelList NOTIFY panelListChanged);
-    Q_PROPERTY(QString currentUnit READ getCurrentUnit NOTIFY currentUnitChanged);
-    Q_PROPERTY(QString pluginVersion READ getPluginVersion CONSTANT);
-    Q_PROPERTY(bool isProjectLoading READ getIsProjectLoading NOTIFY isProjectLoadingChanged);
+                   currentContextChanged)
+    Q_PROPERTY(QObjectListModel* panelList READ getPanelList NOTIFY panelListChanged)
+    Q_PROPERTY(QString currentUnit READ getCurrentUnit NOTIFY currentUnitChanged)
+    Q_PROPERTY(QString pluginVersion READ getPluginVersion CONSTANT)
+    Q_PROPERTY(bool isProjectLoading READ getIsProjectLoading NOTIFY isProjectLoadingChanged)
     Q_PROPERTY(bool activeSynchro READ getActiveSynchro WRITE setActiveSynchro NOTIFY
-                   activeSynchroChanged);
+                   activeSynchroChanged)
     
 
     Q_PROPERTY(int cameraSelectionCount READ getCameraSelectionCount NOTIFY cameraSelectionCountChanged)
@@ -54,9 +54,9 @@ public:
 public Q_SLOTS:
     const QString getProjectDirectory() const;
     void setProjectDirectory(const QString& directory);
-    const int getEditMode() const { return _editMode; }
-    const int getMoveMode() const { return _moveMode; }
-    const int getCameraPointsDisplayMode() const;
+    int getEditMode() const { return _editMode; }
+    int getMoveMode() const { return _moveMode; }
+    int getCameraPointsDisplayMode() const;
     void setCameraPointsDisplayMode(int mode);
 
     int getCurrentCameraSetIndex() const;
@@ -73,7 +73,7 @@ public Q_SLOTS:
     void setCurrentContext(const QString&);
     const QString getCurrentUnit() const;
     const QString getPluginVersion() const;
-    const bool getIsProjectLoading() const { return _isProjectLoading; }
+    bool getIsProjectLoading() const { return _isProjectLoading; }
     void setIsProjectLoading(const bool value);
     bool getActiveSynchro() const { return _activeSynchro; }
     void setActiveSynchro(const bool value);

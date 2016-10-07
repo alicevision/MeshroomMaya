@@ -172,7 +172,7 @@ void MVGProjectWrapper::setProjectDirectory(const QString& directory)
     Q_EMIT projectDirectoryChanged();
 }
 
-const int MVGProjectWrapper::getCameraPointsDisplayMode() const 
+int MVGProjectWrapper::getCameraPointsDisplayMode() const
 {
     MObject locator;
     MVGMayaUtil::getObjectByName(MVGProject::_CAMERA_POINTS_LOCATOR.c_str(), locator);
@@ -609,7 +609,8 @@ void MVGProjectWrapper::initCameraPointsLocator()
         status = MVGMayaUtil::addLocator("MVGCameraPointsLocator", MVGProject::_CAMERA_POINTS_LOCATOR.c_str(), _project.getObject(), cpLocator);
         CHECK_RETURN(status);
     }
-    _cameraPointsLocatorCB = MNodeMessage::addAttributeChangedCallback(cpLocator, onCameraPointsLocatorAttrChanged, (void*)this);
+    _cameraPointsLocatorCB = MNodeMessage::addAttributeChangedCallback(cpLocator, onCameraPointsLocatorAttrChanged,
+                                                                       static_cast<void*>(this));
 }
 
 void MVGProjectWrapper::updatePointsVisibility()
@@ -625,7 +626,7 @@ void MVGProjectWrapper::updatePointsVisibility()
         std::set<int> visibility;
         MIntArray visibleIndexes;
         camWrapper->getCamera().getVisibleIndexes(visibleIndexes);
-        for(int i = 0; i < visibleIndexes.length(); ++i)
+        for(unsigned int i = 0; i < visibleIndexes.length(); ++i)
             visibility.insert(visibleIndexes[i]);
         pointsSets.push_back(visibility);
         // pointsSets won't be resized (because reserved);
