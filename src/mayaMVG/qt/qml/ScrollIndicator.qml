@@ -19,15 +19,12 @@ Item  {
         property real downLimit : (scrollBar.height - scrollElement.height)/scrollBar.height
         property real upLimit: scrollElement.height/scrollBar.height
     }
-    opacity: 0.8
     visible: !(pageSize == 1)
 
     // Background
     Rectangle  {
         anchors.fill: parent
-        radius: orientation == Qt.Vertical ? (width/2 - 1) : (height/2 - 1)
-        color: "white"
-        opacity: 0.3
+        color: "#373737"
 
         MouseArea {
             anchors.fill: parent
@@ -47,8 +44,7 @@ Item  {
         width: orientation == Qt.Vertical ? (parent.width-2) : (m.pageSize * (scrollBar.width-2))
         height: orientation == Qt.Vertical ? (m.pageSize * (scrollBar.height-2)) : (parent.height-2)
         radius: orientation == Qt.Vertical ? (width/2 - 1) : (height/2 - 1)
-        color: "black"
-        opacity: 0.7
+        color: "#5D5D5D"
 
         MouseArea {
             anchors.fill: parent
