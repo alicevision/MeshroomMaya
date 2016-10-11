@@ -49,6 +49,15 @@ Item {
         target: m.project
         onCenterCameraListByIndex: listView.contentY = center(cameraIndex , m.thumbSize, listView)
     }
+
+    MDialog {
+        id: deleteSetConfirmDialog
+        anchors.fill: parent
+        z: 1
+        message: "Delete Camera Set '<b>" + m.project.currentCameraSet.name + "</b>' ?"
+        onAccepted: m.project.deleteCameraSet(m.project.currentCameraSet)
+    }
+
     CamSetCreationDialog {
         id: camSetCreationDialog
         anchors.fill: parent
@@ -165,7 +174,7 @@ Item {
                     iconSource: "img/delete.png"
                     tooltip: "Delete current Camera Set"
                     onClicked: {
-                        m.project.deleteCameraSet(m.project.currentCameraSet)
+                        deleteSetConfirmDialog.show()
                     }
                 }
             }
