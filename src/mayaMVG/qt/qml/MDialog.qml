@@ -44,11 +44,14 @@ MouseArea {
     }
 
     function show() {
+        forceActiveFocus()
         visible = true;
     }
     function hide() {
         visible = false;
     }
+
+    Keys.onEscapePressed: reject()
 
     // Darken the background
     Rectangle {
