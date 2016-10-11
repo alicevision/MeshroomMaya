@@ -2,13 +2,13 @@ import QtQuick 1.1
 import QtDesktop 0.1
 
 
-ColumnLayout {
+Item {
     id: cameraListView
     signal keyPressed(variant value)
     property alias project: m.project
     property alias thumbSize: m.thumbSize
     property alias currentIndex: m.currentIndex
-    spacing: 2
+
     QtObject {
         id: m
         property variant project
@@ -49,6 +49,17 @@ ColumnLayout {
         target: m.project
         onCenterCameraListByIndex: listView.contentY = center(cameraIndex , m.thumbSize, listView)
     }
+    CamSetCreationDialog {
+        id: camSetCreationDialog
+        anchors.fill: parent
+        project: m.project
+        z: 1
+    }
+
+    ColumnLayout {
+        anchors.fill: parent
+        spacing: 2
+
     Rectangle {
         width: parent.width
         implicitHeight: childrenRect.height
@@ -214,12 +225,6 @@ ColumnLayout {
                 }
             }
         }
-
-        CamSetCreationDialog {
-            id: camSetCreationDialog
-            anchors.fill: parent
-            project: m.project
-        }
     }
 
     Rectangle {
@@ -253,5 +258,6 @@ ColumnLayout {
         }
     }
 
+    }
     onKeyPressed: listView.keyPressed(value)
 }
