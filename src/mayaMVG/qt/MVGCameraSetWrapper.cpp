@@ -7,12 +7,14 @@ namespace mayaMVG
     
 MVGCameraSetWrapper::MVGCameraSetWrapper(const QString& displayName, QObject* parent):
 QObject(parent),
-_displayName(displayName)
+_displayName(displayName),
+_cameraWrappers(this)
 {
 }
 
 MVGCameraSetWrapper::MVGCameraSetWrapper(const MObject& set, QObject* parent):
-QObject(parent)
+QObject(parent),
+_cameraWrappers(this)
 {
     _fnSet.setObject(set);
     std::string shortName = _fnSet.name().asChar();
@@ -22,7 +24,8 @@ QObject(parent)
 
 MVGCameraSetWrapper::MVGCameraSetWrapper(const MVGCameraSetWrapper& other):
 QObject(other.parent()),
-_displayName(other._displayName)
+_displayName(other._displayName),
+_cameraWrappers(this)
 {
     _fnSet.setObject(other.fnSet().object());
     _cameraWrappers.setObjectList(other._cameraWrappers.objectList());

@@ -86,6 +86,8 @@ Q_SIGNALS:
     void countChanged();
 
 private:
+    void referenceItem(QObject* obj);
+    void dereferenceItem(QObject* obj);
     void internEmitCountChanged();
 
 private:
