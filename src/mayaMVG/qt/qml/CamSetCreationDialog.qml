@@ -5,6 +5,9 @@ MDialog {
     id: root
     property alias project: m.project
     property bool useSelection: true
+    message: "Enter Camera Set name :"
+
+    okButton.enabled: nameTF.text.trim() !== ""
 
     QtObject {
         id: m
@@ -18,25 +21,24 @@ MDialog {
             nameTF.text = ""
     }
 
+    onAccepted: {
+        if(nameTF.text.trim() === "")
+            return;
+        if(useSelection)
+            m.project.createCameraSetFromSelection(nameTF.text.trim())
+        else
+            m.project.duplicateCameraSet(nameTF.text.trim(), m.project.currentCameraSet)
+    }
+
     Column {
-
-        width: parent.width - spacing * 2
-        anchors.horizontalCenter: parent.horizontalCenter
-        spacing: 6
-
-        Item { height: parent.spacing; width: 1 }
-
-        Text {
-            text: "Enter Set Name :"
-            color: "white"
-            anchors.horizontalCenter: parent.horizontalCenter
-        }
+        width: parent.width
+        spacing: 2
 
         MTextField {
             id: nameTF
             width: parent.width
-            onAccepted: root.submit()
-            Keys.onEscapePressed: root.hide()
+            onAccepted: root.accept()
+            Keys.onEscapePressed: root.reject()
         }
 
         Column {
@@ -51,32 +53,5 @@ MDialog {
                 onClicked: root.useSelection = false
             }
         }
-
-        Row {
-            anchors.right: parent.right
-            height: 20
-            spacing: 10
-            Button {
-                text: "Cancel"
-                onClicked: root.hide()
-            }
-            Button {
-                text: "OK"
-                enabled: nameTF.text.trim() !== ""
-                onClicked: root.submit()
-            }
-        }
-
-        Item { height: parent.spacing; width: 1 }
-    }
-
-    function submit() {
-        if(nameTF.text.trim() === "")
-            return;
-        if(useSelection)
-            m.project.createCameraSetFromSelection(nameTF.text.trim())
-        else
-            m.project.duplicateCameraSet(nameTF.text.trim(), m.project.currentCameraSet)
-        root.hide()
     }
 }
