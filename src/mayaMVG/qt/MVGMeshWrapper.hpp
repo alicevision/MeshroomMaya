@@ -19,7 +19,7 @@ class MVGMeshWrapper : public QObject
     Q_PROPERTY(bool isSelected READ isSelected WRITE setIsSelected NOTIFY isSelectedChanged)
 
 public:
-    MVGMeshWrapper(const MVGMesh& mesh);
+    MVGMeshWrapper(const MVGMesh& mesh, QObject* parent=nullptr);
     MVGMeshWrapper(const MVGMeshWrapper& other);
     ~MVGMeshWrapper();
 

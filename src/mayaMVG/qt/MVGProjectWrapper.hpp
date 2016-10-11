@@ -48,7 +48,7 @@ class MVGProjectWrapper : public QObject
                WRITE setCameraPointsDisplayMode NOTIFY cameraPointsDisplayModeChanged)
 
 public:
-    MVGProjectWrapper();
+    MVGProjectWrapper(QObject* parent=nullptr);
     ~MVGProjectWrapper();
 
 public Q_SLOTS:

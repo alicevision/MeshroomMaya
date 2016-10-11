@@ -77,7 +77,8 @@ std::set<T> setsIntersection(const std::vector< std::set<T> >& sets)
 
 }
 
-MVGProjectWrapper::MVGProjectWrapper():
+MVGProjectWrapper::MVGProjectWrapper(QObject* parent):
+QObject(parent),
 _currentCameraSetId(0),
 _useParticleSelection(false),
 _selectionTolerance(25),

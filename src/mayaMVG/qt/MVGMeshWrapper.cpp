@@ -5,14 +5,16 @@
 namespace mayaMVG
 {
 
-MVGMeshWrapper::MVGMeshWrapper(const MVGMesh& mesh)
-    : _mesh(mesh)
+MVGMeshWrapper::MVGMeshWrapper(const MVGMesh& mesh, QObject* parent)
+    : QObject(parent)
+    , _mesh(mesh)
     , _isSelected(false)
 {
 }
 
 MVGMeshWrapper::MVGMeshWrapper(const MVGMeshWrapper& other)
-    : _mesh(other._mesh)
+    : QObject(other.parent())
+    , _mesh(other._mesh)
     , _isSelected(other._isSelected)
 {
 }

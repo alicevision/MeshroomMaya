@@ -5,15 +5,17 @@
 namespace mayaMVG
 {
 
-MVGCameraWrapper::MVGCameraWrapper(const MVGCamera& camera)
-    : _camera(camera)
+MVGCameraWrapper::MVGCameraWrapper(const MVGCamera& camera, QObject* parent)
+    : QObject(parent)
+    , _camera(camera)
     , _isSelected(false)
     , _imageLoaded(false)
 {
 }
 
 MVGCameraWrapper::MVGCameraWrapper(const MVGCameraWrapper& other)
-    : _camera(other._camera)
+    : QObject(other.parent())
+    , _camera(other._camera)
     , _imageLoaded(other._imageLoaded)
     , _imageSize(other._imageSize)
     , _isSelected(other._isSelected)
