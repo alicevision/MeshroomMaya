@@ -12,7 +12,9 @@ Item {
     property string text
     property alias tooltip: tooltip.text
     property alias checked: checkbox.checked
-    property color color: "white"
+    property alias enabled: checkbox.enabled
+    property bool autoCheckOnClick: false
+    property color color: enabled ? "white" : "#BBB"
     signal clicked()
 
     implicitWidth: childrenRect.width
@@ -29,7 +31,11 @@ Item {
             text: "<span style='color:"+ color +"'>" + root.text + "</span>"
             MouseArea {
                 anchors.fill: parent
-                onClicked: root.clicked()
+                onClicked: {
+                    if(root.autoCheckOnClick)
+                        checkbox.checked = !checkbox.checked
+                    root.clicked()
+                }
             }
         }
     }

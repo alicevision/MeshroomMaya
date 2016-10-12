@@ -7,7 +7,8 @@ Item {
     property string text
     property alias tooltip: tooltip.text
     property alias checked: radiobutton.checked
-    property color color: "white"
+    property alias enabled: radiobutton.enabled
+    property color color: enabled ? "white" : "#BBB"
     signal clicked()
 
     implicitWidth: childrenRect.width
