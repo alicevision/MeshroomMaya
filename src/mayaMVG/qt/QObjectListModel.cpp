@@ -108,6 +108,8 @@ void QObjectListModel::setObjectList(QObjectList objects)
 {
     int oldCount = _objects.count();
     beginResetModel();
+    for(auto* object : _objects)
+        dereferenceItem(object);
     _objects = objects;
     for(auto* object : _objects)
         referenceItem(object);
