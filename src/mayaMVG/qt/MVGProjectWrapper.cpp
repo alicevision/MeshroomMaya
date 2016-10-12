@@ -258,6 +258,11 @@ void MVGProjectWrapper::setUseParticleSelection(bool value)
         _cameraSets.remove(_particleSelectionCameraSet);
         _particleSelectionCameraSet->deleteLater();
         _particleSelectionCameraSet = nullptr;
+        // Restore Maya selection mode
+        MGlobal::setSelectionMode(MGlobal::kSelectObjectMode);
+        // Re-select the cloud to trigger an update in 3D viewport
+        // (makes sure particles don't look selectable (blue) anymore)
+        MGlobal::selectByName(MVGProject::_CLOUD.c_str(), MGlobal::kReplaceList);
     }
 
     Q_EMIT useParticleSelectionChanged();
