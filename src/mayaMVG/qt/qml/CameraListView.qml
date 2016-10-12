@@ -1,4 +1,5 @@
 import QtQuick 1.1
+import MyTools 1.0
 import QtDesktop 0.1
 
 
@@ -12,6 +13,8 @@ Item {
     QtObject {
         id: m
         property variant project
+        property int minThumbSize: 70
+        property int maxThumbSize: 190
         property int thumbSize
         property int currentIndex
     }
@@ -218,6 +221,24 @@ Item {
                     }
                 }
             }
+
+            CustomWheelArea {
+                id: wheelArea
+                anchors.fill: parent
+
+                property int step: 5
+
+                onVerticalWheel: {
+                    if(modifier & Qt.ControlModifier) {
+                        var thumbSize = cameraListView.thumbSize + (delta > 0 ? step : -step);
+                        cameraListView.thumbSize = Math.max(m.minThumbSize, Math.min(thumbSize, m.maxThumbSize));
+                        wheelArea.eventAccept()
+                    }
+                    else
+                        wheelArea.eventIgnore()
+                }
+            }
+
             ContextMenu {
                 id: menu
                 Separator {}
@@ -246,19 +267,22 @@ Item {
                 anchors.rightMargin: anchors.leftMargin
                 Image {
                     source: "img/thumbnailSize.png"
+                    TooltipArea {
+                        anchors.fill: parent
+                        text: "Thumbnail Size"
+                    }
                 }
                 Slider {
                     implicitWidth: 70
-                    minimumValue: 70
-                    maximumValue: 190
-                    value: 70
+                    minimumValue: m.minThumbSize
+                    maximumValue: m.maxThumbSize
+                    value: m.thumbSize
                     onValueChanged: m.thumbSize = value
                 }
 
                 Item { Layout.horizontalSizePolicy: Layout.Expanding }
 
                 Text {
-                    id: txt
                     text: (m.project.cameraSelectionCount > 0 ? (m.project.cameraSelectionCount + " / ") : "") + listView.model.count + " camera(s)"
                     color: "#ccc"
                     horizontalAlignment: Text.AlignRight
