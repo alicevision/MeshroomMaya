@@ -138,7 +138,6 @@ Item {
                             id: cameraSetsCB
                             width: parent.width
                             anchors.verticalCenter: parent.verticalCenter
-                            activeFocusOnPress: true
                             enabled: !m.project.useParticleSelection
 
                             model:  ListModel { id: proxy }

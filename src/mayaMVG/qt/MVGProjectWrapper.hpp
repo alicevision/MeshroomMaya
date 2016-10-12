@@ -141,9 +141,9 @@ public:
     Q_INVOKABLE void setCamerasDepth(const double far);
     Q_INVOKABLE void setCameraLocatorScale(const double scale);
     // Camera Sets
-    Q_INVOKABLE void createCameraSetFromSelection(const QString& name);
-    Q_INVOKABLE void duplicateCameraSet(const QString& copyName, mayaMVG::MVGCameraSetWrapper* sourceSet);
-    void createCameraSetFromDagPaths(const QString& name, const QStringList& paths);
+    Q_INVOKABLE void createCameraSetFromSelection(const QString& name, bool makeCurrent);
+    Q_INVOKABLE void duplicateCameraSet(const QString& copyName, mayaMVG::MVGCameraSetWrapper* sourceSet, bool makeCurrent);
+    void createCameraSetFromDagPaths(const QString& name, const QStringList& paths, bool makeCurrent);
     /// Delete the Maya set corresponding to the given set wrapper
     Q_INVOKABLE void deleteCameraSet(mayaMVG::MVGCameraSetWrapper* setWrapper);
     // Meshes

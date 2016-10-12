@@ -25,14 +25,14 @@ MDialog {
         if(nameTF.text.trim() === "")
             return;
         if(useSelection)
-            m.project.createCameraSetFromSelection(nameTF.text.trim())
+            m.project.createCameraSetFromSelection(nameTF.text.trim(), switchToSet.checked)
         else
-            m.project.duplicateCameraSet(nameTF.text.trim(), m.project.currentCameraSet)
+            m.project.duplicateCameraSet(nameTF.text.trim(), m.project.currentCameraSet, switchToSet.checked)
     }
 
     Column {
         width: parent.width
-        spacing: 2
+        spacing: 3
 
         MTextField {
             id: nameTF
@@ -44,6 +44,7 @@ MDialog {
         Column {
             MRadioButton {
                 text: "Selection - " + m.project.cameraSelectionCount + " camera(s)"
+                enabled: m.project.cameraSelectionCount > 0
                 checked: root.useSelection
                 onClicked: root.useSelection = true
             }
@@ -52,6 +53,13 @@ MDialog {
                 checked: !root.useSelection
                 onClicked: root.useSelection = false
             }
+        }
+        MCheckBox {
+            id: switchToSet
+            anchors.right: parent.right
+            checked: true
+            autoCheckOnClick: true
+            text: "Switch to New Set"
         }
     }
 }

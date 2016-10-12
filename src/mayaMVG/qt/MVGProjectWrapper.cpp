@@ -715,21 +715,21 @@ void MVGProjectWrapper::setCameraLocatorScale(const double scale)
         it->second->getCamera().setLocatorScale(scale);
 }
 
-void MVGProjectWrapper::createCameraSetFromSelection(const QString& name)
+void MVGProjectWrapper::createCameraSetFromSelection(const QString& name, bool makeCurrent)
 {
-    createCameraSetFromDagPaths(name, _selectedCameras);
+    createCameraSetFromDagPaths(name, _selectedCameras, makeCurrent);
 }
 
-void MVGProjectWrapper::duplicateCameraSet(const QString& copyName, MVGCameraSetWrapper* sourceSet)
+void MVGProjectWrapper::duplicateCameraSet(const QString& copyName, MVGCameraSetWrapper* sourceSet, bool makeCurrent)
 {
     auto cameraList = sourceSet->getCameras()->asQList<MVGCameraWrapper>();
     QStringList dagPaths;
     for(auto* wrapper : cameraList)
         dagPaths.append(wrapper->getDagPathAsString());
-    createCameraSetFromDagPaths(copyName, dagPaths);
+    createCameraSetFromDagPaths(copyName, dagPaths, makeCurrent);
 }
 
-void MVGProjectWrapper::createCameraSetFromDagPaths(const QString& name, const QStringList& paths)
+void MVGProjectWrapper::createCameraSetFromDagPaths(const QString& name, const QStringList& paths, bool makeCurrent)
 {
     MSelectionList l;
     MFnSet set;
@@ -755,7 +755,7 @@ void MVGProjectWrapper::createCameraSetFromDagPaths(const QString& name, const Q
     // The set is created with a name by default
     // MVGMayaCallbacks::setAddedCB does not consider it as a mayaMVG camera set
     // So handle this manually here.
-    addCameraSetToUI(setObj, true);
+    addCameraSetToUI(setObj, makeCurrent);
 }
 
 void MVGProjectWrapper::clearAllBlindData()
