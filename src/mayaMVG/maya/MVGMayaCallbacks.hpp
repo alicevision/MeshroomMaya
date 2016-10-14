@@ -1,10 +1,13 @@
+#include "MVGMayaUtil.hpp"
 #include "mayaMVG/core/MVGCamera.hpp"
+#include "mayaMVG/core/MVGLog.hpp"
 #include "mayaMVG/core/MVGMesh.hpp"
 #include "mayaMVG/qt/MVGPanelWrapper.hpp"
 #include "mayaMVG/qt/MVGMainWidget.hpp"
 #include "mayaMVG/maya/context/MVGMoveManipulator.hpp"
 #include "mayaMVG/maya/context/MVGContext.hpp"
 #include "mayaMVG/maya/context/MVGContextCmd.hpp"
+#include <maya/MGlobal.h>
 #include <maya/MFnDependencyNode.h>
 #include <maya/MFnDagNode.h>
 #include <maya/MSelectionList.h>
@@ -101,8 +104,7 @@ static void selectionChangedCB(void*)
     }
     else
         project->clearMeshSelection();
-    
-    if(particleSelectionChanged)
+    if(list.length() == 0 || particleSelectionChanged)
         project->updateParticleSelection(selectedParticles);
 }
 
