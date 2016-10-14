@@ -58,6 +58,7 @@ Item {
         anchors.fill: parent
         z: 1
         message: "Delete Camera Set '<b>" + m.project.currentCameraSet.name + "</b>' ?"
+        Component.onCompleted: okButton.text = "Delete"
         onAccepted: m.project.deleteCameraSet(m.project.currentCameraSet)
     }
 
@@ -88,40 +89,6 @@ Item {
                     height: 23
 
                     ToolButton {
-                        id: particleModeBtn
-                        implicitHeight: parent.height
-                        implicitWidth: implicitHeight
-                        tooltip: "Select Particles"
-                        iconSource: "img/particleSelection.png"
-                        iconSize: 18
-                        checked: m.project.useParticleSelection
-                        onClicked: {
-                            m.project.useParticleSelection = !m.project.useParticleSelection
-                        }
-                    }
-                    Slider  {
-                        id: toleranceSlider
-                        implicitWidth: 90
-                        enabled: m.project.useParticleSelection
-                        minimumValue: 0
-                        maximumValue: 100
-                        stepSize: 1
-                        value: m.project.particleSelectionTolerance
-                        onValueChanged: m.project.particleSelectionTolerance = value
-                    }
-                    Text {
-                        anchors.verticalCenter: parent.verticalCenter
-                        color: m.project.useParticleSelection ? "white" : "#BBB"
-                        text: toleranceSlider.value + "%"
-                    }
-
-                    Item { Layout.horizontalSizePolicy: Layout.Expanding }
-                }
-                RowLayout {
-                    height: 23
-                    width: parent.width
-                    spacing: 4
-                    ToolButton {
                         implicitWidth: 23
                         height: 23
                         iconSource: "img/add_box.png"
@@ -131,6 +98,58 @@ Item {
                             camSetCreationDialog.useSelection = m.project.cameraSelectionCount > 1
                             camSetCreationDialog.show()
                         }
+                    }
+
+                    ToolButton {
+                        id: particleModeBtn
+                        implicitHeight: parent.height
+                        implicitWidth: implicitHeight
+                        tooltip: "Filter Cameras from Particle Selection"
+                        iconSource: "img/particleSelection.png"
+                        iconSize: 18
+                        checked: m.project.useParticleSelection
+                        onClicked: {
+                            m.project.useParticleSelection = !m.project.useParticleSelection
+                        }
+                    }
+                    Row {
+                        height: parent.height
+                        spacing: 4
+                        visible: m.project.useParticleSelection
+
+                        Text {
+                            text: "Tolerance"
+                            color: "white"
+                            anchors.verticalCenter: parent.verticalCenter
+                        }
+
+                        Slider  {
+                            id: toleranceSlider
+                            implicitWidth: 90
+                            minimumValue: 0
+                            maximumValue: 100
+                            stepSize: 1
+                            value: m.project.particleSelectionTolerance
+                            onValueChanged: m.project.particleSelectionTolerance = value
+                        }
+                        Text {
+                            anchors.verticalCenter: parent.verticalCenter
+                            color: "white"
+                            text: toleranceSlider.value + "%"
+                        }
+                    }
+
+                    Item { Layout.horizontalSizePolicy: Layout.Expanding }
+                }
+                RowLayout {
+                    height: 23
+                    width: parent.width - 2
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    spacing: 4
+
+                    Text {
+                        text: "Camera Set :"
+                        color: "white"
                     }
 
                     Item {
@@ -218,6 +237,57 @@ Item {
                         if(!clickedItem.isSelected)
                             selectCameras(idx, idx)
                         menu.showPopup(pos.x, pos.y)
+                    }
+                }
+            }
+
+            Loader {
+                width: parent.width
+                anchors.horizontalCenter: parent.horizontalCenter
+                anchors.top: parent.top
+                anchors.topMargin: 30
+
+                property bool active: m.project.useParticleSelection && listView.count == 0
+                sourceComponent: active ? particleSelectionHelper_component : null
+
+                Component {
+                    id: particleSelectionHelper_component
+                    Column {
+                        property color textColor: "#DDD"
+                        spacing: 8
+                        Image {
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            source: "img/no_particle_selection.png"
+                        }
+
+                        Text {
+                            text: "<b>No particle selected</b>"
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            font.pointSize: 11
+                            color: "#EEE"
+                        }
+                        Text {
+                            text: "<p>Keep the most accurate cameras for a specific area:</p>"
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            font.pointSize: 10
+                            color: textColor
+                        }
+
+                        Column {
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            spacing: 4
+
+                            Repeater {
+                                model: ["Select relevant particles in the 3D viewport",
+                                        "Adjust camera count using the tolerance slider",
+                                        "Create a new Camera Set with <img src='img/add_box.png' align='top'/> when done"]
+                                delegate: Text {
+                                    text: index + 1 + ". " + modelData
+                                    font.pointSize: 10
+                                    color: textColor
+                                }
+                            }
+                        }
                     }
                 }
             }
