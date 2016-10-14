@@ -80,7 +80,7 @@ public Q_SLOTS:
 
     int getCameraSelectionCount() { return _selectedCameras.count(); }
 
-    bool useParticleSelection() const { return _useParticleSelection; }
+    bool useParticleSelection() const;
     void setUseParticleSelection(bool value);
     void updateParticleSelection(const std::set<int>& selection);
 
@@ -204,7 +204,6 @@ private:
     std::set<int> _particleSelection;
     std::map<MVGCameraWrapper*, int> _selectionScorePerCamera;
     std::map<int, std::vector<MVGCameraWrapper*>> _camerasPerPoint;
-    bool _useParticleSelection;
     int _selectionTolerance;
     MVGCameraSetWrapper* _defaultCameraSet;
     MVGCameraSetWrapper* _currentCameraSet;

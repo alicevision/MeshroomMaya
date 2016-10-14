@@ -79,7 +79,6 @@ std::set<T> setsIntersection(const std::vector< std::set<T> >& sets)
 MVGProjectWrapper::MVGProjectWrapper(QObject* parent):
 QObject(parent),
 _currentCameraSetId(0),
-_useParticleSelection(false),
 _selectionTolerance(25),
 _defaultCameraSet(new MVGCameraSetWrapper("- ALL -", this)),
 _currentCameraSet(_defaultCameraSet),
@@ -165,6 +164,11 @@ void MVGProjectWrapper::setActiveSynchro(const bool value)
     Q_EMIT activeSynchroChanged();
 }
 
+bool MVGProjectWrapper::useParticleSelection() const
+{
+    return _particleSelectionCameraSet && _currentCameraSet == _particleSelectionCameraSet;
+}
+
 void MVGProjectWrapper::setProjectDirectory(const QString& directory)
 {
     if(_project.isValid())
@@ -226,10 +230,8 @@ void MVGProjectWrapper::setCurrentCameraSetIndex(int idx)
 
 void MVGProjectWrapper::setUseParticleSelection(bool value)
 {
-    if(value == _useParticleSelection)
+    if(value == useParticleSelection())
         return;
-
-    _useParticleSelection = value;
 
     static const QString particleSetName = "- PARTICLE SELECTION -";
     if(value)
@@ -270,7 +272,10 @@ void MVGProjectWrapper::setUseParticleSelection(bool value)
 
 void MVGProjectWrapper::updateParticleSelection(const std::set<int>& selection)
 {
-    if(!_useParticleSelection)
+    if(!useParticleSelection())
+        return;
+
+    if(selection == _particleSelection)
         return;
 
     _particleSelection = selection;
@@ -1016,7 +1021,7 @@ void MVGProjectWrapper::updatePanelColor(const QString& viewName)
 
 void MVGProjectWrapper::updateCamerasFromParticleSelection(bool force)
 {
-    if(!_useParticleSelection)
+    if(!useParticleSelection())
         return;
 
     QObjectList cams;
