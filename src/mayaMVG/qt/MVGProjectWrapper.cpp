@@ -254,6 +254,7 @@ void MVGProjectWrapper::setUseParticleSelection(bool value)
     {
         if(_currentCameraSet == _particleSelectionCameraSet)
         {
+            _particleSelectionCameraSet->highlightLocators(false);
             _currentCameraSet = nullptr;
             setCurrentCameraSet(_defaultCameraSet);
         }
@@ -778,6 +779,8 @@ void MVGProjectWrapper::clearAllBlindData()
 
 void MVGProjectWrapper::clear()
 {
+    _currentCameraSet->highlightLocators(false);
+
     _camerasByName.clear();
     _activeCameraNameByView.clear();
     clearCameraSelection();
@@ -1050,8 +1053,10 @@ void MVGProjectWrapper::updateCamerasFromParticleSelection(bool force)
             [this](QObject* a, QObject* b){
                return _selectionScorePerCamera[static_cast<MVGCameraWrapper*>(a)] > _selectionScorePerCamera[static_cast<MVGCameraWrapper*>(b)];
             });
+    _particleSelectionCameraSet->highlightLocators(false);
     // Update particle selection set's camera wrappers
     _particleSelectionCameraSet->setCameraWrappers(cams);
+    _particleSelectionCameraSet->highlightLocators(true);
 }
 
 void MVGProjectWrapper::updateCameraSetWrapperMembers(const MObject &set)
@@ -1078,12 +1083,21 @@ void MVGProjectWrapper::setCurrentCameraSet(MVGCameraSetWrapper* setWrapper)
 {
     if(_currentCameraSet == setWrapper)
         return;
-    // Disable particle selection if needed before changing the current set
-    if(_currentCameraSet == _particleSelectionCameraSet)
-        setUseParticleSelection(false);
+
+    if(_currentCameraSet)
+    {
+        // Remove camera locators highlighting
+        _currentCameraSet->highlightLocators(false);
+        // Disable particle selection if needed before changing the current set
+        if(_currentCameraSet == _particleSelectionCameraSet)
+            setUseParticleSelection(false);
+    }
 
     int previousIdx = getCurrentCameraSetIndex();
     _currentCameraSet = setWrapper;
+    // Highlight camera locators of the new set (if not the default one)
+    if(_currentCameraSet != _defaultCameraSet)
+        _currentCameraSet->highlightLocators(true);
     Q_EMIT currentCameraSetChanged();
     if(previousIdx != getCurrentCameraSetIndex())
         Q_EMIT currentCameraSetIndexChanged();

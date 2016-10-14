@@ -2,8 +2,8 @@
 
 #include "MVGQt.hpp"
 #include "QObjectListModel.hpp"
+#include <maya/MColor.h>
 #include <maya/MFnSet.h>
-#include <QtDeclarative>
 
 /**
  * MVGCameraSetWrapper is an object exposing a list of cameras as a Qt model.
@@ -37,6 +37,8 @@ public:
         _cameraWrappers.setObjectList(camWrappers);
     }
 
+    void highlightLocators(bool highlight=true);
+
     bool isEditable() {
         // Only sets corresponding to a real maya setObjet are editable/deletable
         return !_fnSet.object().isNull();
@@ -46,6 +48,8 @@ signals:
     void nameChanged();
 
 private:
+    static const MColor LOCATOR_HIGHLIGHT_COLOR;
+
     MFnSet _fnSet;
     QString _displayName;
     QObjectListModel _cameraWrappers;

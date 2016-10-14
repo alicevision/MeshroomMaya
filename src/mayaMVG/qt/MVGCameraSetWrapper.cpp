@@ -1,9 +1,13 @@
 #include "MVGCameraSetWrapper.hpp"
-#include <mayaMVG/core/MVGProject.hpp>
+#include "MVGCameraWrapper.hpp"
+#include "mayaMVG/core/MVGProject.hpp"
+
 #include <maya/MItDependencyNodes.h>
 
 namespace mayaMVG
 {
+
+const MColor MVGCameraSetWrapper::LOCATOR_HIGHLIGHT_COLOR = MColor(0.37f, 0.91f, 0.65f, 1.0f);
     
 MVGCameraSetWrapper::MVGCameraSetWrapper(const QString& displayName, QObject* parent):
 QObject(parent),
@@ -33,6 +37,16 @@ _cameraWrappers(this)
 
 MVGCameraSetWrapper::~MVGCameraSetWrapper()
 {
+}
+
+void MVGCameraSetWrapper::highlightLocators(bool highlight)
+{
+    for(auto* cam : _cameraWrappers.asQList<MVGCameraWrapper>())
+    {
+        if(!cam->getViews().empty())
+            continue;  // Already defines a custom locator color matching the panel's color
+        cam->getCamera().setLocatorCustomColor(highlight, highlight ? LOCATOR_HIGHLIGHT_COLOR : MColor());
+    }
 }
 
 }
