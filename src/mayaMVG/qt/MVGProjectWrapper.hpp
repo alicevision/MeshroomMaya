@@ -129,7 +129,7 @@ public:
     Q_INVOKABLE void remapPaths(const QString& abcFilePath);
     // Selection
     Q_INVOKABLE void addCamerasToIHMSelection(const QStringList& cameraNames, bool center = false);
-    Q_INVOKABLE void addCamerasToMayaSelection(const QStringList& cameraNames) const;
+    Q_INVOKABLE void addCamerasToMayaSelection(const QStringList& cameraNames);
     Q_INVOKABLE void addMeshesToIHMSelection(const QStringList& selectedMeshes,
                                              bool center = false);
     Q_INVOKABLE void addMeshesToMayaSelection(const QStringList& meshes) const;

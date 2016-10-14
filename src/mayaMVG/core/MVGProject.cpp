@@ -260,7 +260,7 @@ void MVGProject::setProjectDirectory(const std::string& directory) const
     MVGMayaUtil::setStringAttribute(path.node(), _MVG_PROJECTPATH, directory.c_str());
 }
 
-void MVGProject::selectCameras(const std::vector<std::string>& cameraNames) const
+void MVGProject::selectCameras(const std::vector<std::string>& cameraNames, MGlobal::ListAdjustment listAdjustment) const
 {
     MSelectionList list;
     for(std::vector<std::string>::const_iterator it = cameraNames.begin(); it != cameraNames.end();
@@ -269,7 +269,7 @@ void MVGProject::selectCameras(const std::vector<std::string>& cameraNames) cons
         MVGCamera camera(*it);
         list.add(camera.getDagPath());
     }
-    MGlobal::setActiveSelectionList(list);
+    MGlobal::setActiveSelectionList(list, listAdjustment);
 }
 
 void MVGProject::selectMeshes(const std::vector<std::string>& meshes) const

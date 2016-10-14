@@ -2,6 +2,7 @@
 
 #include "mayaMVG/core/MVGNodeWrapper.hpp"
 #include "maya/MColor.h"
+#include <maya/MGlobal.h>
 #include <vector>
 #include <list>
 #include <map>
@@ -39,7 +40,7 @@ public:
 public:
     const std::string getProjectDirectory() const;
     void setProjectDirectory(const std::string&) const;
-    void selectCameras(const std::vector<std::string>& cameraNames) const;
+    void selectCameras(const std::vector<std::string>& cameraNames, MGlobal::ListAdjustment=MGlobal::kReplaceList) const;
     void selectMeshes(const std::vector<std::string>& meshNames) const;
     void unlockProject() const;
     void lockProject() const;

@@ -236,6 +236,11 @@ void MVGProjectWrapper::setUseParticleSelection(bool value)
     static const QString particleSetName = "- PARTICLE SELECTION -";
     if(value)
     {
+        // Create a temporary set for particle selection
+        _particleSelectionCameraSet = new MVGCameraSetWrapper(particleSetName);
+        _cameraSets.append(_particleSelectionCameraSet);
+        // Use selection set as current set
+        setCurrentCameraSet(_particleSelectionCameraSet);
         // Would be better, but does not end up selecting the cloud node
         // allowing immediate interactive selection of particles
         //    MGlobal::selectByName(MVGProject::_CLOUD.c_str(), MGlobal::kReplaceList);
@@ -243,12 +248,7 @@ void MVGProjectWrapper::setUseParticleSelection(bool value)
         MString cmd;
         cmd.format("select \"^1s\"; selectMode -component", MVGProject::_CLOUD.c_str());
         MGlobal::executeCommand(cmd);
-        // Create a temporary set for particle selection
-        _particleSelectionCameraSet = new MVGCameraSetWrapper(particleSetName);
-        _cameraSets.append(_particleSelectionCameraSet);
         updateCamerasFromParticleSelection(true);
-        // Use selection set as current set
-        setCurrentCameraSet(_particleSelectionCameraSet);
     }
     else if(_particleSelectionCameraSet)
     {
@@ -522,14 +522,39 @@ void MVGProjectWrapper::addCamerasToIHMSelection(const QStringList& selectedCame
  *
  * @param[in] cameraNames Names list of the cameras to add to IHM selection
  */
-void MVGProjectWrapper::addCamerasToMayaSelection(const QStringList& cameraNames) const
+void MVGProjectWrapper::addCamerasToMayaSelection(const QStringList& cameraNames)
 {
     if(!_project.isValid())
         return;
     std::vector<std::string> cameras;
-    for(QStringList::const_iterator it = cameraNames.begin(); it != cameraNames.end(); ++it)
-        cameras.push_back(it->toStdString());
-    _project.selectCameras(cameras);
+    for(const auto& camName : cameraNames)
+        cameras.push_back(camName.toStdString());
+
+    if(useParticleSelection())
+    {
+        // Remove only cameras from the active selection list
+        // to keep the particle selection
+        MSelectionList currentSelection;
+        MGlobal::getActiveSelectionList(currentSelection);
+        MItSelectionList it(currentSelection, MFn::kCamera);
+
+        MSelectionList camList;
+        MDagPath p;
+        for( ; !it.isDone(); it.next()) {
+            it.getDagPath(p);
+            camList.add(p);
+        }
+        currentSelection.merge(camList, MSelectionList::kRemoveFromList);
+        MGlobal::setActiveSelectionList(currentSelection);
+        // Select the cameras in the UI to avoid 'centerCameraListByIndex' emission
+        addCamerasToIHMSelection(cameraNames, false);
+        // Add cameras to the active selection
+        _project.selectCameras(cameras, MGlobal::kAddToHeadOfList);
+    }
+    else
+    {
+        _project.selectCameras(cameras);
+    }
 }
 
 void MVGProjectWrapper::addMeshesToIHMSelection(const QStringList& selectedMeshPaths, bool center)
@@ -1027,35 +1052,39 @@ void MVGProjectWrapper::updateCamerasFromParticleSelection(bool force)
     if(!useParticleSelection())
         return;
 
-    QObjectList cams;
+    QObjectList filteredCams;
 
-    const auto maxIt = std::max_element(_selectionScorePerCamera.begin(), _selectionScorePerCamera.end(),
-            [](const std::pair<MVGCameraWrapper*, int>& p1, const std::pair<MVGCameraWrapper*, int>& p2)
-            {
-                return p1.second < p2.second;
-            });
-
-    const auto minScore = maxIt->second * (1.0f - (_selectionTolerance/100.0f));
-
-    // Keep only cameras meeting the minimum score requirement
-    for(const auto& elt : _selectionScorePerCamera)
+    if(!_particleSelection.empty())
     {
-        if(elt.second >= minScore)
-            cams.append(elt.first);
+        const auto maxIt = std::max_element(_selectionScorePerCamera.begin(), _selectionScorePerCamera.end(),
+                [](const std::pair<MVGCameraWrapper*, int>& p1, const std::pair<MVGCameraWrapper*, int>& p2)
+                {
+                    return p1.second < p2.second;
+                });
+
+        const auto minScore = maxIt->second * (1.0f - (_selectionTolerance/100.0f));
+
+        // Keep only cameras meeting the minimum score requirement
+        for(const auto& elt : _selectionScorePerCamera)
+        {
+            if(elt.second >= minScore)
+                filteredCams.append(elt.first);
+        }
+
+        // Unless forced to update, same size here means no changes
+        if(!force && filteredCams.size() == _particleSelectionCameraSet->getCameras()->size())
+            return;
+
+        // Sort model by score
+        std::sort(filteredCams.begin(), filteredCams.end(),
+                [this](QObject* a, QObject* b){
+                   return _selectionScorePerCamera[static_cast<MVGCameraWrapper*>(a)] > _selectionScorePerCamera[static_cast<MVGCameraWrapper*>(b)];
+                });
     }
 
-    // Unless forced to update, same size here means no changes
-    if(!force && cams.size() == _particleSelectionCameraSet->getCameras()->size())
-        return;
-
-    // Sort model by score
-    std::sort(cams.begin(), cams.end(),
-            [this](QObject* a, QObject* b){
-               return _selectionScorePerCamera[static_cast<MVGCameraWrapper*>(a)] > _selectionScorePerCamera[static_cast<MVGCameraWrapper*>(b)];
-            });
     _particleSelectionCameraSet->highlightLocators(false);
     // Update particle selection set's camera wrappers
-    _particleSelectionCameraSet->setCameraWrappers(cams);
+    _particleSelectionCameraSet->setCameraWrappers(filteredCams);
     _particleSelectionCameraSet->highlightLocators(true);
 }
 
