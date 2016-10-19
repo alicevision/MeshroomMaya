@@ -118,24 +118,28 @@ Item {
                         visible: m.project.useParticleSelection
 
                         Text {
-                            text: "Tolerance"
+                            text: "Min. Accuracy"
                             color: "white"
                             anchors.verticalCenter: parent.verticalCenter
                         }
 
+
                         Slider  {
-                            id: toleranceSlider
+                            id: accuracySlider
                             implicitWidth: 90
                             minimumValue: 0
                             maximumValue: 100
                             stepSize: 1
-                            value: m.project.particleSelectionTolerance
-                            onValueChanged: m.project.particleSelectionTolerance = value
+                            value: m.project.particleSelectionAccuracy
+                            onValueChanged: m.project.particleSelectionAccuracy = value
                         }
+
                         Text {
+                            property int minAccuracy: Math.max(m.project.particleMaxAccuracy * (m.project.particleSelectionAccuracy/100), 1)
                             anchors.verticalCenter: parent.verticalCenter
                             color: "white"
-                            text: toleranceSlider.value + "%"
+                            text: minAccuracy + " / " + m.project.particleSelectionCount + " points"
+                            visible: m.project.particleSelectionCount > 0
                         }
                     }
 
@@ -267,7 +271,7 @@ Item {
                             color: "#EEE"
                         }
                         Text {
-                            text: "<p>Keep the most accurate cameras for a specific area:</p>"
+                            text: "<p>To keep the most accurate cameras for a specific area:</p>"
                             anchors.horizontalCenter: parent.horizontalCenter
                             font.pointSize: 10
                             color: textColor
@@ -279,7 +283,7 @@ Item {
 
                             Repeater {
                                 model: ["Select relevant particles in the 3D viewport",
-                                        "Adjust camera count using the tolerance slider",
+                                        "Filter cameras using the accuracy slider",
                                         "Create a new Camera Set with <img src='img/add_box.png' align='top'/> when done"]
                                 delegate: Text {
                                     text: index + 1 + ". " + modelData
@@ -339,7 +343,7 @@ Item {
                     source: "img/thumbnailSize.png"
                     TooltipArea {
                         anchors.fill: parent
-                        text: "Thumbnail Size"
+                        text: "Thumbnails Size"
                     }
                 }
                 Slider {

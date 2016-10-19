@@ -30,8 +30,10 @@ class MVGProjectWrapper : public QObject
 
     Q_PROPERTY(bool useParticleSelection READ useParticleSelection WRITE setUseParticleSelection
                NOTIFY useParticleSelectionChanged)
-    Q_PROPERTY(int particleSelectionTolerance READ getParticleSelectionTolerance
-               WRITE setParticleSelectionTolerance NOTIFY particleSelectionToleranceChanged)
+    Q_PROPERTY(int particleSelectionAccuracy READ getParticleSelectionAccuracy
+               WRITE setParticleSelectionAccuracy NOTIFY particleSelectionAccuracyChanged)
+    Q_PROPERTY(int particleSelectionCount READ getParticleSelectionCount NOTIFY particleSelectionCountChanged)
+    Q_PROPERTY(int particleMaxAccuracy READ getParticleMaxAccuracy NOTIFY particleMaxAccuracyChanged)
     Q_PROPERTY(QString currentContext READ getCurrentContext WRITE setCurrentContext NOTIFY
                    currentContextChanged)
     Q_PROPERTY(QObjectListModel* panelList READ getPanelList NOTIFY panelListChanged)
@@ -40,7 +42,6 @@ class MVGProjectWrapper : public QObject
     Q_PROPERTY(bool isProjectLoading READ getIsProjectLoading NOTIFY isProjectLoadingChanged)
     Q_PROPERTY(bool activeSynchro READ getActiveSynchro WRITE setActiveSynchro NOTIFY
                    activeSynchroChanged)
-    
 
     Q_PROPERTY(int cameraSelectionCount READ getCameraSelectionCount NOTIFY cameraSelectionCountChanged)
 
@@ -82,15 +83,26 @@ public Q_SLOTS:
 
     bool useParticleSelection() const;
     void setUseParticleSelection(bool value);
+
+    size_t getParticleSelectionCount() const { return _particleSelection.size(); }
+
+    int getParticleMaxAccuracy() const { return _particleMaxAccuracy; }
+    void setParticleMaxAccuracy(int value) {
+        if(_particleMaxAccuracy == value)
+            return;
+        _particleMaxAccuracy = value;
+        Q_EMIT particleMaxAccuracyChanged();
+    }
+
     void updateParticleSelection(const std::set<int>& selection);
 
-    int getParticleSelectionTolerance() const { return _selectionTolerance; }
-    void setParticleSelectionTolerance(int value) {
-        if(_selectionTolerance == value)
+    int getParticleSelectionAccuracy() const { return _particleSelectionAccuracy; }
+    void setParticleSelectionAccuracy(int value) {
+        if(_particleSelectionAccuracy == value)
             return;
-        _selectionTolerance = value;
+        _particleSelectionAccuracy = value;
         updateCamerasFromParticleSelection();
-        Q_EMIT particleSelectionToleranceChanged();
+        Q_EMIT particleSelectionAccuracyChanged();
     }
 
 Q_SIGNALS:
@@ -111,7 +123,9 @@ Q_SIGNALS:
     void currentCameraSetIndexChanged();
     void cameraPointsDisplayModeChanged();
     void useParticleSelectionChanged();
-    void particleSelectionToleranceChanged();
+    void particleSelectionAccuracyChanged();
+    void particleSelectionCountChanged();
+    void particleMaxAccuracyChanged();
 
 public:
     Q_INVOKABLE QString openFileDialog() const;
@@ -204,7 +218,9 @@ private:
     std::set<int> _particleSelection;
     std::map<MVGCameraWrapper*, int> _selectionScorePerCamera;
     std::map<int, std::vector<MVGCameraWrapper*>> _camerasPerPoint;
-    int _selectionTolerance;
+    int _particleSelectionAccuracy;
+    int _particleMaxAccuracy;
+
     MVGCameraSetWrapper* _defaultCameraSet;
     MVGCameraSetWrapper* _currentCameraSet;
     MVGCameraSetWrapper* _particleSelectionCameraSet;

@@ -80,7 +80,7 @@ std::set<T> setsIntersection(const std::vector< std::set<T> >& sets)
 MVGProjectWrapper::MVGProjectWrapper(QObject* parent):
 QObject(parent),
 _currentCameraSetId(0),
-_selectionTolerance(25),
+_particleSelectionAccuracy(25),
 _defaultCameraSet(new MVGCameraSetWrapper("- ALL -", this)),
 _currentCameraSet(_defaultCameraSet),
 _particleSelectionCameraSet(nullptr),
@@ -294,6 +294,7 @@ void MVGProjectWrapper::updateParticleSelection(const std::set<int>& selection)
             _selectionScorePerCamera[camWrapper]++;
         }
     }
+    Q_EMIT particleSelectionCountChanged();
     updateCamerasFromParticleSelection(true);
 }
 
@@ -1082,13 +1083,13 @@ void MVGProjectWrapper::updateCamerasFromParticleSelection(bool force)
                 {
                     return p1.second < p2.second;
                 });
-
-        const auto minScore = maxIt->second * (1.0f - (_selectionTolerance/100.0f));
+        setParticleMaxAccuracy(maxIt->second);
+        const auto minAccuracy = getParticleMaxAccuracy() * (_particleSelectionAccuracy/100.0f);
 
         // Keep only cameras meeting the minimum score requirement
         for(const auto& elt : _selectionScorePerCamera)
         {
-            if(elt.second >= minScore)
+            if(elt.second >= minAccuracy)
                 filteredCams.append(elt.first);
         }
 
