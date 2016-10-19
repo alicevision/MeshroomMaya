@@ -187,6 +187,9 @@ MStatus initializePlugin(MObject obj)
     id = MEventMessage::addEventCallback("NewSceneOpened", newSceneCB, &status);
     if(status)
         _callbacks.append(id);
+    id = MEventMessage::addEventCallback("deleteAll", newSceneCB, &status);
+    if(status)
+        _callbacks.append(id);
     id = MEventMessage::addEventCallback("SceneOpened", sceneChangedCB, &status);
     if(status)
         _callbacks.append(id);
