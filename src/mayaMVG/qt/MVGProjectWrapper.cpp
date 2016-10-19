@@ -1031,7 +1031,9 @@ void MVGProjectWrapper::reloadMVGCamerasFromMaya()
             _camerasPerPoint[indices[i]].push_back(cameraWrapper);
         }
         MObject cam = camera.getObject();
-
+        // Lock cam node to avoid manipulation errors
+        MFnDagNode dagCam(cam);
+        dagCam.setLocked(true);
         MCallbackId cbId = MNodeMessage::addNodePreRemovalCallback(cam, [](MObject& node, void* projectWrapper) {
             auto* project = static_cast<MVGProjectWrapper*>(projectWrapper);
             project->removeCameraFromUI(node);
