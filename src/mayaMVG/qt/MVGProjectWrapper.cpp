@@ -513,7 +513,9 @@ void MVGProjectWrapper::addCamerasToIHMSelection(const QStringList& selectedCame
         if(center && camera->getDagPathAsString() == selectedCameraNames[0])
         {
             setCameraToView(camera, static_cast<MVGPanelWrapper*>(_panelList.get(0))->getName());
-            Q_EMIT centerCameraListByIndex(_currentCameraSet->getCameras()->indexOf(camera));
+            const auto idx = _currentCameraSet->getCameras()->indexOf(camera);
+            if(idx >= 0)
+                Q_EMIT centerCameraListByIndex(idx);
         }
     }
     Q_EMIT cameraSelectionCountChanged();
