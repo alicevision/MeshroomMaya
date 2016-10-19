@@ -157,7 +157,7 @@ public:
     void clearCameraSelection();
     void clearMeshSelection();
     // UI
-    void removeCameraFromUI(MDagPath& cameraPath);
+    void removeCameraFromUI(MObject& cameraPath);
     void addMeshToUI(const MDagPath& meshPath);
     void removeMeshFromUI(const MDagPath& meshPath);
     void addCameraSetToUI(MObject& set, bool makeCurrent=false);

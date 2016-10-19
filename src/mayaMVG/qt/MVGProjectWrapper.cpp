@@ -18,6 +18,7 @@
 #include <maya/MFnTypedAttribute.h>
 #include <maya/MFnTransform.h>
 #include <maya/MFnIntArrayData.h>
+#include <maya/MFnCamera.h>
 #include <maya/MDagPath.h>
 #include <maya/MNodeMessage.h>
 #include <maya/MFnSet.h>
@@ -872,18 +873,27 @@ void MVGProjectWrapper::clearMeshSelection()
     _selectedMeshes.clear();
 }
 
-void MVGProjectWrapper::removeCameraFromUI(MDagPath& cameraPath)
+void MVGProjectWrapper::removeCameraFromUI(MObject& camera)
 {
-    MVGCamera camera(cameraPath);
-    if(!camera.isValid())
-        return;
+    MFnCamera fnCam(camera);
+    MDagPath path;
+    fnCam.getPath(path);
+    const std::string camName = path.fullPathName().asChar();
+    // Remove callbacks on this node
+    MMessage::removeCallbacks(_nodeCallbacks[camName]);
+    _nodeCallbacks.erase(camName);
 
-    auto* wrapper = _camerasByName[camera.getDagPathAsString()];
+    auto it = _camerasByName.find(camName);
+    if(it == _camerasByName.end())
+        return;
+    _camerasByName.erase(camName);
+
+    auto* wrapper = it->second;
     // Remove all occurences of the wrapper in the camera sets
     for (MVGCameraSetWrapper* setWrapper : _cameraSets.asQList<MVGCameraSetWrapper>())
     {
         const int idx = setWrapper->getCameras()->indexOf(wrapper);
-        if(idx > 0)
+        if(idx >= 0)
             setWrapper->getCameras()->removeAt(idx);
     }
 
@@ -891,11 +901,11 @@ void MVGProjectWrapper::removeCameraFromUI(MDagPath& cameraPath)
     MDagPath leftCameraPath, rightCameraPath;
     MVGMayaUtil::getCameraInView(leftCameraPath, "mvgLPanel");
     leftCameraPath.extendToShape();
-    if(leftCameraPath.fullPathName() == cameraPath.fullPathName())
+    if(leftCameraPath.fullPathName() == camName.c_str())
         MVGMayaUtil::clearCameraInView("mvgLPanel");
     MVGMayaUtil::getCameraInView(rightCameraPath, "mvgRPanel");
     rightCameraPath.extendToShape();
-    if(rightCameraPath.fullPathName() == cameraPath.fullPathName())
+    if(rightCameraPath.fullPathName() == camName.c_str())
         MVGMayaUtil::clearCameraInView("mvgRPanel");
 }
 
@@ -1018,6 +1028,13 @@ void MVGProjectWrapper::reloadMVGCamerasFromMaya()
                 _camerasPerPoint.emplace(indices[i], std::vector<MVGCameraWrapper*>());
             _camerasPerPoint[indices[i]].push_back(cameraWrapper);
         }
+        MObject cam = camera.getObject();
+
+        MCallbackId cbId = MNodeMessage::addNodePreRemovalCallback(cam, [](MObject& node, void* projectWrapper) {
+            auto* project = static_cast<MVGProjectWrapper*>(projectWrapper);
+            project->removeCameraFromUI(node);
+        }, static_cast<void*>(this));
+        _nodeCallbacks[camera.getName()].append(cbId);
     }
     // TODO : Camera selection
 

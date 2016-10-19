@@ -207,18 +207,6 @@ static void nodeRemovedCB(MObject& node, void*)
 
     switch(node.apiType())
     {
-        case MFn::kCamera:
-        {
-            // Check that it is one of ours cameras
-            MDagPath cameraPath;
-            CHECK_RETURN(MDagPath::getAPathTo(node, cameraPath))
-            MVGCamera camera(cameraPath);
-            if(!camera.isValid())
-                return;
-            // Remove camera from UI model
-            project->removeCameraFromUI(cameraPath);
-            break;
-        }
         case MFn::kMesh:
         {
             MFnDagNode fn(node);
@@ -233,11 +221,6 @@ static void nodeRemovedCB(MObject& node, void*)
             cmd.format("^1s -e -rebuild ^2s", MVGContextCmd::name, MVGContextCmd::instanceName);
             MGlobal::executeCommand(cmd);
             break;
-        }
-        case MFn::kSet:
-        {
-            if(MVGProject::isMVGCameraSet(node))
-                project->removeCameraSetFromUI(node);
         }
         default:
             break;
