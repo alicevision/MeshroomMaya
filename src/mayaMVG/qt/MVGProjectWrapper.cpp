@@ -1120,7 +1120,11 @@ void MVGProjectWrapper::updateCameraSetWrapperMembers(const MObject &set)
         selectionIt.getDagPath(path);
         path.extendToShape();
         if(path.apiType() == MFn::kCamera)
-            cams.append(_camerasByName[path.fullPathName().asChar()]);
+        {
+            MVGCamera cam(path);
+            if(cam.isValid() && _camerasByName.count(cam.getDagPathAsString()))
+                cams.append(_camerasByName[cam.getDagPathAsString()]);
+        }
     }
     wrapper->setCameraWrappers(cams);
 }
