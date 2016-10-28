@@ -26,7 +26,6 @@
 #include <maya/MItSelectionList.h>
 #include <maya/MObjectSetMessage.h>
 #include <maya/MDagModifier.h>
-#include <maya/MDagPath.h>
 
 namespace mayaMVG
 {
@@ -761,6 +760,21 @@ void MVGProjectWrapper::setCameraLocatorScale(const double scale)
     for(std::map<std::string, MVGCameraWrapper*>::const_iterator it = _camerasByName.begin();
         it != _camerasByName.end(); ++it)
         it->second->getCamera().setLocatorScale(scale);
+}
+
+void MVGProjectWrapper::selectCamerasPoints()
+{
+    std::set<int> points;
+    MIntArray array;
+    for(const auto& camName : _selectedCameras)
+    {
+        _camerasByName[camName.toStdString()]->getCamera().getVisibleIndexes(array);
+        for(unsigned int i=0; i<array.length(); ++i)
+            points.insert(array[i]);
+    }
+    // Activate particle selection mode
+    setUseParticleSelection(true);
+    MVGMayaUtil::selectParticles(MVGProject::_CLOUD.c_str(), points);
 }
 
 void MVGProjectWrapper::createCameraSetFromSelection(const QString& name, bool makeCurrent)

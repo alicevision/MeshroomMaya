@@ -328,6 +328,10 @@ Item {
                 }
                 Separator { }
                 MenuItem {
+                    text: "Select Camera(s) visible Points"
+                    onTriggered: m.project.selectCamerasPoints()
+                }
+                MenuItem {
                     text: "Create Set from Selection"
                     onTriggered: {
                         camSetCreationDialog.useSelection = true

@@ -3,6 +3,7 @@
 #include <maya/MString.h>
 #include <maya/MStatus.h>
 #include <vector>
+#include <set>
 
 class MObject;
 class MPlug;
@@ -56,6 +57,7 @@ struct MVGMayaUtil
     // maya selection
     static MStatus addToMayaSelection(const MString& objectName);
     static MStatus clearMayaSelection();
+    static MStatus selectParticles(const MString &objectName, const std::set<int> &points);
     // attributes
     static MStatus getIntArrayAttribute(const MObject&, const MString&, MIntArray&, bool = false);
     static MStatus setIntArrayAttribute(const MObject&, const MString&, const MIntArray&,

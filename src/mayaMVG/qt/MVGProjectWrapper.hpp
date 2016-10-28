@@ -156,6 +156,7 @@ public:
     Q_INVOKABLE void setCamerasFar(const double far);
     Q_INVOKABLE void setCamerasDepth(const double far);
     Q_INVOKABLE void setCameraLocatorScale(const double scale);
+    Q_INVOKABLE void selectCamerasPoints();
     // Camera Sets
     Q_INVOKABLE void createCameraSetFromSelection(const QString& name, bool makeCurrent);
     Q_INVOKABLE void duplicateCameraSet(const QString& copyName, mayaMVG::MVGCameraSetWrapper* sourceSet, bool makeCurrent);
