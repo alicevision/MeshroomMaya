@@ -242,12 +242,8 @@ void MVGProjectWrapper::setUseParticleSelection(bool value)
         _cameraSets.append(_particleSelectionCameraSet);
         // Use selection set as current set
         setCurrentCameraSet(_particleSelectionCameraSet);
-        // Would be better, but does not end up selecting the cloud node
-        // allowing immediate interactive selection of particles
-        //    MGlobal::selectByName(MVGProject::_CLOUD.c_str(), MGlobal::kReplaceList);
-        //    MGlobal::setSelectionMode(MGlobal::kSelectComponentMode);
         MString cmd;
-        cmd.format("select \"^1s\"; selectMode -component", MVGProject::_CLOUD.c_str());
+        cmd.format("select \"^1s\"; selectType -pr true; selectMode -component", MVGProject::_CLOUD.c_str());
         MGlobal::executeCommand(cmd);
         updateCamerasFromParticleSelection(true);
     }
