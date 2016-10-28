@@ -26,6 +26,7 @@
 #include <maya/MItSelectionList.h>
 #include <maya/MObjectSetMessage.h>
 #include <maya/MDagModifier.h>
+#include <maya/MDagPath.h>
 
 namespace mayaMVG
 {
@@ -630,6 +631,16 @@ void MVGProjectWrapper::setCameraToView(MVGCameraWrapper* cameraWrapper, const Q
     }
 
     updatePointsVisibility();
+}
+
+void MVGProjectWrapper::setPerspFromCamera(MVGCameraWrapper *wrapper)
+{
+    // Retrieve "persp" cam transform
+    MDagPath perspPath;
+    CHECK_RETURN(MVGMayaUtil::getDagPathByName("persp", perspPath));
+    MFnTransform perspTransform(perspPath);
+    // Apply transform from the given camera
+    perspTransform.set(wrapper->getCamera().getDagPath().inclusiveMatrix());
 }
 
 void MVGProjectWrapper::swapViews()

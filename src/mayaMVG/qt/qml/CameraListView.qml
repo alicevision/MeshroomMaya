@@ -323,15 +323,21 @@ Item {
                 id: menu
                 Separator {}
                 MenuItem {
-                    text: "Open File"
-                    onTriggered: {Qt.openUrlExternally(ma.clickedItem.imagePath)}
+                    text: "View in \"persp\""
+                    onTriggered: m.project.setPerspFromCamera(ma.clickedItem)
                 }
+                Separator { }
                 MenuItem {
                     text: "Create Set from Selection"
                     onTriggered: {
                         camSetCreationDialog.useSelection = true
                         camSetCreationDialog.show()
                     }
+                }
+                Separator { }
+                MenuItem {
+                    text: "Open File"
+                    onTriggered: {Qt.openUrlExternally(ma.clickedItem.imagePath)}
                 }
             }
         }
