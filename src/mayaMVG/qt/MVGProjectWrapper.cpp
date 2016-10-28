@@ -604,10 +604,8 @@ void MVGProjectWrapper::deleteCameraSet(MVGCameraSetWrapper* setWrapper)
     MGlobal::executeCommand(cmd, false, true);
 }
 
-void MVGProjectWrapper::setCameraToView(QObject* camera, const QString& viewName)
+void MVGProjectWrapper::setCameraToView(MVGCameraWrapper* cameraWrapper, const QString& viewName)
 {
-    MVGCameraWrapper* cameraWrapper = static_cast<MVGCameraWrapper*>(camera);
-
     // Push command
     _project.pushLoadCurrentImagePlaneCommand(viewName.toStdString());
     // Set UI
@@ -636,6 +634,14 @@ void MVGProjectWrapper::setCameraToView(QObject* camera, const QString& viewName
     }
 
     updatePointsVisibility();
+}
+
+void MVGProjectWrapper::swapViews()
+{
+    MVGCameraWrapper* lPanelCam = cameraFromViewName("mvgLPanel");
+    MVGCameraWrapper* rPanelCam = cameraFromViewName("mvgRPanel");
+    setCameraToView(rPanelCam, "mvgLPanel");
+    setCameraToView(lPanelCam, "mvgRPanel");
 }
 
 void MVGProjectWrapper::initCameraPointsLocator() 

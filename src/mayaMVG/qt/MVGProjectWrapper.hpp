@@ -149,7 +149,8 @@ public:
     Q_INVOKABLE void addMeshesToMayaSelection(const QStringList& meshes) const;
     Q_INVOKABLE void selectClosestCam() const;
     // Cameras
-    Q_INVOKABLE void setCameraToView(QObject* camera, const QString& viewName);
+    Q_INVOKABLE void setCameraToView(mayaMVG::MVGCameraWrapper* cameraWrapper, const QString& viewName);
+    Q_INVOKABLE void swapViews();
     Q_INVOKABLE void setCamerasNear(const double near);
     Q_INVOKABLE void setCamerasFar(const double far);
     Q_INVOKABLE void setCamerasDepth(const double far);

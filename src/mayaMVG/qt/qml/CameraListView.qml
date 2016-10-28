@@ -87,19 +87,13 @@ Item {
                 RowLayout {
                     width: parent.width
                     height: 23
-
                     ToolButton {
                         implicitWidth: 23
                         height: 23
-                        iconSource: "img/add_box.png"
-                        tooltip: "Create new Camera Set"
-
-                        onClicked: {
-                            camSetCreationDialog.useSelection = m.project.cameraSelectionCount > 1
-                            camSetCreationDialog.show()
-                        }
+                        iconSource: "img/swapViews.png"
+                        tooltip: "Swap Views"
+                        onClicked: m.project.swapViews()
                     }
-
                     ToolButton {
                         id: particleModeBtn
                         implicitHeight: parent.height
@@ -189,6 +183,18 @@ Item {
                         Connections {
                             target: m.project.cameraSets
                             onCountChanged: cameraSetsCB.rebuildMenu()
+                        }
+                    }
+
+                    ToolButton {
+                        implicitWidth: 23
+                        height: 23
+                        iconSource: "img/add_box.png"
+                        tooltip: "Create new Camera Set"
+
+                        onClicked: {
+                            camSetCreationDialog.useSelection = m.project.cameraSelectionCount > 1
+                            camSetCreationDialog.show()
                         }
                     }
 
