@@ -34,7 +34,6 @@ include(${QT_USE_FILE})
 # OpenMVG dependency
 #
 find_package(OpenMVG REQUIRED)
-find_package(Ceres REQUIRED)
 
 #
 # OpenGL dependency

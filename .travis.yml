@@ -40,7 +40,7 @@ before_script:
   - export CXX="g++-4.8"
   # Create build folder
   - mkdir $MAYAMVG_BUILD
-  - cd $OPENMVG_BUILD
+  - cd $MAYAMVG_BUILD
   # Classic release build
   - >
      cmake \

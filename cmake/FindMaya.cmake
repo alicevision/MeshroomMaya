@@ -156,8 +156,6 @@ FOREACH(_maya_lib
     FIND_LIBRARY(MAYA_${_maya_lib}_LIBRARY ${_maya_lib}
       HINTS
         ${MAYA_LOCATION}
-      PATHS
-        ${_maya_TEST_PATHS}
       PATH_SUFFIXES
         MacOS  # osx
       NO_CMAKE_SYSTEM_PATH # this must be used or else Foundation.framework will be found instead of libFoundation
@@ -167,8 +165,6 @@ FOREACH(_maya_lib
     FIND_LIBRARY(MAYA_${_maya_lib}_LIBRARY ${_maya_lib}
       HINTS
         ${MAYA_LOCATION}
-      PATHS
-        ${_maya_TEST_PATHS}
       PATH_SUFFIXES
         lib    # linux and windows
       DOC "Maya's ${MAYA_LIB} library path"
