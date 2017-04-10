@@ -10,6 +10,7 @@ import QtDesktop 0.1
 RowLayout {
     property alias label: lbl.text
     property alias labelWidth: lbl_container.width
+    property alias tooltip: tooltip.text
     // Use "content" as parent for instantiated children
     default property alias children: content.children
 
@@ -26,6 +27,10 @@ RowLayout {
             color: "white"
             width: parent.width
             horizontalAlignment: Text.AlignRight
+        }
+        TooltipArea {
+            id: tooltip
+            anchors.fill: parent
         }
     }
     // Content

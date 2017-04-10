@@ -116,6 +116,12 @@ Item {
                 MSettingsEntry {
                     label: "Cam. Visible Points"
                     width: parent.width - 40
+                    tooltip: "Display mode for points visible by active (left/right) cameras<br/>
+                              <b>None</b>: no display<br/>
+                              <b>Both</b>: points of both cams in both views<br/>
+                              <b>Each</b>: points of each cam only in its view<br/>
+                              <b>Common Points</b>: only points visible by both cams<br/>
+                             "
                     ComboBox {
                         implicitWidth: 120
                         model: ListModel {
