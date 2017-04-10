@@ -614,8 +614,9 @@ void MVGProjectWrapper::setCameraToView(MVGCameraWrapper* cameraWrapper, const Q
             camWrapper->getCamera().setLocatorCustomColor(false);
         }
     }
+
     // Update active camera
-    _activeCameraNameByView[viewName.toStdString()] = cameraWrapper->getDagPathAsString().toStdString();
+    _activeCameraNameByView[viewName.toStdString()] = cameraWrapper ? cameraWrapper->getDagPathAsString().toStdString() : "";
 
     // Update data from new configuration
     for(const auto& camByView : _activeCameraNameByView)
@@ -646,8 +647,8 @@ void MVGProjectWrapper::swapViews()
 {
     MVGCameraWrapper* lPanelCam = cameraFromViewName("mvgLPanel");
     MVGCameraWrapper* rPanelCam = cameraFromViewName("mvgRPanel");
-    setCameraToView(rPanelCam, "mvgLPanel");
-    setCameraToView(lPanelCam, "mvgRPanel");
+    if(rPanelCam) setCameraToView(rPanelCam, "mvgLPanel");
+    if(lPanelCam) setCameraToView(lPanelCam, "mvgRPanel");
 }
 
 void MVGProjectWrapper::initCameraPointsLocator() 
