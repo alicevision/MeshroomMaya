@@ -9,6 +9,7 @@
 #include <maya/MFnParticleSystem.h>
 #include <maya/MVectorArray.h>
 #include <maya/MPointArray.h>
+#include <maya/MDoubleArray.h>
 #include <maya/MSelectionList.h>
 #include <maya/MDagModifier.h>
 #include <maya/MFnTypedAttribute.h>
@@ -208,6 +209,53 @@ bool MVGPointCloud::projectPointsWithLineConstraint(
 
     // Project the mouse point
     return MVGGeometryUtil::projectPointOnPlane(view, mouseCSPoint, model, projectedWSMouse);
+}
+
+MStatus MVGPointCloud::setOpacity(double value)
+{
+    MFnParticleSystem fn(_dagpath);
+    MDoubleArray array(fn.count(), value);
+    return setOpacityPPAttribute(array);
+}
+
+MStatus MVGPointCloud::setOpacity(const MIntArray &indices, double value)
+{
+    MDoubleArray array;
+    getOpacityPP(array);
+    for(unsigned int i=0; i<indices.length(); ++i)
+        array[indices[i]] = value;
+    return setOpacityPPAttribute(array);
+}
+
+MStatus MVGPointCloud::getOpacityPP(MDoubleArray& values)
+{
+    MStatus status;
+    MFnParticleSystem fn(_dagpath, &status);
+    ensureOpacityPPAttribute();
+    fn.getPerParticleAttribute("opacityPP", values, &status);
+    return status;
+}
+
+MStatus MVGPointCloud::setOpacityPPAttribute(MDoubleArray& values)
+{
+    MStatus status;
+    MFnParticleSystem fn(_dagpath, &status);
+    ensureOpacityPPAttribute();
+    fn.setPerParticleAttribute("opacityPP", values, &status);
+    return status;
+}
+
+MStatus MVGPointCloud::ensureOpacityPPAttribute()
+{
+    MStatus status;
+    MFnParticleSystem fn(_dagpath, &status);
+    if(!fn.isPerParticleDoubleAttribute("opacityPP"))
+    {
+        MFnTypedAttribute typedAttr;
+        MObject attrObject = typedAttr.create("opacityPP", "opacityPP", MFnData::kDoubleArray);
+        fn.addAttribute(attrObject);
+    }
+    return status;
 }
 
 } // namespace

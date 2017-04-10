@@ -48,6 +48,11 @@ class MVGProjectWrapper : public QObject
     Q_PROPERTY(int cameraPointsDisplayMode READ getCameraPointsDisplayMode
                WRITE setCameraPointsDisplayMode NOTIFY cameraPointsDisplayModeChanged)
 
+    Q_PROPERTY(bool filterPoints READ getFilterPoints WRITE setFilterPoints
+               NOTIFY filterPointsChanged)
+    Q_PROPERTY(int pointsFilteringThreshold READ getPointsFilteringThreshold
+               WRITE setPointsFilteringThreshold NOTIFY pointsFilteringThresholdChanged)
+
 public:
     MVGProjectWrapper(QObject* parent=nullptr);
     ~MVGProjectWrapper();
@@ -105,6 +110,18 @@ public Q_SLOTS:
         Q_EMIT particleSelectionAccuracyChanged();
     }
 
+    int getPointsFilteringThreshold() const { return _pointsFilteringThreshold; }
+    void setPointsFilteringThreshold(int value) {
+        if(_pointsFilteringThreshold == value)
+            return;
+        _pointsFilteringThreshold = value;
+        updateParticlesOpacity();
+        Q_EMIT pointsFilteringThresholdChanged();
+    }
+
+    bool getFilterPoints() const { return _filterPoints; }
+    void setFilterPoints(bool value);
+
 Q_SIGNALS:
     void projectDirectoryChanged();
     void editModeChanged();
@@ -124,8 +141,11 @@ Q_SIGNALS:
     void cameraPointsDisplayModeChanged();
     void useParticleSelectionChanged();
     void particleSelectionAccuracyChanged();
+    void pointsFilteringThresholdChanged();
+
     void particleSelectionCountChanged();
     void particleMaxAccuracyChanged();
+    void filterPointsChanged();
 
 public:
     Q_INVOKABLE QString openFileDialog() const;
@@ -187,6 +207,9 @@ public:
     void setMoveMode(const int mode);
     void updatePanelColor(const QString& viewName);
     
+protected Q_SLOTS:
+    void updateParticlesOpacity();
+
 private:
     void initCameraPointsLocator();
     void updatePointsVisibility();
@@ -223,6 +246,8 @@ private:
     std::map<int, std::vector<MVGCameraWrapper*>> _camerasPerPoint;
     int _particleSelectionAccuracy;
     int _particleMaxAccuracy;
+    bool _filterPoints;
+    int _pointsFilteringThreshold;
 
     MVGCameraSetWrapper* _defaultCameraSet;
     MVGCameraSetWrapper* _currentCameraSet;

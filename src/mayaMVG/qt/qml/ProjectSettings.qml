@@ -37,7 +37,7 @@ Item {
             State {
                 name: "OPEN"
                 when: m.isOpen
-                PropertyChanges { target: settings; height: 360; }
+                PropertyChanges { target: settings; height: 385; }
                 PropertyChanges { target: settings; opacity: 1; }
             }
         ]
@@ -151,6 +151,32 @@ Item {
                                 enabled: m.project.projectDirectory !== ""
                                 selectedIndex: m.project.cameraPointsDisplayMode
                                 onSelectedIndexChanged: if(activeFocus) m.project.cameraPointsDisplayMode = selectedIndex
+                            }
+                        }
+
+                        MSettingsEntry {
+                            width: mainColumn.settingsEntryWidth
+                            label: "Filter Points"
+                            tooltip: "Display only points seen by at least the given number of cameras of the current camera set."
+                            MCheckBox {
+                                anchors.verticalCenter: parent.verticalCenter
+                                width: 10
+                                checked: m.project.filterPoints
+                                onClicked: m.project.filterPoints = !m.project.filterPoints
+                            }
+                            Slider  {
+                                implicitWidth: 90
+                                minimumValue: 1
+                                maximumValue: 100
+                                stepSize: 1
+                                enabled: m.project && m.project.filterPoints
+                                value: m.project.pointsFilteringThreshold
+                                onValueChanged: if(containsMouse) m.project.pointsFilteringThreshold = value
+                            }
+                            Text {
+                                anchors.verticalCenter: parent.verticalCenter
+                                text: m.project.pointsFilteringThreshold + " +"
+                                color: m.textColor
                             }
                         }
                     }

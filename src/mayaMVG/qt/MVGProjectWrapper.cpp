@@ -81,6 +81,8 @@ MVGProjectWrapper::MVGProjectWrapper(QObject* parent):
 QObject(parent),
 _currentCameraSetId(0),
 _particleSelectionAccuracy(25),
+_filterPoints(false),
+_pointsFilteringThreshold(1),
 _defaultCameraSet(new MVGCameraSetWrapper("- ALL -", this)),
 _currentCameraSet(_defaultCameraSet),
 _particleSelectionCameraSet(nullptr),
@@ -294,6 +296,66 @@ void MVGProjectWrapper::updateParticleSelection(const std::set<int>& selection)
     updateCamerasFromParticleSelection(true);
 }
 
+void MVGProjectWrapper::setFilterPoints(bool value) {
+    if(_filterPoints == value)
+        return;
+    _filterPoints = value;
+
+    if(_filterPoints)
+    {
+        connect(this, SIGNAL(currentCameraSetChanged()), this, SLOT(updateParticlesOpacity()));
+        connect(this, SIGNAL(particleSelectionAccuracyChanged()), this, SLOT(updateParticlesOpacity()));
+    }
+    else
+    {
+        disconnect(this, SIGNAL(currentCameraSetChanged()), this, SLOT(updateParticlesOpacity()));
+        disconnect(this, SIGNAL(particleSelectionAccuracyChanged()), this, SLOT(updateParticlesOpacity()));
+    }
+    updateParticlesOpacity();
+    Q_EMIT filterPointsChanged();
+}
+
+void MVGProjectWrapper::updateParticlesOpacity()
+{
+    // opacity is not taken into account when using particle selection in Maya
+    if(useParticleSelection())
+        return;
+
+    MVGPointCloud pc(MVGProject::_CLOUD);
+    if(!pc.isValid())
+        return;
+
+    if(_filterPoints)
+    {
+        // Set opacity to 0 for all particles
+        pc.setOpacity(0);
+        // set opacity to 1 for particles visible by cams in current set
+        std::set<int> indices;
+        std::map<int, int> indexScore;
+        MIntArray array;
+        for(auto* wrapper : _currentCameraSet->getCameras()->asQList<MVGCameraWrapper>())
+        {
+
+            wrapper->getCamera().getVisibleIndexes(array);
+            for(unsigned int i=0; i < array.length(); ++i)
+            {
+                indexScore[array[i]]++;
+            }
+        }
+        array.clear();
+        for(const auto& indexToScore : indexScore)
+        {
+            if(indexToScore.second > _pointsFilteringThreshold)
+                array.append(indexToScore.first);
+        }
+        pc.setOpacity(array, 1.0);
+    }
+    else
+    {
+        pc.setOpacity(1.0);
+    }
+}
+
 QString MVGProjectWrapper::openFileDialog() const
 {
     MString directoryPath;
@@ -344,7 +406,7 @@ void MVGProjectWrapper::loadExistingProject()
     if(projects.empty())
         return;
     _project = projects.front();
-    
+
     initCameraPointsLocator();
     reloadMVGCamerasFromMaya();
     reloadMVGMeshesFromMaya();
@@ -651,7 +713,7 @@ void MVGProjectWrapper::swapViews()
     if(lPanelCam) setCameraToView(lPanelCam, "mvgRPanel");
 }
 
-void MVGProjectWrapper::initCameraPointsLocator() 
+void MVGProjectWrapper::initCameraPointsLocator()
 {
     MObject cpLocator;
     MStatus status;
