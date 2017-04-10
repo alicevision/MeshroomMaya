@@ -160,18 +160,20 @@ Item {
                             tooltip: "Display only points seen by at least the given number of cameras of the current camera set."
                             MCheckBox {
                                 anchors.verticalCenter: parent.verticalCenter
-                                width: 10
+                                width: 14
                                 checked: m.project.filterPoints
                                 onClicked: m.project.filterPoints = !m.project.filterPoints
+                                clip: true
                             }
                             Slider  {
-                                implicitWidth: 90
+                                implicitWidth: 100
                                 minimumValue: 1
-                                maximumValue: 100
+                                maximumValue: 30
                                 stepSize: 1
                                 enabled: m.project && m.project.filterPoints
                                 value: m.project.pointsFilteringThreshold
-                                onValueChanged: if(containsMouse) m.project.pointsFilteringThreshold = value
+                                activeFocusOnPress: true
+                                onValueChanged: if(containsMouse || activeFocus) m.project.pointsFilteringThreshold = value
                             }
                             Text {
                                 anchors.verticalCenter: parent.verticalCenter
