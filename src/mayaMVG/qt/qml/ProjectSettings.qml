@@ -37,13 +37,13 @@ Item {
             State {
                 name: "OPEN"
                 when: m.isOpen
-                PropertyChanges { target: settings; height: 370; }
+                PropertyChanges { target: settings; height: 360; }
                 PropertyChanges { target: settings; opacity: 1; }
             }
         ]
         transitions: Transition {
-            PropertyAnimation { target: settings; properties: "height"; duration: 300 }
-            PropertyAnimation { target: settings; properties: "opacity"; duration: 200 }
+            PropertyAnimation { target: settings; properties: "height"; duration: 200 }
+            PropertyAnimation { target: settings; properties: "opacity"; duration: 100 }
         }
     }
 
@@ -55,6 +55,7 @@ Item {
             anchors.fill: parent
             anchors.margins: 5
             Column {
+                id: mainColumn
                 anchors.fill: parent
                 spacing: 4
                 property int settingsEntryWidth: width - 40
@@ -69,6 +70,15 @@ Item {
                 Row {
                     height: childrenRect.height
                     spacing: 4
+                    ToolButton {
+                        implicitWidth: 30
+                        implicitHeight: 30
+                        iconSource: "img/syncSelection.png"
+                        tooltip: "Synchronize with Maya Selection"
+                        checked: m.project.activeSynchro
+                        onClicked: m.project.activeSynchro = !m.project.activeSynchro
+                    }
+
                     // Clear blind data
                     ToolButton {
                         implicitWidth: 30
@@ -95,65 +105,60 @@ Item {
                     }
                 }
 
-                MSettingsEntry {
-                    label: "Display Point Cloud"
-                    width: parent.settingsEntryWidth
+                GroupBox {
+                    title: "Point Cloud"
+                    width: parent.width
+                    Column {
+                        width: parent.width
+                        spacing: 2
 
-                    MCheckBox {
-                        width: 40
-                        text: m.leftPanel.label
-                        checked: m.leftPanel.isPointCloudDisplayed
-                        onClicked: m.leftPanel.isPointCloudDisplayed = !m.leftPanel.isPointCloudDisplayed
-                    }
-                    MCheckBox {
-                        width: 40
-                        text: m.rightPanel.label
-                        checked: m.rightPanel.isPointCloudDisplayed
-                        onClicked: m.rightPanel.isPointCloudDisplayed = !m.rightPanel.isPointCloudDisplayed
-                    }
-                }
+                        MSettingsEntry {
+                            label: "Display Point Cloud"
+                            width: mainColumn.settingsEntryWidth
 
-                MSettingsEntry {
-                    label: "Cam. Visible Points"
-                    width: parent.width - 40
-                    tooltip: "Display mode for points visible by active (left/right) cameras<br/>
-                              <b>None</b>: no display<br/>
-                              <b>Both</b>: points of both cams in both views<br/>
-                              <b>Each</b>: points of each cam only in its view<br/>
-                              <b>Common Points</b>: only points visible by both cams<br/>
-                             "
-                    ComboBox {
-                        implicitWidth: 120
-                        model: ListModel {
-                            ListElement { text: "None" }
-                            ListElement { text: "Both" }
-                            ListElement { text: "Each" }
-                            ListElement { text: "Common Points Only" }
+                            MCheckBox {
+                                width: 40
+                                text: m.leftPanel.label
+                                checked: m.leftPanel.isPointCloudDisplayed
+                                onClicked: m.leftPanel.isPointCloudDisplayed = !m.leftPanel.isPointCloudDisplayed
+                            }
+                            MCheckBox {
+                                width: 40
+                                text: m.rightPanel.label
+                                checked: m.rightPanel.isPointCloudDisplayed
+                                onClicked: m.rightPanel.isPointCloudDisplayed = !m.rightPanel.isPointCloudDisplayed
+                            }
                         }
-                        activeFocusOnPress: true
-                        enabled: m.project.projectDirectory !== ""
-                        selectedIndex: m.project.cameraPointsDisplayMode
-                        onSelectedIndexChanged: if(activeFocus) m.project.cameraPointsDisplayMode = selectedIndex
-                    }
-                }
 
-                MSettingsEntry {
-                    width: parent.settingsEntryWidth
-                    MCheckBox {
-                        implicitWidth: parent.width
-                        Layout.minimumHeight: implicitHeight
-
-                        text: "Active Synchronization"
-                        tooltip: "Camera Synchronization"
-                        checked: m.project.activeSynchro
-                        onClicked: m.project.activeSynchro = !m.project.activeSynchro
+                        MSettingsEntry {
+                            label: "Cam. Visible Points"
+                            width: parent.width - 40
+                            tooltip: "Display mode for points visible by active (left/right) cameras<br/>
+                                      <b>None</b>: no display<br/>
+                                      <b>Both</b>: points of both cams in both views<br/>
+                                      <b>Each</b>: points of each cam only in its view<br/>
+                                      <b>Common Points</b>: only points visible by both cams<br/>
+                                     "
+                            ComboBox {
+                                implicitWidth: 120
+                                model: ListModel {
+                                    ListElement { text: "None" }
+                                    ListElement { text: "Both" }
+                                    ListElement { text: "Each" }
+                                    ListElement { text: "Common Points Only" }
+                                }
+                                activeFocusOnPress: true
+                                enabled: m.project.projectDirectory !== ""
+                                selectedIndex: m.project.cameraPointsDisplayMode
+                                onSelectedIndexChanged: if(activeFocus) m.project.cameraPointsDisplayMode = selectedIndex
+                            }
+                        }
                     }
                 }
 
                 // Camera parameters
                 CameraSettings {
                     implicitWidth: parent.width
-                    height: 180
                     project: m.project
                 }
 
