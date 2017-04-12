@@ -5,13 +5,13 @@
 #include <maya/MColor.h>
 #include <maya/MFnSet.h>
 
-/**
- * MVGCameraSetWrapper is an object exposing a list of cameras as a Qt model.
- * It can be based on a Maya set or
- */
 namespace mayaMVG 
 {
     
+/**
+ * MVGCameraSetWrapper is an object exposing a list of cameras as a Qt model.
+ * It can be based on an existing Maya set or on an arbitrary list of cameras.
+ */
 class MVGCameraSetWrapper : public QObject
 {
     Q_OBJECT
