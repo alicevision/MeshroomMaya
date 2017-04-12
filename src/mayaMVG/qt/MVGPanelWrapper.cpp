@@ -8,8 +8,9 @@
 namespace mayaMVG
 {
 
-MVGPanelWrapper::MVGPanelWrapper(const QString& name, const QString& label, const QColor& color)
-    : _name(name)
+MVGPanelWrapper::MVGPanelWrapper(const QString& name, const QString& label, const QColor& color, QObject* parent)
+    : QObject(parent)
+    , _name(name)
     , _label(label)
     , _isVisible(true)
     , _defaultColor(color)
@@ -17,8 +18,9 @@ MVGPanelWrapper::MVGPanelWrapper(const QString& name, const QString& label, cons
     updateStylesheet();
 }
 
-MVGPanelWrapper::MVGPanelWrapper(const QString& name)
-    : _name(name)
+MVGPanelWrapper::MVGPanelWrapper(const QString& name, QObject* parent)
+    : QObject(parent)
+    , _name(name)
     , _label(name)
     , _isVisible(true)
 {

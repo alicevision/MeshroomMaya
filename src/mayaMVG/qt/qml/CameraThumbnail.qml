@@ -82,7 +82,7 @@ Rectangle {
                     id: camMouseArea
                     anchors.fill: parent
                     hoverEnabled: true
-                    onClicked: m.project.setCameraToView(m.camera, model.modelData.name)
+                    onPressed: m.project.setCameraToView(m.camera, model.modelData.name)
                 }
             }
         }

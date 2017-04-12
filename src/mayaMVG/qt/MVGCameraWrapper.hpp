@@ -21,7 +21,7 @@ class MVGCameraWrapper : public QObject
     Q_PROPERTY(qint64 sourceWeight READ getSourceWeight CONSTANT)
 
 public:
-    MVGCameraWrapper(const MVGCamera& camera);
+    MVGCameraWrapper(const MVGCamera& camera, QObject* parent=nullptr);
     MVGCameraWrapper(const MVGCameraWrapper& other);
     ~MVGCameraWrapper();
 

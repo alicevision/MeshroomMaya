@@ -430,9 +430,24 @@ void MVGCamera::setLocatorCustomColor(bool useCustomColor, const MColor& color) 
     MStatus status;
     MFnCamera fnCamera(getDagPath(), &status);
     CHECK_RETURN(status)
+    if(usingLocatorCustomColor() == useCustomColor)
+    {
+        if(useCustomColor == false)
+            return;
+        else if(color == fnCamera.objectColor())
+            return;
+    }
     fnCamera.setUseObjectColor(useCustomColor);
     if(useCustomColor)
         status = fnCamera.setObjectColor(color); // Only works in VP 2.0
+}
+
+bool MVGCamera::usingLocatorCustomColor() const
+{
+    MStatus status;
+    MFnCamera fnCamera(getDagPath(), &status);
+    CHECK(status);
+    return fnCamera.usingObjectColor();
 }
 
 const std::pair<double, double> MVGCamera::getImageSize() const

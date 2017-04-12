@@ -7,6 +7,7 @@
 class MIntArray;
 class MPointArray;
 class M3dView;
+class MDoubleArray;
 namespace mayaMVG
 {
 
@@ -34,6 +35,16 @@ public:
                                          const MPointArray& faceCSPoints,
                                          const MPointArray& constraintedWSPoints,
                                          const MPoint& mouseCSPoint, MPoint& projectedWSMouse);
+
+    MStatus setOpacity(double value);
+    MStatus setOpacity(const MIntArray& indices, double value);
+
+protected:
+    MStatus getOpacityPP(MDoubleArray& values);
+    MStatus setOpacityPPAttribute(MDoubleArray& values);
+private:
+    MStatus ensureOpacityPPAttribute();
+
 };
 
 } // namespace

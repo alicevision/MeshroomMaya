@@ -20,8 +20,8 @@ class MVGPanelWrapper : public QObject
     Q_PROPERTY(QColor color READ getColor WRITE setColor NOTIFY colorChanged)
     
 public:
-    MVGPanelWrapper(const QString& name);
-    MVGPanelWrapper(const QString& name, const QString& label, const QColor& color);
+    MVGPanelWrapper(const QString& name, QObject* parent=nullptr);
+    MVGPanelWrapper(const QString& name, const QString& label, const QColor& color, QObject* parent=nullptr);
     ~MVGPanelWrapper();
 
 public:

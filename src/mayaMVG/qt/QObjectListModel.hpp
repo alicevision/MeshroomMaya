@@ -27,6 +27,11 @@ public:
         ObjectRole = Qt::UserRole + 1
     };
 
+    QObjectList::iterator begin() { return _objects.begin(); }
+    QObjectList::const_iterator begin() const { return _objects.begin(); }
+    QObjectList::iterator end() { return _objects.end(); }
+    QObjectList::const_iterator end() const { return _objects.end(); }
+
     int rowCount(const QModelIndex& parent) const;
     QVariant data(const QModelIndex& index, int role) const;
     QObjectList objectList() const;
@@ -54,6 +59,8 @@ public:
         return _objects.lastIndexOf(object, from);
     }
 
+    void remove(QObject* object) { removeAt(_objects.indexOf(object)); }
+
     inline int count() const { return _objects.count(); }
     inline int size() const { return _objects.size(); }
     inline bool isEmpty() const { return _objects.isEmpty(); }
@@ -79,6 +86,8 @@ Q_SIGNALS:
     void countChanged();
 
 private:
+    void referenceItem(QObject* obj);
+    void dereferenceItem(QObject* obj);
     void internEmitCountChanged();
 
 private:

@@ -108,7 +108,11 @@ void QObjectListModel::setObjectList(QObjectList objects)
 {
     int oldCount = _objects.count();
     beginResetModel();
+    for(auto* object : _objects)
+        dereferenceItem(object);
     _objects = objects;
+    for(auto* object : _objects)
+        referenceItem(object);
     endResetModel();
     Q_EMIT dataChanged(index(0), index(_objects.count()));
     if(_objects.count() != oldCount)
@@ -126,6 +130,7 @@ void QObjectListModel::append(QObject* object)
 {
     beginInsertRows(QModelIndex(), _objects.count(), _objects.count());
     _objects.append(object);
+    referenceItem(object);
     endInsertRows();
     internEmitCountChanged();
 }
@@ -139,6 +144,8 @@ void QObjectListModel::append(const QObjectList& objects)
 {
     beginInsertRows(QModelIndex(), _objects.count(), _objects.count() + objects.count() - 1);
     _objects.append(objects);
+    for(auto* object : objects)
+        referenceItem(object);
     endInsertRows();
     internEmitCountChanged();
 }
@@ -154,6 +161,7 @@ void QObjectListModel::insert(int i, QObject* object)
 {
     beginInsertRows(QModelIndex(), i, i);
     _objects.insert(i, object);
+    referenceItem(object);
     endInsertRows();
     internEmitCountChanged();
 }
@@ -172,7 +180,11 @@ void QObjectListModel::insert(int i, const QObjectList& objects)
 
     beginInsertRows(QModelIndex(), i, i + objects.count() - 1);
     for(int j = objects.count() - 1; j > -1; --j)
-        _objects.insert(i, objects.at(j));
+    {
+        QObject* obj = objects.at(j);
+        _objects.insert(i, obj);
+        referenceItem(obj);
+    }
     endInsertRows();
     internEmitCountChanged();
 }
@@ -186,7 +198,10 @@ void QObjectListModel::insert(int i, const QObjectList& objects)
 */
 void QObjectListModel::replace(int i, QObject* object)
 {
+    QObject* obj = _objects.at(i);
     _objects.replace(i, object);
+    referenceItem(object);
+    dereferenceItem(obj);
     Q_EMIT dataChanged(index(i), index(i));
 }
 
@@ -221,7 +236,10 @@ void QObjectListModel::removeAt(int i, int count)
 {
     beginRemoveRows(QModelIndex(), i, i + count - 1);
     for(int j = 0; j < count; ++j)
-        _objects.removeAt(i);
+    {
+        auto* obj = _objects.takeAt(i);
+        dereferenceItem(obj);
+    }
     endRemoveRows();
     internEmitCountChanged();
 }
@@ -237,6 +255,7 @@ QObject* QObjectListModel::takeAt(int i)
 {
     beginRemoveRows(QModelIndex(), i, i);
     QObject* obj = _objects.takeAt(i);
+    dereferenceItem(obj);
     endRemoveRows();
     internEmitCountChanged();
     return obj; // INVOKABLE => by default tranfer ownership to qml
@@ -252,6 +271,7 @@ void QObjectListModel::clear()
         return;
 
     beginRemoveRows(QModelIndex(), 0, _objects.count() - 1);
+    for(auto* obj : _objects){ dereferenceItem(obj); }
     _objects.clear();
     endRemoveRows();
     internEmitCountChanged();
@@ -263,15 +283,30 @@ void QObjectListModel::clear()
 */
 QObject* QObjectListModel::get(int i) const
 {
-    QObject* obj = _objects.at(i);
-    // Explicitly keep the ownership which is not the default behavior in INVOKABLE methods.
-    QDeclarativeEngine::setObjectOwnership(obj, QDeclarativeEngine::CppOwnership);
-    return obj;
+    return _objects.at(i);
 }
 
 void QObjectListModel::emitModified()
 {
     Q_EMIT countChanged();
+}
+
+void QObjectListModel::referenceItem(QObject *obj)
+{
+    // Take ownership of orphan objects
+    if(obj && !obj->parent())
+        obj->setParent(this);
+    // Explicitly keep the ownership on C++ side which is not the default behavior
+    // for INVOKABLE methods (i.e QObjectListModel::get) if object has no parent.
+    // Note: should not happen anymore since model takes ownership of orphan objects...
+    QDeclarativeEngine::setObjectOwnership(obj, QDeclarativeEngine::CppOwnership);
+}
+
+void QObjectListModel::dereferenceItem(QObject* obj)
+{
+    // Delete the object if parented to this list
+    if(obj && obj->parent() == this)
+        obj->deleteLater();
 }
 
 void QObjectListModel::internEmitCountChanged()

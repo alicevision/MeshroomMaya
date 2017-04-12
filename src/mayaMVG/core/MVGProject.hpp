@@ -2,9 +2,11 @@
 
 #include "mayaMVG/core/MVGNodeWrapper.hpp"
 #include "maya/MColor.h"
+#include <maya/MGlobal.h>
 #include <vector>
 #include <list>
 #include <map>
+
 
 namespace mayaMVG
 {
@@ -26,6 +28,10 @@ public:
 
 public:
     static std::vector<MVGProject> list();
+    /// Get all the camera sets created by MayaMVG in the current Maya scene
+    static std::vector<MObject> getMVGCameraSets();
+    /// Return whether the given set is a camera set created by MayaMVG
+    static bool isMVGCameraSet(const MObject& obj);
 
 public:
     bool applySceneTransformation() const;
@@ -34,7 +40,7 @@ public:
 public:
     const std::string getProjectDirectory() const;
     void setProjectDirectory(const std::string&) const;
-    void selectCameras(const std::vector<std::string>& cameraNames) const;
+    void selectCameras(const std::vector<std::string>& cameraNames, MGlobal::ListAdjustment=MGlobal::kReplaceList) const;
     void selectMeshes(const std::vector<std::string>& meshNames) const;
     void unlockProject() const;
     void lockProject() const;
@@ -60,6 +66,7 @@ public:
     static MColor _RIGHT_PANEL_DEFAULT_COLOR;
     static MColor _COMMON_POINTS_DEFAULT_COLOR;
     static MString _MVG_PROJECTPATH;
+    static std::string _CAMERASET_PREFIX;
 
     /// FIFO queue indicating the list of images/cameras keept in memory
     /// Cameras corresponding to current images seen in panels are not stored in this list.

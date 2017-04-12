@@ -10,6 +10,7 @@ Item {
     property alias contentY: componentListView.contentY
     property alias contentHeight: componentListView.contentHeight
     property alias count: componentListView.count
+    property alias listView: componentListView
     QtObject {
         id: m
         property variant model
@@ -26,6 +27,7 @@ Item {
                 return (currentPosition + step < downLimit) ? currentPosition + step : downLimit
         }
     }
+
 
     RowLayout {
         anchors.fill: parent
@@ -47,7 +49,9 @@ Item {
         }
         Item {
             height: parent.height
-            implicitWidth: 12
+            implicitWidth: componentListView.visibleArea.heightRatio < 1 ? 12 : 0
+            // Force parent layout update when scrollbar's visibility changes
+            onImplicitWidthChanged: { parent.spacing = 1; parent.spacing = 0; }
             ScrollIndicator  {
                 id: verticalScrollBar
                 anchors.fill: parent

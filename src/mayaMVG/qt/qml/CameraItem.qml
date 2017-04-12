@@ -20,6 +20,7 @@ Rectangle {
         property int thumbRatio: 4/3
     }
 
+
     StateGroup {
         id: selectionState
         states: [
@@ -71,11 +72,14 @@ Rectangle {
                 Item {
                     width: parent.width
                     implicitHeight: cameraName.height * 2 // x2 to add vertical margins
-                    Text{
+                    Text {
                        id: cameraName
                        anchors.verticalCenter: parent.verticalCenter
+                       width: parent.width
+                       horizontalAlignment: Text.AlignLeft
+                       elide: Text.ElideRight
                        text: m.camera.name
-                       font.pointSize: 12
+                       font.pointSize: 10
                        color: "white"
                     }
                 }
@@ -124,6 +128,7 @@ Rectangle {
                         anchors.verticalCenter: parent.verticalCenter
                         text: m.camera.imagePath
                         font.pointSize: 10
+                        elide: Text.ElideMiddle
                         color: "#888888"
                     }
                 }

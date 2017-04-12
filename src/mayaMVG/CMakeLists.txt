@@ -61,11 +61,17 @@ set(MOC_HDRS
 	qt/MVGMeshWrapper.hpp
 	qt/MVGProjectWrapper.hpp
 	qt/MVGPanelWrapper.hpp
+	qt/MVGCameraSetWrapper.hpp
 	qt/QmlInstantCoding.hpp
 	qt/QObjectListModel.hpp
         qt/QWheelArea.hpp
 )
 qt4_wrap_cpp(MOC_SRCS ${MOC_HDRS})
+
+# Qml sources
+#
+file(GLOB_RECURSE QML_SRCS *.qml)
+
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
 #
@@ -73,7 +79,8 @@ include_directories(${CMAKE_CURRENT_BINARY_DIR})
 #
 add_library(${project_BIN} SHARED
     ${PLUGIN_SRCS}
-    ${MOC_SRCS})
+    ${MOC_SRCS}
+    ${QML_SRCS})
 target_include_directories(${project_BIN} PUBLIC
     ${MAYA_INCLUDE_DIR}
     ${OPENMVG_INCLUDE_DIRS}

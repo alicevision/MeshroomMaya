@@ -232,6 +232,18 @@ MStatus MVGMayaUtil::clearMayaSelection()
                                          "cmds.select(cl=True)");
 }
 
+MStatus MVGMayaUtil::selectParticles(const MString &objectName, const std::set<int> &points)
+{
+    // Can't select particle components using maya C++ API
+    // Build our own comand manually
+    std::ostringstream s;
+    s << "select -r ";
+    for(const auto& pt : points)
+        s << objectName << ".pt[" << pt << "] ";
+    s << ";";
+    return MGlobal::executeCommand(s.str().c_str());
+}
+
 MStatus MVGMayaUtil::getIntArrayAttribute(const MObject& object, const MString& param,
                                           MIntArray& intArray, bool networked)
 {

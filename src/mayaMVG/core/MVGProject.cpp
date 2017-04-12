@@ -16,7 +16,8 @@
 #include <maya/MMatrix.h>
 #include <maya/MItSelectionList.h>
 #include <maya/MItMeshPolygon.h>
-
+#include <maya/MItDependencyNodes.h>
+#include <maya/MFnSet.h>
 #include <algorithm>
 
 namespace
@@ -72,6 +73,7 @@ MColor MVGProject::_LEFT_PANEL_DEFAULT_COLOR = MColor(0.29f, 0.57f, 1.0f);
 MColor MVGProject::_RIGHT_PANEL_DEFAULT_COLOR = MColor(1.0f, 1.0f, 0.35f);
 MColor MVGProject::_COMMON_POINTS_DEFAULT_COLOR = MColor(0.47f, 1.0f, 0.47f);
 MString MVGProject::_MVG_PROJECTPATH = "mvgProjectPath";
+std::string MVGProject::_CAMERASET_PREFIX = "mvgCamset_";
 
 // Image cache
 // List of camera by name or dagpath according to uniqueness
@@ -120,6 +122,30 @@ std::vector<MVGProject> MVGProject::list()
             list.push_back(project);
     }
     return list;
+}
+
+std::vector<MObject> MVGProject::getMVGCameraSets()
+{
+    std::vector<MObject> sets;
+    MItDependencyNodes setsIt(MFn::kSet);
+    MObject node;
+    // Iterate over all sets and find the ones created by MayaMVG
+    for (; !setsIt.isDone(); setsIt.next())
+    {
+        node = setsIt.thisNode();
+        if(isMVGCameraSet(node))
+            sets.push_back(node);
+    }
+    return sets;
+}
+
+bool MVGProject::isMVGCameraSet(const MObject& obj)
+{
+    if(obj.apiType() != MFn::kSet)
+        return false;
+    MFnSet set(obj);
+    const std::string setName(set.name().asChar());
+    return setName.find(_CAMERASET_PREFIX) != std::string::npos;
 }
 
 /**
@@ -234,7 +260,7 @@ void MVGProject::setProjectDirectory(const std::string& directory) const
     MVGMayaUtil::setStringAttribute(path.node(), _MVG_PROJECTPATH, directory.c_str());
 }
 
-void MVGProject::selectCameras(const std::vector<std::string>& cameraNames) const
+void MVGProject::selectCameras(const std::vector<std::string>& cameraNames, MGlobal::ListAdjustment listAdjustment) const
 {
     MSelectionList list;
     for(std::vector<std::string>::const_iterator it = cameraNames.begin(); it != cameraNames.end();
@@ -243,7 +269,7 @@ void MVGProject::selectCameras(const std::vector<std::string>& cameraNames) cons
         MVGCamera camera(*it);
         list.add(camera.getDagPath());
     }
-    MGlobal::setActiveSelectionList(list);
+    MGlobal::setActiveSelectionList(list, listAdjustment);
 }
 
 void MVGProject::selectMeshes(const std::vector<std::string>& meshes) const
