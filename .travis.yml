@@ -1,0 +1,59 @@
+#
+# http://travis-ci.org configuration file
+#
+language: cpp
+
+compiler:
+  - gcc
+sudo: false
+
+addons:
+  apt:
+    sources:
+      - ubuntu-toolchain-r-test
+    packages:
+      - cmake
+      - g++-4.8
+
+env:
+  global:
+    - NUM_CPU="`grep processor /proc/cpuinfo | wc -l`"; echo $NUM_CPU
+    - BUILD_TYPE="Release"
+    - BUILD_SYSTEM="`uname -s`"
+    - BUILD_PROCESSOR="`uname -p`"
+    - MAYAMVG_SOURCE=${TRAVIS_BUILD_DIR}/src
+    - MAYAMVG_BUILD=${TRAVIS_BUILD_DIR}/mayaMVG-build
+    - MAYAMVG_INSTALL=${TRAVIS_BUILD_DIR}/mayaMVG-install
+    # Maya API
+    - MAYAAPI_ROOT=${TRAVIS_BUILD_DIR}/mayaAPI
+
+before_install:
+  - >
+    if [ "$(ls -A $MAYAAPI_ROOT)" ]; then
+      echo "MAYAAPI found in cache.";
+    else
+      # Download maya devkit
+      git clone https://github.com/poparteu/mayaAPI.git $MAYAAPI_ROOT
+    fi
+
+before_script:
+  - export CXX="g++-4.8"
+  # Create build folder
+  - mkdir $MAYAMVG_BUILD
+  - cd $MAYAMVG_BUILD
+  # Classic release build
+  - >
+     cmake \
+       -DCMAKE_INSTALL_PREFIX=$MAYAMVG_INSTALL \
+       -DCMAKE_BUILD_TYPE=$BUILD_TYPE \
+       -DMAYA_LOCATION=$MAYAAPI_ROOT/2016.sp1/linux \
+       -DQT_QMAKE_EXECUTABLE='$MAYAAPI_ROOT/bin/qmake' \
+       $MAYAMVG_SOURCE
+
+script:
+  - make VERBOSE=1
+  - make install
+
+cache:
+  directories:
+    - $MAYAAPI_ROOT
