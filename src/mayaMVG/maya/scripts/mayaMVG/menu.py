@@ -68,10 +68,10 @@ def exportSelectionAsABC_CB():
 def openMVGWindow_CB():
     # ToolStats
     try:
-        from toolStats import toolUsage
-        toolUsage.addUsage('MayaMVG','vfx.mikros.int')
+        from toolstat import toolUsage
+        toolUsage.add('MayaMVG', category='MAYA_TOOLS')
     except:
-        print "WARNING : ToolStats module not found."
+        print "WARNING : toolstat module not found."
     pm.MVGCmd()
 
 def createLocatorFromVertex_CB():
