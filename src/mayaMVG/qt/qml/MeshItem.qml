@@ -1,16 +1,17 @@
-import QtQuick 1.1
-import QtDesktop 0.1
+import QtQuick 2.5
+import QtQuick.Layouts 1.1
+import QtQuick.Controls 1.4
 
 
 Rectangle {
     id: meshItem
-    border.color: "black"
-    color: "#262626"
-    height: 75
+    color: "#303030"
+    height: 65
     property alias project: m.project
     property alias mesh: m.mesh
     signal multipleSelection(int index)
     signal selection(int index)
+
     QtObject {
         id: m
         property variant project
@@ -28,65 +29,36 @@ Rectangle {
 
         ]
     }
+    MouseArea {
+        anchors.fill: parent
+        onClicked: {
+            if(mouse.modifiers & Qt.ShiftModifier)
+                multipleSelection(index)
+            else {
+                selection(index)
+            }
+        }
+    }
 
     RowLayout {
         id: meshItemRow
         anchors.fill: parent
         anchors.margins: 10
-        spacing: 0
-
-        MouseArea {
-            anchors.fill: parent
-            onClicked: {
-                if(mouse.modifiers & Qt.ShiftModifier)
-                    multipleSelection(index)
-                else {
-                    selection(index)
-                }
-            }
-        }
-
-        // Data
-        Item {
-            Layout.horizontalSizePolicy: Layout.Expanding
-            height: parent.height
-            Text {
-                id: meshName
-                anchors.verticalCenter: parent.verticalCenter
-                text: m.mesh.name
-                font.pointSize: 12
-                color: "white"
-            }
-        }
-
-        // MVG CheckBox
-        CheckBox {
+        spacing: 4
+        // Active CheckBox
+        MCheckBox {
             id: meshActiveCheckBox
-            implicitHeight: parent.height
-            implicitWidth: 20
             checked: m.mesh.isActive
-            MouseArea {
-                anchors.fill: parent
-                onClicked: m.mesh.isActive = !m.mesh.isActive
-            }
+            onClicked: m.mesh.isActive = !m.mesh.isActive
         }
-        Item {
-            implicitWidth: active.width
-            height: parent.height
-            Text {
-                id: active
-                anchors.verticalCenter: parent.verticalCenter
-                text: "Active"
-                color: "white"
-                font.pointSize: 11
-                MouseArea {
-                    anchors.fill: parent
-                    onClicked: m.mesh.isActive = !m.mesh.isActive
-                }
-            }
+        // Data
+        Label {
+            id: meshName
+            Layout.fillWidth: true
+            anchors.verticalCenter: parent.verticalCenter
+            text: m.mesh.name
+            font.pointSize: 11
+            color: "white"
         }
-
     }
-
-
 }

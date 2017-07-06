@@ -1,6 +1,5 @@
-import QtQuick 1.1
-import QtDesktop 0.1
-
+import QtQuick 2.5
+import QtQuick.Controls 1.4
 
 Item {
     id: meshListView
@@ -12,7 +11,7 @@ Item {
         id: m
         property variant project
         property int currentIndex
-        property int itemHeight : 75
+        property int itemHeight : 60
     }
 
 //    function altColor(i) {
@@ -47,30 +46,26 @@ Item {
          onCenterMeshListByIndex: listView.contentY = center(meshIndex, m.itemHeight, listView)
      }
 
-    Component
-    {
-        id: meshComponent
-        MeshItem {
-            width: listView.width - 12 // ScrollBar height
-            height: meshListView.itemHeight
-            mesh: model.modelData
-            project: meshListView.project
-            onSelection: {
-                meshListView.currentIndex = index
-                selectMeshes(index, index)
-            }
-            onMultipleSelection: selectMeshes(meshListView.currentIndex, index)
-        }
-
-    }
-
-    CustomListView {
-        id: listView
+    ScrollView {
         anchors.fill: parent
-        model: m.project.meshModel
-        delegate: meshComponent
-    }
+        ListView {
+            id: listView
+            spacing: 1
 
+            model: m.project.meshModel
+            delegate: MeshItem {
+                width: listView.width
+                height: meshListView.itemHeight
+                project: meshListView.project
+                mesh: object
+                onSelection: {
+                    meshListView.currentIndex = index
+                    selectMeshes(index, index)
+                }
+                onMultipleSelection: selectMeshes(meshListView.currentIndex, index)
+            }
+        }
+    }
 
     onKeyPressed: listView.keyPressed(value)
 }

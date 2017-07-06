@@ -1,11 +1,10 @@
-import QtQuick 1.1
-import QtDesktop 0.1
-
+import QtQuick 2.5
+import QtQuick.Controls 1.4
+import QtQuick.Layouts 1.1
 
 Rectangle {
     id: cameraItem
-    border.color: "black"
-    color: "#262626"
+    color: "#303030"
     height: m.baseHeight
     property alias camera: m.camera
     property alias project: m.project
@@ -19,7 +18,6 @@ Rectangle {
         property int baseHeight
         property int thumbRatio: 4/3
     }
-
 
     StateGroup {
         id: selectionState
@@ -38,28 +36,29 @@ Rectangle {
 
     RowLayout {
         id: cameraItemRow
-        width: parent.width
-        height: parent.height
+        anchors.fill: parent
+        anchors.margins: 3
         spacing: 10
         visible: false
         Component.onCompleted: visible = true
 
         CameraThumbnail {
             implicitWidth: height * m.thumbRatio
-            height: parent.height
-            Layout.horizontalSizePolicy: Layout.Fixed
+            implicitHeight: parent.height
+            Layout.alignment: Qt.AlignCenter
             project: m.project
             camera: m.camera
         }
 
         // Right part : data
         Item {
-            Layout.horizontalSizePolicy: Layout.Expanding
-            height: parent.height
+            Layout.fillWidth: true
+            Layout.fillHeight: true
 
             MouseArea { // Place here to not block mouse event below
                 anchors.fill: parent
-                onClicked: {
+
+                onPressed: {
                     if(mouse.modifiers & Qt.ShiftModifier)
                         multipleSelection(index)
                     else
@@ -68,31 +67,26 @@ Rectangle {
             }
             ColumnLayout {
                 anchors.fill: parent
+                anchors.margins: 1
+
                 // title
-                Item {
-                    width: parent.width
-                    implicitHeight: cameraName.height * 2 // x2 to add vertical margins
-                    Text {
-                       id: cameraName
-                       anchors.verticalCenter: parent.verticalCenter
-                       width: parent.width
-                       horizontalAlignment: Text.AlignLeft
-                       elide: Text.ElideRight
-                       text: m.camera.name
-                       font.pointSize: 10
-                       color: "white"
-                    }
+                Label {
+                   id: cameraName
+                   Layout.fillWidth: true
+                   horizontalAlignment: Text.AlignLeft
+                   elide: Text.ElideRight
+                   text: m.camera.name
                 }
+
                 // extra infos (see component below)
                 Item {
-                    width: parent.width
+                    Layout.fillWidth: true
                     implicitHeight: childrenRect.height
-                    Layout.verticalSizePolicy: Layout.Expanding
+                    Layout.fillHeight: true
                     Loader {
                         id: loader
                         sourceComponent: undefined
                         width: parent.width
-                        height: childrenRect.height
                     }
                 }
             }
@@ -113,53 +107,34 @@ Rectangle {
     // COMPONENT extraInformation
     Component {
         id: extraInformation
-        Item {
-            ColumnLayout
-            {
+
+        Column
+        {
+            //width: parent.width
+            spacing: 5
+            // file path
+            Text {
                 width: parent.width
-                height: childrenRect.height
-                spacing: 5
-                // file path
-                Item {
+                text: m.camera.imagePath
+                elide: Text.ElideMiddle
+                color: "#888888"
+            }
+            // Image size
+            /*
+            Item {
+                width: parent.width
+                Layout.minimumHeight: childrenRect.height
+                Text {
                     width: parent.width
-                    Layout.minimumHeight: childrenRect.height
-                    Text {
-                        width: parent.width
-                        anchors.verticalCenter: parent.verticalCenter
-                        text: m.camera.imagePath
-                        font.pointSize: 10
-                        elide: Text.ElideMiddle
-                        color: "#888888"
-                    }
+                    text: m.camera.sourceSize.width + "x" + m.camera.sourceSize.height
+                    font.pointSize: 10
+                    color: "#888888"
                 }
-                // Image size
-                /*
-                Item {
-                    width: parent.width
-                    Layout.minimumHeight: childrenRect.height
-                    Text {
-                        width: parent.width
-                        text: m.camera.sourceSize.width + "x" + m.camera.sourceSize.height
-                        font.pointSize: 10
-                        color: "#888888"
-                    }
-                }*/
-                // file weight
-                Item {
-                    width: parent.width
-                    Layout.minimumHeight: childrenRect.height
-                    Text {
-                        width: parent.width
-                        text: convertWeight(m.camera.sourceWeight)
-                        font.pointSize: 10
-                        color: "#888888"
-                    }
-                }
-                // Vertical spacer
-                Item {
-                    width: parent.width
-                    Layout.verticalSizePolicy: Layout.Expanding
-                }
+            }*/
+            // file weight
+            Text {
+                text: convertWeight(m.camera.sourceWeight)
+                color: "#888888"
             }
         }
     }

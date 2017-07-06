@@ -1,5 +1,7 @@
-import QtQuick 1.1
-import QtDesktop 0.1
+import QtQuick 2.5
+import QtQuick.Layouts 1.0
+import QtQuick.Controls 1.4
+import QtQuick.Controls.Styles 1.4
 
 Rectangle {
     color: "#444"
@@ -11,6 +13,7 @@ Rectangle {
     ColumnLayout
     {
         anchors.fill: parent
+        anchors.margins: 1
         ContextBar {
             id: contextBar
             implicitHeight: 35
@@ -18,27 +21,32 @@ Rectangle {
             project: _project
             settingsVisibility: (_project.projectDirectory === "")
         }
-        ProjectSettings {
-            id: settings
-            implicitWidth: parent.width
-            Layout.minimumHeight: childrenRect.height
-            Layout.maximumHeight: childrenRect.height
-            Layout.verticalSizePolicy: Layout.Expanding
-            isOpen: contextBar.settingsVisibility
-            project: _project
-            sliderMinValue: 90
-            sliderMaxValue: 180
-            onSettingProjectLoaded: contextBar.settingsVisibility = false
-            thumbSize: sliderMinValue
+
+        CollapsibleItem {
+            title: "Settings"
+            Layout.fillWidth: true
+            collapsed: !contextBar.settingsVisibility
+            ProjectSettings {
+                id: settings
+                implicitWidth: parent.width
+                Layout.minimumHeight: childrenRect.height
+                Layout.maximumHeight: childrenRect.height
+                Layout.fillHeight: true
+                isOpen: true
+                project: _project
+                sliderMinValue: 90
+                sliderMaxValue: 180
+                onSettingProjectLoaded: contextBar.settingsVisibility = false
+                thumbSize: sliderMinValue
+            }
         }
 
         MVGPanel {
             id: componentList
-            implicitWidth: parent.width
-            Layout.verticalSizePolicy: Layout.Expanding
+            Layout.fillWidth: true
+            Layout.fillHeight: true
             thumbSize: settings.thumbSize
             project: _project
-            mode: contextBar.mode
         }
     }
 

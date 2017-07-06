@@ -1,13 +1,9 @@
-import QtQuick 1.1
-import QtDesktop 0.1
+import QtQuick 2.5
+import QtQuick.Controls 1.4
+import QtQuick.Controls.Styles 1.4
 
 
-/**
- * QtDesktop TextField exposing "accepted" signal when Return/Enter key is pressed
- */
 TextField {
-    signal accepted()
-
-    Keys.onReturnPressed: accepted()
-    Keys.onEnterPressed: accepted()
+    // Menu with Maya style crashes on 2017.4 ...
+    menu: null
 }

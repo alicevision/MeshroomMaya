@@ -9,6 +9,7 @@ Requirements
 * cmake
 * Maya
 * Qt compatible with you version of Maya (Qt4.8 until Maya 2016)
+* Maya 2017: requires Qt-5.6.1 qml modules ('qml' folder in standard Qt installation) to be in QML2_IMPORT_PATH at runtime (not embedded in Maya).
 
 Installation
 ------------

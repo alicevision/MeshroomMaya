@@ -1,5 +1,5 @@
-import QtQuick 1.1
-import QtDesktop 0.1
+import QtQuick 2.5
+import QtQuick.Controls 1.4
 
 Item {
 
@@ -50,14 +50,14 @@ Item {
         }
         // item data
         Item {
-            Layout.horizontalSizePolicy: Layout.Expanding
+            Layout.fillWidth: true
             height: parent.height
             ColumnLayout {
                 anchors.fill: parent
                 // title
                 Item {
                     width: parent.width
-                    Layout.verticalSizePolicy: Layout.Expanding
+                    Layout.fillHeight: true
                     Text {
                         text: title
                         font.pointSize: 12
@@ -68,7 +68,7 @@ Item {
                 // extra infos (see component below)
                 Item {
                     width: parent.width
-                    Layout.verticalSizePolicy: Layout.Expanding
+                    Layout.fillHeight: true
                     Loader {
                         id: loader
                         opacity: 0
