@@ -37,6 +37,9 @@
 #if defined(GrayScale)
 #undef GrayScale
 #endif
+#if defined(Expose)
+#undef Expose
 #endif
-#include <QtCore/QtCore>
-#include <QtGui/QtGui>
+#endif
+#include <QtCore>
+#include <QtGui>

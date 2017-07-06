@@ -8,6 +8,7 @@
 #include <maya/MQtUtil.h>
 #include <maya/MArgList.h>
 #include <maya/MGlobal.h>
+#include <QWidget>
 
 namespace mayaMVG
 {
@@ -178,7 +179,7 @@ bool MVGContext::eventFilter(QObject* obj, QEvent* e)
             QMouseEvent* mouseevent = static_cast<QMouseEvent*>(e);
             if(!mouseevent)
                 return false;
-            QPointF offset_screen = _eventData.onPressMousePos - mouseevent->posF();
+            QPointF offset_screen = _eventData.onPressMousePos - mouseevent->localPos();
             const double viewport_width = widget->width();
             QPointF offset = (offset_screen / viewport_width) * camera.getHorizontalFilmAperture() *
                              camera.getZoom();
@@ -211,7 +212,7 @@ bool MVGContext::eventFilter(QObject* obj, QEvent* e)
             const double scaleRatio = newZoom / previousZoom;
             // compute & set pan offset
             QPointF center_ratio(0.5, 0.5 * viewportHeight / viewportWidth);
-            QPointF mouse_ratio_center = (center_ratio - (mouseevent->posF() / viewportWidth));
+            QPointF mouse_ratio_center = (center_ratio - (mouseevent->localPos() / viewportWidth));
             QPointF mouse_maya_center =
                 mouse_ratio_center * camera.getHorizontalFilmAperture() * previousZoom;
             QPointF mouseAfterZoo_maya_center = mouse_maya_center * scaleRatio;

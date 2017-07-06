@@ -1,10 +1,10 @@
 #pragma once
 
 #include "mayaMVG/qt/MVGProjectWrapper.hpp"
-#include <QtGui/QWidget>
+#include <QWidget>
 
 class QWidget;
-class QDeclarativeView;
+class QQuickWidget;
 
 namespace mayaMVG
 {
@@ -19,14 +19,14 @@ public:
     ~MVGMainWidget();
 
 public:
-    QDeclarativeView* getView() const;
+    QWidget* getView() const;
     MVGProjectWrapper& getProjectWrapper() { return _projectWrapper; }
 
     // Needed to pass the focusOutEvent to the view
     void focusOutEvent(QFocusEvent* event);
 
 private:
-    QDeclarativeView* _view;
+    QQuickWidget* _view;
     MVGProjectWrapper _projectWrapper;
 };
 

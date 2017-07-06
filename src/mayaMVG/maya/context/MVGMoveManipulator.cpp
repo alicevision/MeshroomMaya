@@ -11,6 +11,7 @@
 #include <maya/MFnPointArrayData.h>
 #include <maya/MFnTypedAttribute.h>
 #include <maya/MVectorArray.h>
+#include <QApplication>
 
 namespace mayaMVG
 {

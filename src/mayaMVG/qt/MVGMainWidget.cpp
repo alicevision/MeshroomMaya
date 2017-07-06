@@ -1,11 +1,13 @@
 #include "mayaMVG/qt/MVGMainWidget.hpp"
 #include "mayaMVG/qt/QmlInstantCoding.hpp"
-#include "mayaMVG/qt/QWheelArea.hpp"
+//#include "mayaMVG/qt/QWheelArea.hpp"
 #include "mayaMVG/maya/MVGMayaUtil.hpp"
 #include "mayaMVG/qt/MVGCameraWrapper.hpp"
 #include "mayaMVG/qt/MVGCameraSetWrapper.hpp"
-#include <QtDeclarative/QDeclarativeView>
-#include <QtGui/QFocusEvent>
+#include <QFocusEvent>
+#include <QQuickWidget>
+#include <QQmlEngine>
+#include <QQmlContext>
 
 namespace mayaMVG
 {
@@ -18,9 +20,8 @@ MVGMainWidget::MVGMainWidget(QWidget* parent)
     qmlRegisterType<MVGCameraWrapper>();
     qmlRegisterType<QObjectListModel>();
     qmlRegisterType<MVGCameraSetWrapper>();
-    qmlRegisterType<QWheelArea>("MyTools", 1, 0, "CustomWheelArea");
 
-    _view = new QDeclarativeView(parent);
+    _view = new QQuickWidget(parent);
 
     _projectWrapper.loadExistingProject();
     QString importDirectory = QString(MVGMayaUtil::getModulePath().asChar()) + "/qml";
@@ -45,7 +46,7 @@ MVGMainWidget::MVGMainWidget(QWidget* parent)
         qic->addFilesFromDirectory(qmlFolder.absolutePath(), true);
     }
     _view->setSource(QUrl::fromLocalFile(mainQml));
-    _view->setResizeMode(QDeclarativeView::SizeRootObjectToView);
+    _view->setResizeMode(QQuickWidget::SizeRootObjectToView);
 }
 
 MVGMainWidget::~MVGMainWidget()
@@ -59,7 +60,7 @@ void MVGMainWidget::focusOutEvent(QFocusEvent* event)
     _view->clearFocus();
 }
 
-QDeclarativeView* MVGMainWidget::getView() const
+QWidget* MVGMainWidget::getView() const
 {
     return _view;
 }

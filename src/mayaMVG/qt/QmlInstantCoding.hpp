@@ -1,8 +1,7 @@
 #pragma once
 
 #include <QtCore>
-#include <QtDeclarative>
-#include <QtDeclarative/qdeclarativeview.h>
+#include <QQuickWidget>
 
 namespace mayaMVG
 {
@@ -27,7 +26,7 @@ public:
      * (default: False)
      * @param verbose if True, output log infos (default: False)
      */
-    QmlInstantCoding(QDeclarativeView* attachedView, bool watching = true, bool watchSource = false,
+    QmlInstantCoding(QQuickWidget* attachedView, bool watching = true, bool watchSource = false,
                      bool verbose = false);
 
     ~QmlInstantCoding();
@@ -108,7 +107,7 @@ public:
 
 private:
     QFileSystemWatcher* _fileWatcher;
-    QDeclarativeView* _attachedView;
+    QQuickWidget* _attachedView;
     QStringList _watchedFiles;
     bool _verbose;
     bool _watching;
