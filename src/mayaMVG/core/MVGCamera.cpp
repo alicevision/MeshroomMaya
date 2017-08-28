@@ -16,6 +16,7 @@
 #include <maya/MFnNumericAttribute.h>
 #include <maya/MFnTypedAttribute.h>
 #include <maya/MItDependencyNodes.h>
+#include <maya/MDagPathArray.h>
 
 namespace mayaMVG
 {
@@ -161,22 +162,21 @@ std::vector<MVGCamera> MVGCamera::getCameras()
 {
     MStatus status;
     std::vector<MVGCamera> list;
-    // Retrieve mayaMVG camera node
-    MDagPath cameraDagPath;
-    status = MVGMayaUtil::getDagPathByName(MVGProject::_CAMERAS_GROUP.c_str(), cameraDagPath);
-    MFnDagNode cameraDagNode(cameraDagPath);
-    for(int i = 0; i < cameraDagNode.childCount(); ++i)
+    // Retrieve mayaMVG camera group path
+    MDagPath cameraGroupDagPath;
+    status = MVGMayaUtil::getDagPathByName(MVGProject::_CAMERAS_GROUP.c_str(), cameraGroupDagPath);
+
+    MDagPathArray cameraPaths;
+    cameraGroupDagPath.getAllPathsBelow(cameraPaths);
+    list.reserve(cameraPaths.length());
+
+    for(unsigned int i = 0; i < cameraPaths.length(); ++i)
     {
-        // Retrieve transform node
-        MObject cameraObject = cameraDagNode.child(i);
-        MDagPath cameraPath;
-        status = MDagPath::getAPathTo(cameraObject, cameraPath);
-        CHECK(status);
-        cameraPath.extendToShape();
-        MVGCamera camera(cameraPath);
-        if(camera.isValid())
-            list.push_back(camera);
+        MVGCamera cam(cameraPaths[i]);
+        if(cam.isValid())
+            list.push_back(cam);
     }
+
     return list;
 }
 
