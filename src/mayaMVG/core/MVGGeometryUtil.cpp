@@ -6,9 +6,9 @@
 #include "mayaMVG/core/MVGPlaneKernel.hpp"
 #include "mayaMVG/core/MVGLineConstrainedPlaneKernel.hpp"
 #include "mayaMVG/maya/MVGMayaUtil.hpp"
-#include <openMVG/multiview/triangulation_nview.hpp>
-#include <openMVG/multiview/projection.hpp>
-#include <openMVG/robust_estimation/robust_estimator_LMeds.hpp>
+#include <aliceVision/multiview/triangulation/Triangulation.hpp>
+#include <aliceVision/multiview/projection.hpp>
+#include <aliceVision/robustEstimation/leastMedianOfSquares.hpp>
 #include <maya/MPointArray.h>
 #include <maya/M3dView.h>
 #include <maya/MPlug.h>
@@ -272,12 +272,12 @@ bool MVGGeometryUtil::computePlane(const MPointArray& pointsWS, PlaneKernel::Mod
     if(pointsWS.length() < 3)
         return false;
 
-    openMVG::Mat facePointsMat(3, pointsWS.length());
+    aliceVision::Mat facePointsMat(3, pointsWS.length());
     for(size_t i = 0; i < pointsWS.length(); ++i)
         facePointsMat.col(i) = TO_VEC3(pointsWS[i]);
     PlaneKernel kernel(facePointsMat);
     double outlierThreshold = std::numeric_limits<double>::infinity();
-    openMVG::robust::LeastMedianOfSquares(kernel, &model, &outlierThreshold);
+    aliceVision::robustEstimation::LeastMedianOfSquares(kernel, &model, &outlierThreshold);
 
     return true;
 }
@@ -297,13 +297,13 @@ bool MVGGeometryUtil::computePlaneWithLineConstraint(const MPointArray& pointsWS
         return false;
     if(constraintPoints.length() < 2)
         return false;
-    openMVG::Mat facePointsMat(3, pointsWS.length());
+    aliceVision::Mat facePointsMat(3, pointsWS.length());
     for(size_t i = 0; i < pointsWS.length(); ++i)
         facePointsMat.col(i) = TO_VEC3(pointsWS[i]);
     LineConstrainedPlaneKernel kernel(facePointsMat, TO_VEC3(constraintPoints[0]),
                                       TO_VEC3(constraintPoints[1]));
     double outlierThreshold = std::numeric_limits<double>::infinity();
-    openMVG::robust::LeastMedianOfSquares(kernel, &model, &outlierThreshold);
+    aliceVision::robustEstimation::LeastMedianOfSquares(kernel, &model, &outlierThreshold);
 
     return true;
 }
@@ -368,9 +368,9 @@ void MVGGeometryUtil::triangulatePoint(const std::map<int, MPoint>& point2dPerCa
     const size_t cameraCount = point2dPerCamera_CS.size();
     assert(cameraCount > 1);
     // prepare n-view triangulation data
-    openMVG::Mat2X imagePoints(2, cameraCount);
+    aliceVision::Mat2X imagePoints(2, cameraCount);
 
-    std::vector<openMVG::Mat34> projectiveCameras;
+    std::vector<aliceVision::Mat34> projectiveCameras;
     {
         std::map<int, MPoint>::const_iterator it = point2dPerCamera_CS.begin();
         for(size_t i = 0; it != point2dPerCamera_CS.end(); ++i, ++it)
@@ -393,14 +393,14 @@ void MVGGeometryUtil::triangulatePoint(const std::map<int, MPoint>& point2dPerCa
             camera.getSensorSize(sensorSize);
 
             // Keep ideal matrix with principal point centered
-            openMVG::Mat3 K;
+            aliceVision::Mat3 K;
             K << intrinsicsArray[0], 0.0, sensorSize[0] / 2.0, 0.0, intrinsicsArray[0],
                 sensorSize[1] / 2.0, 0.0, 0.0, 1.0;
 
             // Retrieve transformation matrix
             const MMatrix inclusiveMatrix = camera.getDagPath().inclusiveMatrix();
             const MTransformationMatrix transformMatrix(inclusiveMatrix);
-            openMVG::Mat3 R;
+            aliceVision::Mat3 R;
             MMatrix rotationMatrix = transformMatrix.asRotateMatrix();
             for(int m = 0; m < 3; ++m)
             {
@@ -415,24 +415,24 @@ void MVGGeometryUtil::triangulatePoint(const std::map<int, MPoint>& point2dPerCa
             }
 
             // Retrieve translation vector
-            const openMVG::Vec3 C = TO_VEC3(camera.getCenter());
-            const openMVG::Vec3 t = -R * C;
+            const aliceVision::Vec3 C = TO_VEC3(camera.getCenter());
+            const aliceVision::Vec3 t = -R * C;
 
             // Compute projection matrix
-            openMVG::Mat34 P;
-            openMVG::P_From_KRt(K, R, t, &P);
+            aliceVision::Mat34 P;
+            aliceVision::P_From_KRt(K, R, t, &P);
             projectiveCameras.push_back(P);
 
             // clicked point matrix (image space)
             MPoint clickedISPosition;
             MVGGeometryUtil::cameraToImageSpace(camera, point2d_CS, clickedISPosition);
-            imagePoints.col(i) = openMVG::Vec2(clickedISPosition.x, clickedISPosition.y);
+            imagePoints.col(i) = aliceVision::Vec2(clickedISPosition.x, clickedISPosition.y);
         }
     }
 
     // call n-view triangulation function
-    openMVG::Vec4 result;
-    openMVG::TriangulateNViewAlgebraic(imagePoints, projectiveCameras, &result);
+    aliceVision::Vec4 result;
+    aliceVision::TriangulateNViewAlgebraic(imagePoints, projectiveCameras, &result);
     outTriangulatedPoint_WS.x = result(0);
     outTriangulatedPoint_WS.y = result(1);
     outTriangulatedPoint_WS.z = result(2);

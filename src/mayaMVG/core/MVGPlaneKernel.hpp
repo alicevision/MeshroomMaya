@@ -5,15 +5,15 @@
 
 namespace mayaMVG {
 
-// Should be part of OpenMVG
+// Should be part of aliceVision
 struct PlaneKernel
 {
-    typedef openMVG::Vec4 Model;
+    typedef aliceVision::Vec4 Model;
     enum
     {
         MINIMUM_SAMPLES = 3
     };
-    PlaneKernel(const openMVG::Mat& pt)
+    PlaneKernel(const aliceVision::Mat& pt)
         : _pt(pt)
     {
     }
@@ -26,11 +26,11 @@ struct PlaneKernel
         // Calculate the distance from the point to the plane normal as the dot
         // product
         // D = (P-A).N/|N|
-        openMVG::Vec3 pt3 = _pt.col(sample);
-        openMVG::Vec4 pt4(pt3(0), pt3(1), pt3(2), 1.0);
+        aliceVision::Vec3 pt3 = _pt.col(sample);
+        aliceVision::Vec4 pt4(pt3(0), pt3(1), pt3(2), 1.0);
         return fabs(model.dot(pt4));
     }
-    const openMVG::Mat& _pt;
+    const aliceVision::Mat& _pt;
 };
 
 // FIXME check return value

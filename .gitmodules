@@ -1,3 +1,3 @@
-[submodule "src/openMVG"]
-	path = src/openMVG
-	url = http://github.com/openMVG/openMVG.git
+[submodule "src/aliceVision"]
+	path = src/aliceVision
+	url = http://github.com/alicevision/AliceVision.git

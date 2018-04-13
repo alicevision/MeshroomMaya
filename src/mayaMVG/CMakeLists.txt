@@ -1,3 +1,4 @@
+#cmake_minimum_required(VERSION 3.3)
 
 project(mayaMVG)
 
@@ -28,9 +29,11 @@ find_package(Maya REQUIRED)
 find_package(Qt5 ${MAYA_QT_VERSION_SHORT} COMPONENTS Core Widgets Quick QuickWidgets REQUIRED)
 
 #
-# OpenMVG dependency
+# AliceVision dependency
 #
-find_package(OpenMVG REQUIRED)
+find_package(AliceVision REQUIRED)
+
+find_package(Boost REQUIRED)
 find_package(Ceres REQUIRED)
 
 #
@@ -76,25 +79,27 @@ include_directories(${CMAKE_CURRENT_BINARY_DIR})
 add_library(${project_BIN} SHARED
     ${PLUGIN_SRCS}
     ${MOC_SRCS}
-    ${QML_SRCS})
+    ${QML_SRCS}
+)
 target_include_directories(${project_BIN} PUBLIC
     ${MAYA_INCLUDE_DIR}
-    ${OPENMVG_INCLUDE_DIRS}
+    ${ALICEVISION_INCLUDE_DIRS}
     ${OPENGL_INCLUDE_DIR}
-    )
+)
 target_link_libraries(${project_BIN} PUBLIC
     ${MAYA_Foundation_LIBRARY}
     ${MAYA_OpenMaya_LIBRARY}
     ${MAYA_OpenMayaUI_LIBRARY}
     ${MAYA_OpenMayaFX_LIBRARY}
     ${MAYA_OpenMayaRender_LIBRARY}
-    ${OPENMVG_LIBRARY}
-    stlplus
-    openMVG_numeric
-    openMVG_multiview
+    ${ALICEVISION_LIBRARY}
+    aliceVision_system
+    aliceVision_numeric
+    aliceVision_multiview
+    aliceVision_image
     ${QT_LIBRARIES}
     ${OPENGL_LIBRARIES}
-    )
+)
 
 qt5_use_modules(${project_BIN} Core Widgets Quick QuickWidgets)
 maya_set_plugin_properties(${project_BIN})
