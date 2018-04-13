@@ -1,9 +1,8 @@
-import QtQuick 1.1
-import QtDesktop 0.1
-
+import QtQuick 2.5
+import QtQuick.Controls 1.4
 
 /*
-  An improved QtQuick 1.1 CheckBox, not breaking the binding for "checked" property
+  An improved QtQuick 2.5 CheckBox, not breaking the binding for "checked" property
   when clicked. Also gives control over text color and tooltip's text.
 */
 Item {

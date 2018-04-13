@@ -1,5 +1,5 @@
-import QtQuick 1.1
-import QtDesktop 0.1
+import QtQuick 2.5
+import QtQuick.Controls 1.4
 
 Item
 {
@@ -16,7 +16,7 @@ Item
         anchors.fill: parent
         spacing: 0
         Item {
-            Layout.horizontalSizePolicy: Layout.Expanding
+            Layout.fillWidth: true
             height: parent.height
             ScrollArea {
                 anchors.fill: parent
@@ -50,7 +50,6 @@ Item
                     width: parent.width
                     height: parent.width
                     iconSource: "img/cross.png"
-                    iconSize: 12
                     tooltip: "Close"
                     checked: true
                     onClicked: textBox.visible = false;
@@ -59,7 +58,6 @@ Item
                     width: parent.width
                     height: parent.width
                     iconSource: "img/clear.png"
-                    iconSize: 15
                     checked: true
                     tooltip: "Clear"
                     onClicked: _project.logText = ""

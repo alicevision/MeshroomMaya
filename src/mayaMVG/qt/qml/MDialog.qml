@@ -1,5 +1,5 @@
-import QtQuick 1.1
-import QtDesktop 0.1
+import QtQuick 2.5
+import QtQuick.Controls 1.4
 
 /**
  * Contextual modal dialog with a text message and an optional set of default buttons.

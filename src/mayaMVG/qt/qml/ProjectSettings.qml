@@ -1,6 +1,6 @@
-import QtQuick 1.1
-import QtDesktop 0.1
-
+import QtQuick 2.5
+import QtQuick.Controls 1.4
+import QtQuick.Controls.Styles 1.4
 
 Item {
     id: settings
@@ -37,7 +37,7 @@ Item {
             State {
                 name: "OPEN"
                 when: m.isOpen
-                PropertyChanges { target: settings; height: 385; }
+                PropertyChanges { target: settings; height: 340; }
                 PropertyChanges { target: settings; opacity: 1; }
             }
         ]
@@ -50,10 +50,7 @@ Item {
     Item { // needed to set margins around GroupBox
         clip: true
         anchors.fill: parent
-        GroupBox {
-            title: "Settings"
-            anchors.fill: parent
-            anchors.margins: 5
+
             Column {
                 id: mainColumn
                 anchors.fill: parent
@@ -61,8 +58,9 @@ Item {
                 property int settingsEntryWidth: width - 40
                 // browse button
                 BrowseDirectory {
-                    project: m.project
                     width: parent.width
+                    title: "Scene"
+                    project: m.project
                     onBrowserProjectLoaded: settingProjectLoaded()
                 }
 
@@ -77,6 +75,7 @@ Item {
                         tooltip: "Synchronize with Maya Selection"
                         checked: m.project.activeSynchro
                         onClicked: m.project.activeSynchro = !m.project.activeSynchro
+                        ButtonCheckIndicator {}
                     }
 
                     // Clear blind data
@@ -149,8 +148,11 @@ Item {
                                 }
                                 activeFocusOnPress: true
                                 enabled: m.project.projectDirectory !== ""
-                                selectedIndex: m.project.cameraPointsDisplayMode
-                                onSelectedIndexChanged: if(activeFocus) m.project.cameraPointsDisplayMode = selectedIndex
+                                currentIndex: m.project.cameraPointsDisplayMode
+                                onActivated: {
+                                    m.project.cameraPointsDisplayMode = index
+                                    currentIndex = Qt.binding(function() { return m.project.cameraPointsDisplayMode })
+                                }
                             }
                         }
 
@@ -173,7 +175,10 @@ Item {
                                 enabled: m.project && m.project.filterPoints
                                 value: m.project.pointsFilteringThreshold
                                 activeFocusOnPress: true
-                                onValueChanged: if(containsMouse || activeFocus) m.project.pointsFilteringThreshold = value
+                                onValueChanged: {
+                                    if(hovered || activeFocus) m.project.pointsFilteringThreshold = value
+                                    value = Qt.binding(function() { return m.project.pointsFilteringThreshold } )
+                                }
                             }
                             Text {
                                 anchors.verticalCenter: parent.verticalCenter
@@ -200,5 +205,4 @@ Item {
                 }
             }
         }
-    }
 }

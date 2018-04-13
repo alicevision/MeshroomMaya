@@ -1,5 +1,5 @@
 #include "QObjectListModel.hpp"
-#include <QtDeclarative/QDeclarativeEngine>
+#include <QQmlEngine>
 
 /*!
     \class QObjectListModel
@@ -45,9 +45,7 @@ QObjectListModel::QObjectListModel(QObject* parent)
     : QAbstractListModel(parent)
     , _autoEmit(true)
 {
-    QHash<int, QByteArray> roles;
-    roles[ObjectRole] = "object";
-    setRoleNames(roles);
+    _roles[ObjectRole] = "object";
 }
 
 /*!
@@ -59,9 +57,7 @@ QObjectListModel::QObjectListModel(QObjectList objects, QObject* parent)
     , _autoEmit(true)
     , _objects(objects)
 {
-    QHash<int, QByteArray> roles;
-    roles[ObjectRole] = "object";
-    setRoleNames(roles);
+    _roles[ObjectRole] = "object";
 }
 
 /*!
@@ -299,7 +295,7 @@ void QObjectListModel::referenceItem(QObject *obj)
     // Explicitly keep the ownership on C++ side which is not the default behavior
     // for INVOKABLE methods (i.e QObjectListModel::get) if object has no parent.
     // Note: should not happen anymore since model takes ownership of orphan objects...
-    QDeclarativeEngine::setObjectOwnership(obj, QDeclarativeEngine::CppOwnership);
+    QQmlEngine::setObjectOwnership(obj, QQmlEngine::CppOwnership);
 }
 
 void QObjectListModel::dereferenceItem(QObject* obj)

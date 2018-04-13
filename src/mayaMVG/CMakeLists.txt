@@ -25,10 +25,7 @@ find_package(Maya REQUIRED)
 #
 # Qt dependency
 #
-find_package(Qt4 ${MAYA_QT_VERSION_SHORT} REQUIRED)
-set(QT_USE_QTOPENGL TRUE)
-set(QT_USE_QTDECLARATIVE TRUE)
-include(${QT_USE_FILE})
+find_package(Qt5 ${MAYA_QT_VERSION_SHORT} COMPONENTS Core Widgets Quick QuickWidgets REQUIRED)
 
 #
 # OpenMVG dependency
@@ -64,9 +61,8 @@ set(MOC_HDRS
 	qt/MVGCameraSetWrapper.hpp
 	qt/QmlInstantCoding.hpp
 	qt/QObjectListModel.hpp
-        qt/QWheelArea.hpp
 )
-qt4_wrap_cpp(MOC_SRCS ${MOC_HDRS})
+qt5_wrap_cpp(MOC_SRCS ${MOC_HDRS})
 
 # Qml sources
 #
@@ -99,6 +95,8 @@ target_link_libraries(${project_BIN} PUBLIC
     ${QT_LIBRARIES}
     ${OPENGL_LIBRARIES}
     )
+
+qt5_use_modules(${project_BIN} Core Widgets Quick QuickWidgets)
 maya_set_plugin_properties(${project_BIN})
 
 #

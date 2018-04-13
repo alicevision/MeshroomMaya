@@ -81,32 +81,32 @@ public:
         return new MVGCameraPointsDrawOverride(obj);
     }
 public:
-    virtual ~MVGCameraPointsDrawOverride() {};
+    virtual ~MVGCameraPointsDrawOverride() {}
 
-    virtual MHWRender::DrawAPI supportedDrawAPIs() const {
-        return MHWRender::kOpenGL;
+    virtual MHWRender::DrawAPI supportedDrawAPIs() const override {
+        return MHWRender::kAllDevices;
     }
-    virtual bool hasUIDrawables() const { return true; };
+    virtual bool hasUIDrawables() const override { return true; }
 
     virtual bool isBounded(
         const MDagPath& objPath,
-        const MDagPath& cameraPath) const {
+        const MDagPath& cameraPath) const override {
         return false;
     }
-    
+
     static void draw(const MHWRender::MDrawContext&, const MUserData*);
 
     virtual MUserData* prepareForDraw(
             const MDagPath& objPath,
             const MDagPath& cameraPath,
             const MHWRender::MFrameContext& frameContext,
-            MUserData* oldData);
+            MUserData* oldData) override;
     
     virtual void addUIDrawables(
             const MDagPath& objPath,
             MHWRender::MUIDrawManager& drawManager,
             const MHWRender::MFrameContext& frameContext,
-            const MUserData* data);
+            const MUserData* data) override;
     
 private:
     MVGCameraPointsDrawOverride(const MObject& obj):

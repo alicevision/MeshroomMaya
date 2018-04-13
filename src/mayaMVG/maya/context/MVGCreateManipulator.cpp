@@ -8,6 +8,7 @@
 #include "mayaMVG/qt/MVGUserLog.hpp"
 #include "mayaMVG/qt/MVGQt.hpp"
 #include <maya/MArgList.h>
+#include <QApplication>
 
 namespace mayaMVG
 {

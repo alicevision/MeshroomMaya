@@ -1,6 +1,6 @@
-import QtQuick 1.1
-import QtDesktop 0.1
-
+import QtQuick 2.5
+import QtQuick.Controls 1.4
+import QtQuick.Layouts 1.1
 
 /*
   A simple row layout displaying a label with a fixed size on the left
@@ -21,10 +21,9 @@ RowLayout {
     Item {
         id: lbl_container
         implicitWidth: 100
-        height: childrenRect.height
-        Text {
+        height: lbl.height
+        Label {
             id: lbl
-            color: "white"
             width: parent.width
             horizontalAlignment: Text.AlignRight
         }
@@ -36,8 +35,7 @@ RowLayout {
     // Content
     Row {
         id: content
-        Layout.horizontalSizePolicy: Layout.Expanding
-        height: childrenRect.height
+        Layout.fillWidth: true
         spacing: 6
     }
 }

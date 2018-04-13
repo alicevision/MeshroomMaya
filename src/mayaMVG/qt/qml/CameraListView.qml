@@ -1,7 +1,7 @@
-import QtQuick 1.1
-import MyTools 1.0
-import QtDesktop 0.1
-
+import QtQuick 2.5
+import QtQuick.Controls 1.4
+import QtQuick.Layouts 1.1
+import QtQuick.Controls.Styles 1.4
 
 Item {
     id: cameraListView
@@ -74,7 +74,8 @@ Item {
         spacing: 2
 
         Rectangle {
-            width: parent.width
+            Layout.fillWidth: true
+
             implicitHeight: childrenRect.height
             radius: 2
             color: "#393939"
@@ -89,7 +90,7 @@ Item {
                     height: 23
                     ToolButton {
                         implicitWidth: 23
-                        height: 23
+                        implicitHeight: 23
                         iconSource: "img/swapViews.png"
                         tooltip: "Swap Views"
                         onClicked: m.project.swapViews()
@@ -100,23 +101,19 @@ Item {
                         implicitWidth: implicitHeight
                         tooltip: "Filter Cameras from Particle Selection"
                         iconSource: "img/particleSelection.png"
-                        iconSize: 18
                         checked: m.project.useParticleSelection
-                        onClicked: {
-                            m.project.useParticleSelection = !m.project.useParticleSelection
-                        }
+                        onClicked: m.project.useParticleSelection = !m.project.useParticleSelection
+                        ButtonCheckIndicator {}
                     }
                     Row {
                         height: parent.height
                         spacing: 4
                         visible: m.project.useParticleSelection
 
-                        Text {
+                        Label {
                             text: "Min. Accuracy"
-                            color: "white"
                             anchors.verticalCenter: parent.verticalCenter
                         }
-
 
                         Slider  {
                             id: accuracySlider
@@ -137,49 +134,36 @@ Item {
                         }
                     }
 
-                    Item { Layout.horizontalSizePolicy: Layout.Expanding }
+                    Item { Layout.fillWidth: true }
                 }
                 RowLayout {
-                    height: 23
+                    implicitHeight: 23
                     width: parent.width - 2
                     anchors.horizontalCenter: parent.horizontalCenter
                     spacing: 4
 
-                    Text {
+                    Label {
                         text: "Camera Set :"
-                        color: "white"
                     }
+                    ComboBox {
+                        id: cameraSetsCB
 
-                    Item {
-                        height: parent.height
-                        Layout.horizontalSizePolicy: Layout.Expanding
+                        Layout.fillWidth: true
+                        implicitHeight: parent.height
+                        enabled: !m.project.useParticleSelection
 
-                        ComboBox {
-                            id: cameraSetsCB
-                            width: parent.width
-                            anchors.verticalCenter: parent.verticalCenter
-                            enabled: !m.project.useParticleSelection
+                        model: ListModel { id: proxy }
 
-                            model:  ListModel { id: proxy }
+                        Component.onCompleted: rebuildMenu()
 
-                            Component.onCompleted: rebuildMenu()
+                        currentIndex: m.project.currentCameraSetIndex
+                        onActivated: m.project.currentCameraSetIndex = index
 
-                            selectedIndex: m.project.currentCameraSetIndex
-                            selectedText: m.project.currentCameraSet.name
-                            onSelectedIndexChanged: {
-                                if(m.project.currentCameraSetIndex !== selectedIndex)
-                                    m.project.currentCameraSetIndex = selectedIndex
-                            }
-
-                            function rebuildMenu() {
-                                proxy.clear()
-                                for(var i = 0; i < m.project.cameraSets.count; ++i)
-                                    proxy.append({"text" : m.project.cameraSets.get(i).name})
-                                // Only way to force combobox's menu update...
-                                data[5].rebuildMenu()
-                            }
+                        function rebuildMenu() {
+                            proxy.clear()
+                            for(var i = 0; i < m.project.cameraSets.count; ++i)
+                                proxy.append({"text" : m.project.cameraSets.get(i).name})
                         }
-
                         Connections {
                             target: m.project.cameraSets
                             onCountChanged: cameraSetsCB.rebuildMenu()
@@ -188,7 +172,7 @@ Item {
 
                     ToolButton {
                         implicitWidth: 23
-                        height: 23
+                        implicitHeight: 23
                         iconSource: "img/add_box.png"
                         tooltip: "Create new Camera Set"
 
@@ -200,7 +184,7 @@ Item {
 
                     ToolButton {
                         implicitWidth: 23
-                        height: 23
+                        implicitHeight: 23
                         enabled: m.project.currentCameraSet.editable
                         iconSource: "img/delete.png"
                         tooltip: "Delete current Camera Set"
@@ -212,25 +196,27 @@ Item {
             }
         }
 
-        CustomListView {
+        ScrollView {
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+
+        ListView {
             id: listView
-            width: parent.width
-            Layout.verticalSizePolicy: Layout.Expanding
+            anchors.fill: parent
             model: m.project.currentCameraSet.cameras
+            spacing: 1
 
-            delegate: Component {
+            delegate: CameraItem {
+                implicitWidth: listView.width - 4
+                baseHeight: cameraListView.thumbSize
+                camera: object
+                project: cameraListView.project
 
-                CameraItem {
-                    width: listView.width
-                    baseHeight: cameraListView.thumbSize
-                    camera: object
-                    project: cameraListView.project
-                    onSelection: {
-                        cameraListView.currentIndex = index
-                        selectCameras(index, index)
-                    }
-                    onMultipleSelection: selectCameras(cameraListView.currentIndex, index)
+                onSelection: {
+                    cameraListView.currentIndex = index
+                    selectCameras(index, index)
                 }
+                onMultipleSelection: selectCameras(cameraListView.currentIndex, index)
             }
 
             MouseArea {
@@ -239,15 +225,23 @@ Item {
                 anchors.fill: parent
                 acceptedButtons: Qt.RightButton
                 onPressed: {
-                    var pos = mapToItem(null, mouse.x, mouse.y)
-                    var idx = listView.listView.indexAt(mouse.x + listView.listView.contentX, mouse.y + listView.listView.contentY)
+                    var idx = listView.indexAt(mouse.x + listView.contentX, mouse.y + listView.contentY)
                     if(idx >= 0)
                     {
                         clickedItem = listView.model.get(idx)
-                        if(!clickedItem.isSelected)
-                            selectCameras(idx, idx)
-                        menu.showPopup(pos.x, pos.y)
+                        selectCameras(idx, idx)
+                        menu.popup()
                     }
+                }
+                onWheel: {
+                    var step = 5
+                    if(wheel.modifiers & Qt.ControlModifier)
+                    {
+                        var thumbSize = cameraListView.thumbSize + (wheel.angleDelta.y > 0 ? step : -step);
+                        cameraListView.thumbSize = Math.max(m.minThumbSize, Math.min(thumbSize, m.maxThumbSize));
+                    }
+                    else
+                        wheel.accepted = false
                 }
             }
 
@@ -302,31 +296,15 @@ Item {
                 }
             }
 
-            CustomWheelArea {
-                id: wheelArea
-                anchors.fill: parent
-
-                property int step: 5
-
-                onVerticalWheel: {
-                    if(modifier & Qt.ControlModifier) {
-                        var thumbSize = cameraListView.thumbSize + (delta > 0 ? step : -step);
-                        cameraListView.thumbSize = Math.max(m.minThumbSize, Math.min(thumbSize, m.maxThumbSize));
-                        wheelArea.eventAccept()
-                    }
-                    else
-                        wheelArea.eventIgnore()
-                }
-            }
-
-            ContextMenu {
+            Menu {
                 id: menu
-                Separator {}
+                style: MenuStyle {}
+                MenuSeparator {}
                 MenuItem {
                     text: "View in \"persp\""
                     onTriggered: m.project.setPerspFromCamera(ma.clickedItem)
                 }
-                Separator { }
+                MenuSeparator { }
                 MenuItem {
                     text: "Select Camera(s) visible Points"
                     onTriggered: m.project.selectCamerasPoints()
@@ -338,16 +316,16 @@ Item {
                         camSetCreationDialog.show()
                     }
                 }
-                Separator { }
+                MenuSeparator { }
                 MenuItem {
                     text: "Open File"
                     onTriggered: {Qt.openUrlExternally(ma.clickedItem.imagePath)}
                 }
             }
         }
-
+        }
         Rectangle {
-            width: parent.width
+            Layout.fillWidth: true
             implicitHeight: 22
             radius: 2
             color: "#393939"
@@ -370,7 +348,7 @@ Item {
                     onValueChanged: m.thumbSize = value
                 }
 
-                Item { Layout.horizontalSizePolicy: Layout.Expanding }
+                Item { Layout.fillWidth: true }
 
                 Text {
                     text: (m.project.cameraSelectionCount > 0 ? (m.project.cameraSelectionCount + " / ") : "") + listView.model.count + " camera(s)"

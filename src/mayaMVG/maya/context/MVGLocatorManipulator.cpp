@@ -9,6 +9,7 @@
 #include "mayaMVG/qt/MVGQt.hpp"
 #include <maya/MArgList.h>
 #include <maya/MFnTransform.h>
+#include <QApplication>
 
 namespace mayaMVG
 {

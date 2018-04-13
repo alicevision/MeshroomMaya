@@ -27,13 +27,17 @@ public:
         ObjectRole = Qt::UserRole + 1
     };
 
+    QHash<int, QByteArray> roleNames() const override {
+        return _roles;
+    }
+
     QObjectList::iterator begin() { return _objects.begin(); }
     QObjectList::const_iterator begin() const { return _objects.begin(); }
     QObjectList::iterator end() { return _objects.end(); }
     QObjectList::const_iterator end() const { return _objects.end(); }
 
-    int rowCount(const QModelIndex& parent) const;
-    QVariant data(const QModelIndex& index, int role) const;
+    int rowCount(const QModelIndex& parent) const override;
+    QVariant data(const QModelIndex& index, int role) const override;
     QObjectList objectList() const;
     void setObjectList(QObjectList objects);
     void append(QObject* object);
@@ -94,4 +98,5 @@ private:
     bool _autoEmit;
     Q_DISABLE_COPY(QObjectListModel)
     QList<QObject*> _objects;
+    QHash<int, QByteArray> _roles;
 };

@@ -1,18 +1,18 @@
 #include "mayaMVG/qt/QmlInstantCoding.hpp"
 #include "mayaMVG/core/MVGLog.hpp"
 #include <QDir>
+#include <QQmlEngine>
 #include <unistd.h> 
 
 namespace mayaMVG
 {
 
-QmlInstantCoding::QmlInstantCoding(QDeclarativeView* attachedView, bool watching, bool watchSource,
+QmlInstantCoding::QmlInstantCoding(QQuickWidget* attachedView, bool watching, bool watchSource,
                                    bool verbose)
     : QObject(attachedView)
 {
-    QDeclarativeView* view = dynamic_cast<QDeclarativeView*>(attachedView);
-    if(view == NULL)
-        LOG_ERROR("QmlInstantCoding: attachedView must be a QDeclarativeView");
+    if(!attachedView)
+        LOG_ERROR("QmlInstantCoding: attachedView must be a QQuickWidget");
 
     _fileWatcher = new QFileSystemWatcher();
     _attachedView = attachedView;
@@ -25,7 +25,7 @@ QmlInstantCoding::QmlInstantCoding(QDeclarativeView* attachedView, bool watching
     setWatching(watching);
 
     // If view already has a source, add it to files to watch
-    if(_attachedView->status() != QDeclarativeView::Null && watchSource)
+    if(_attachedView->status() != QQuickWidget::Null && watchSource)
         addFile(_attachedView->source());
 }
 
