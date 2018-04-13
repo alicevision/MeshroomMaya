@@ -515,10 +515,15 @@ void MVGProjectWrapper::loadABC(const QString& abcFilePath)
         LOG_ERROR("Can't find cameras in MVG hierarchy")
         return;
     }
-    for(int i = 0; i < cameraGroupPath.childCount(); ++i)
+
+    MDagPathArray cameras;
+    cameraGroupPath.getAllPathsBelow(cameras);
+
+    for(unsigned int i = 0; i < cameras.length(); ++i)
     {
-        MDagPath cameraDagPath;
-        MDagPath::getAPathTo(cameraGroupPath.child(i), cameraDagPath);
+        MDagPath cameraDagPath = cameras[i];
+        if(cameraDagPath.apiType() != MFn::kCamera)
+            continue;
         MVGCamera::create(cameraDagPath, itemsPerCam);
     }
 
