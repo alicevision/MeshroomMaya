@@ -54,7 +54,7 @@ public:
     void clearImageCache();
 
 public:
-    // openMVG node names
+    // aliceVision node names
     static std::string _CAMERAS_GROUP;
     static std::string _CLOUD_GROUP;
     static std::string _CLOUD;

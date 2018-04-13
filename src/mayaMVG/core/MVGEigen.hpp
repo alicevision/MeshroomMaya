@@ -1,6 +1,6 @@
 #pragma once
-// /!\ Include this file instead of <openMVG/numeric/numeric.h>
-// /!\ or before any include of OpenMVG or Eigen
+// /!\ Include this file instead of <aliceVision/numeric/numeric.hpp>
+// /!\ or before any include of aliceVision or Eigen
 
 // X11 defines CamelCase macros that clash with some of Eigen's enums.
 // To avoid include-order based issues, we undefine those problematic names
@@ -13,5 +13,5 @@
 
 #endif //LINUX
 
-// openMVG includes Eigen
-#include <openMVG/numeric/numeric.h>
+// aliceVision includes Eigen
+#include <aliceVision/numeric/numeric.hpp>

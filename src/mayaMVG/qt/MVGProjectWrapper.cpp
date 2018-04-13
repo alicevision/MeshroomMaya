@@ -463,13 +463,14 @@ void MVGProjectWrapper::loadABC(const QString& abcFilePath)
     setProjectDirectory(abcFilePath);
 
     // Cameras group node
-    MObject cameraParent = rootDagPath.child(0);
     MDagPath cameraGroupPath;
-    MDagPath::getAPathTo(cameraParent, cameraGroupPath);
+    status = MVGMayaUtil::getDagPathByName(MVGProject::_CAMERAS_GROUP.c_str(), cameraGroupPath);
+    CHECK_RETURN(status);
+
     // Cloud group node
-    MObject cloudParent = rootDagPath.child(1);
     MDagPath cloudGroupPath;
-    MDagPath::getAPathTo(cloudParent, cloudGroupPath);
+    status = MVGMayaUtil::getDagPathByName(MVGProject::_CLOUD_GROUP.c_str(), cloudGroupPath);
+    CHECK_RETURN(status);
 
     // Camera points locator
     initCameraPointsLocator();

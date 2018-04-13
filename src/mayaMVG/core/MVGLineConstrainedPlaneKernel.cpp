@@ -1,12 +1,12 @@
 #include "MVGLineConstrainedPlaneKernel.hpp"
 
-#include <openMVG/robust_estimation/robust_estimator_LMeds.hpp>
+#include <aliceVision/robustEstimation/leastMedianOfSquares.hpp>
 
 namespace mayaMVG
 {
 
-LineConstrainedPlaneKernel::LineConstrainedPlaneKernel(const openMVG::Mat& pt, const openMVG::Vec3& constraintP0,
-                           const openMVG::Vec3& constraintP1)
+LineConstrainedPlaneKernel::LineConstrainedPlaneKernel(const aliceVision::Mat& pt, const aliceVision::Vec3& constraintP0,
+                           const aliceVision::Vec3& constraintP1)
     : _pt(pt)
     , _constraintP0(constraintP0)
     , _constraintP1(constraintP1)
@@ -18,12 +18,12 @@ void LineConstrainedPlaneKernel::Fit(const std::vector<size_t>& samples, std::ve
 {
     assert(samples.size() >= MINIMUM_SAMPLES);
     equation->clear();
-    openMVG::Mat sampled_xs = openMVG::ExtractColumns(_pt, samples);
-    openMVG::Vec3 p2 = sampled_xs.col(0);
+    aliceVision::Mat sampled_xs = aliceVision::ExtractColumns(_pt, samples);
+    aliceVision::Vec3 p2 = sampled_xs.col(0);
     // Compute the segment values (in 3d) between p2 and p0
-    const openMVG::Vec3 p2p0 = p2 - _constraintP0;
+    const aliceVision::Vec3 p2p0 = p2 - _constraintP0;
     // Avoid some crashes by checking for collinearity here
-    openMVG::Vec3 dy1dy2 = _P1P0.array() / p2p0.array();
+    aliceVision::Vec3 dy1dy2 = _P1P0.array() / p2p0.array();
     if((dy1dy2[0] == dy1dy2[1]) && (dy1dy2[2] == dy1dy2[1])) // Check for collinearity
         return;
     // Compute the plane coefficients from the 3 given points in a

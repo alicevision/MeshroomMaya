@@ -13,7 +13,7 @@ class MPointArray;
 class M3dView;
 
 #define TO_MPOINT(a) MPoint(a(0), a(1), a(2))
-#define TO_VEC3(a) openMVG::Vec3(a.x, a.y, a.z)
+#define TO_VEC3(a) aliceVision::Vec3(a.x, a.y, a.z)
 
 namespace mayaMVG
 {
