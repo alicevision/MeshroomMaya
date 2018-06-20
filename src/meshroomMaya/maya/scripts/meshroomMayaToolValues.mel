@@ -1,0 +1,15 @@
+
+global proc meshroomMayaToolValues(string $toolName)
+{
+    string $parent = `toolPropertyWindow -q -location`;
+    setParent ($parent);
+    string $icon = "meshroomMayaTool.png";
+    string $help = "";
+    toolPropertySetCommon $toolName $icon $help;
+    toolPropertySelect mvgToolLayout;
+    meshroomMayaToolOptionValues($toolName);
+}
+
+global proc meshroomMayaToolOptionValues(string $toolName)
+{
+}

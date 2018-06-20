@@ -1,17 +1,17 @@
-# **MayaMVG** (v0.4.2)
+# **MeshroomMaya** (v0.4.2)
 
 ### **Start**
 
-The first time you use MayaMVG, you need to load the plugin (via Window → Settings/Preferences → Plug-in Manager).
+The first time you use MeshroomMaya, you need to load the plugin (via Window → Settings/Preferences → Plug-in Manager).
 Tick the autoload option to have it automatically loaded next time.
-You can now open the plugin window (via MayaMVG → Open).
+You can now open the plugin window (via MeshroomMaya → Open).
 
 ### **Load a project**
 
-MayaMVG allows you to load a Meshroom reconstruction. Choose the Alembic file at the root of the project.
+MeshroomMaya allows you to load a Meshroom reconstruction. Choose the Alembic file at the root of the project.
 
 ### **Interface**
-MayaMVG toolbar and parameters are presented as follow :
+MeshroomMaya toolbar and parameters are presented as follow :
 
 <p align="center">
   <img src="img/interface.png">
@@ -62,10 +62,10 @@ MayaMVG toolbar and parameters are presented as follow :
 #### **Viewport**
 
 <p align="center">
-  <img src="img/mayamvg_window.png">
+  <img src="img/meshroommaya_window.png">
 </p>
 
-One project is loaded, the different views are displayed below  toolbar and parameters. You can choose which camera you want to display in MayaMVG viewports.
+One project is loaded, the different views are displayed below  toolbar and parameters. You can choose which camera you want to display in MeshroomMaya viewports.
 
 * Mouse wheel : zoom and unzoom in image
 
@@ -95,7 +95,7 @@ A new face can be create from an existing edge. You have to click the edge and m
 
 Shortcut : CTRL + 1
 
-This tool enable to set a 3D point more precisely from 2D points clicked on MayaMVG view. It does not use the point cloud at all. You need to set this point in at least two views.
+This tool enable to set a 3D point more precisely from 2D points clicked on MeshroomMaya view. It does not use the point cloud at all. You need to set this point in at least two views.
 
 Pressing "Enter"’ key, the 2D positions will be erased.
 
@@ -127,7 +127,7 @@ Once the locator created, it can be adjusted with Maya tools (rotation, scale, m
 
 * Create locator from vertex
 
-Locator can also be created from an existing vertex. You have to set vertex selection mode and select the vertex from which you want to create the locator. Then, in MayaMVG menu, click on "Create locator from vertex".
+Locator can also be created from an existing vertex. You have to set vertex selection mode and select the vertex from which you want to create the locator. Then, in MeshroomMaya menu, click on "Create locator from vertex".
 
 <p align="center">
   <img src="img/menu.png">
@@ -137,10 +137,10 @@ Proceed as in "Create locator by triangulation" section to place it more precise
 
 ### **Cameras**
 
-To set a camera in one of the MayaMVG view, click on the corresponding thumbnail.
+To set a camera in one of the MeshroomMaya view, click on the corresponding thumbnail.
 
-**Tip** : If you select a camera in Maya, it automatically selects it in MayaMVG and load it in the left viewport.
-You can also select the camera directly from MayaMVG.
+**Tip** : If you select a camera in Maya, it automatically selects it in MeshroomMaya and load it in the left viewport.
+You can also select the camera directly from MeshroomMaya.
 
 <p align="center">
   <img src="img/cameralist.png">
@@ -156,11 +156,11 @@ Meshes can be activated/deactivated in plugin.
 
 ### **Alembic bridge**
 
-#### **Export from MayaMVG**
+#### **Export from MeshroomMaya**
 
 
 Select meshes and cameras to export.
-Click on menu : "MayaMVG > Export selection as ABC" to choose file location. 
+Click on menu : "MeshroomMaya > Export selection as ABC" to choose file location.
 
 #### **Import in Nuke/Mari**
 

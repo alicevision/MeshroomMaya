@@ -1,0 +1,10 @@
+
+global proc meshroomMayaCreateUI() {
+    python "from meshroomMaya import menu;menu.mvgCreateMenu()";
+    print "\n[MeshroomMaya] Plugin loaded.\n";
+}
+
+global proc meshroomMayaDeleteUI() {
+    python "from meshroomMaya import menu;menu.mvgDeleteMenu()";
+    print "\n[MeshroomMaya] Plugin unloaded.\n";
+}

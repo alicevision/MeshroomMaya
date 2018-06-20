@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.3)
 
-project(pluginMayaMVG)
+project(pluginMeshroomMaya)
 
 #
 # Plugin version
@@ -54,4 +54,4 @@ find_package(OpenGL REQUIRED)
 # Add sources
 #
 
-add_subdirectory(mayaMVG)
+add_subdirectory(meshroomMaya)
