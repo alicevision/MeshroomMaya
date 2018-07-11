@@ -1,0 +1,20 @@
+
+global proc meshroomMayaToolProperties ()
+{
+    setUITemplate -pushTemplate DefaultTemplate;
+    string $parent = `toolPropertyWindow -q -location`;
+    setParent $parent;
+    if(!`columnLayout -exists mvgToolLayout`) {
+        columnLayout -adjustableColumn true mvgToolLayout;
+            frameLayout -collapsable false -collapse false -label "Properties";
+            setParent ..;
+        setParent ..;
+    }
+    setUITemplate -popTemplate;
+    meshroomMayaToolSetCallbacks($parent);
+}
+
+global proc meshroomMayaToolSetCallbacks(string $parent)
+{
+    setParent $parent;
+}

@@ -1,7 +1,7 @@
-MayaMVG
+MeshroomMaya
 ==========
 
-MayaMVG is a Maya plugin that enables to model 3D objects from images.
+MeshroomMaya is a Maya plugin that enables to model 3D objects from images.
 
 Requirements
 ------------
@@ -27,11 +27,11 @@ Plugin documentation is available [here](doc/Documentation.v0.4.2.md)
 
 License
 -------
-MayaMVG is licensed under [MPL v2 license](LICENSE.md).
+MeshroomMaya is licensed under [MPL v2 license](LICENSE.md).
 
 Development
 -----------
-Clang format rules for MayaMVG can be found [here](.clang-format).
+Clang format rules for MeshroomMaya can be found [here](.clang-format).
 To format code easily, install Clang (dont forget to add bin path to PATH) and execute :
 ```
 > ./format_all_files.sh
