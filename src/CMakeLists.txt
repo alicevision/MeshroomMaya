@@ -12,11 +12,11 @@ set(PLUGIN_VERSION_MINOR 0)
 #
 # Compiler settings
 #
+set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 if(UNIX)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -std=c++11")
-    set(CMAKE_CXX_COMPILER g++)
-    set(CMAKE_C_COMPILER gcc)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC")
 endif()
 
 #
