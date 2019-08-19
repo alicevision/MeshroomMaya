@@ -491,22 +491,63 @@ void MVGProjectWrapper::loadABC(const QString& abcFilePath)
     status =
         MVGMayaUtil::getIntArrayAttribute(pointCloud, "mvg_visibilitySize", visibilitySizeArray);
     CHECK_RETURN(status)
-    MIntArray visibilityIDsArray;
-    status = MVGMayaUtil::getIntArrayAttribute(pointCloud, "mvg_visibilityIds", visibilityIDsArray);
-    CHECK_RETURN(status)
 
-    int k = 0;
+
     std::map<int, MIntArray> itemsPerCam;
-    // Browse 3D points
-    for(int j = 0; j < visibilitySizeArray.length(); ++j)
+    MIntArray visibilitiesArray;
     {
-        int nbView = visibilitySizeArray[j];
-        int lastPosition = k + (nbView - 1) * 2;
-        // Browse visibility
-        for(; k < lastPosition + 1; k += 2)
+        int step = 1;
+        status = MVGMayaUtil::getIntArrayAttribute(pointCloud, "mvg_visibilityViewId", visibilitiesArray);
+        if(status == MS::kSuccess)
         {
-            int viewID = visibilityIDsArray[k];
-            itemsPerCam[viewID].append(j);
+            step = 1;
+        }
+        else // Test previous file format for compatibility
+        {
+            // In the previous file format: 
+            // mvg_visibilityIds was containing [<viewID, featId>] in a flat list.
+            // Here, as we only need the viewID, we read only one over 2 values.
+            step = 2;
+            status = MVGMayaUtil::getIntArrayAttribute(pointCloud, "mvg_visibilityIds", visibilitiesArray);
+            CHECK_RETURN(status)
+        }
+
+        int fullNbVisibilities = 0;
+        for(int j = 0; j < visibilitySizeArray.length(); ++j)
+        {
+            int nbViews = visibilitySizeArray[j];
+            fullNbVisibilities += nbViews;
+        }
+        if(fullNbVisibilities * step != visibilitiesArray.length())
+        {
+            LOG_ERROR("Incorrect file: mvg_visibilitySize is not coherent with mvg_visibilityIds."
+                      "(mvg_visibilitySize length= " + std::to_string(visibilitySizeArray.length()) +
+                      ", mvg_visibilitySize total= " + std::to_string(fullNbVisibilities) +
+                      ", mvg_visibilityIds size= " + std::to_string(visibilitiesArray.length()) +
+                      ", step= " + std::to_string(step) +
+                      ")")
+        }
+        else
+        {
+            LOG_WARNING("Valid file: mvg_visibilitySize is coherent with mvg_visibilityIds."
+                      "(mvg_visibilitySize length= " + std::to_string(visibilitySizeArray.length()) +
+                      ", mvg_visibilitySize total= " + std::to_string(fullNbVisibilities) +
+                      ", mvg_visibilityIds size= " + std::to_string(visibilitiesArray.length()) +
+                      ", step= " + std::to_string(step) +
+                      ")")
+            int k = 0;
+            // Browse 3D points
+            for(int j = 0; j < visibilitySizeArray.length(); ++j)
+            {
+                int nbViews = visibilitySizeArray[j];
+                int endPosition = k + nbViews * step;
+                // Browse visibilities
+                for(; k < endPosition; k += step)
+                {
+                    int viewID = visibilitiesArray[k];
+                    itemsPerCam[viewID].append(j);
+                }
+            }
         }
     }
 
