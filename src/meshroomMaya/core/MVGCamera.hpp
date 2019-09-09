@@ -31,7 +31,7 @@ public:
     virtual bool isValid() const;
 
 public:
-    static MVGCamera create(MDagPath& cameraDagPath, std::map<int, MIntArray>& itemsPerCamera);
+    static MVGCamera create(MDagPath& cameraDagPath, const std::map<int, MIntArray>& itemsPerCamera);
     static std::vector<MVGCamera> getCameras();
 
 public:

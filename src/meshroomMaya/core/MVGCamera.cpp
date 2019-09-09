@@ -108,7 +108,7 @@ bool MVGCamera::isValid() const
     return true;
 }
 
-MVGCamera MVGCamera::create(MDagPath& cameraDagPath, std::map<int, MIntArray>& itemsPerCamera)
+MVGCamera MVGCamera::create(MDagPath& cameraDagPath, const std::map<int, MIntArray>& itemsPerCamera)
 {
     MStatus status;
 
@@ -140,7 +140,17 @@ MVGCamera MVGCamera::create(MDagPath& cameraDagPath, std::map<int, MIntArray>& i
     dagModifier.doIt();
 
     // Set MVG attributes
-    MVGMayaUtil::setIntArrayAttribute(cameraNode, MVGCamera::_MVG_ITEMS, itemsPerCamera[viewID]);
+    if(itemsPerCamera.find(viewID) != itemsPerCamera.end())
+    {
+        MVGMayaUtil::setIntArrayAttribute(cameraNode, MVGCamera::_MVG_ITEMS, itemsPerCamera.at(viewID));
+    }
+    else
+    {
+        // No visibility information
+        LOG_INFO("MVGCamera: viewID=" << viewID << " is NOT in the itemsPerCamera, so we initialize it to an empty array.")
+        MIntArray empyArray;
+        MVGMayaUtil::setIntArrayAttribute(cameraNode, MVGCamera::_MVG_ITEMS, empyArray);
+    }
 
     // create, reparent & connect image plane
     MString cmd;

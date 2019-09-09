@@ -26,6 +26,8 @@ def setImagesPaths(abcFilePath, imageAttribute, imageSourceAttribute, thumbnailA
   for c in cameraList:
     if not cmds.attributeQuery(imageAttribute, node=c, exists=True):
       continue
+    if not cmds.attributeQuery(imageSourceAttribute, node=c, exists=True):
+      continue
     originalImagePath = cmds.getAttr(c+'.'+imageAttribute)
     cmds.setAttr(c+'.'+imageSourceAttribute, originalImagePath, type="string")
     basename = os.path.basename(originalImagePath)
