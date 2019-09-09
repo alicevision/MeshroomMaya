@@ -529,7 +529,7 @@ void MVGProjectWrapper::loadABC(const QString& abcFilePath)
         }
         else
         {
-            LOG_WARNING("Valid file: mvg_visibilitySize is coherent with mvg_visibilityIds."
+            LOG_INFO("Valid file: mvg_visibilitySize is coherent with mvg_visibilityIds."
                       "(mvg_visibilitySize length= " + std::to_string(visibilitySizeArray.length()) +
                       ", mvg_visibilitySize total= " + std::to_string(fullNbVisibilities) +
                       ", mvg_visibilityIds size= " + std::to_string(visibilitiesArray.length()) +
